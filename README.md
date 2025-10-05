@@ -29,7 +29,7 @@ SWP391_Project/
 - Node.js 14+ and npm installed
 - Git installed
 
-### Installation
+### Quick Setup (Recommended)
 
 1. Clone the repository:
 ```bash
@@ -37,13 +37,24 @@ git clone https://github.com/hdphong2k5/SWP391_Project.git
 cd SWP391_Project
 ```
 
-2. Install backend dependencies:
+2. Run the setup script:
+```bash
+./setup.sh
+```
+
+This will automatically install all dependencies for both backend and frontend.
+
+### Manual Installation
+
+If you prefer to install dependencies manually:
+
+1. Install backend dependencies:
 ```bash
 cd backend
 npm install
 ```
 
-3. Install frontend dependencies:
+2. Install frontend dependencies:
 ```bash
 cd ../frontend
 npm install
@@ -51,9 +62,19 @@ npm install
 
 ### Running the Application
 
-You need to run both the backend and frontend servers simultaneously.
+#### Option 1: Quick Start (Both servers simultaneously)
 
-#### Terminal 1 - Start Backend Server:
+```bash
+./run.sh
+```
+
+This script will start both backend and frontend servers. Press Ctrl+C to stop both.
+
+#### Option 2: Manual Start (Separate terminals)
+
+You need to run both the backend and frontend servers simultaneously in different terminals.
+
+**Terminal 1 - Start Backend Server:**
 ```bash
 cd backend
 npm start
@@ -63,7 +84,7 @@ npm run dev
 
 The backend API will be available at `http://localhost:5000`
 
-#### Terminal 2 - Start Frontend Server:
+**Terminal 2 - Start Frontend Server:**
 ```bash
 cd frontend
 npm start
