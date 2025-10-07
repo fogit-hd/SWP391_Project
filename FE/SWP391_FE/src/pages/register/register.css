@@ -1,0 +1,157 @@
+/* Register Page Styles */
+.register-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.register-background {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background-image: url('https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?q=80&w=2070&auto=format&fit=crop');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.register-background::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+.register-card-container {
+  position: relative;
+  z-index: 10;
+  width: 100%;
+  max-width: 36rem;
+  margin: 0 1rem;
+}
+
+.register-card {
+  border-radius: 16px;
+  backdrop-filter: blur(4px);
+  background-color: rgba(255, 255, 255, 0.95);
+}
+
+.register-card .ant-card-body {
+  padding: 24px;
+}
+
+.register-header {
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+.register-title {
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin: 0;
+}
+
+.register-subtitle {
+  color: #6b7280;
+  margin: 0;
+}
+
+.register-form {
+  margin-top: 1rem;
+}
+
+.register-form .ant-form-item {
+  margin-bottom: 1rem;
+}
+
+.register-form .ant-form-item-label > label {
+  font-weight: 500;
+}
+
+.register-form-row {
+  margin-bottom: 1rem;
+}
+
+.register-form-row .ant-col {
+  margin-bottom: 0.5rem;
+}
+
+.register-gender-select .ant-select-selector {
+  display: flex;
+  align-items: center;
+}
+
+.register-gender-option {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.register-terms-checkbox {
+  margin: 1rem 0;
+}
+
+.register-terms-link {
+  color: #1890ff;
+  text-decoration: none;
+}
+
+.register-terms-link:hover {
+  color: #40a9ff;
+  text-decoration: underline;
+}
+
+.register-submit-button {
+  margin-top: 1rem;
+  height: 40px;
+  font-weight: 500;
+}
+
+.register-login-link {
+  text-align: center;
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin-top: 1rem;
+}
+
+.register-login-link a {
+  color: #1890ff;
+  text-decoration: none;
+}
+
+.register-login-link a:hover {
+  color: #40a9ff;
+  text-decoration: underline;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .register-card-container {
+    max-width: 28rem;
+    margin: 0 0.5rem;
+  }
+  
+  .register-card .ant-card-body {
+    padding: 20px;
+  }
+  
+  .register-title {
+    font-size: 1.25rem;
+  }
+  
+  .register-form-row .ant-col {
+    margin-bottom: 0.75rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .register-card-container {
+    max-width: 24rem;
+  }
+  
+  .register-card .ant-card-body {
+    padding: 16px;
+  }
+}
