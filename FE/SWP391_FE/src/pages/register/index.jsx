@@ -20,19 +20,19 @@ import {
 } from "@ant-design/icons";
 import api from "../../config/axios";
 import { toast } from "react-toastify";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 // If you're on AntD v5, import the base reset once in your app entry:
 // import "antd/dist/reset.css";
+import "./register.css";
 
 const { Option } = Select;
 
-const EVCoShipRegisterPage = () => {
+const RegisterPage = () => {
   const [form] = Form.useForm();
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
   const validateEmail = (email) => /\S+@\S+\.\S+/.test(email);
-  const validatePhone = (phone) => /^0\d{9,10}$/.test(phone);
 
   const onFinish = async (values) => {
     setIsLoading(true);
@@ -49,21 +49,15 @@ const EVCoShipRegisterPage = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center relative">
+    <div className="register-container">
       {/* Background */}
-      <div className="absolute inset-0 z-0 bg-[url('https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?q=80&w=2070&auto=format&fit=crop')] bg-cover bg-center bg-no-repeat">
-        <div className="absolute inset-0 bg-black/50"></div>
-      </div>
+      <div className="register-background"></div>
 
-      <div className="relative z-10 w-full max-w-xl mx-4">
-        <Card
-          className="backdrop-blur-sm"
-          style={{ borderRadius: 16 }}
-          bodyStyle={{ padding: 24 }}
-        >
-          <div className="text-center mb-4">
-            <h2 className="text-2xl font-bold">Create your account</h2>
-            <p className="text-gray-500">It only takes a minute.</p>
+      <div className="register-card-container">
+        <Card className="register-card">
+          <div className="register-header">
+            <h2 className="register-title">Create your account</h2>
+            <p className="register-subtitle">It only takes a minute.</p>
           </div>
 
           <Form
@@ -75,21 +69,47 @@ const EVCoShipRegisterPage = () => {
               agree: false,
             }}
             requiredMark={false}
+            className="register-form"
           >
-            <Row gutter={16}>
+            <Row gutter={16} className="register-form-row">
               {/* Full Name */}
               <Col span={24}>
                 <Form.Item
                   label="Full name"
                   name="fullName"
                   rules={[
-                    { required: true, message: "Full name is required" },
+                    { required: true, message: "This field is required" },
                     {
                       validator: (_, v) =>
                         v && v.trim()
                           ? Promise.resolve()
                           : Promise.reject(
-                              new Error("Full name cannot be empty")
+                              new Error("This field cannot be empty")
+                            ),
+                    },
+                  ]}
+                >
+                  <Input
+                    placeholder="Full name"
+                    prefix={<UserOutlined />}
+                    allowClear
+                  />
+                </Form.Item>
+              </Col>
+
+              {/* Username */}
+              <Col span={24}>
+                <Form.Item
+                  label="Username"
+                  name="username"
+                  rules={[
+                    { required: true, message: "This field is required" },
+                    {
+                      validator: (_, v) =>
+                        v && v.trim()
+                          ? Promise.resolve()
+                          : Promise.reject(
+                              new Error("This field cannot be empty")
                             ),
                     },
                   ]}
@@ -103,7 +123,7 @@ const EVCoShipRegisterPage = () => {
               </Col>
 
               {/* Gender */}
-              <Col xs={24} md={12}>
+              {/* <Col xs={24} md={12}>
                 <Form.Item
                   label="Gender"
                   name="gender"
@@ -113,10 +133,11 @@ const EVCoShipRegisterPage = () => {
                 >
                   <Select
                     placeholder="Select gender"
+                    className="register-gender-select"
                     options={[
                       {
                         label: (
-                          <span>
+                          <span className="register-gender-option">
                             <ManOutlined /> Male
                           </span>
                         ),
@@ -124,7 +145,7 @@ const EVCoShipRegisterPage = () => {
                       },
                       {
                         label: (
-                          <span>
+                          <span className="register-gender-option">
                             <WomanOutlined /> Female
                           </span>
                         ),
@@ -132,35 +153,6 @@ const EVCoShipRegisterPage = () => {
                       },
                       { label: "Other", value: "OTHER" },
                     ]}
-                  />
-                </Form.Item>
-              </Col>
-
-              {/* Phone */}
-              <Col xs={24} md={12}>
-                <Form.Item
-                  label="Phone"
-                  name="phone"
-                  rules={[
-                    { required: true, message: "Phone is required" },
-                    {
-                      validator: (_, v) =>
-                        !v || validatePhone(v)
-                          ? Promise.resolve()
-                          : Promise.reject(
-                              new Error(
-                                "Phone must start with 0 and be 10–11 digits"
-                              )
-                            ),
-                    },
-                  ]}
-                >
-                  <Input
-                    placeholder="Phone (e.g. 09xxxxxxxx)"
-                    prefix={<PhoneOutlined />}
-                    inputMode="numeric"
-                    maxLength={11}
-                    allowClear
                   />
                 </Form.Item>
               </Col>
@@ -245,6 +237,7 @@ const EVCoShipRegisterPage = () => {
             <Form.Item
               name="agree"
               valuePropName="checked"
+              className="register-terms-checkbox"
               rules={[
                 {
                   validator: (_, v) =>
@@ -256,9 +249,13 @@ const EVCoShipRegisterPage = () => {
             >
               <Checkbox>
                 I agree to the{" "}
-                <a href="#" onClick={(e) => e.preventDefault()}>
-                  Terms &amp; Privacy
-                </a>
+                <Link
+                  to="/terms"
+                  className="register-terms-link"
+                  target="_blank"
+                >
+                  Terms &amp; Privacy Policy
+                </Link>
               </Checkbox>
             </Form.Item>
 
@@ -269,16 +266,14 @@ const EVCoShipRegisterPage = () => {
                 loading={isLoading}
                 block
                 size="large"
+                className="register-submit-button"
               >
                 {isLoading ? "Creating account..." : "Create account"}
               </Button>
             </Form.Item>
 
-            <div className="text-center text-sm text-gray-600">
-              Already have an account?{" "}
-              <a href="/login" className="text-blue-600 hover:text-blue-500">
-                Sign in
-              </a>
+            <div className="register-login-link">
+              Already have an account? <Link to="/login">Sign in</Link>
             </div>
           </Form>
         </Card>
@@ -287,4 +282,4 @@ const EVCoShipRegisterPage = () => {
   );
 };
 
-export default EVCoShipRegisterPage;
+export default RegisterPage;
