@@ -1,0 +1,129 @@
+/* Login Page Styles */
+.login-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.login-background {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background-image: url('https://images.unsplash.com/photo-1571068316344-75bc76f77890?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.login-background::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+.login-card-container {
+  position: relative;
+  z-index: 10;
+  width: 100%;
+  max-width: 28rem;
+  margin: 0 1rem;
+}
+
+.login-card {
+  border-radius: 16px;
+}
+
+.login-card .ant-card-body {
+  padding: 24px;
+}
+
+.login-header {
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+.login-title {
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin: 0;
+}
+
+.login-subtitle {
+  color: #6b7280;
+  margin: 0;
+}
+
+.login-form {
+  margin-top: 1rem;
+}
+
+.login-form .ant-form-item {
+  margin-bottom: 1rem;
+}
+
+.login-form .ant-form-item-label > label {
+  font-weight: 500;
+}
+
+.login-remember-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.login-forgot-link {
+  color: #1890ff;
+  text-decoration: none;
+}
+
+.login-forgot-link:hover {
+  color: #40a9ff;
+  text-decoration: underline;
+}
+
+.login-submit-button {
+  margin-top: 0.5rem;
+  height: 40px;
+  font-weight: 500;
+}
+
+.login-divider {
+  margin: 1.5rem 0;
+}
+
+.login-social-buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.login-social-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .login-card-container {
+    max-width: 24rem;
+    margin: 0 0.5rem;
+  }
+  
+  .login-card .ant-card-body {
+    padding: 20px;
+  }
+  
+  .login-title {
+    font-size: 1.25rem;
+  }
+  
+  .login-social-buttons {
+    grid-template-columns: 1fr;
+  }
+}
