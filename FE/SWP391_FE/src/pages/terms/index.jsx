@@ -1,72 +1,183 @@
-import { Link } from "react-router";
-import { Button, Card, Typography, Divider, List } from "antd";
+import { Link } from "react-router-dom";
+import { Button, Card, Typography, Divider, List, Alert } from "antd";
 
 const { Title, Paragraph, Text } = Typography;
 
 function TermsPage() {
   return (
-    <div style={{ padding: "40px", maxWidth: "800px", margin: "0 auto" }}>
+    <div style={{ padding: "40px", maxWidth: "1000px", margin: "0 auto" }}>
       <Card>
-        <Title level={1}>EV CoShare - Terms and Conditions</Title>
+        <Title level={1}>EV Co-ownership & Cost-sharing System</Title>
+        <Paragraph style={{ fontSize: "16px", color: "#666" }}>
+          Phần mềm quản lý đồng sở hữu & chia sẻ chi phí xe điện
+        </Paragraph>
         
-        <Title level={2}>Co-ownership Agreement</Title>
-        <Paragraph>
-          By joining EV CoShare, you agree to participate in our electric vehicle co-ownership program. 
-          This program allows multiple members to share the cost and usage of electric vehicles, making 
-          sustainable transportation more accessible and affordable.
-        </Paragraph>
+        <Alert
+          message="Important Notice"
+          description="By registering, you agree to all terms and conditions outlined below. Please read carefully before proceeding."
+          type="warning"
+          showIcon
+          style={{ marginBottom: "30px" }}
+        />
 
-        <Title level={3}>Key Terms:</Title>
+        <Title level={2}>I. TỔNG QUAN HỆ THỐNG</Title>
+        <Paragraph>
+          <strong>Mục tiêu:</strong> Xây dựng nền tảng quản lý đồng sở hữu xe điện giúp nhiều người cùng sở hữu và sử dụng xe một cách công bằng, minh bạch và hiệu quả.
+        </Paragraph>
+        
+        <Title level={3}>Đối tượng sử dụng:</Title>
         <List
           dataSource={[
-            "Co-ownership involves shared financial responsibility for vehicle purchase, maintenance, and insurance",
-            "Members agree to fair usage scheduling and respect other co-owners' booking times",
-            "All co-owners must maintain valid driving licenses and insurance coverage",
-            "Identity verification is required for security and legal compliance",
-            "Members are responsible for any damages caused during their usage periods",
-            "Cost sharing is based on actual usage time and vehicle depreciation",
-            "Cancellation policies apply for scheduled usage periods"
+            "Co-owner (Đồng chủ sở hữu)",
+            "Staff (Nhân viên vận hành)",
+            "Admin (Quản trị viên hệ thống)"
           ]}
           renderItem={(item) => <List.Item>• {item}</List.Item>}
         />
 
         <Divider />
 
-        <Title level={2}>Privacy Policy</Title>
-        <Paragraph>
-          Your personal information is collected for identity verification, usage tracking, and 
-          communication purposes. We maintain strict data protection standards and will not 
-          share your information with third parties without consent.
-        </Paragraph>
-
-        <Title level={3}>Data Collection:</Title>
+        <Title level={2}>II. QUYỀN VÀ NGHĨA VỤ CO-OWNER</Title>
+        
+        <Title level={3}>A. Đăng ký & Xác thực</Title>
         <List
           dataSource={[
-            "Identity documents for verification purposes",
-            "Usage patterns for fair cost calculation",
-            "Contact information for scheduling and communication",
-            "Payment information for cost sharing transactions",
-            "Vehicle condition reports for maintenance tracking"
+            "Mỗi co-owner phải cung cấp CMND/CCCD hợp lệ và chưa hết hạn",
+            "Giấy phép lái xe phải phù hợp với loại xe đăng ký (B1, B2)",
+            "Tuổi tối thiểu: 18 tuổi cho ô tô điện"
+          ]}
+          renderItem={(item) => <List.Item>• {item}</List.Item>}
+        />
+
+        <Title level={3}>B. Quản lý tỷ lệ sở hữu</Title>
+        <List
+          dataSource={[
+            "Tổng tỷ lệ sở hữu trong nhóm = 100%",
+            "Tỷ lệ sở hữu tối thiểu: 10% để tham gia nhóm",
+            "Tỷ lệ sở hữu tối đa: 70% cho một cá nhân",
+            "Việc chuyển nhượng tỷ lệ sở hữu phải qua hợp đồng pháp lý"
+          ]}
+          renderItem={(item) => <List.Item>• {item}</List.Item>}
+        />
+
+        <Title level={3}>C. Đặt lịch & Sử dụng xe</Title>
+        <List
+          dataSource={[
+            "Đặt lịch trước tối thiểu 2 giờ, tối đa 14 ngày",
+            "Lịch đặt xe phải cách nhau tối thiểu 30 phút để sạc điện",
+            "Mỗi co-owner được đặt xe tối đa 8 giờ/1 ngày",
+            "Mỗi co-owner có hạn ngạch sử dụng xe tối đa trong tháng",
+            "Ưu tiên dựa trên tỷ lệ sở hữu",
+            "Check-in đúng giờ, chậm > 15 phút tự động huỷ lịch",
+            "Check-out trong vòng 15 phút sau khi kết thúc sử dụng"
+          ]}
+          renderItem={(item) => <List.Item>• {item}</List.Item>}
+        />
+
+        <Title level={3}>D. Quy định phạt vi phạm</Title>
+        <List
+          dataSource={[
+            "Huỷ lịch trong 30 phút trước check-in: phạt hạn ngạch trừ theo nửa số giờ đã đặt",
+            "Chậm check-out > 30 phút: phạt thời gian sử dụng x2",
+            "Chậm check-out > 60 phút: phạt thời gian sử dụng 2 ngày",
+            "Chậm check-out > 180 phút: phạt thời gian sử dụng 1 tuần, trừ 1 điểm uy tín",
+            "Không check-in/out: cấm sử dụng 7 ngày"
           ]}
           renderItem={(item) => <List.Item>• {item}</List.Item>}
         />
 
         <Divider />
 
-        <Title level={2}>Cost Sharing Model</Title>
-        <Paragraph>
-          Our cost sharing model is designed to be fair and transparent. Costs are distributed 
-          based on actual usage time, vehicle wear, and shared expenses like insurance and maintenance.
-        </Paragraph>
+        <Title level={2}>III. CHI PHÍ & THANH TOÁN</Title>
+        
+        <Title level={3}>A. Phân chia chi phí</Title>
+        <List
+          dataSource={[
+            "Chi phí dịch vụ (bảo dưỡng, sửa chữa, vệ sinh) chỉ được thực hiện khi 100% Co-owner phê duyệt",
+            "Phí sạc điện do người sử dụng xe trực tiếp thanh toán tại điểm sạc",
+            "Chi phí hư hỏng/tai nạn/vi phạm giao thông do Co-owner gây ra sẽ gán trực tiếp cho cá nhân đó",
+            "Phí quản lý nền tảng = 5-10% giá trị dịch vụ, thu từ đối tác dịch vụ"
+          ]}
+          renderItem={(item) => <List.Item>• {item}</List.Item>}
+        />
 
-        <Text type="secondary">
-          For detailed cost breakdowns and calculation methods, please refer to your specific 
-          co-ownership plan documentation.
-        </Text>
+        <Title level={3}>B. Thanh toán</Title>
+        <List
+          dataSource={[
+            "Hệ thống xuất hóa đơn điện tử (e-invoice) cho Co-owner",
+            "Thanh toán qua ngân hàng hoặc ví điện tử bên ngoài hệ thống",
+            "Nếu không thanh toán: quyền đặt dịch vụ bị chặn, tài khoản trạng thái 'Unpaid'",
+            "Quá hạn thanh toán 30 ngày: loại khỏi nhóm đồng sở hữu"
+          ]}
+          renderItem={(item) => <List.Item>• {item}</List.Item>}
+        />
+
+        <Divider />
+
+        <Title level={2}>IV. NHÓM ĐỒNG SỞ HỮU</Title>
+        
+        <Title level={3}>A. Quản lý nhóm</Title>
+        <List
+          dataSource={[
+            "Nhóm tối thiểu 2 người, tối đa 8 người",
+            "Có 1 admin nhóm (thường là người có tỷ lệ sở hữu cao nhất)",
+            "Admin nhóm có thể mời/xóa thành viên với sự đồng ý ≥ 60% nhóm",
+            "Thành viên có thể tự rời nhóm với thông báo trước 30 ngày",
+            "Khi rời nhóm, phải thanh toán hết các khoản nợ"
+          ]}
+          renderItem={(item) => <List.Item>• {item}</List.Item>}
+        />
+
+        <Title level={3}>B. Quyết định chung</Title>
+        <List
+          dataSource={[
+            "Các quyết định lớn cần bỏ phiếu: nâng cấp xe, bán xe, thay đổi quy định",
+            "Quyết định thông qua khi có ≥ 75% phiếu đồng ý (tính theo tỷ lệ sở hữu)",
+            "Thời gian bỏ phiếu: 7 ngày, gia hạn tối đa 3 ngày",
+            "Không tham gia bỏ phiếu = không đồng ý",
+            "Kết quả bỏ phiếu công khai cho tất cả thành viên"
+          ]}
+          renderItem={(item) => <List.Item>• {item}</List.Item>}
+        />
+
+        <Divider />
+
+        <Title level={2}>V. BẢO MẬT & AN TOÀN</Title>
+        <List
+          dataSource={[
+            "Mã hóa tất cả dữ liệu nhạy cảm (thông tin cá nhân, tài chính)",
+            "Xác thực 2 lớp (2FA) bắt buộc cho tất cả tài khoản",
+            "Backup dữ liệu hàng ngày, lưu trữ tại 2 địa điểm khác nhau",
+            "Log tất cả hoạt động quan trọng trong hệ thống",
+            "Tuân thủ quy định bảo vệ dữ liệu cá nhân (GDPR, PDPA)"
+          ]}
+          renderItem={(item) => <List.Item>• {item}</List.Item>}
+        />
+
+        <Divider />
+
+        <Title level={2}>VI. TUÂN THỦ PHÁP LUẬT</Title>
+        <List
+          dataSource={[
+            "Tuân thủ luật giao thông và quy định về xe điện",
+            "Đăng ký kinh doanh và nộp thuế theo quy định",
+            "Bảo hiểm trách nhiệm dân sự cho hoạt động kinh doanh",
+            "Báo cáo định kỳ cho cơ quan quản lý giao thông",
+            "Hợp tác với cơ quan pháp luật khi có yêu cầu"
+          ]}
+          renderItem={(item) => <List.Item>• {item}</List.Item>}
+        />
+
+        <Alert
+          message="Lưu ý quan trọng"
+          description="Hệ thống hoạt động 99.5% thời gian với thời gian phản hồi trung bình < 2 giây. Hỗ trợ đa nền tảng: web, iOS, Android."
+          type="info"
+          style={{ marginTop: "30px" }}
+        />
 
         <div style={{ marginTop: "30px", textAlign: "center" }}>
           <Button type="primary" size="large">
-            <Link to="/register">I Accept - Continue Registration</Link>
+            <Link to="/register">Tôi đồng ý - Tiếp tục đăng ký</Link>
           </Button>
         </div>
       </Card>
