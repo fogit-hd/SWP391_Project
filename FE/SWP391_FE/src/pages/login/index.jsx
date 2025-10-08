@@ -63,7 +63,9 @@ const LoginPage = () => {
         <Card className="login-card">
           <div className="login-header">
             <h2 className="login-title">Welcome Back, Co-owner</h2>
-            <p className="login-subtitle">Sign in to access your shared vehicles</p>
+            <p className="login-subtitle">
+              Sign in to access your shared vehicles
+            </p>
           </div>
 
           <Form
@@ -146,15 +148,6 @@ const LoginPage = () => {
                 className="login-social-button"
               >
                 Google
-              </Button>
-              <Button
-                type="default"
-                block
-                icon={<FaGithub />}
-                onClick={() => message.info("GitHub OAuth not implemented")}
-                className="login-social-button"
-              >
-                GitHub
               </Button>
             </div>
           </Form>
