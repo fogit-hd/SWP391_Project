@@ -13,16 +13,11 @@ import {
 import {
   UserOutlined,
   MailOutlined,
-  PhoneOutlined,
   LockOutlined,
-  ManOutlined,
-  WomanOutlined,
 } from "@ant-design/icons";
 import api from "../../config/axios";
 import { toast } from "react-toastify";
 import { Link, useNavigate } from "react-router-dom";
-// If you're on AntD v5, import the base reset once in your app entry:
-// import "antd/dist/reset.css";
 import "./register.css";
 
 const { Option } = Select;
@@ -121,42 +116,7 @@ const RegisterPage = () => {
                   />
                 </Form.Item>
               </Col>
-
-              {/* Gender */}
-              {/* <Col xs={24} md={12}>
-                <Form.Item
-                  label="Gender"
-                  name="gender"
-                  rules={[
-                    { required: true, message: "Please select a gender" },
-                  ]}
-                >
-                  <Select
-                    placeholder="Select gender"
-                    className="register-gender-select"
-                    options={[
-                      {
-                        label: (
-                          <span className="register-gender-option">
-                            <ManOutlined /> Male
-                          </span>
-                        ),
-                        value: "MALE",
-                      },
-                      {
-                        label: (
-                          <span className="register-gender-option">
-                            <WomanOutlined /> Female
-                          </span>
-                        ),
-                        value: "FEMALE",
-                      },
-                      { label: "Other", value: "OTHER" },
-                    ]}
-                  />
-                </Form.Item>
-              </Col>
-
+              
               {/* Email */}
               <Col span={24}>
                 <Form.Item
