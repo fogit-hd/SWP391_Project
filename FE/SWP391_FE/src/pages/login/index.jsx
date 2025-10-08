@@ -14,7 +14,7 @@ import { MailOutlined, LockOutlined } from "@ant-design/icons";
 import { FaGoogle, FaGithub } from "react-icons/fa";
 import api from "../../config/axios";
 import { toast } from "react-toastify";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { login } from "../../redux/accountSlice";
 import "./login.css";
@@ -115,11 +115,12 @@ const LoginPage = () => {
               </Col>
               <Col>
                 <a
-                  href="#"
                   onClick={(e) => e.preventDefault()}
                   className="login-forgot-link"
                 >
-                  Forgot your password?
+                  <Link to="/register">
+                    Don't have an account? Register here
+                  </Link>
                 </a>
               </Col>
             </Row>
@@ -133,23 +134,9 @@ const LoginPage = () => {
                 size="large"
                 className="login-submit-button"
               >
-                {isLoading ? "Signing in..." : "Access My Vehicles"}
+                {isLoading ? "Signing in..." : "Sign In"}
               </Button>
             </Form.Item>
-
-            <Divider className="login-divider">Or continue with</Divider>
-
-            <div className="login-social-buttons">
-              <Button
-                type="default"
-                block
-                icon={<FaGoogle />}
-                onClick={() => message.info("Google OAuth not implemented")}
-                className="login-social-button"
-              >
-                Google
-              </Button>
-            </div>
           </Form>
         </Card>
       </div>

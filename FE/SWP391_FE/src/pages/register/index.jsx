@@ -45,7 +45,7 @@ const RegisterPage = () => {
     try {
       // Build multipart/form-data
       const formData = new FormData();
-      
+
       // Only append email and password (AI will extract other info from photos)
       formData.append("email", values.email);
       formData.append("password", values.password);
@@ -234,9 +234,12 @@ const RegisterPage = () => {
               >
                 <Button icon={<UploadOutlined />}>Upload ID Documents</Button>
               </Upload>
-              <div style={{ marginTop: "8px", fontSize: "12px", color: "#666" }}>
-                <strong>AI Processing:</strong> Our AI will automatically extract your name, date of birth, 
-                address, and other details from your ID documents to complete your profile.
+              <div
+                style={{ marginTop: "8px", fontSize: "12px", color: "#666" }}
+              >
+                <strong>AI Processing:</strong> Our AI will automatically
+                extract your name, date of birth, address, and other details
+                from your ID documents to complete your profile.
               </div>
             </Form.Item>
 
@@ -259,7 +262,7 @@ const RegisterPage = () => {
                 <Link
                   to="/terms"
                   className="register-terms-link"
-                  target="_blank"
+                  // target="_blank" -> chuyen sang trang moi
                 >
                   Co-ownership Terms &amp; Privacy Policy
                 </Link>

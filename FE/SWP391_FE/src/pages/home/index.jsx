@@ -20,16 +20,14 @@ import {
   FireOutlined,
   UserOutlined,
   LogoutOutlined,
-  ShoppingCartOutlined,
-  LeftOutlined,
-  RightOutlined,
-  EnvironmentOutlined,
-  StarFilled,
+  HistoryOutlined,
 } from "@ant-design/icons";
 import { Link } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { logout } from "../../redux/accountSlice";
 import "./home.css";
+import "../../../index.css";
+import { FaHistory } from "react-icons/fa";
 
 const { Header, Content, Footer } = Layout;
 const { Title, Paragraph, Text } = Typography;
@@ -37,7 +35,6 @@ const { Title, Paragraph, Text } = Typography;
 const Homepage = () => {
   const account = useSelector((store) => store.account);
   const dispatch = useDispatch();
-  const [currentProduct, setCurrentProduct] = useState(0);
 
   const user = {
     name: "Alex Reid",
@@ -49,61 +46,26 @@ const Homepage = () => {
     dispatch(logout());
   };
 
-  const coOwnershipPlans = [
-    {
-      name: "Urban Commuter",
-      monthlyCost: "$89/month",
-      image:
-        "https://images.unsplash.com/photo-1620027734496-2f08b35b6c82?auto=format&fit=crop&q=80&w=2062",
-      description:
-        "Perfect for city commuting. Share costs with 2-3 other members and enjoy premium electric bikes for daily travel.",
-      specs: { usage: "Up to 500km", members: "2-3 people" },
-    },
-    {
-      name: "Adventure Seeker",
-      monthlyCost: "$129/month",
-      image:
-        "https://images.unsplash.com/photo-1627961958410-a9f4e2f5b355?auto=format&fit=crop&q=80&w=2062",
-      description:
-        "Ideal for weekend adventures and outdoor enthusiasts. Share high-performance e-bikes with adventure partners.",
-      specs: { usage: "Up to 800km", members: "2-4 people" },
-    },
-    {
-      name: "Family Fleet",
-      monthlyCost: "$199/month",
-      image:
-        "https://images.unsplash.com/photo-1598226463239-7a020f5a728b?auto=format&fit=crop&q=80&w=2062",
-      description:
-        "Complete family solution with multiple e-bikes. Share the fleet with other families in your neighborhood.",
-      specs: { usage: "Up to 1000km", members: "2-3 families" },
-    },
-  ];
-
   const testimonials = [
     {
       quote:
         "EV Co-ownership changed everything for me! I'm saving $200/month compared to buying my own e-bike, and I get access to premium models. The sharing schedule works perfectly with my neighbors.",
-      author: "Jessica M.",
+      author: "JohHuy Q.",
       rating: 5,
     },
     {
       quote:
         "As someone who only uses an e-bike on weekends, co-ownership made perfect sense. I pay a fraction of the cost and get access to top-tier adventure bikes when I need them.",
-      author: "David L.",
-      rating: 5,
+      author: "DavidVy M.",
+      rating: 4.5,
     },
     {
       quote:
         "Our family shares a fleet with two other families in our building. The kids love having different bikes to choose from, and we've built amazing friendships through this community.",
-      author: "Sarah K.",
-      rating: 5,
+      author: "SarahNgyn L.",
+      rating: 4.9,
     },
   ];
-
-  const nextPlan = () =>
-    setCurrentProduct((prev) => (prev + 1) % coOwnershipPlans.length);
-  const prevPlan = () =>
-    setCurrentProduct((prev) => (prev - 1 + coOwnershipPlans.length) % coOwnershipPlans.length);
 
   const userMenuItems = [
     {
@@ -112,9 +74,9 @@ const Homepage = () => {
       label: "My Profile",
     },
     {
-      key: "orders",
-      icon: <ShoppingCartOutlined />,
-      label: "Order History",
+      key: "history",
+      icon: <HistoryOutlined />,
+      label: "History",
     },
     {
       type: "divider",
@@ -134,7 +96,7 @@ const Homepage = () => {
           level={2}
           style={{ color: "#1890ff", margin: 0, fontWeight: "bold" }}
         >
-          EV CoShare
+          EVCS
         </Title>
 
         <Menu
@@ -174,10 +136,14 @@ const Homepage = () => {
           ) : (
             <Space>
               <Link to="/login">
-                <Button ghost>Login</Button>
+                <Button ghost className="nav-button">
+                  Login
+                </Button>
               </Link>
               <Link to="/register">
-                <Button type="primary">Register</Button>
+                <Button type="primary" className="nav-button">
+                  Register
+                </Button>
               </Link>
             </Space>
           )}
@@ -229,8 +195,9 @@ const Homepage = () => {
                 margin: "0 auto 2rem",
               }}
             >
-              Experience premium electric vehicles without the full cost. Join our 
-              co-ownership community and share the benefits of sustainable transportation.
+              Experience premium electric vehicles without the full cost. Join
+              our co-ownership community and share the benefits of sustainable
+              transportation.
             </Paragraph>
             <Button
               type="primary"
@@ -276,6 +243,7 @@ const Homepage = () => {
             ].map((feature, index) => (
               <Col key={index} xs={24} md={8}>
                 <Card
+                  className="feature-card"
                   style={{
                     background: "#002140",
                     border: "1px solid #1890ff",
@@ -314,139 +282,6 @@ const Homepage = () => {
               </Col>
             ))}
           </Row>
-        </div>
-
-        {/* Product Showcase Section */}
-        <div style={{ padding: "80px 50px", background: "#002140" }}>
-          <Row justify="center" style={{ marginBottom: "60px" }}>
-            <Col>
-              <Title level={1} style={{ color: "white", textAlign: "center" }}>
-                Choose Your Co-Ownership Plan
-              </Title>
-            </Col>
-          </Row>
-          <div
-            style={{
-              maxWidth: "1200px",
-              margin: "0 auto",
-              position: "relative",
-            }}
-          >
-            <Carousel
-              beforeChange={(from, to) => setCurrentProduct(to)}
-              autoplay={false}
-              effect="fade"
-              arrows
-              prevArrow={<LeftOutlined />}
-              nextArrow={<RightOutlined />}
-            >
-              {coOwnershipPlans.map((plan) => (
-                <div key={plan.name}>
-                  <Row gutter={0} align="middle">
-                    <Col xs={24} lg={12}>
-                      <img
-                        src={plan.image}
-                        alt={plan.name}
-                        style={{
-                          width: "100%",
-                          height: "400px",
-                          objectFit: "cover",
-                        }}
-                      />
-                    </Col>
-                    <Col xs={24} lg={12}>
-                      <div style={{ padding: "48px", background: "#002140" }}>
-                        <Title
-                          level={1}
-                          style={{ color: "white", marginBottom: "16px" }}
-                        >
-                          {plan.name}
-                        </Title>
-                        <Paragraph
-                          style={{ color: "#bfbfbf", marginBottom: "24px" }}
-                        >
-                          {plan.description}
-                        </Paragraph>
-                        <Row gutter={32} style={{ marginBottom: "32px" }}>
-                          <Col span={12}>
-                            <div
-                              style={{ textAlign: "center", padding: "16px 0" }}
-                            >
-                              <EnvironmentOutlined
-                                style={{
-                                  fontSize: "24px",
-                                  color: "#1890ff",
-                                  marginBottom: "8px",
-                                }}
-                              />
-                              <div
-                                style={{
-                                  fontSize: "18px",
-                                  fontWeight: "bold",
-                                  color: "white",
-                                }}
-                              >
-                                {plan.specs.usage}
-                              </div>
-                              <div
-                                style={{ fontSize: "14px", color: "#bfbfbf" }}
-                              >
-                                Monthly Usage
-                              </div>
-                            </div>
-                          </Col>
-                          <Col span={12}>
-                            <div
-                              style={{ textAlign: "center", padding: "16px 0" }}
-                            >
-                              <UserOutlined
-                                style={{
-                                  fontSize: "24px",
-                                  color: "#1890ff",
-                                  marginBottom: "8px",
-                                }}
-                              />
-                              <div
-                                style={{
-                                  fontSize: "18px",
-                                  fontWeight: "bold",
-                                  color: "white",
-                                }}
-                              >
-                                {plan.specs.members}
-                              </div>
-                              <div
-                                style={{ fontSize: "14px", color: "#bfbfbf" }}
-                              >
-                                Co-Owners
-                              </div>
-                            </div>
-                          </Col>
-                        </Row>
-                        <Title
-                          level={2}
-                          style={{ color: "#1890ff", marginBottom: "24px" }}
-                        >
-                          {plan.monthlyCost}
-                        </Title>
-                        <Button
-                          ghost
-                          size="large"
-                          style={{
-                            padding: "0 32px",
-                            height: "40px",
-                            borderRadius: "20px",
-                          }}
-                        >
-                          Join This Plan
-                        </Button>
-                      </div>
-                    </Col>
-                  </Row>
-                </div>
-              ))}
-            </Carousel>
-          </div>
         </div>
 
         {/* Testimonials Section */}
@@ -536,7 +371,8 @@ const Homepage = () => {
                 marginBottom: "32px",
               }}
             >
-              Join our co-ownership community today and start saving on premium electric vehicles.
+              Join our co-ownership community today and start saving on premium
+              electric vehicles.
             </Paragraph>
             <Button
               type="primary"
@@ -563,56 +399,45 @@ const Homepage = () => {
         }}
       >
         <Row gutter={[32, 32]}>
-          <Col xs={24} md={6}>
-            <Title level={3} style={{ color: "white", marginBottom: "16px" }}>
+          <Col xs={24} md={10}>
+            <Title level={5} style={{ color: "white", marginBottom: "16px" }}>
               EV CoShare - Electric Vehicle Co-Ownership
             </Title>
             <Paragraph style={{ maxWidth: "300px", color: "#bfbfbf" }}>
-              Share the future of sustainable transportation. Join our co-ownership 
-              community and access premium electric vehicles at a fraction of the cost.
+              Share the future of sustainable transportation. Join our
+              co-ownership community and access premium electric vehicles at a
+              fraction of the cost.
             </Paragraph>
           </Col>
-          <Col xs={24} md={6}>
-            <Title level={4} style={{ color: "white", marginBottom: "16px" }}>
-              Co-Ownership Plans
-            </Title>
-            <Space direction="vertical" size="small">
-              {["Urban Commuter", "Adventure Seeker", "Family Fleet", "Custom Plans"].map((item) => (
-                <a
-                  key={item}
-                  href="#"
-                  style={{ color: "#bfbfbf", display: "block" }}
-                >
-                  {item}
-                </a>
-              ))}
-            </Space>
-          </Col>
-          <Col xs={24} md={6}>
+          <Col xs={24} md={7}>
             <Title level={4} style={{ color: "white", marginBottom: "16px" }}>
               Company
             </Title>
             <Space direction="vertical" size="small">
-              {["How It Works", "Success Stories", "Partner With Us"].map((item) => (
-                <a
-                  key={item}
-                  href="#"
-                  style={{ color: "#bfbfbf", display: "block" }}
-                >
-                  {item}
-                </a>
-              ))}
+              {["How It Works", "Success Stories", "Partner With Us"].map(
+                (item) => (
+                  <a
+                    key={item}
+                    href="#"
+                    className="footer-link"
+                    style={{ color: "#bfbfbf", display: "block" }}
+                  >
+                    {item}
+                  </a>
+                )
+              )}
             </Space>
           </Col>
-          <Col xs={24} md={6}>
+          <Col xs={24} md={7}>
             <Title level={4} style={{ color: "white", marginBottom: "16px" }}>
               Follow Us
             </Title>
             <Space direction="vertical" size="small">
-              {["Facebook", "Instagram", "Twitter"].map((item) => (
+              {["Facebook"].map((item) => (
                 <a
                   key={item}
-                  href="#"
+                  href="https://www.facebook.com/phong.huynh.192/?locale=vi_VN"
+                  className="footer-link"
                   style={{ color: "#bfbfbf", display: "block" }}
                 >
                   {item}
@@ -623,7 +448,7 @@ const Homepage = () => {
         </Row>
         <Divider style={{ borderColor: "#1890ff", margin: "32px 0 16px" }} />
         <div style={{ textAlign: "center", color: "#bfbfbf" }}>
-          <Text>
+          <Text style={{ color: "#ffffffff" }}>
             &copy; {new Date().getFullYear()} EV CoShare. All Rights Reserved.
           </Text>
         </div>
