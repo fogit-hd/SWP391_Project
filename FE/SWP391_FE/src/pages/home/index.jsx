@@ -27,7 +27,6 @@ import { useDispatch, useSelector } from "react-redux";
 import { logout } from "../../redux/accountSlice";
 import "./home.css";
 import "../../../index.css";
-import { FaHistory } from "react-icons/fa";
 
 const { Header, Content, Footer } = Layout;
 const { Title, Paragraph, Text } = Typography;
