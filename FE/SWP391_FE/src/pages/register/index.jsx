@@ -36,7 +36,7 @@ const RegisterPage = () => {
     // Validate that exactly 2 files are present
     if (uuidFiles.length !== 2) {
       message.error(
-        "Please upload exactly 2 files for Citizen ID (PNG or PDF)."
+        "Please upload exactly 2 ID documents for AI verification."
       );
       return;
     }
@@ -45,18 +45,16 @@ const RegisterPage = () => {
     try {
       // Build multipart/form-data
       const formData = new FormData();
-      // append scalar fields
-      Object.keys(values).forEach((key) => {
-        // skip potential file field
-        if (key === "UUID") return;
-        formData.append(key, values[key]);
-      });
+      
+      // Only append email and password (AI will extract other info from photos)
+      formData.append("email", values.email);
+      formData.append("password", values.password);
 
-      // append uuid files (named uuidFiles[] so backend can read as array)
+      // append uuid files for AI processing
       uuidFiles.forEach((f) => {
         // use originFileObj (the actual File)
         const fileObj = f.originFileObj || f;
-        formData.append("uuidFiles", fileObj);
+        formData.append("idDocuments", fileObj);
       });
 
       const response = await api.post("/register", formData, {
@@ -81,8 +79,10 @@ const RegisterPage = () => {
       <div className="register-card-container">
         <Card className="register-card">
           <div className="register-header">
-            <h2 className="register-title">Join EV CoShare</h2>
-            <p className="register-subtitle">Start your electric vehicle co-ownership journey today.</p>
+            <h2 className="register-title">Join Our Community</h2>
+            <p className="register-subtitle">
+              Start your electric vehicle co-ownership journey today.
+            </p>
           </div>
 
           <Form
@@ -93,25 +93,10 @@ const RegisterPage = () => {
             className="register-form"
           >
             <Row gutter={16} className="register-form-row">
-              {/* Username */}
-              <Col span={24}>
-                <Form.Item
-                  label="Username"
-                  name="username"
-                  rules={[{ required: true, message: "Username is required" }]}
-                >
-                  <Input
-                    placeholder="Username"
-                    prefix={<UserOutlined />}
-                    allowClear
-                  />
-                </Form.Item>
-              </Col>
-
               {/* Email */}
               <Col span={24}>
                 <Form.Item
-                  label="Email"
+                  label="Email Address"
                   name="email"
                   rules={[
                     { required: true, message: "Email is required" },
@@ -126,7 +111,7 @@ const RegisterPage = () => {
                   ]}
                 >
                   <Input
-                    placeholder="Email address"
+                    placeholder="Enter your email address"
                     type="email"
                     prefix={<MailOutlined />}
                     allowClear
@@ -149,7 +134,7 @@ const RegisterPage = () => {
                   hasFeedback
                 >
                   <Input.Password
-                    placeholder="Password (min 8 chars)"
+                    placeholder="Create a password (min 8 chars)"
                     prefix={<LockOutlined />}
                   />
                 </Form.Item>
@@ -158,7 +143,7 @@ const RegisterPage = () => {
               {/* Confirm Password */}
               <Col xs={24} md={12}>
                 <Form.Item
-                  label="Confirm password"
+                  label="Confirm Password"
                   name="confirmPassword"
                   dependencies={["password"]}
                   hasFeedback
@@ -177,16 +162,16 @@ const RegisterPage = () => {
                   ]}
                 >
                   <Input.Password
-                    placeholder="Confirm password"
+                    placeholder="Confirm your password"
                     prefix={<LockOutlined />}
                   />
                 </Form.Item>
               </Col>
             </Row>
 
-            {/* Identity Verification for Co-ownership */}
+            {/* AI-Powered ID Document Upload */}
             <Form.Item
-              label="Identity Verification (Required for Co-ownership)"
+              label="ID Documents (AI will extract your information)"
               name="UUID"
               // custom validator will check uuidFiles state
               rules={[
@@ -196,13 +181,13 @@ const RegisterPage = () => {
                       ? Promise.resolve()
                       : Promise.reject(
                           new Error(
-                            "Please upload exactly 2 files (PNG or PDF) for identity verification."
+                            "Please upload exactly 2 ID documents (front & back or two different IDs)."
                           )
                         ),
                 },
               ]}
             >
-                <Upload
+              <Upload
                 accept=".png,.jpg,.jpeg,.pdf"
                 multiple
                 beforeUpload={(file) => {
@@ -249,6 +234,10 @@ const RegisterPage = () => {
               >
                 <Button icon={<UploadOutlined />}>Upload ID Documents</Button>
               </Upload>
+              <div style={{ marginTop: "8px", fontSize: "12px", color: "#666" }}>
+                <strong>AI Processing:</strong> Our AI will automatically extract your name, date of birth, 
+                address, and other details from your ID documents to complete your profile.
+              </div>
             </Form.Item>
 
             {/* Terms */}
@@ -286,12 +275,12 @@ const RegisterPage = () => {
                 size="large"
                 className="register-submit-button"
               >
-                {isLoading ? "Creating account..." : "Join Co-ownership Community"}
+                {isLoading ? "Creating account..." : "Create account"}
               </Button>
             </Form.Item>
 
             <div className="register-login-link">
-              Already a co-owner? <Link to="/login">Sign in</Link>
+              Already have an account? <Link to="/login">Sign in</Link>
             </div>
           </Form>
         </Card>
