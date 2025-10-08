@@ -76,13 +76,14 @@ const LoginPage = () => {
             requiredMark={false}
             className="login-form"
           >
+            {/* Email Field */}
             <Form.Item
-              label="Username"
-              name="username"
-              rules={[{ required: true, message: "Username is required" }]}
+              label="Email"
+              name="email"
+              rules={[{ required: true, message: "Email is required" }]}
             >
               <Input
-                placeholder="Enter your username"
+                placeholder="Enter your email"
                 prefix={<MailOutlined />}
                 allowClear
               />
