@@ -94,19 +94,6 @@
   margin: 1.5rem 0;
 }
 
-.login-social-buttons {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 0.75rem;
-}
-
-.login-social-button {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-}
-
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .login-card-container {
