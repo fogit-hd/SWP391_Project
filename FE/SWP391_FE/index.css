@@ -1,5 +1,100 @@
+/* Global CSS Reset and Fixes for White Line Issue */
 * {
     margin: 0;
     padding: 0;
+    box-sizing: border-box;
     scroll-behavior: smooth;
+}
+
+/* Remove white line/scrollbar issues */
+html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    overflow-x: hidden; /* Prevent horizontal scrollbar */
+}
+
+/* Fix for Ant Design Layout components */
+.ant-layout {
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    min-height: 100vh !important;
+}
+
+.ant-layout-content {
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+}
+
+/* Remove any potential white borders or outlines */
+.ant-layout,
+.ant-layout-header,
+.ant-layout-content,
+.ant-layout-footer {
+    border: none !important;
+    outline: none !important;
+}
+
+/* Fix for any potential white space on the left */
+body {
+    background-color: #001529; /* Match your dark theme */
+}
+
+/* Ensure full width coverage */
+#root {
+    width: 100%;
+    min-height: 100vh;
+    margin: 0;
+    padding: 0;
+}
+
+/* Remove any default browser scrollbar styling that might cause white lines */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #001529;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #1890ff;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #40a9ff;
+}
+
+/* Fix for any potential white line from Ant Design components */
+.ant-card {
+    border: none !important;
+}
+
+.ant-card-body {
+    padding: 0 !important;
+}
+
+/* Ensure no white space around the main content */
+.main-content {
+    width: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+/* Fix for any potential white line in the header area */
+.ant-layout-header {
+    padding: 0 !important;
+    margin: 0 !important;
+    border-bottom: none !important;
+}
+
+/* Remove any potential white line from the footer */
+.ant-layout-footer {
+    padding: 0 !important;
+    margin: 0 !important;
+    border-top: none !important;
 }
