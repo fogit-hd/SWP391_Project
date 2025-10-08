@@ -11,14 +11,13 @@
   position: absolute;
   inset: 0;
   z-index: 0;
-  background-image: url('https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?q=80&w=2070&auto=format&fit=crop');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
 }
 
 .register-background::before {
-  content: '';
+  content: "";
   position: absolute;
   inset: 0;
   background-color: rgba(0, 0, 0, 0.5);
@@ -132,15 +131,15 @@
     max-width: 28rem;
     margin: 0 0.5rem;
   }
-  
+
   .register-card .ant-card-body {
     padding: 20px;
   }
-  
+
   .register-title {
     font-size: 1.25rem;
   }
-  
+
   .register-form-row .ant-col {
     margin-bottom: 0.75rem;
   }
@@ -150,7 +149,7 @@
   .register-card-container {
     max-width: 24rem;
   }
-  
+
   .register-card .ant-card-body {
     padding: 16px;
   }
