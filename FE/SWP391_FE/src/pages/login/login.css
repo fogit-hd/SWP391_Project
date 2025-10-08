@@ -11,14 +11,13 @@
   position: absolute;
   inset: 0;
   z-index: 0;
-  background-image: url('https://images.unsplash.com/photo-1571068316344-75bc76f77890?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
 }
 
 .login-background::before {
-  content: '';
+  content: "";
   position: absolute;
   inset: 0;
   background-color: rgba(0, 0, 0, 0.5);
@@ -97,7 +96,7 @@
 
 .login-social-buttons {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr;
   gap: 0.75rem;
 }
 
@@ -114,15 +113,15 @@
     max-width: 24rem;
     margin: 0 0.5rem;
   }
-  
+
   .login-card .ant-card-body {
     padding: 20px;
   }
-  
+
   .login-title {
     font-size: 1.25rem;
   }
-  
+
   .login-social-buttons {
     grid-template-columns: 1fr;
   }
