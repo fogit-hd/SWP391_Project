@@ -90,51 +90,36 @@ const Homepage = () => {
   ];
 
   return (
-    <Layout style={{ minHeight: "100vh", background: "#001529" }}>
+    <Layout className="page-layout">
       <Header className="header">
-        <Title
-          level={2}
-          style={{ color: "#1890ff", margin: 0, fontWeight: "bold" }}
-        >
+        <Title level={2} className="site-title">
           EVCS
         </Title>
 
         <Menu
           theme="dark"
           mode="horizontal"
-          style={{
-            background: "transparent",
-            border: "none",
-            minWidth: "400px",
-            justifyContent: "center",
-          }}
+          className="nav-menu"
           items={[
-            { key: "plans", label: "Co-Ownership Plans" },
-            { key: "benefits", label: "Benefits" },
-            { key: "contact", label: "Contact" },
+            { key: "available", label: "Available teams" },
+            { key: "contact", label: "Contact Us" },
           ]}
         />
 
-        <Space>
+        <Space className="header-actions">
           {account ? (
             <Dropdown
               menu={{ items: userMenuItems }}
               placement="bottomRight"
               arrow
             >
-              <Space style={{ cursor: "pointer" }}>
-                <Text style={{ color: "white", fontWeight: "bold" }}>
-                  {account.fullName}
-                </Text>
-                <Avatar
-                  src={user.avatar}
-                  size={40}
-                  style={{ border: "2px solid #1890ff" }}
-                />
+              <Space className="user-profile">
+                <Text className="user-name">{account.fullName}</Text>
+                <Avatar src={user.avatar} size={40} className="user-avatar" />
               </Space>
             </Dropdown>
           ) : (
-            <Space>
+            <Space className="auth-buttons">
               <Link to="/login">
                 <Button ghost className="nav-button">
                   Login
@@ -150,80 +135,35 @@ const Homepage = () => {
         </Space>
       </Header>
 
-      <Content style={{ marginTop: 64 }}>
+      <Content className="page-content">
         {/* Hero Section */}
-        <div
-          style={{
-            height: "100vh",
-            backgroundImage:
-              "url(https://images.unsplash.com/photo-1620802051782-725fa33db067?q=80&w=1469&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D)",
-            backgroundSize: "cover",
-            backgroundPosition: "center",
-            backgroundRepeat: "no-repeat",
-            position: "relative",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            textAlign: "center",
-          }}
-        >
-          <div
-            style={{
-              position: "absolute",
-              inset: 0,
-              background:
-                "linear-gradient(to top, rgba(0, 21, 41, 0.9), rgba(0, 21, 41, 0.7), transparent)",
-            }}
-          ></div>
-          <div style={{ position: "relative", zIndex: 10, color: "white" }}>
-            <Title
-              level={1}
-              style={{
-                color: "white",
-                fontSize: "4rem",
-                fontWeight: "bold",
-                marginBottom: "1rem",
-              }}
-            >
+        <div className="hero">
+          <div className="hero-overlay" />
+          <div className="hero-content">
+            <Title level={1} className="hero-title">
               Share the Future.
             </Title>
-            <Paragraph
-              style={{
-                fontSize: "1.25rem",
-                color: "#bfbfbf",
-                maxWidth: "600px",
-                margin: "0 auto 2rem",
-              }}
-            >
+            <Paragraph className="hero-paragraph">
               Experience premium electric vehicles without the full cost. Join
               our co-ownership community and share the benefits of sustainable
               transportation.
             </Paragraph>
-            <Button
-              type="primary"
-              size="large"
-              style={{
-                height: "50px",
-                padding: "0 40px",
-                fontSize: "18px",
-                borderRadius: "25px",
-              }}
-            >
+            <Button type="primary" size="large" className="hero-cta">
               Join Co-Ownership
             </Button>
           </div>
         </div>
 
         {/* Features Section */}
-        <div style={{ padding: "80px 50px", background: "#001529" }}>
-          <Row justify="center" style={{ marginBottom: "60px" }}>
+        <div className="features-section">
+          <Row justify="center" className="section-header">
             <Col>
-              <Title level={1} style={{ color: "white", textAlign: "center" }}>
+              <Title level={1} className="section-title">
                 Why Choose Co-Ownership?
               </Title>
             </Col>
           </Row>
-          <Row gutter={[32, 32]} justify="center">
+          <div className="features-grid">
             {[
               {
                 icon: <RocketOutlined />,
@@ -241,89 +181,44 @@ const Homepage = () => {
                 text: "Use vehicles when you need them, share costs when you don't. Perfect for occasional users.",
               },
             ].map((feature, index) => (
-              <Col key={index} xs={24} md={8}>
-                <Card
-                  className="feature-card"
-                  style={{
-                    background: "#002140",
-                    border: "1px solid #1890ff",
-                    borderRadius: "16px",
-                    textAlign: "center",
-                    height: "300px",
-                    transition: "all 0.3s ease",
-                  }}
-                  bodyStyle={{ padding: "32px" }}
-                  hoverable
-                >
-                  <div
-                    style={{
-                      display: "inline-block",
-                      padding: "16px",
-                      background: "#001529",
-                      borderRadius: "50%",
-                      border: "1px solid #1890ff",
-                      marginBottom: "24px",
-                    }}
-                  >
-                    <div style={{ fontSize: "32px", color: "#1890ff" }}>
-                      {feature.icon}
-                    </div>
-                  </div>
-                  <Title
-                    level={3}
-                    style={{ color: "white", marginBottom: "16px" }}
-                  >
-                    {feature.title}
-                  </Title>
-                  <Paragraph style={{ color: "#bfbfbf", lineHeight: "1.6" }}>
-                    {feature.text}
-                  </Paragraph>
-                </Card>
-              </Col>
+              <Card key={index} className="feature-card" hoverable>
+                <div className="feature-icon-container">
+                  <div className="feature-icon">{feature.icon}</div>
+                </div>
+                <Title level={3} className="feature-title">
+                  {feature.title}
+                </Title>
+                <Paragraph className="feature-description">
+                  {feature.text}
+                </Paragraph>
+              </Card>
             ))}
-          </Row>
+          </div>
         </div>
 
         {/* Testimonials Section */}
-        <div style={{ padding: "80px 50px", background: "#001529" }}>
-          <Row justify="center" style={{ marginBottom: "60px" }}>
+        <div className="testimonials-section">
+          <Row justify="center" className="section-header">
             <Col>
-              <Title level={1} style={{ color: "white", textAlign: "center" }}>
+              <Title level={1} className="section-title">
                 Trusted by Co-Owners
               </Title>
             </Col>
           </Row>
           <Row justify="center">
             <Col xs={24} lg={16}>
-              <Carousel autoplay>
+              <Carousel autoplay className="testimonials-carousel">
                 {testimonials.map((testimonial, index) => (
-                  <div
-                    key={index}
-                    style={{ textAlign: "center", padding: "40px" }}
-                  >
+                  <div key={index} className="testimonial-item">
                     <Rate
                       disabled
                       value={testimonial.rating}
-                      style={{ color: "#faad14", marginBottom: "24px" }}
+                      className="testimonial-rating"
                     />
-                    <Paragraph
-                      style={{
-                        fontSize: "18px",
-                        color: "#bfbfbf",
-                        fontStyle: "italic",
-                        marginBottom: "24px",
-                        lineHeight: "1.6",
-                      }}
-                    >
+                    <Paragraph className="testimonial-quote">
                       "{testimonial.quote}"
                     </Paragraph>
-                    <Text
-                      style={{
-                        fontSize: "16px",
-                        fontWeight: "bold",
-                        color: "white",
-                      }}
-                    >
+                    <Text className="testimonial-author">
                       - {testimonial.author}
                     </Text>
                   </div>
@@ -334,56 +229,17 @@ const Homepage = () => {
         </div>
 
         {/* Call to Action Section */}
-        <div
-          style={{
-            padding: "80px 50px",
-            background: "#002140",
-            textAlign: "center",
-            position: "relative",
-            backgroundImage:
-              "url(https://images.unsplash.com/photo-1511994294314-3c662760f3d5?auto=format&fit=crop&q=80&w=2670)",
-            backgroundSize: "cover",
-            backgroundPosition: "center",
-          }}
-        >
-          <div
-            style={{
-              position: "absolute",
-              inset: 0,
-              background: "rgba(0, 33, 64, 0.9)",
-            }}
-          ></div>
-          <div
-            style={{
-              position: "relative",
-              zIndex: 10,
-              maxWidth: "600px",
-              margin: "0 auto",
-            }}
-          >
-            <Title level={1} style={{ color: "white", marginBottom: "16px" }}>
+        <div className="cta-section">
+          <div className="cta-overlay" />
+          <div className="cta-content">
+            <Title level={1} className="cta-title">
               Ready to Start Sharing?
             </Title>
-            <Paragraph
-              style={{
-                fontSize: "18px",
-                color: "#bfbfbf",
-                marginBottom: "32px",
-              }}
-            >
+            <Paragraph className="cta-paragraph">
               Join our co-ownership community today and start saving on premium
               electric vehicles.
             </Paragraph>
-            <Button
-              type="primary"
-              size="large"
-              style={{
-                height: "50px",
-                padding: "0 40px",
-                fontSize: "18px",
-                borderRadius: "25px",
-              }}
-            >
+            <Button type="primary" size="large" className="cta-cta">
               Start Co-Owning
             </Button>
           </div>
@@ -391,37 +247,26 @@ const Homepage = () => {
       </Content>
 
       {/* Footer */}
-      <Footer
-        style={{
-          background: "#001529",
-          color: "#bfbfbf",
-          padding: "64px 50px 32px",
-        }}
-      >
-        <Row gutter={[32, 32]}>
+      <Footer className="site-footer">
+        <Row gutter={[32, 32]} className="footer-content">
           <Col xs={24} md={10}>
-            <Title level={5} style={{ color: "white", marginBottom: "16px" }}>
+            <Title level={5} className="footer-brand-title">
               EV CoShare - Electric Vehicle Co-Ownership
             </Title>
-            <Paragraph style={{ maxWidth: "300px", color: "#bfbfbf" }}>
+            <Paragraph className="footer-description">
               Share the future of sustainable transportation. Join our
               co-ownership community and access premium electric vehicles at a
               fraction of the cost.
             </Paragraph>
           </Col>
           <Col xs={24} md={7}>
-            <Title level={4} style={{ color: "white", marginBottom: "16px" }}>
+            <Title level={4} className="footer-section-title">
               Company
             </Title>
-            <Space direction="vertical" size="small">
+            <Space direction="vertical" size="small" className="footer-links">
               {["How It Works", "Success Stories", "Partner With Us"].map(
                 (item) => (
-                  <a
-                    key={item}
-                    href="#"
-                    className="footer-link"
-                    style={{ color: "#bfbfbf", display: "block" }}
-                  >
+                  <a key={item} href="#" className="footer-link">
                     {item}
                   </a>
                 )
@@ -429,16 +274,15 @@ const Homepage = () => {
             </Space>
           </Col>
           <Col xs={24} md={7}>
-            <Title level={4} style={{ color: "white", marginBottom: "16px" }}>
+            <Title level={4} className="footer-section-title">
               Follow Us
             </Title>
-            <Space direction="vertical" size="small">
+            <Space direction="vertical" size="small" className="footer-links">
               {["Facebook"].map((item) => (
                 <a
                   key={item}
                   href="https://www.facebook.com/phong.huynh.192/?locale=vi_VN"
                   className="footer-link"
-                  style={{ color: "#bfbfbf", display: "block" }}
                 >
                   {item}
                 </a>
@@ -446,9 +290,9 @@ const Homepage = () => {
             </Space>
           </Col>
         </Row>
-        <Divider style={{ borderColor: "#1890ff", margin: "32px 0 16px" }} />
-        <div style={{ textAlign: "center", color: "#bfbfbf" }}>
-          <Text style={{ color: "#ffffffff" }}>
+        <Divider className="footer-divider" />
+        <div className="footer-copyright">
+          <Text className="copyright-text">
             &copy; {new Date().getFullYear()} EV CoShare. All Rights Reserved.
           </Text>
         </div>
