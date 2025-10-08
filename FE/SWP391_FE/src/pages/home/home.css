@@ -1,11 +1,47 @@
+/* Simplified Home Page Styles - Minimal Animations */
 .header {
   position: fixed;
   z-index: 1000;
   width: 100%;
-  background: rgba(0, 21, 41, 0.9);
+  background: rgba(0, 21, 41, 0.95);
   backdrop-filter: blur(8px);
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 0 50px;
+  border-bottom: 1px solid rgba(24, 144, 255, 0.2);
+}
+
+/* Simple button hover animations for navbar */
+.nav-button {
+  transition: all 0.2s ease;
+}
+
+.nav-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(24, 144, 255, 0.3);
+}
+
+/* Remove most animations - keep it simple */
+.feature-card {
+  transition: transform 0.2s ease;
+}
+
+.feature-card:hover {
+  transform: translateY(-2px);
+}
+
+.footer-link {
+  transition: color 0.2s ease;
+}
+
+.footer-link:hover {
+  color: #1890ff !important;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .header {
+    padding: 0 20px;
+  }
 }
