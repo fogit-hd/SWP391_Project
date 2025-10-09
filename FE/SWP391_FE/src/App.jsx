@@ -7,6 +7,7 @@ import LoginPage from "/src/pages/login";
 import RegisterPage from "/src/pages/register";
 import Dashboard from "/src/pages/admin/dashboard";
 import TermsPage from "/src/pages/terms";
+import Contract from "./pages/econtract";
 
 function App() {
   const router = createBrowserRouter([
@@ -41,6 +42,10 @@ function App() {
     {
       path: "/terms",
       element: <TermsPage />,
+    },
+    {
+      path: "/contract",
+      element: <Contract />,
     },
   ]);
 
