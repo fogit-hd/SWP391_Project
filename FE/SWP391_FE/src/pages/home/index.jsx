@@ -95,15 +95,18 @@ const Homepage = () => {
           EVCS
         </Title>
 
-        <Menu
-          theme="dark"
-          mode="horizontal"
-          className="nav-menu"
-          items={[
-            { key: "available", label: "Available teams" },
-            { key: "contact", label: "Contact Us" },
-          ]}
-        />
+        <Space className="nav-menu">
+          <Link to="/available">
+            <Button type="text" className="nav-menu-button">
+              Available teams
+            </Button>
+          </Link>
+          <Link to="/contact">
+            <Button type="text" className="nav-menu-button">
+              Contact Us
+            </Button>
+          </Link>
+        </Space>
 
         <Space className="header-actions">
           {account ? (
@@ -147,9 +150,11 @@ const Homepage = () => {
               our co-ownership community and share the benefits of sustainable
               transportation.
             </Paragraph>
-            <Button type="primary" size="large" className="hero-cta">
-              Join Co-Ownership
-            </Button>
+            <Link to="/contract">
+              <Button type="primary" size="large" className="hero-cta">
+                Join Co-Ownership Now
+              </Button>
+            </Link>
           </div>
         </div>
 
