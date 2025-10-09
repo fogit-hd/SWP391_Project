@@ -1,0 +1,180 @@
+/* 🌌 NỀN */
+.econ-wrapper-center {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: radial-gradient(circle at center, #0a0f1f 0%, #05060a 100%);
+  overflow: hidden;
+  position: relative;
+  padding: 20px;
+}
+
+/* Hiệu ứng ánh sáng động phía sau */
+.econ-wrapper-center::before {
+  content: "";
+  position: absolute;
+  width: 400px;
+  height: 400px;
+  background: radial-gradient(circle, rgba(0, 255, 255, 0.4), transparent 70%);
+  filter: blur(120px);
+  top: 10%;
+  left: 50%;
+  transform: translateX(-50%);
+  animation: glowPulse 6s ease-in-out infinite alternate;
+}
+
+@keyframes glowPulse {
+  0% {
+    opacity: 0.5;
+    transform: translateX(-50%) scale(1);
+  }
+  100% {
+    opacity: 0.9;
+    transform: translateX(-50%) scale(1.2);
+  }
+}
+
+/* ⚡ FORM CARD */
+.econ-card {
+  width: 100%;
+  max-width: 460px;
+  background: rgba(20, 25, 45, 0.85);
+  border-radius: 18px;
+  padding: 32px;
+  border: 1px solid rgba(0, 255, 255, 0.3);
+  box-shadow: 0 0 25px rgba(0, 255, 255, 0.15), inset 0 0 15px rgba(0, 255, 255, 0.05);
+  backdrop-filter: blur(20px);
+  color: #e0faff;
+  animation: fadeSlideUp 1s ease forwards;
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+@keyframes fadeSlideUp {
+  0% {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.econ-card:hover {
+  box-shadow: 0 0 35px rgba(0, 255, 255, 0.35);
+  transition: 0.4s ease;
+}
+
+/* 🧠 TIÊU ĐỀ */
+.econ-main-title {
+  text-align: center;
+  color: #00f0ff;
+  font-weight: 700;
+  text-shadow: 0 0 8px #00f0ff, 0 0 20px rgba(0, 255, 255, 0.3);
+  margin-bottom: 8px;
+}
+
+.econ-intro {
+  text-align: center;
+  color: #b5c9d6;
+  font-size: 14.5px;
+  margin-bottom: 16px;
+}
+
+/* 🧾 FORM ITEMS */
+.econ-form .ant-form-item-label > label {
+  color: #aeeaff !important;
+  font-weight: 500;
+}
+
+.econ-form input,
+.econ-form textarea,
+.econ-form .ant-select-selector {
+  background: rgba(10, 20, 35, 0.85) !important;
+  border: 1px solid rgba(0, 255, 255, 0.3) !important;
+  color: #e0faff !important;
+  border-radius: 10px !important;
+  transition: 0.3s ease;
+}
+
+.econ-form input:focus,
+.econ-form textarea:focus,
+.econ-form .ant-select-focused .ant-select-selector {
+  box-shadow: 0 0 10px rgba(0, 255, 255, 0.4);
+  border-color: #00f0ff !important;
+}
+
+/* ✨ BUTTON */
+.econ-submit button {
+  background: linear-gradient(90deg, #00ffff, #0077ff);
+  border: none;
+  color: white;
+  font-weight: 600;
+  border-radius: 12px;
+  box-shadow: 0 0 15px rgba(0, 255, 255, 0.4);
+  transition: all 0.3s ease-in-out;
+}
+
+.econ-submit button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 25px rgba(0, 255, 255, 0.6);
+}
+
+/* 🧊 ANIMATION GLOW */
+@keyframes neonGlow {
+  from {
+    box-shadow: 0 0 10px rgba(0, 255, 255, 0.4);
+  }
+  to {
+    box-shadow: 0 0 25px rgba(0, 255, 255, 0.8);
+  }
+}
+
+/* ✨ INPUT PLACEHOLDER */
+.econ-form input::placeholder,
+.econ-form textarea::placeholder {
+  color: rgba(200, 255, 255, 0.5);
+}
+
+/* 🔘 SELECT DROPDOWN */
+.ant-select-dropdown {
+  background: rgba(10, 20, 35, 0.95);
+  color: #e0faff;
+  border: 1px solid rgba(0, 255, 255, 0.4);
+}
+
+.ant-select-item-option-content {
+  color: #aeeaff;
+}
+
+.ant-select-item-option-active {
+  background: rgba(0, 255, 255, 0.1);
+}
+
+/* 🌟 MODAL */
+.ant-modal-content {
+  background: rgba(15, 25, 40, 0.95) !important;
+  color: #e0faff !important;
+  border: 1px solid rgba(0, 255, 255, 0.3);
+  box-shadow: 0 0 25px rgba(0, 255, 255, 0.3);
+}
+
+.ant-modal-header {
+  background: transparent !important;
+  border-bottom: 1px solid rgba(0, 255, 255, 0.2) !important;
+}
+
+.ant-modal-title {
+  color: #00ffff !important;
+  text-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+}
+
+/* 📱 RESPONSIVE */
+@media (max-width: 600px) {
+  .econ-card {
+    max-width: 90%;
+    padding: 24px;
+  }
+}
