@@ -11,7 +11,6 @@ import {
   message,
 } from "antd";
 import { MailOutlined, LockOutlined } from "@ant-design/icons";
-import { FaGoogle, FaGithub } from "react-icons/fa";
 import api from "../../config/axios";
 import { toast } from "react-toastify";
 import { Link, useNavigate } from "react-router-dom";
@@ -88,7 +87,7 @@ const LoginPage = () => {
                 allowClear
               />
             </Form.Item>
-
+            {/* Password Field */}
             <Form.Item
               label="Password"
               name="password"
