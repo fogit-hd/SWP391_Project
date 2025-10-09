@@ -11,7 +11,6 @@ import {
   message,
 } from "antd";
 import { MailOutlined, LockOutlined } from "@ant-design/icons";
-import { FaGoogle, FaGithub } from "react-icons/fa";
 import api from "../../config/axios";
 import { toast } from "react-toastify";
 import { Link, useNavigate } from "react-router-dom";
@@ -76,18 +75,19 @@ const LoginPage = () => {
             requiredMark={false}
             className="login-form"
           >
+            {/* Email Field */}
             <Form.Item
-              label="Username"
-              name="username"
-              rules={[{ required: true, message: "Username is required" }]}
+              label="Email"
+              name="email"
+              rules={[{ required: true, message: "Email is required" }]}
             >
               <Input
-                placeholder="Enter your username"
+                placeholder="Enter your email"
                 prefix={<MailOutlined />}
                 allowClear
               />
             </Form.Item>
-
+            {/* Password Field */}
             <Form.Item
               label="Password"
               name="password"
