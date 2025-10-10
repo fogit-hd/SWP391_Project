@@ -8,6 +8,9 @@ import RegisterPage from "/src/pages/register";
 import Dashboard from "/src/pages/admin/dashboard";
 import TermsPage from "/src/pages/terms";
 import Contract from "./pages/econtract";
+import ManageContract from "./pages/admin/manageContract";
+import ManageService from "./pages/admin/manageService";
+import ManageGroup from "./pages/admin/manageGroup";
 
 function App() {
   const router = createBrowserRouter([
@@ -27,6 +30,32 @@ function App() {
         // </ProtectedRoute>
       ),
     },
+    {
+      path: "/manage-contract",
+      element: (
+        // <ProtectedRoute role={"ADMIN"}>
+        <ManageContract />
+        // </ProtectedRoute>
+      ),
+    },
+    {
+      path: "/manage-service",
+      element: (
+        // <ProtectedRoute role={"ADMIN"}>
+        <ManageService />
+        // </ProtectedRoute>
+      ),
+    },
+
+    {
+      path: "/manage-group",
+      element: (
+        // <ProtectedRoute role={"ADMIN"}>
+        <ManageGroup />
+        // </ProtectedRoute>
+      ),
+    },
+
     {
       path: "/",
       element: <Homepage />,

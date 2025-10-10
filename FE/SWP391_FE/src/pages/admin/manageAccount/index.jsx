@@ -8,15 +8,84 @@ import {
   message,
   Spin,
   Alert,
+  Breadcrumb,
+  Layout,
+  Menu,
+  theme,
 } from "antd";
 import {
   EditOutlined,
   DeleteOutlined,
   PlusOutlined,
-  ReloadOutlined
+  ReloadOutlined,
+  PieChartOutlined,
+  UserOutlined,
+  UsergroupAddOutlined,
+  TeamOutlined,
 } from "@ant-design/icons";
+import { Link } from "react-router-dom";
+import api from "../../../config/axios";
+import { RiAccountCircle2Line } from "react-icons/ri";
+import { MdOutlineManageAccounts } from "react-icons/md";
+
+const { Header, Content, Footer, Sider } = Layout;
+
+const items = [
+  {
+    key: "/dashboard",
+    icon: <PieChartOutlined />,
+    label: <Link to="/dashboard">Dashboard</Link>,
+  },
+  {
+    key: "user-management",
+    icon: <RiAccountCircle2Line />,
+    label: "User Management",
+    children: [
+      {
+        key: "/manage-account",
+        icon: <MdOutlineManageAccounts />,
+        label: <Link to="/manage-account">Manage Accounts</Link>,
+      },
+      {
+        key: "/manage-group",
+        icon: <TeamOutlined />,
+        label: <Link to="/manage-group">Manage Group</Link>,
+      },
+    ],
+  },
+  {
+    key: "contract-management",
+    icon: <UserOutlined />,
+    label: "Contract Management",
+    children: [
+      {
+        key: "/manage-contract",
+        icon: <UsergroupAddOutlined />,
+        label: <Link to="/manage-contract">Manage Contracts</Link>,
+      },
+    ],
+  },
+  {
+    key: "service-management",
+    icon: <UserOutlined />,
+    label: "Service Management",
+    children: [
+      {
+        key: "/manage-service",
+        icon: <UsergroupAddOutlined />,
+        label: <Link to="/manage-service">Manage Services</Link>,
+      },
+    ],
+  },
+];
 
 const ManageAccount = () => {
+  // Layout state
+  const [collapsed, setCollapsed] = useState(false);
+  const {
+    token: { colorBgContainer, borderRadiusLG },
+  } = theme.useToken();
+
   // State management
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -27,14 +96,13 @@ const ManageAccount = () => {
     total: 0,
   });
 
-  // API Configuration - Update these URLs with your actual API endpoints
-  const API_BASE_URL = "http://localhost:8080/api"; // Replace with your API base URL
-  const ENDPOINTS = {
-    GET_USERS: "/users",
-    DELETE_USER: "/users",
-    UPDATE_USER: "/users",
-    CREATE_USER: "/users",
-  };
+  // // API Endpoints
+  // const ENDPOINTS = {
+  //   GET_USERS: "/users",
+  //   DELETE_USER: "/users",
+  //   UPDATE_USER: "/users",
+  //   CREATE_USER: "/users",
+  // };
 
   const columns = [
     {
@@ -131,47 +199,32 @@ const ManageAccount = () => {
     setError(null);
 
     try {
-      const params = new URLSearchParams({
+      const params = {
         page: page.toString(),
         limit: pageSize.toString(),
-      });
+      };
 
       // Add sorting parameters
       if (sortField && sortOrder) {
-        params.append("sortBy", sortField);
-        params.append("sortOrder", sortOrder === "ascend" ? "asc" : "desc");
+        params.sortBy = sortField;
+        params.sortOrder = sortOrder === "ascend" ? "asc" : "desc";
       }
 
       // Add filter parameters
       Object.keys(filters).forEach((key) => {
         if (filters[key] && filters[key].length > 0) {
-          params.append(key, filters[key].join(","));
+          params[key] = filters[key].join(",");
         }
       });
 
-      const response = await fetch(
-        `${API_BASE_URL}${ENDPOINTS.GET_USERS}?${params}`,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${localStorage.getItem("token")}`, // Add your auth token
-          },
-        }
-      );
+      const response = await api.get("/users", { params });
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const result = await response.json();
-
-      setData(result.data || result); // Adjust based on your API response structure
+      setData(response.data.data || response.data);
       setPagination((prev) => ({
         ...prev,
         current: page,
         pageSize: pageSize,
-        total: result.total || result.data?.length || 0,
+        total: response.data.total || response.data.data?.length || 0,
       }));
     } catch (err) {
       setError(err.message);
@@ -183,20 +236,7 @@ const ManageAccount = () => {
 
   const deleteUser = async (userId) => {
     try {
-      const response = await fetch(
-        `${API_BASE_URL}${ENDPOINTS.DELETE_USER}/${userId}`,
-        {
-          method: "DELETE",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
+      await api.delete(`/users/${userId}`);
 
       message.success("User deleted successfully");
       // Refresh the data
@@ -240,64 +280,105 @@ const ManageAccount = () => {
   }, []);
 
   return (
-    <div style={{ padding: "24px" }}>
-      <Card
-        title="User Management"
-        extra={
-          <Space>
-            <Button
-              icon={<ReloadOutlined />}
-              onClick={handleRefresh}
-              loading={loading}
-            >
-              Refresh
-            </Button>
-            <Button
-              type="primary"
-              icon={<PlusOutlined />}
-              onClick={handleAddUser}
-            >
-              Add User
-            </Button>
-          </Space>
-        }
+    <Layout style={{ minHeight: "100vh" }}>
+      <Sider
+        collapsible
+        collapsed={collapsed}
+        onCollapse={(value) => setCollapsed(value)}
+        width={250}
+        collapsedWidth={80}
       >
-        {error && (
-          <Alert
-            message="Error"
-            description={error}
-            type="error"
-            showIcon
-            style={{ marginBottom: 16 }}
-            action={
-              <Button size="small" onClick={handleRefresh}>
-                Retry
-              </Button>
-            }
+        <div className="demo-logo-vertical" />
+        <Menu
+          theme="dark"
+          defaultSelectedKeys={["/manage-account"]}
+          mode="inline"
+          items={items}
+          accordion
+        />
+      </Sider>
+      <Layout>
+        <Header style={{ padding: 0, background: colorBgContainer }} />
+        <Content style={{ margin: "0 16px" }}>
+          <Breadcrumb
+            style={{ margin: "16px 0" }}
+            items={[
+              { title: "Home" },
+              { title: "Dashboard" },
+              { title: "Manage Accounts" },
+            ]}
           />
-        )}
-
-        <Spin spinning={loading}>
-          <Table
-            columns={columns}
-            dataSource={data}
-            rowKey="id"
-            pagination={{
-              current: pagination.current,
-              pageSize: pagination.pageSize,
-              total: pagination.total,
-              showSizeChanger: true,
-              showQuickJumper: true,
-              showTotal: (total, range) =>
-                `${range[0]}-${range[1]} of ${total} users`,
-              pageSizeOptions: ["10", "20", "50", "100"],
+          <div
+            style={{
+              padding: 24,
+              minHeight: 360,
+              background: colorBgContainer,
+              borderRadius: borderRadiusLG,
             }}
-            onChange={handleTableChange}
-            scroll={{ x: 1200 }}
-          />
-        </Spin>
-      </Card>
-    </div>
+          >
+            <Card
+              title="User Management"
+              extra={
+                <Space>
+                  <Button
+                    icon={<ReloadOutlined />}
+                    onClick={handleRefresh}
+                    loading={loading}
+                  >
+                    Refresh
+                  </Button>
+                  <Button
+                    type="primary"
+                    icon={<PlusOutlined />}
+                    onClick={handleAddUser}
+                  >
+                    Add User
+                  </Button>
+                </Space>
+              }
+            >
+              {error && (
+                <Alert
+                  message="Error"
+                  description={error}
+                  type="error"
+                  showIcon
+                  style={{ marginBottom: 16 }}
+                  action={
+                    <Button size="small" onClick={handleRefresh}>
+                      Retry
+                    </Button>
+                  }
+                />
+              )}
+
+              <Spin spinning={loading}>
+                <Table
+                  columns={columns}
+                  dataSource={data}
+                  rowKey="id"
+                  pagination={{
+                    current: pagination.current,
+                    pageSize: pagination.pageSize,
+                    total: pagination.total,
+                    showSizeChanger: true,
+                    showQuickJumper: true,
+                    showTotal: (total, range) =>
+                      `${range[0]}-${range[1]} of ${total} users`,
+                    pageSizeOptions: ["10", "20", "50", "100"],
+                  }}
+                  onChange={handleTableChange}
+                  scroll={{ x: 1200 }}
+                />
+              </Spin>
+            </Card>
+          </div>
+        </Content>
+        <Footer style={{ textAlign: "center" }}>
+          Ant Design ©{new Date().getFullYear()} Created by Ant UED
+        </Footer>
+      </Layout>
+    </Layout>
   );
 };
 
