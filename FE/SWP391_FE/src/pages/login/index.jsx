@@ -32,7 +32,7 @@ const LoginPage = () => {
   const onFinish = async (values) => {
     setIsLoading(true);
     try {
-      const response = await api.post("/login", values);
+      const response = await api.post("/auth/login", values);
       toast.success("Successfully logged in!");
       console.log(response);
       const { token, role } = response.data;
@@ -47,7 +47,11 @@ const LoginPage = () => {
         navigate("/");
       }
     } catch (e) {
-      message.error("Login failed. Please try again.");
+      console.error("Login error:", e);
+      console.error("Error response:", e.response?.data);
+      const errorMessage =
+        e.response?.data?.message || "Login failed. Please try again.";
+      message.error(errorMessage);
     } finally {
       setIsLoading(false);
     }

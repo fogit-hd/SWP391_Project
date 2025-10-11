@@ -2,7 +2,7 @@ import axios from "axios";
 
 // Set config defaults when creating the instance
 const api = axios.create({
-  baseURL: "http://14.225.212.245:8080/api/",
+  baseURL: "https://swp391backend-5.onrender.com/api",
 });
 
 // Thêm token trước khi gửi request
