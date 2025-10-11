@@ -12,8 +12,8 @@ import Contract from "./pages/econtract";
 import ManageContract from "./pages/admin/manageContract";
 import ManageService from "./pages/admin/manageService";
 import ManageGroup from "./pages/admin/manageGroup";
-import VerifyOTP from "./pages/verify.otp";
 import ForgotPassword from "./pages/forgot.password";
+import VerifyOTP from "./pages/verify.otp";
 
 function App() {
   const router = createBrowserRouter([

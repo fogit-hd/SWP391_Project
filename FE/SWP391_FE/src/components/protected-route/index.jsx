@@ -10,9 +10,7 @@ function ProtectedRoute({ roleId, children }) {
   console.log("Full account object:", account);
   console.log("Current user roleId:", account?.roleId);
   console.log("Required roleId:", roleId);
-  console.log("Account type:", typeof account);
   console.log("RoleId type:", typeof account?.roleId);
-  console.log("Required roleId type:", typeof roleId);
   console.log("Comparison result:", account?.roleId === roleId);
   console.log("===========================");
 

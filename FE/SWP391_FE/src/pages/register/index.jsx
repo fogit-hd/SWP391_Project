@@ -10,18 +10,13 @@ import {
   Col,
   message,
   Upload,
-  DatePicker,
-  Radio,
 } from "antd";
 import {
-  UserOutlined,
   MailOutlined,
   LockOutlined,
   UploadOutlined,
   PhoneOutlined,
   IdcardOutlined,
-  CalendarOutlined,
-  EnvironmentOutlined,
 } from "@ant-design/icons";
 import api from "../../config/axios";
 import { toast } from "react-toastify";
@@ -287,6 +282,9 @@ const RegisterPage = () => {
 
       message.destroy();
       toast.success("Successfully created new account!");
+      
+      // Save email to localStorage as fallback
+      localStorage.setItem("email", values.email);
       navigate("/verify-otp", { state: { email: values.email } });
       console.log(response);
     } catch (e) {

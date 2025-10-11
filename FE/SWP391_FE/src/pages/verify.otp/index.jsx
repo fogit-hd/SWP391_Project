@@ -16,16 +16,16 @@ const VerifyOTP = () => {
   const location = useLocation();
 
   useEffect(() => {
-    // Get email from navigation state or localStorage
-    const emailFromState = location.state?.email;
-    const emailFromStorage = localStorage.getItem("email");
-    const emailToUse = emailFromState || emailFromStorage;
+    // Get email from navigation state or localStorage (fallback)
+    const emailFromState = location.state?.email; // là biến email của navigate("/verify-otp", { state: { email: values.email } }); bên file register ( index.jsx )
+    const emailFromStorage = localStorage.getItem("email"); // là biến values.email bên file register ( index.jsx ) đã lưu vào
+    const emailToUse = emailFromState || emailFromStorage; // trường hợp check xem chỉ cần tồn tại 1 trong 2 cái là được
 
     if (emailToUse) {
-      setEmail(emailToUse);
-      form.setFieldsValue({ email: emailToUse });
+      setEmail(emailToUse); //setEmail của useState hiện tại thành email vừa lấy được
+      form.setFieldsValue({ email: emailToUse }); //set giá trị bên trong cái ô nhập thành email này luôn
     }
-  }, [location.state, form]);
+  }, [location.state, form]); // hệ thống sẽ tự động chạy useEffect này khi location.state ( tức là cái giá trị email bên register khi navigate qua đây thay đổi, thì web bên này cũng thay đổi theo ) hoặc giá trị trong form khi có sự thay thay đổi
 
   const onFinish = async (values) => {
     setIsLoading(true);
@@ -47,7 +47,7 @@ const VerifyOTP = () => {
       toast.success("Account verified successfully!");
 
       // Clear email from localStorage
-      localStorage.removeItem("registerEmail");
+      localStorage.removeItem("email");
 
       // Navigate to login page
       navigate("/login");
@@ -89,28 +89,28 @@ const VerifyOTP = () => {
   };
 
   const resendOTP = async () => {
-    // Nếu chưa từng request resend, xóa email và yêu cầu nhập email mới
-    if (!hasRequestedResend) {
-      setEmail("");
-      form.setFieldsValue({ email: "" });
-      setHasRequestedResend(true);
-      toast.info("Vui lòng nhập email mới để nhận OTP!");
-      return;
-    }
+    // // Nếu chưa từng request resend, xóa email và yêu cầu nhập email mới
+    // if (!hasRequestedResend) {
+    //   setEmail("");
+    //   form.setFieldsValue({ email: "" });
+    //   setHasRequestedResend(true);
+    //   toast.info("Vui lòng nhập email mới để nhận OTP!");
+    //   return;
+    // }
 
-    // Kiểm tra email có được nhập hay không
-    const currentEmail = form.getFieldValue("email");
-    if (!currentEmail) {
-      toast.error("Email is required to resend OTP");
-      return;
-    }
+    // // Kiểm tra email có được nhập hay không
+    // const currentEmail = form.getFieldValue("email");
+    // if (!currentEmail) {
+    //   toast.error("Email is required to resend OTP");
+    //   return;
+    // }
 
     try {
       message.loading("Resending OTP...", 0);
 
       await api.post(
-        "/auth/send-otp",
-        { email: currentEmail },
+        "/auth/resend-otp",
+        { email: email },
         {
           headers: { "Content-Type": "application/json" },
         }
@@ -167,7 +167,7 @@ const VerifyOTP = () => {
                 type="email"
                 prefix={<MailOutlined />}
                 allowClear
-                disabled={!!email && !hasRequestedResend} // Disable if email is pre-filled and haven't requested resend
+                // disabled={!!email && !hasRequestedResend} // Disable if email is pre-filled and haven't requested resend
               />
             </Form.Item>
 
