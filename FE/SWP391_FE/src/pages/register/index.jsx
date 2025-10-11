@@ -287,7 +287,7 @@ const RegisterPage = () => {
 
       message.destroy();
       toast.success("Successfully created new account!");
-      navigate("/login");
+      navigate("/verify-otp", { state: { email: values.email } });
       console.log(response);
     } catch (e) {
       message.destroy();
@@ -321,7 +321,7 @@ const RegisterPage = () => {
           >
             <Row gutter={20}>
               {/* Email */}
-              <Col xs={24} md={13}>
+              <Col xs={24} md={24}>
                 <Form.Item
                   label="Email Address"
                   name="email"
@@ -340,37 +340,6 @@ const RegisterPage = () => {
                   <Input
                     placeholder="Enter your email address"
                     type="email"
-                    prefix={<MailOutlined />}
-                    allowClear
-                  />
-                </Form.Item>
-              </Col>
-
-              <Col xs={24} md={4}>
-                <Form.Item label=" ">
-                  <Button block>Send OTP</Button>
-                </Form.Item>
-              </Col>
-
-              <Col xs={24} md={7}>
-                <Form.Item
-                  label="OTP"
-                  name="otp"
-                  rules={[
-                    { required: true, message: "OTP is required" },
-                    {
-                      validator: (_, v) =>
-                        !v || validateEmail(v)
-                          ? Promise.resolve()
-                          : Promise.reject(
-                              new Error("Please enter a valid OTP")
-                            ),
-                    },
-                  ]}
-                >
-                  <Input
-                    placeholder="OTP here"
-                    type="text"
                     prefix={<MailOutlined />}
                     allowClear
                   />
