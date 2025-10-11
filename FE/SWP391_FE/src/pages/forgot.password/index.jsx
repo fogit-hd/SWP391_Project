@@ -143,7 +143,7 @@ const ForgotPassword = () => {
       <div className="verify-card-container">
         <Card className="verify-card">
           <div className="verify-header">
-            <h2 className="verify-title">Verify Your Account</h2>
+            <h2 className="verify-title">Get Activation Code</h2>
             <p className="verify-subtitle">
               Please enter the Activation Code sent to your email address to
               create a new password.
