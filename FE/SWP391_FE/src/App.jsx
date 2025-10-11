@@ -1,5 +1,6 @@
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import ProtectedRoute from "components/protected-route";
+import AuthProvider from "components/auth-provider";
 import ManageAccount from "./pages/admin/manageAccount";
 import { ToastContainer } from "react-toastify";
 import Homepage from "/src/pages/home";
@@ -11,48 +12,50 @@ import Contract from "./pages/econtract";
 import ManageContract from "./pages/admin/manageContract";
 import ManageService from "./pages/admin/manageService";
 import ManageGroup from "./pages/admin/manageGroup";
+import VerifyOTP from "./pages/verify.otp";
+import ForgotPassword from "./pages/forgot.password";
 
 function App() {
   const router = createBrowserRouter([
     {
       path: "/dashboard",
       element: (
-        // <ProtectedRoute role={"ADMIN"}>
-        <Dashboard />
-        // </ProtectedRoute>
+        <ProtectedRoute roleId={1}>
+          <Dashboard />
+        </ProtectedRoute>
       ),
     },
     {
       path: "/manage-account",
       element: (
-        // <ProtectedRoute role={"ADMIN"}>
-        <ManageAccount />
-        // </ProtectedRoute>
+        <ProtectedRoute roleId={1}>
+          <ManageAccount />
+        </ProtectedRoute>
       ),
     },
     {
       path: "/manage-contract",
       element: (
-        // <ProtectedRoute role={"ADMIN"}>
-        <ManageContract />
-        // </ProtectedRoute>
+        <ProtectedRoute roleId={1}>
+          <ManageContract />
+        </ProtectedRoute>
       ),
     },
     {
       path: "/manage-service",
       element: (
-        // <ProtectedRoute role={"ADMIN"}>
-        <ManageService />
-        // </ProtectedRoute>
+        <ProtectedRoute roleId={1}>
+          <ManageService />
+        </ProtectedRoute>
       ),
     },
 
     {
       path: "/manage-group",
       element: (
-        // <ProtectedRoute role={"ADMIN"}>
-        <ManageGroup />
-        // </ProtectedRoute>
+        <ProtectedRoute roleId={1}>
+          <ManageGroup />
+        </ProtectedRoute>
       ),
     },
 
@@ -69,20 +72,32 @@ function App() {
       element: <RegisterPage />,
     },
     {
+      path: "/verify-otp",
+      element: <VerifyOTP />,
+    },
+    {
+      path: "/forgot-password",
+      element: <ForgotPassword />,
+    },
+    {
       path: "/terms",
       element: <TermsPage />,
     },
     {
       path: "/contract",
-      element: <Contract />,
+      element: (
+        <ProtectedRoute roleId={3}>
+          <Contract />
+        </ProtectedRoute>
+      ),
     },
   ]);
 
   return (
-    <>
+    <AuthProvider>
       <ToastContainer />
       <RouterProvider router={router} />
-    </>
+    </AuthProvider>
   );
 }
 
