@@ -134,17 +134,17 @@ const RegisterPage = () => {
       // Combine data from both sides
       // Smart merge: prioritize non-empty values, don't let "N/A" overwrite real data
       const combinedData = {};
-      
+
       // First add all front data
-      Object.keys(frontData).forEach(key => {
+      Object.keys(frontData).forEach((key) => {
         const value = frontData[key];
         if (value && value !== "N/A" && value !== "undefined") {
           combinedData[key] = value;
         }
       });
-      
+
       // Then add back data, but only if field is empty or doesn't exist
-      Object.keys(backData).forEach(key => {
+      Object.keys(backData).forEach((key) => {
         const value = backData[key];
         if (value && value !== "N/A" && value !== "undefined") {
           // Only add if field doesn't exist yet OR existing value is N/A
@@ -172,7 +172,9 @@ const RegisterPage = () => {
       if (missingFields.length > 0) {
         console.warn("Missing essential fields:", missingFields);
         toast.warning(
-          `CCCD scanned but missing: ${missingFields.join(", ")}. Please verify the information.`
+          `CCCD scanned but missing: ${missingFields.join(
+            ", "
+          )}. Please verify the information.`
         );
       } else {
         toast.success("CCCD scanned successfully! All information extracted.");
@@ -222,30 +224,45 @@ const RegisterPage = () => {
       formData.append("password", values.password);
       formData.append("phone", values.phone);
       formData.append("dateOfBirth", scannedData.dateOfBirth || "");
-      
+
       // Fix gender logic: properly check gender value
       const genderValue = scannedData.gender || "";
-      if (genderValue === "true" || genderValue === "Male" || genderValue === "Nam" || genderValue === "male") {
-        formData.append("gender", "Male");
-      } else if (genderValue === "false" || genderValue === "Female" || genderValue === "Nữ" || genderValue === "female") {
-        formData.append("gender", "Female");
+      if (
+        genderValue === "true" ||
+        genderValue === "Male" ||
+        genderValue === "Nam" ||
+        genderValue === "male"
+      ) {
+        formData.append("gender", "true");
+      } else if (
+        genderValue === "false" ||
+        genderValue === "Female" ||
+        genderValue === "Nữ" ||
+        genderValue === "female"
+      ) {
+        formData.append("gender", "false");
       } else {
-        // Default to Male if gender is unclear
-        formData.append("gender", "Male");
+        // Default to true (Male) if gender is unclear
+        formData.append("gender", "true");
       }
-      
+
       formData.append("idNumber", scannedData.idNumber || "");
       formData.append("issueDate", scannedData.issueDate || "");
       formData.append("expiryDate", scannedData.expiryDate || "");
       formData.append("placeOfIssue", scannedData.placeOfIssue || "");
-      formData.append("placeOfBirth", scannedData.placeOfBirth || "");
+      formData.append("placeOfBirth", scannedData.placeOfBirth || "N/A");
       formData.append("address", scannedData.address || "");
 
       // Add uploaded files
       // Note: First file should be FRONT (with photo), second file should be BACK (with chip)
       uploadedFiles.forEach((file, index) => {
         const fileObj = file.originFileObj || file;
-        console.log(`Appending file ${index}:`, fileObj.name, fileObj.type, fileObj.size);
+        console.log(
+          `Appending file ${index}:`,
+          fileObj.name,
+          fileObj.type,
+          fileObj.size
+        );
         if (index === 0) {
           formData.append("frontImage", fileObj);
         } else if (index === 1) {
@@ -302,9 +319,9 @@ const RegisterPage = () => {
             requiredMark={false}
             className="register-form"
           >
-            <Row gutter={16}>
+            <Row gutter={20}>
               {/* Email */}
-              <Col span={24}>
+              <Col xs={24} md={13}>
                 <Form.Item
                   label="Email Address"
                   name="email"
@@ -323,6 +340,37 @@ const RegisterPage = () => {
                   <Input
                     placeholder="Enter your email address"
                     type="email"
+                    prefix={<MailOutlined />}
+                    allowClear
+                  />
+                </Form.Item>
+              </Col>
+
+              <Col xs={24} md={4}>
+                <Form.Item label=" ">
+                  <Button block>Send OTP</Button>
+                </Form.Item>
+              </Col>
+
+              <Col xs={24} md={7}>
+                <Form.Item
+                  label="OTP"
+                  name="otp"
+                  rules={[
+                    { required: true, message: "OTP is required" },
+                    {
+                      validator: (_, v) =>
+                        !v || validateEmail(v)
+                          ? Promise.resolve()
+                          : Promise.reject(
+                              new Error("Please enter a valid OTP")
+                            ),
+                    },
+                  ]}
+                >
+                  <Input
+                    placeholder="OTP here"
+                    type="text"
                     prefix={<MailOutlined />}
                     allowClear
                   />
@@ -559,14 +607,22 @@ const RegisterPage = () => {
             </div>
             <div className="cccd-info-item">
               <span className="cccd-info-label">Date of Birth:</span>
-              <span className="cccd-info-value">{formatDate(scannedData.dateOfBirth)}</span>
+              <span className="cccd-info-value">
+                {formatDate(scannedData.dateOfBirth)}
+              </span>
             </div>
             <div className="cccd-info-item">
               <span className="cccd-info-label">Gender:</span>
               <span className="cccd-info-value">
-                {scannedData.gender === true || scannedData.gender === "true" || scannedData.gender === "Male" || scannedData.gender === "Nam" 
-                  ? "Male" 
-                  : scannedData.gender === false || scannedData.gender === "false" || scannedData.gender === "Female" || scannedData.gender === "Nữ"
+                {scannedData.gender === true ||
+                scannedData.gender === "true" ||
+                scannedData.gender === "Male" ||
+                scannedData.gender === "Nam"
+                  ? "Male"
+                  : scannedData.gender === false ||
+                    scannedData.gender === "false" ||
+                    scannedData.gender === "Female" ||
+                    scannedData.gender === "Nữ"
                   ? "Female"
                   : scannedData.gender}
               </span>
@@ -579,15 +635,21 @@ const RegisterPage = () => {
             </div>
             <div className="cccd-info-item">
               <span className="cccd-info-label">Address:</span>
-              <span className="cccd-info-value">{scannedData.address || "N/A"}</span>
+              <span className="cccd-info-value">
+                {scannedData.address || "N/A"}
+              </span>
             </div>
             <div className="cccd-info-item">
               <span className="cccd-info-label">Issue Date:</span>
-              <span className="cccd-info-value">{formatDate(scannedData.issueDate)}</span>
+              <span className="cccd-info-value">
+                {formatDate(scannedData.issueDate)}
+              </span>
             </div>
             <div className="cccd-info-item">
               <span className="cccd-info-label">Expiry Date:</span>
-              <span className="cccd-info-value">{formatDate(scannedData.expiryDate)}</span>
+              <span className="cccd-info-value">
+                {formatDate(scannedData.expiryDate)}
+              </span>
             </div>
             <div className="cccd-info-item">
               <span className="cccd-info-label">Place of Issue:</span>
