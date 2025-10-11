@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Form,
   Input,
@@ -29,6 +29,17 @@ const LoginPage = () => {
     2. Get => selector
   */
 
+  // Load remembered email on component mount
+  useEffect(() => {
+    const rememberedEmail = localStorage.getItem("rememberedEmail");
+    if (rememberedEmail) {
+      form.setFieldsValue({
+        email: rememberedEmail,
+        rememberMe: true,
+      });
+    }
+  }, [form]);
+
   const onFinish = async (values) => {
     setIsLoading(true);
     try {
@@ -37,6 +48,16 @@ const LoginPage = () => {
       console.log(response);
       const { token, role } = response.data;
       localStorage.setItem("token", token);
+
+      // Save userData to localStorage for persistence
+      localStorage.setItem("userData", JSON.stringify(response.data));
+
+      // Handle Remember me functionality
+      if (values.rememberMe) {
+        localStorage.setItem("rememberedEmail", values.email);
+      } else {
+        localStorage.removeItem("rememberedEmail");
+      }
 
       // lưu state
       dispatch(login(response.data));
@@ -55,6 +76,28 @@ const LoginPage = () => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  // Handle forgot password navigation
+  const handleForgotPassword = () => {
+    const currentEmail = form.getFieldValue("email");
+    
+    // Validate email before navigating
+    if (!currentEmail) {
+      message.error("Please enter your email address first");
+      return;
+    }
+
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(currentEmail)) {
+      message.error("Please enter a valid email address");
+      return;
+    }
+
+    // Save email to localStorage and navigate
+    localStorage.setItem("email", currentEmail);
+    navigate("/forgot-password", { state: { email: currentEmail } });
   };
 
   return (
@@ -119,8 +162,20 @@ const LoginPage = () => {
               </Col>
               <Col>
                 <a
-                  onClick={(e) => e.preventDefault()}
+                  onClick={handleForgotPassword}
                   className="login-forgot-link"
+                  style={{ cursor: "pointer" }}
+                >
+                  Forgot Password?
+                </a>
+              </Col>
+            </Row>
+
+            <Row justify="center" align="middle" style={{ marginTop: "10px" }}>
+              <Col>
+                <a
+                  onClick={(e) => e.preventDefault()}
+                  className="login-register-link"
                 >
                   <Link to="/register">
                     Don't have an account? Register here
