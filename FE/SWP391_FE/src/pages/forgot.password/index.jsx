@@ -8,10 +8,9 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 const ForgotPassword = () => {
   const [form] = Form.useForm();
   const [isLoading, setIsLoading] = useState(false);
-  const [email, setEmail] = useState("");
   const [isResendDisabled, setIsResendDisabled] = useState(false);
   const [countdown, setCountdown] = useState(0);
-  const [hasRequestedResend, setHasRequestedResend] = useState(false);
+  const [hasRequestedResend] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -22,7 +21,6 @@ const ForgotPassword = () => {
     const emailToUse = emailFromState || emailFromStorage;
 
     if (emailToUse) {
-      setEmail(emailToUse);
       form.setFieldsValue({ email: emailToUse });
     }
   }, [location.state, form]);
@@ -96,25 +94,7 @@ const ForgotPassword = () => {
   };
 
   const sendActivationCode = async () => {
-    // // Nếu chưa từng request send, xóa email và yêu cầu nhập email mới
-    // if (!hasRequestedResend) {
-    //   setEmail("");
-    //   form.setFieldsValue({ email: "" });
-    //   setHasRequestedResend(true);
-    //   toast.info("Enter your email again to receive Activation Code!");
-    //   return;
-    // }
-
-    // // Kiểm tra email có được nhập hay không
-    // const currentEmail = form.getFieldValue("email");
-    // if (!currentEmail) {
-    //   toast.error("Email is required to send Activation Code");
-    //   return;
-    // }
-
-    // const currentEmail = form.getFieldValue("email");
-
-    const currentEmail = localStorage.getItem("email") || email;
+    const currentEmail = localStorage.getItem("email");
     if (!currentEmail) {
       message.error("Email not found. Please enter first");
       return;
@@ -164,6 +144,8 @@ const ForgotPassword = () => {
             <p className="verify-subtitle">
               Please enter the Activation Code sent to your email address to
               create a new password.
+              <br />
+              <MailOutlined /> <strong>{localStorage.getItem("email")}</strong>
             </p>
             Your Email is: <b>{email}</b>
           </div>
@@ -181,31 +163,10 @@ const ForgotPassword = () => {
               requiredMark={false}
               className="verify-form"
             >
-              {/* Email
-              <Form.Item
-                label="Email Address"
-                name="email"
-                rules={[
-                  { required: true, message: "Email is required" },
-                  {
-                    type: "email",
-                    message: "Please enter a valid email address",
-                  },
-                ]}
-              >
-                <Input
-                  placeholder="Enter your email address"
-                  type="email"
-                  prefix={<MailOutlined />}
-                  allowClear
-                  // disabled={!!email && !hasRequestedResend} // Disable if email is pre-filled and haven't requested resend
-                />
-              </Form.Item> */}
-
               {/* Password */}
               <Col xs={24} md={24}>
                 <Form.Item
-                  label="Password"
+                  label="New Password"
                   name="password"
                   rules={[
                     { required: true, message: "Password is required" },

@@ -31,7 +31,7 @@ const VerifyOTP = () => {
     setIsLoading(true);
     try {
       const requestData = {
-        email: localStorage.getItem("email") || email,
+        email: localStorage.getItem("email"),
         otp: values.otp,
       };
 
@@ -102,22 +102,6 @@ const VerifyOTP = () => {
   };
 
   const resendOTP = async () => {
-    // // Nếu chưa từng request resend, xóa email và yêu cầu nhập email mới
-    // if (!hasRequestedResend) {
-    //   setEmail("");
-    //   form.setFieldsValue({ email: "" });
-    //   setHasRequestedResend(true);
-    //   toast.info("Vui lòng nhập email mới để nhận OTP!");
-    //   return;
-    // }
-
-    // // Kiểm tra email có được nhập hay không
-    // const currentEmail = form.getFieldValue("email");
-    // if (!currentEmail) {
-    //   toast.error("Email is required to resend OTP");
-    //   return;
-    // }
-
     try {
       message.loading("Resending OTP...", 0);
 
@@ -170,8 +154,10 @@ const VerifyOTP = () => {
           <div className="verify-header">
             <h2 className="verify-title">Verify Your Account</h2>
             <p className="verify-subtitle">
-              Please enter the OTP sent to your email address to activate your
-              account.
+              Please enter the OTP sent to your email address to change
+              password.
+              <br />
+              <MailOutlined /> <strong>{localStorage.getItem("email")}</strong>
             </p>
             <p>Your email is: {localStorage.getItem("email")}</p>
           </div>
