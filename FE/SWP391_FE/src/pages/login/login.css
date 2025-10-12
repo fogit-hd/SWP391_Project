@@ -84,6 +84,26 @@
   text-decoration: underline;
 }
 
+.login-register-link {
+  color: #1890ff;
+  text-decoration: none;
+}
+
+.login-register-link:hover {
+  color: #40a9ff;
+  text-decoration: underline;
+}
+
+.login-verify-link {
+  color: #52c41a;
+  text-decoration: none;
+}
+
+.login-verify-link:hover {
+  color: #73d13d;
+  text-decoration: underline;
+}
+
 .login-submit-button {
   margin-top: 0.5rem;
   height: 40px;
