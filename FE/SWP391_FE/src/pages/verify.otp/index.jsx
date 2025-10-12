@@ -45,6 +45,7 @@ const VerifyOTP = () => {
 
       message.destroy();
       toast.success("Account verified successfully!");
+      toast.success("Your account is now activated! You can now sign in.");
 
       // Clear email from localStorage
       localStorage.removeItem("email");
@@ -56,14 +57,26 @@ const VerifyOTP = () => {
     } catch (error) {
       message.destroy();
       console.error("Verification error:", error);
+      console.error("Error response:", error.response?.data);
 
       let errorMessage = "OTP verification failed. Please try again.";
+
       if (error.response?.status === 400) {
         errorMessage =
           error.response.data?.message ||
           "Invalid OTP. Please check and try again.";
       } else if (error.response?.status === 404) {
         errorMessage = "Email not found. Please register again.";
+      } else if (error.response?.status === 410) {
+        errorMessage =
+          error.response.data?.message ||
+          "OTP has expired. Please request a new one.";
+      } else if (error.response?.status === 500) {
+        errorMessage =
+          error.response.data?.message ||
+          "Server error. Please try again later.";
+      } else {
+        errorMessage = error.response?.data?.message || errorMessage;
       }
 
       toast.error(errorMessage);
@@ -108,7 +121,26 @@ const VerifyOTP = () => {
     } catch (error) {
       message.destroy();
       console.error("Resend OTP error:", error);
-      toast.error("Failed to resend OTP. Please try again.");
+      console.error("Error response:", error.response?.data);
+
+      let errorMessage = "Failed to resend OTP. Please try again.";
+
+      if (error.response?.status === 400) {
+        errorMessage = error.response.data?.message || "Invalid email address.";
+      } else if (error.response?.status === 404) {
+        errorMessage = "Email not found. Please register first.";
+      } else if (error.response?.status === 429) {
+        errorMessage =
+          "Too many requests. Please wait before requesting another OTP.";
+      } else if (error.response?.status === 500) {
+        errorMessage =
+          error.response.data?.message ||
+          "Server error. Please try again later.";
+      } else {
+        errorMessage = error.response?.data?.message || errorMessage;
+      }
+
+      toast.error(errorMessage);
     }
   };
 
@@ -127,6 +159,7 @@ const VerifyOTP = () => {
               <br />
               <MailOutlined /> <strong>{localStorage.getItem("email")}</strong>
             </p>
+            <p>Your email is: {localStorage.getItem("email")}</p>
           </div>
 
           <Form
