@@ -92,9 +92,10 @@ const LoginPage = () => {
       }
 
       // lưu state
-      dispatch(login(response.data));
+      dispatch(login(userData));
 
-      if (role === "ADMIN") {
+      // Navigate based on role
+      if (roleId === 1) { // Admin
         navigate("/dashboard");
       } else {
         navigate("/");
@@ -137,7 +138,7 @@ const LoginPage = () => {
   };
 
   // Handle forgot password navigation
-  const handleForgotPassword = async () => {
+  const handleForgotPassword = () => {
     const currentEmail = form.getFieldValue("email");
 
     // Validate email before navigating
@@ -153,40 +154,9 @@ const LoginPage = () => {
       return;
     }
 
-    try {
-      // Check account status before allowing password reset
-      message.loading("Checking account status...", 0);
-
-      const response = await api.post("/auth/check-account-status", {
-        email: currentEmail,
-      });
-
-      message.destroy();
-
-      // If account is not active, navigate to verify.otp
-      if (response.data && response.data.isActive === false) {
-        toast.info(
-          "Your account is not activated yet. Redirecting to verification page..."
-        );
-        localStorage.setItem("email", currentEmail);
-        navigate("/verify-otp", { state: { email: currentEmail } });
-      } else {
-        // Account is active, proceed to forgot password
-        localStorage.setItem("email", currentEmail);
-        navigate("/forgot-password", { state: { email: currentEmail } });
-      }
-    } catch (error) {
-      message.destroy();
-      console.error("Account status check error:", error);
-
-      // If the check fails, assume account is not active and redirect to verify.otp
-      // This is safer as it prevents password reset for potentially inactive accounts
-      toast.warning(
-        "Unable to verify account status. Please activate your account first."
-      );
-      localStorage.setItem("email", currentEmail);
-      navigate("/verify-otp", { state: { email: currentEmail } });
-    }
+    // Store email and navigate to forgot password page
+    localStorage.setItem("email", currentEmail);
+    navigate("/forgot-password", { state: { email: currentEmail } });
   };
 
   return (
