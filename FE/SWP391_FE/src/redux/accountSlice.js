@@ -7,22 +7,26 @@ export const accountSlice = createSlice({
   initialState,
   reducers: {
     login: (state, action) => {
-      state = action.payload;
-      return state;
+      return action.payload;
     },
     logout: () => {
+      // Clear localStorage
       localStorage.removeItem("token");
+      localStorage.removeItem("refreshToken");
       localStorage.removeItem("userData");
+      localStorage.removeItem("profileData");
       return initialState;
     },
     restoreUser: (state, action) => {
-      state = action.payload;
-      return state;
+      return action.payload;
+    },
+    updateUser: (state, action) => {
+      return { ...state, ...action.payload };
     },
   },
 });
 
 // Action creators are generated for each case reducer function
-export const { login, logout, restoreUser } = accountSlice.actions;
+export const { login, logout, restoreUser, updateUser } = accountSlice.actions;
 
 export default accountSlice.reducer;
