@@ -282,15 +282,37 @@ const RegisterPage = () => {
 
       message.destroy();
       toast.success("Successfully created new account!");
-      
+      toast.info(
+        "Your account is not activated yet. Please verify your email to activate your account."
+      );
+
       // Save email to localStorage as fallback
       localStorage.setItem("email", values.email);
       navigate("/verify-otp", { state: { email: values.email } });
       console.log(response);
     } catch (e) {
       message.destroy();
-      console.error(e);
-      message.error("Registration failed. Please try again.");
+      console.error("Registration error:", e);
+      console.error("Error response:", e.response?.data);
+
+      let errorMessage = "Registration failed. Please try again.";
+
+      if (e.response?.status === 400) {
+        errorMessage =
+          e.response.data?.message ||
+          "Invalid registration data. Please check your information.";
+      } else if (e.response?.status === 409) {
+        errorMessage =
+          e.response.data?.message ||
+          "Email already exists. Please use a different email.";
+      } else if (e.response?.status === 500) {
+        errorMessage =
+          e.response.data?.message || "Server error. Please try again later.";
+      } else {
+        errorMessage = e.response?.data?.message || errorMessage;
+      }
+
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -306,7 +328,7 @@ const RegisterPage = () => {
           <div className="register-header">
             <h2 className="register-title">Join Our Community</h2>
             <p className="register-subtitle">
-              Start your electric vehicle co-ownership journey today.
+              a Start your electric vehicle co-ownership journey today.
             </p>
           </div>
 

@@ -46,11 +46,43 @@ const LoginPage = () => {
       const response = await api.post("/auth/login", values);
       toast.success("Successfully logged in!");
       console.log(response);
-      const { token, role } = response.data;
-      localStorage.setItem("token", token);
+
+      // Extract tokens from response.data.data (nested structure)
+      const { accessToken, refreshToken, role } =
+        response.data.data || response.data;
+
+      // Store tokens
+      console.log("Setting authentication token");
+      console.log("Access token:", accessToken);
+      console.log("Refresh token:", refreshToken);
+      localStorage.setItem("token", accessToken);
+      if (refreshToken) {
+        localStorage.setItem("refreshToken", refreshToken);
+      }
 
       // Save userData to localStorage for persistence
-      localStorage.setItem("userData", JSON.stringify(response.data));
+      console.log("Setting user data");
+      
+      // Tạo userData với roleId từ role
+      const roleMapping = {
+        Admin: 1,
+        Staff: 2,
+        CoOwner: 3,
+      };
+      const roleId = roleMapping[role] || 3;
+      
+      const userData = {
+        ...response.data,
+        roleId: roleId,
+        role: role,
+      };
+      
+      localStorage.setItem("userData", JSON.stringify(userData));
+      
+      // Verify tokens were set
+      console.log("Verifying authentication tokens");
+      console.log("Token in localStorage:", localStorage.getItem("token"));
+      console.log("RefreshToken in localStorage:", localStorage.getItem("refreshToken"));
 
       // Handle Remember me functionality
       if (values.rememberMe) {
@@ -70,18 +102,44 @@ const LoginPage = () => {
     } catch (e) {
       console.error("Login error:", e);
       console.error("Error response:", e.response?.data);
-      const errorMessage =
-        e.response?.data?.message || "Login failed. Please try again.";
-      message.error(errorMessage);
+
+      let errorMessage = "Login failed. Please try again.";
+
+      // Check if account is not activated
+      if (
+        e.response?.status === 403 ||
+        e.response?.data?.message?.includes("not activated") ||
+        e.response?.data?.message?.includes("inactive")
+      ) {
+        errorMessage =
+          "Your account is not activated yet. Please check your email and verify your account first.";
+        toast.error(errorMessage);
+      } else if (e.response?.status === 401) {
+        errorMessage =
+          e.response?.data?.message ||
+          "Invalid email or password. Please check your credentials.";
+        toast.error(errorMessage);
+      } else if (e.response?.status === 404) {
+        errorMessage =
+          "Email not found. Please check your email or register first.";
+        toast.error(errorMessage);
+      } else if (e.response?.status === 500) {
+        errorMessage =
+          e.response?.data?.message || "Server error. Please try again later.";
+        toast.error(errorMessage);
+      } else {
+        errorMessage = e.response?.data?.message || errorMessage;
+        toast.error(errorMessage);
+      }
     } finally {
       setIsLoading(false);
     }
   };
 
   // Handle forgot password navigation
-  const handleForgotPassword = () => {
+  const handleForgotPassword = async () => {
     const currentEmail = form.getFieldValue("email");
-    
+
     // Validate email before navigating
     if (!currentEmail) {
       message.error("Please enter your email address first");
@@ -95,9 +153,40 @@ const LoginPage = () => {
       return;
     }
 
-    // Save email to localStorage and navigate
-    localStorage.setItem("email", currentEmail);
-    navigate("/forgot-password", { state: { email: currentEmail } });
+    try {
+      // Check account status before allowing password reset
+      message.loading("Checking account status...", 0);
+
+      const response = await api.post("/auth/check-account-status", {
+        email: currentEmail,
+      });
+
+      message.destroy();
+
+      // If account is not active, navigate to verify.otp
+      if (response.data && response.data.isActive === false) {
+        toast.info(
+          "Your account is not activated yet. Redirecting to verification page..."
+        );
+        localStorage.setItem("email", currentEmail);
+        navigate("/verify-otp", { state: { email: currentEmail } });
+      } else {
+        // Account is active, proceed to forgot password
+        localStorage.setItem("email", currentEmail);
+        navigate("/forgot-password", { state: { email: currentEmail } });
+      }
+    } catch (error) {
+      message.destroy();
+      console.error("Account status check error:", error);
+
+      // If the check fails, assume account is not active and redirect to verify.otp
+      // This is safer as it prevents password reset for potentially inactive accounts
+      toast.warning(
+        "Unable to verify account status. Please activate your account first."
+      );
+      localStorage.setItem("email", currentEmail);
+      navigate("/verify-otp", { state: { email: currentEmail } });
+    }
   };
 
   return (
@@ -173,14 +262,17 @@ const LoginPage = () => {
 
             <Row justify="center" align="middle" style={{ marginTop: "10px" }}>
               <Col>
-                <a
-                  onClick={(e) => e.preventDefault()}
-                  className="login-register-link"
-                >
-                  <Link to="/register">
-                    Don't have an account? Register here
-                  </Link>
-                </a>
+                <Link to="/register" className="login-register-link">
+                  Don't have an account? Register here
+                </Link>
+              </Col>
+            </Row>
+
+            <Row justify="center" align="middle" style={{ marginTop: "10px" }}>
+              <Col>
+                <Link to="/verify-otp" className="login-verify-link">
+                  Need to verify your account? Click here
+                </Link>
               </Col>
             </Row>
 
