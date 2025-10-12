@@ -31,7 +31,7 @@ const ForgotPassword = () => {
     setIsLoading(true);
     try {
       const requestData = {
-        email: values.email,
+        email: localStorage.getItem("email") || email,
         activationCode: values["activation-code"],
         newPassword: values.password,
       };
@@ -59,13 +59,18 @@ const ForgotPassword = () => {
       message.destroy();
       console.error("Change error:", error);
 
-      let errorMessage = "Forgotpassword system got failed. Please try again.";
+      let errorMessage = "Password reset failed. Please try again.";
+      
       if (error.response?.status === 400) {
         errorMessage =
           error.response.data?.message ||
           "Invalid Activation Code. Please check and try again.";
+      } else if (error.response?.status === 403 || error.response?.data?.message?.includes("not activated") || error.response?.data?.message?.includes("inactive")) {
+        errorMessage = "Your account is not activated yet. Please verify your account first before resetting password.";
       } else if (error.response?.status === 404) {
         errorMessage = "Email not found. Please double check again.";
+      } else {
+        errorMessage = error.response?.data?.message || errorMessage;
       }
 
       toast.error(errorMessage);
@@ -107,7 +112,9 @@ const ForgotPassword = () => {
     //   return;
     // }
 
-    const currentEmail = form.getFieldValue("email");
+    // const currentEmail = form.getFieldValue("email");
+
+    const currentEmail = localStorage.getItem("email") || email;
     if (!currentEmail) {
       message.error("Email not found. Please enter first");
       return;
@@ -131,7 +138,17 @@ const ForgotPassword = () => {
     } catch (error) {
       message.destroy();
       console.error("Send Activation Code error:", error);
-      toast.error("Failed to send Activation Code. Please try again.");
+      
+      let errorMessage = "Failed to send Activation Code. Please try again.";
+      
+      // Check if account is not activated
+      if (error.response?.status === 403 || error.response?.data?.message?.includes("not activated") || error.response?.data?.message?.includes("inactive")) {
+        errorMessage = "Your account is not activated yet. Please verify your account first before resetting password.";
+        toast.error(errorMessage);
+      } else {
+        errorMessage = error.response?.data?.message || errorMessage;
+        toast.error(errorMessage);
+      }
     }
   };
 
@@ -143,12 +160,18 @@ const ForgotPassword = () => {
       <div className="verify-card-container">
         <Card className="verify-card">
           <div className="verify-header">
-            <h2 className="verify-title">Verify Your Account</h2>
+            <h2 className="verify-title">Setting Your Account</h2>
             <p className="verify-subtitle">
               Please enter the Activation Code sent to your email address to
               create a new password.
             </p>
+            Your Email is: <b>{email}</b>
           </div>
+          {/* {console.log("Rendering with email:", email)}
+          {console.log(
+            "Rendering with localstrorage email:",
+            localStorage.getItem("email")
+          )} */}
 
           <Row>
             <Form
@@ -158,7 +181,7 @@ const ForgotPassword = () => {
               requiredMark={false}
               className="verify-form"
             >
-              {/* Email */}
+              {/* Email
               <Form.Item
                 label="Email Address"
                 name="email"
@@ -177,7 +200,7 @@ const ForgotPassword = () => {
                   allowClear
                   // disabled={!!email && !hasRequestedResend} // Disable if email is pre-filled and haven't requested resend
                 />
-              </Form.Item>
+              </Form.Item> */}
 
               {/* Password */}
               <Col xs={24} md={24}>
