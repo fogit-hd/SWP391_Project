@@ -11,7 +11,7 @@ const VerifyOTP = () => {
   const [email, setEmail] = useState("");
   const [isResendDisabled, setIsResendDisabled] = useState(false);
   const [countdown, setCountdown] = useState(0);
-  const [hasRequestedResend, setHasRequestedResend] = useState(false);
+  const [hasRequestedResend] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
 

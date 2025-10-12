@@ -23,9 +23,6 @@ import { toast } from "react-toastify";
 import { Link, useNavigate } from "react-router-dom";
 import "./register.css";
 
-const { Option } = Select;
-const { TextArea } = Input;
-
 const RegisterPage = () => {
   const [form] = Form.useForm();
   const [isLoading, setIsLoading] = useState(false);
