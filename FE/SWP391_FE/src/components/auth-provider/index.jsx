@@ -15,37 +15,23 @@ function AuthProvider({ children }) {
           // Khôi phục user data từ localStorage
           const parsedUserData = JSON.parse(userData);
 
-          // Decode JWT để lấy roleId
-          const jwtPayload = JSON.parse(
-            atob(parsedUserData.accessToken.split(".")[1])
-          );
-          const roleMapping = {
-            Admin: 1,
-            Staff: 2,
-            CoOwner: 3,
-          };
-
-          const roleId = roleMapping[jwtPayload.role] || 3; // Default to CoOwner
+          // Đơn giản hóa: chỉ lấy roleId trực tiếp từ userData, không decode JWT
+          const roleId = parsedUserData.roleId || 3; // Default to CoOwner (3)
 
           // Tạo user object với roleId
           const userWithRoleId = {
             ...parsedUserData,
             roleId: roleId,
-            role: jwtPayload.role,
-            email: jwtPayload.email,
-            name: jwtPayload.name,
           };
 
           dispatch(restoreUser(userWithRoleId));
-          console.log("User data restored from localStorage:", userWithRoleId);
-          console.log("Role mapping:", jwtPayload.role, "->", roleId);
+          console.log("User data restored from localStorage");
         } catch (error) {
-          console.error("Failed to parse user data from localStorage:", error);
-          localStorage.removeItem("userData");
-          localStorage.removeItem("token");
+          console.error("Failed to parse user data in AuthProvider:", error);
+          // Don't clear tokens on parse error - just log the error
         }
       } else {
-        console.log("No token or userData found in localStorage");
+        console.log("No authentication data found in localStorage");
       }
     };
 
