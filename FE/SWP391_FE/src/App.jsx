@@ -100,6 +100,14 @@ function App() {
         </ProtectedRoute>
       ),
     },
+
+    
+    {
+      path: "/view-econtract", 
+      element: <ViewContract />,
+    },
+
+    
   ]);
 
   return (

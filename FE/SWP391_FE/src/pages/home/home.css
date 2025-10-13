@@ -529,6 +529,11 @@
   }
 }
 
+.register-button-fix {
+  background: #1890ff !important;
+  border-color: #1890ff !important;
+  color: white !important;
+}
 /* ===== PROFILE MODAL ===== */
 .profile-modal {
   background: white !important;
