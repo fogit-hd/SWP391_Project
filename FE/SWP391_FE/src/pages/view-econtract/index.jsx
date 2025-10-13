@@ -255,6 +255,7 @@ const ViewContract = () => {
               </div>
 
               <Modal
+                className="view-contract-modal"
                 title={`Sign ${displayedContract ? displayedContract.contract_number : "contract"}`}
                 open={isSignModalVisible}
                 onCancel={() => setIsSignModalVisible(false)}

@@ -183,3 +183,11 @@
   border-radius: 12px;
   font-weight: 600;
 }
+
+/* Checkbox label inside the sign modal should be white */
+.view-contract-modal .ant-checkbox-wrapper {
+  color: #ffffff !important;
+}
+.view-contract-modal .ant-checkbox-wrapper .ant-checkbox + span {
+  color: #ffffff !important;
+}
