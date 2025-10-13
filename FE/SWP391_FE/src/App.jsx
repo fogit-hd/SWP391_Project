@@ -10,7 +10,9 @@ import TermsPage from "/src/pages/terms";
 import Contract from "./pages/econtract";
 import ManageContract from "./pages/admin/manageContract";
 import ManageService from "./pages/admin/manageService";
-import ManageGroup from "./pages/admin/manageGroup";
+import ManageGroup from "./pages/admin/manageGroup"
+import ViewContract from "./pages/view-econtract";
+
 
 function App() {
   const router = createBrowserRouter([
@@ -76,6 +78,14 @@ function App() {
       path: "/contract",
       element: <Contract />,
     },
+
+    
+    {
+      path: "/view-econtract", 
+      element: <ViewContract />,
+    },
+
+    
   ]);
 
   return (

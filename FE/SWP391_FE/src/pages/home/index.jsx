@@ -243,9 +243,15 @@ const Homepage = () => {
               Join our co-ownership community today and start saving on premium
               electric vehicles.
             </Paragraph>
-            <Button type="primary" size="large" className="cta-cta">
-              Start Co-Owning
-            </Button>
+        
+
+  <Link to="/view-econtract">
+  <Button type="primary" size="large" className="cta-cta">
+    Start Co-Owning
+  </Button>
+</Link>
+
+
           </div>
         </div>
       </Content>
