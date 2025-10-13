@@ -14,6 +14,7 @@ import ManageService from "./pages/admin/manageService";
 import ManageGroup from "./pages/admin/manageGroup";
 import ForgotPassword from "./pages/forgot.password";
 import VerifyOTP from "./pages/verify.otp";
+import UpdateProfile from "./pages/update.profile";
 
 function App() {
   const router = createBrowserRouter([
@@ -82,6 +83,14 @@ function App() {
     {
       path: "/terms",
       element: <TermsPage />,
+    },
+    {
+      path: "/update-profile",
+      element: (
+        <ProtectedRoute roleId={3}>
+          <UpdateProfile />
+        </ProtectedRoute>
+      ),
     },
     {
       path: "/contract",
