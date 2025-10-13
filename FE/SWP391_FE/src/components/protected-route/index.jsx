@@ -1,19 +1,24 @@
 import { Button, Result } from "antd";
-import React from "react";
 import { useSelector } from "react-redux";
-import { Outlet, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
-function ProtectedRoute({ role, children }) {
-  // so sánh role của account đang đăng nhập và cái role mà page yêu cầu
-
+function ProtectedRoute({ roleId, children }) {
   const account = useSelector((store) => store.account);
   const navigate = useNavigate();
 
-  if (account?.role === role) {
-    // cho qua
+  console.log("=== ProtectedRoute Debug ===");
+  console.log("Full account object:", account);
+  console.log("Current user roleId:", account?.roleId);
+  console.log("Required roleId:", roleId);
+  console.log("RoleId type:", typeof account?.roleId);
+  console.log("Comparison result:", account?.roleId === roleId);
+  console.log("===========================");
+
+  if (account?.roleId === roleId) {
+    // dạ em mời anh qua
     return children;
   } else {
-    // m ko có quyền truy cập
+    // m đéo có quyền truy cập, cút ra ngoài
     return (
       <Result
         status="403"
@@ -22,11 +27,11 @@ function ProtectedRoute({ role, children }) {
         extra={
           <Button
             onClick={() => {
-              navigate("/dashboard");
+              navigate("/");
             }}
             type="primary"
           >
-            Back Home
+            Back to homepage
           </Button>
         }
       />

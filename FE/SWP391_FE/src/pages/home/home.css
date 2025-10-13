@@ -101,7 +101,6 @@
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(24, 144, 255, 0.3);
 }
-
 /* ===== HERO SECTION ===== */
 .hero {
   height: 100vh;
@@ -184,10 +183,10 @@
   background: #002140;
   text-align: center;
   position: relative;
-  background-image: url("https://images.unsplash.com/photo-1511994294314-3c662760f3d5?auto=format&fit=crop&q=80&w=2670");
+  /* background-image: url("https://images.unsplash.com/photo-1511994294314-3c662760f3d5?auto=format&fit=crop&q=80&w=2670");
   background-size: cover;
   background-position: center;
-  background-attachment: fixed;
+  background-attachment: fixed; */
 }
 
 .section-header {
@@ -534,4 +533,253 @@
   background: #1890ff !important;
   border-color: #1890ff !important;
   color: white !important;
+}
+/* ===== PROFILE MODAL ===== */
+.profile-modal {
+  background: white !important;
+}
+
+/* Hide any file inputs in profile modal */
+.profile-modal input[type="file"] {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  position: absolute !important;
+  left: -9999px !important;
+  width: 0 !important;
+  height: 0 !important;
+  overflow: hidden !important;
+}
+
+.profile-modal .ant-modal-content {
+  background: white !important;
+  border-radius: 12px !important;
+}
+
+.profile-modal .ant-modal-header {
+  border-bottom: none;
+  padding: 24px 24px 0 24px;
+  background: white !important;
+  border-radius: 12px 12px 0 0 !important;
+}
+
+.profile-modal-header {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 0;
+}
+
+.profile-modal-avatar {
+  border: 4px solid #f0f0f0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+/* Avatar Upload Container */
+.avatar-upload-container {
+  position: relative;
+  display: inline-block;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+/* Hide the file input completely */
+.avatar-upload-input {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  position: absolute !important;
+  left: -9999px !important;
+  width: 0 !important;
+  height: 0 !important;
+  overflow: hidden !important;
+}
+
+/* Style the label to be invisible but clickable */
+.avatar-upload-label {
+  cursor: pointer !important;
+  display: inline-block !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: none !important;
+  background: none !important;
+  outline: none !important;
+  text-decoration: none !important;
+  color: inherit !important;
+}
+
+.avatar-upload-container:hover .profile-modal-avatar {
+  transform: scale(1.05);
+  border-color: #40a9ff;
+  box-shadow: 0 6px 20px rgba(64, 169, 255, 0.3);
+}
+
+/* Avatar Overlay */
+.avatar-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: all 0.3s ease;
+  z-index: 2;
+  pointer-events: none; /* Prevent overlay from blocking clicks */
+}
+
+.avatar-upload-container:hover .avatar-overlay {
+  opacity: 1;
+}
+
+/* Ensure avatar is visible when no image */
+.profile-modal-avatar {
+  background-color: #1890ff !important;
+  color: white !important;
+}
+
+/* Camera Icon */
+.camera-icon {
+  color: #ffffff;
+  font-size: 24px;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+/* Upload Text */
+.upload-text {
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 500;
+  text-align: center;
+  margin-top: 4px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+/* Avatar Upload Content */
+.avatar-upload-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.profile-modal-title-content {
+  flex: 1;
+}
+
+.profile-modal-name {
+  margin: 0 !important;
+  color: #262626;
+  font-weight: 600;
+}
+
+.profile-modal-email {
+  font-size: 16px;
+  margin-top: 4px;
+  color: #8c8c8c;
+}
+
+.profile-content {
+  padding: 0;
+}
+
+.profile-section-card {
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  border: 1px solid #f0f0f0;
+}
+
+.profile-section-card .ant-card-head {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 12px 12px 0 0;
+  border-bottom: none;
+}
+
+.profile-section-card .ant-card-head-title {
+  color: white;
+  font-weight: 600;
+  font-size: 16px;
+}
+
+.profile-section-card .ant-card-body {
+  padding: 20px;
+}
+
+.profile-field {
+  margin-bottom: 16px;
+}
+
+.profile-field .ant-typography {
+  display: block;
+  margin-bottom: 8px;
+  color: #595959;
+  font-size: 14px;
+}
+
+.profile-value {
+  font-size: 15px;
+  color: #262626;
+  line-height: 1.5;
+  word-break: break-word;
+}
+
+.profile-loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+}
+
+.profile-loading-text {
+  margin-top: 16px;
+  color: #8c8c8c;
+  font-size: 16px;
+}
+
+.profile-modal .ant-modal-footer {
+  border-top: none;
+  padding: 16px 24px 24px 24px;
+  text-align: center;
+  background: white !important;
+  border-radius: 0 0 12px 12px !important;
+}
+
+.profile-modal .ant-modal-footer .ant-btn {
+  min-width: 100px;
+  height: 40px;
+  border-radius: 8px;
+  font-weight: 500;
+}
+
+.profile-modal .ant-modal-body {
+  background: white !important;
+  color: #262626 !important;
+  padding: 24px !important;
+}
+
+.profile-modal .ant-modal-title {
+  color: #262626 !important;
+  font-weight: 600 !important;
+}
+
+.profile-descriptions {
+  background: white !important;
+}
+
+.profile-descriptions .ant-descriptions-item-label {
+  background-color: #f5f5f5 !important;
+  font-weight: bold !important;
+  width: 150px !important;
+  color: #262626 !important;
+}
+
+.profile-descriptions .ant-descriptions-item-content {
+  color: #262626 !important;
 }
