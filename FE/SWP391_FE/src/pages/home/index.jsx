@@ -522,6 +522,7 @@ const Homepage = () => {
       key: "change-password",
       icon: <CheckOutlined />,
       label: "Change Password",
+      onClick: () => navigate("/change-password"),
     },
     {
       key: "history",
