@@ -30,6 +30,7 @@ const LoginPage = () => {
   */
 
   // Load remembered email on component mount
+
   useEffect(() => {
     const rememberedEmail = localStorage.getItem("rememberedEmail");
     if (rememberedEmail) {
@@ -60,9 +61,8 @@ const LoginPage = () => {
         localStorage.setItem("refreshToken", refreshToken);
       }
 
-      // Save userData to localStorage for persistence
       console.log("Setting user data");
-      
+
       // Tạo userData với roleId từ role
       const roleMapping = {
         Admin: 1,
@@ -70,19 +70,28 @@ const LoginPage = () => {
         CoOwner: 3,
       };
       const roleId = roleMapping[role] || 3;
-      
+
       const userData = {
         ...response.data,
         roleId: roleId,
         role: role,
       };
-      
+
       localStorage.setItem("userData", JSON.stringify(userData));
-      
+
       // Verify tokens were set
       console.log("Verifying authentication tokens");
       console.log("Token in localStorage:", localStorage.getItem("token"));
-      console.log("RefreshToken in localStorage:", localStorage.getItem("refreshToken"));
+      console.log(
+        "RefreshToken in localStorage:",
+        localStorage.getItem("refreshToken")
+      );
+
+      //Handle password for change password
+      localStorage.setItem("password", values.password);
+      console.log("Password saved to localStorage for change password");
+      console.log("Password:", values.password);
+      console.log("Password:", localStorage.getItem("password"));
 
       // Handle Remember me functionality
       if (values.rememberMe) {
@@ -95,7 +104,8 @@ const LoginPage = () => {
       dispatch(login(userData));
 
       // Navigate based on role
-      if (roleId === 1) { // Admin
+      if (roleId === 1) {
+        // Admin
         navigate("/dashboard");
       } else {
         navigate("/");

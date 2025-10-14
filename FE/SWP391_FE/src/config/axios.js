@@ -102,7 +102,7 @@ api.interceptors.response.use(
         localStorage.removeItem("token");
         localStorage.removeItem("refreshToken");
         localStorage.removeItem("userData");
-
+        window.location.href = '/login';
         console.log("Authentication tokens cleared");
 
         // Redirect to login page
