@@ -15,6 +15,8 @@ import ManageGroup from "./pages/admin/manageGroup";
 import ForgotPassword from "./pages/forgot.password";
 import VerifyOTP from "./pages/verify.otp";
 import UpdateProfile from "./pages/update.profile";
+import  ViewEContract from "./pages/view.econtract";
+
 
 function App() {
   const router = createBrowserRouter([
@@ -103,8 +105,13 @@ function App() {
 
     
     {
-      path: "/view-econtract", 
-      element: <ViewContract />,
+      path: "/view.econtract", 
+      element: (
+        <ProtectedRoute roleId={3}>
+          <ViewEContract />
+        </ProtectedRoute>
+      )
+    
     },
 
     

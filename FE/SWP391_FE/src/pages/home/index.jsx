@@ -703,7 +703,7 @@ const Homepage = () => {
             </Paragraph>
         
 
-  <Link to="/view-econtract">
+  <Link to="/view.econtract">
   <Button type="primary" size="large" className="cta-cta">
     Start Co-Owning
   </Button>
