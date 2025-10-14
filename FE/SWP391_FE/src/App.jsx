@@ -17,6 +17,7 @@ import VerifyOTP from "./pages/verify.otp";
 import UpdateProfile from "./pages/update.profile";
 import ChangePassword from "./pages/change.password";
 import CreateGroup from "./pages/create.group";
+import ViewContract from "./pages/view.econtract";
 
 function App() {
   const router = createBrowserRouter([
@@ -118,14 +119,10 @@ function App() {
         </ProtectedRoute>
       ),
     },
-
-    
     {
-      path: "/view-econtract", 
+      path: "/view-econtract",
       element: <ViewContract />,
     },
-
-    
   ]);
 
   return (
