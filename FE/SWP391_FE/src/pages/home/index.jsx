@@ -119,6 +119,7 @@ const Homepage = () => {
 
   // Function to handle user logout
   const handleLogout = () => {
+    console.log("refreshToken:", localStorage.getItem("refreshToken"));
     console.log("Logging out user...");
 
     // Clear profile data from localStorage
@@ -126,14 +127,15 @@ const Homepage = () => {
     setProfileData(null);
     dispatch(logout());
   };
+
   // Function to handle profile menu click
   const handleProfileClick = () => {
     setIsProfileModalVisible(true);
-
+    console.log("User data: ", localStorage.getItem("userData"));
     // Only fetch fresh data if we don't have profile data yet
     if (!profileData) {
       console.log("No profile data found, fetching from API...");
-    fetchProfileData();
+      fetchProfileData();
     } else {
       console.log("Profile data already loaded from localStorage");
     }
@@ -318,10 +320,12 @@ const Homepage = () => {
   const handleUpdateProfile = () => {
     // Pass the parsed profileData object instead of localStorage string
     const savedProfileData = localStorage.getItem("profileData");
-    const parsedProfileData = savedProfileData ? JSON.parse(savedProfileData) : null;
-    
+    const parsedProfileData = savedProfileData
+      ? JSON.parse(savedProfileData)
+      : null;
+
     navigate("/update-profile", {
-      state: { 
+      state: {
         profileData: parsedProfileData,
         // Also pass individual fields for easier access
         email: parsedProfileData?.email,
@@ -334,7 +338,7 @@ const Homepage = () => {
         placeOfBirth: parsedProfileData?.placeOfBirth,
         issueDate: parsedProfileData?.issueDate,
         expiryDate: parsedProfileData?.expiryDate,
-        placeOfIssue: parsedProfileData?.placeOfIssue
+        placeOfIssue: parsedProfileData?.placeOfIssue,
       },
     });
   };
@@ -456,28 +460,28 @@ const Homepage = () => {
 
       // Only show error toast if this is a manual fetch, not auto-fetch
       if (isInitialized) {
-      let errorMessage = "Failed to fetch profile data. Please try again.";
+        let errorMessage = "Failed to fetch profile data. Please try again.";
 
         if (error.response?.status === 403) {
-        errorMessage =
-          "Access denied. You don't have permission to view profile.";
-      } else if (error.response?.status === 404) {
+          errorMessage =
+            "Access denied. You don't have permission to view profile.";
+        } else if (error.response?.status === 404) {
           errorMessage =
             "Profile endpoint not found. Please check API configuration.";
-      } else if (error.response?.status === 500) {
-        errorMessage = "Server error. Please try again later.";
+        } else if (error.response?.status === 500) {
+          errorMessage = "Server error. Please try again later.";
         } else if (
           error.code === "NETWORK_ERROR" ||
           error.message === "Network Error"
         ) {
           errorMessage =
             "Network error. Please check your internet connection.";
-      } else {
+        } else {
           errorMessage =
             error.response?.data?.message || error.message || errorMessage;
-      }
+        }
 
-      toast.error(errorMessage);
+        toast.error(errorMessage);
       }
     } finally {
       setIsProfileLoading(false);
@@ -775,7 +779,7 @@ const Homepage = () => {
                 id="avatar-upload"
               />
               <label htmlFor="avatar-upload" className="avatar-upload-label">
-            <Avatar
+                <Avatar
                   size={100}
                   src={(() => {
                     const avatarSrc = profileData?.imageUrl;
@@ -806,7 +810,7 @@ const Homepage = () => {
             <div className="profile-modal-title-content">
               <Title level={2} className="profile-modal-name">
                 {profileData?.fullName || "User Profile"}
-            </Title>
+              </Title>
               <Text type="secondary" className="profile-modal-email">
                 {profileData?.email || ""}
               </Text>
@@ -852,10 +856,10 @@ const Homepage = () => {
                       {profileData?.gender !== undefined ? (
                         <Tag color={profileData.gender ? "blue" : "pink"}>
                           {profileData.gender ? "Male" : "Female"}
-                </Tag>
-              ) : (
-                "N/A"
-              )}
+                        </Tag>
+                      ) : (
+                        "N/A"
+                      )}
                     </div>
                   </div>
                 </Col>
@@ -872,7 +876,7 @@ const Homepage = () => {
                               day: "numeric",
                             }
                           )
-                : "N/A"}
+                        : "N/A"}
                     </div>
                   </div>
                 </Col>
