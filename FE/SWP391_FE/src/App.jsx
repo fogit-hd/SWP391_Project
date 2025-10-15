@@ -1,6 +1,6 @@
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
-import ProtectedRoute from "components/protected-route";
-import AuthProvider from "components/auth-provider";
+import ProtectedRoute from "components/protected.route";
+import AuthProvider from "components/auth.provider";
 import ManageAccount from "./pages/admin/manageAccount";
 import { ToastContainer } from "react-toastify";
 import Homepage from "/src/pages/home";
@@ -15,7 +15,9 @@ import ManageGroup from "./pages/admin/manageGroup";
 import ForgotPassword from "./pages/forgot.password";
 import VerifyOTP from "./pages/verify.otp";
 import UpdateProfile from "./pages/update.profile";
-import  ViewEContract from "./pages/view.econtract";
+import ChangePassword from "./pages/change.password";
+import CreateGroup from "./pages/create.group";
+import ViewEContract from "./pages/view.econtract";
 
 
 function App() {
@@ -95,6 +97,14 @@ function App() {
       ),
     },
     {
+      path: "/change-password",
+      element: (
+        <ProtectedRoute roleId={3}>
+          <ChangePassword />
+        </ProtectedRoute>
+      ),
+    },
+    {
       path: "/contract",
       element: (
         <ProtectedRoute roleId={3}>
@@ -102,8 +112,6 @@ function App() {
         </ProtectedRoute>
       ),
     },
-
-    
     {
       path: "/view.econtract", 
       element: (
@@ -113,8 +121,6 @@ function App() {
       )
     
     },
-
-    
   ]);
 
   return (
