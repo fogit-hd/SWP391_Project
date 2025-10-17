@@ -17,8 +17,8 @@ import VerifyOTP from "./pages/verify.otp";
 import UpdateProfile from "./pages/update.profile";
 import ChangePassword from "./pages/change.password";
 import CreateGroup from "./pages/create.group";
-import ViewEContract from "./pages/view.econtract";
-
+import ViewContract from "./pages/view.econtract";
+import ManageVehicle from "./pages/admin/manageVehicle";
 
 function App() {
   const router = createBrowserRouter([
@@ -60,6 +60,15 @@ function App() {
       element: (
         <ProtectedRoute roleId={1}>
           <ManageGroup />
+        </ProtectedRoute>
+      ),
+    },
+
+    {
+      path: "/manage-vehicle",
+      element: (
+        <ProtectedRoute roleId={1}>
+          <ManageVehicle />
         </ProtectedRoute>
       ),
     },
