@@ -41,7 +41,7 @@ function App() {
     {
       path: "/admin/manage-contract",
       element: (
-        <ProtectedRoute roleId={1}>
+        <ProtectedRoute roleId={3}>
           <ManageContract />
         </ProtectedRoute>
       ),
@@ -122,13 +122,16 @@ function App() {
       ),
     },
     {
-      path: "/view.econtract", 
+      path: "/create-member-group",
       element: (
         <ProtectedRoute roleId={3}>
-          <ViewEContract />
+          <CreateGroup />
         </ProtectedRoute>
-      )
-    
+      ),
+    },
+    {
+      path: "/view-econtract",
+      element: <ViewContract />,
     },
   ]);
 

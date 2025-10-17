@@ -39,7 +39,6 @@ import api from "../../../config/axios";
 import ContractEditor from "../../../components/ContractEditor";
 import VariablesManager from "../../../components/VariablesManager";
 import ClausesManager from "../../../components/ClausesManager";
-import ContractPreview from "../../../components/ContractPreview";
 import "./ManageContract.css";
 
 const { Header, Content, Footer, Sider } = Layout;
