@@ -65,11 +65,6 @@ mvn clean install
 mvn spring-boot:run
 ```
 
-### 📸 Screenshots
-![Contract Editor](https://github.com/...)
-![Dashboard](https://github.com/...)
-![Template Management](https://github.com/...)
-
 ### 🤝 Contributing
 Since this is my first project, I'm open to any suggestions, improvements, or contributions! Feel free to:
 - Report bugs
