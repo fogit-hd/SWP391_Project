@@ -23,15 +23,15 @@ import ManageVehicle from "./pages/admin/manageVehicle";
 function App() {
   const router = createBrowserRouter([
     {
-      path: "/dashboard",
+      path: "/admin/dashboard",
       element: (
-        <ProtectedRoute roleId={1}>
+        <ProtectedRoute roleId={3}>
           <Dashboard />
         </ProtectedRoute>
       ),
     },
     {
-      path: "/manage-account",
+      path: "/admin/manage-account",
       element: (
         <ProtectedRoute roleId={1}>
           <ManageAccount />
@@ -39,9 +39,9 @@ function App() {
       ),
     },
     {
-      path: "/manage-contract",
+      path: "/admin/manage-contract",
       element: (
-        <ProtectedRoute roleId={1}>
+        <ProtectedRoute roleId={3}>
           <ManageContract />
         </ProtectedRoute>
       ),
