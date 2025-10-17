@@ -122,16 +122,13 @@ function App() {
       ),
     },
     {
-      path: "/create-member-group",
+      path: "/view.econtract", 
       element: (
         <ProtectedRoute roleId={3}>
-          <CreateGroup />
+          <ViewEContract />
         </ProtectedRoute>
-      ),
-    },
-    {
-      path: "/view-econtract",
-      element: <ViewContract />,
+      )
+    
     },
   ]);
 
