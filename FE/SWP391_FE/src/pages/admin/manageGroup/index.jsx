@@ -89,9 +89,9 @@ const { Header, Content, Footer, Sider } = Layout;
 
 const sidebarItems = [
   {
-    key: "/dashboard",
+    key: "/admin/dashboard",
     icon: <PieChartOutlined />,
-    label: <Link to="/dashboard">Dashboard</Link>,
+    label: <Link to="/admin/dashboard">Dashboard</Link>,
   },
   {
     key: "user-management",

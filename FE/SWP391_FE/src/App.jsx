@@ -41,7 +41,7 @@ function App() {
     {
       path: "/admin/manage-contract",
       element: (
-        <ProtectedRoute roleId={3}>
+        <ProtectedRoute roleId={1}>
           <ManageContract />
         </ProtectedRoute>
       ),
