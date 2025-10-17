@@ -6,24 +6,60 @@ import {
   TeamOutlined,
   UserOutlined,
   UsergroupAddOutlined,
+  EditOutlined,
+  CodeOutlined,
+  SettingOutlined,
+  PlusOutlined,
+  FileTextOutlined,
 } from "@ant-design/icons";
-import { Breadcrumb, Layout, Menu, theme, Button } from "antd";
+import {
+  Breadcrumb,
+  Layout,
+  Menu,
+  theme,
+  Button,
+  Row,
+  Col,
+  Card,
+  Typography,
+} from "antd";
 import { Link, useNavigate } from "react-router-dom";
+
 const { Header, Content, Footer, Sider } = Layout;
-function getItem(label, key, icon, children) {
-  return {
-    key,
-    icon,
-    children,
-    label: <Link to={key}>{label}</Link>,
-  };
-}
+const { Title, Paragraph } = Typography;
+
 const items = [
-  getItem("Dashboard", "/dashboard", <PieChartOutlined />),
-  getItem("User Management", "sub1", <UserOutlined />, [
-    getItem("Manage Accounts", "/manage-account", <UsergroupAddOutlined />),
-  ]),
+  {
+    key: "dashboard",
+    icon: <PieChartOutlined />,
+    label: <Link to="/admin/dashboard">Dashboard</Link>,
+  },
+  {
+    key: "user-management",
+    icon: <UserOutlined />,
+    label: "User Management",
+    children: [
+      {
+        key: "manage-accounts",
+        icon: <UsergroupAddOutlined />,
+        label: <Link to="/admin/manage-account">Manage Accounts</Link>,
+      },
+    ],
+  },
+  {
+    key: "contract-management",
+    icon: <FileTextOutlined />,
+    label: "Contract Management",
+    children: [
+      {
+        key: "manage-templates",
+        icon: <PlusOutlined />,
+        label: <Link to="/admin/manage-contract">Manage Templates</Link>,
+      },
+    ],
+  },
 ];
+
 const Dashboard = () => {
   const [collapsed, setCollapsed] = useState(false);
   const navigate = useNavigate();
@@ -32,8 +68,13 @@ const Dashboard = () => {
   } = theme.useToken();
 
   const handleManageAccount = () => {
-    navigate("/manage-account");
+    navigate("/admin/manage-account");
   };
+
+  const handleViewTemplate = () => {
+    navigate("/admin/manage-contract");
+  };
+
   return (
     <Layout style={{ minHeight: "100vh" }}>
       <Sider
@@ -44,7 +85,7 @@ const Dashboard = () => {
         <div className="demo-logo-vertical" />
         <Menu
           theme="dark"
-          defaultSelectedKeys={["1"]}
+          defaultSelectedKeys={["dashboard"]}
           mode="inline"
           items={items}
         />
@@ -65,25 +106,56 @@ const Dashboard = () => {
             }}
           >
             <div style={{ marginBottom: 24 }}>
-              <h2>Welcome to Dashboard</h2>
-              <p>Manage your application from here.</p>
+              <Title level={2}>Admin Dashboard</Title>
+              <Paragraph>
+                Manage your application and contract templates from here.
+              </Paragraph>
             </div>
-            <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
-              <Button
-                type="primary"
-                size="large"
-                icon={<UsergroupAddOutlined />}
-                onClick={handleManageAccount}
-              >
-                Manage Accounts
-              </Button>
-              <Button size="large" icon={<UserOutlined />}>
-                User Settings
-              </Button>
-              <Button size="large" icon={<FileOutlined />}>
-                Reports
-              </Button>
-            </div>
+
+            {/* User Management Section */}
+            <Card title="User Management" style={{ marginBottom: 24 }}>
+              <Row gutter={[16, 16]}>
+                <Col span={8}>
+                  <Button
+                    type="primary"
+                    size="large"
+                    icon={<UsergroupAddOutlined />}
+                    onClick={handleManageAccount}
+                    block
+                  >
+                    Manage Accounts
+                  </Button>
+                </Col>
+                <Col span={8}>
+                  <Button size="large" icon={<UserOutlined />} block>
+                    User Settings
+                  </Button>
+                </Col>
+                <Col span={8}>
+                  <Button size="large" icon={<FileOutlined />} block>
+                    Reports
+                  </Button>
+                </Col>
+              </Row>
+            </Card>
+
+            {/* Contract Management Section */}
+            <Card title="Contract Management">
+              <Row gutter={[16, 16]}>
+                <Col xs={24} sm={12} lg={8}>
+                  <Button
+                    type="primary"
+                    size="large"
+                    icon={<PlusOutlined />}
+                    onClick={handleViewTemplate}
+                    block
+                    style={{ height: 60 }}
+                  >
+                    View templates
+                  </Button>
+                </Col>
+              </Row>
+            </Card>
           </div>
         </Content>
         <Footer style={{ textAlign: "center" }}>
@@ -93,4 +165,5 @@ const Dashboard = () => {
     </Layout>
   );
 };
+
 export default Dashboard;

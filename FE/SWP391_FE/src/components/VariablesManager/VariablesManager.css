@@ -1,0 +1,258 @@
+/* Variables Manager Styles - Professional Admin Theme */
+.variables-manager {
+  background: #ffffff;
+  border-radius: 4px;
+}
+
+.variables-manager h3 {
+  color: #262626 !important;
+  font-size: 16px !important;
+  font-weight: 600 !important;
+  margin-bottom: 16px !important;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.variables-manager .ant-btn {
+  border-radius: 4px !important;
+  font-weight: 400 !important;
+  height: 32px !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+  transition: all 0.2s ease !important;
+  font-size: 13px !important;
+}
+
+.variables-manager .ant-btn-primary {
+  background: #1890ff !important;
+  border: 1px solid #1890ff !important;
+  color: white !important;
+}
+
+.variables-manager .ant-btn-primary:hover {
+  background: #40a9ff !important;
+  border-color: #40a9ff !important;
+  color: white !important;
+}
+
+.variables-manager .ant-btn-danger {
+  background: #ff4d4f !important;
+  border: 1px solid #ff4d4f !important;
+  color: white !important;
+}
+
+.variables-manager .ant-btn-danger:hover {
+  background: #ff7875 !important;
+  border-color: #ff7875 !important;
+  color: white !important;
+}
+
+.variables-manager .ant-btn-default {
+  background: #ffffff !important;
+  border: 1px solid #d9d9d9 !important;
+  color: #262626 !important;
+}
+
+.variables-manager .ant-btn-default:hover {
+  background: #f5f5f5 !important;
+  border-color: #bfbfbf !important;
+  color: #262626 !important;
+}
+
+/* Table Styles */
+.variables-manager .ant-table {
+  background: white;
+  border-radius: 4px;
+  border: 1px solid #f0f0f0;
+}
+
+.variables-manager .ant-table-thead > tr > th {
+  background: #fafafa !important;
+  color: #262626 !important;
+  font-weight: 600 !important;
+  font-size: 14px !important;
+  border-bottom: 1px solid #e8e8e8 !important;
+  padding: 12px 16px !important;
+  text-align: left;
+}
+
+.variables-manager .ant-table-tbody > tr > td {
+  padding: 12px 16px !important;
+  border-bottom: 1px solid #f5f5f5 !important;
+  font-size: 14px !important;
+  color: #595959 !important;
+  background: white;
+}
+
+.variables-manager .ant-table-tbody > tr:hover > td {
+  background: #fafafa !important;
+}
+
+.variables-manager .ant-table-tbody > tr:nth-child(even) > td {
+  background: #fafafa;
+}
+
+/* Tag Styles */
+.variables-manager .ant-tag {
+  border-radius: 4px !important;
+  font-weight: 400 !important;
+  padding: 2px 8px !important;
+  font-size: 12px !important;
+}
+
+.variables-manager .ant-tag-blue {
+  background: #f0f0f0 !important;
+  color: #595959 !important;
+  border: 1px solid #d9d9d9 !important;
+}
+
+.variables-manager .ant-tag-green {
+  background: #fafafa !important;
+  color: #262626 !important;
+  border: 1px solid #e8e8e8 !important;
+}
+
+.variables-manager .ant-tag-red {
+  background: #fff2f0 !important;
+  color: #ff4d4f !important;
+  border: 1px solid #ffccc7 !important;
+}
+
+/* Code Style for Variable Names */
+.variables-manager code {
+  background: #f5f5f5 !important;
+  color: #262626 !important;
+  padding: 2px 6px !important;
+  border-radius: 3px !important;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace !important;
+  font-size: 12px !important;
+  border: 1px solid #e8e8e8 !important;
+}
+
+/* Modal Styles */
+.variables-manager .ant-modal-content {
+  border-radius: 6px !important;
+  overflow: hidden !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+}
+
+.variables-manager .ant-modal-header {
+  background: #ffffff !important;
+  border-bottom: 1px solid #f0f0f0 !important;
+  padding: 16px 24px !important;
+}
+
+.variables-manager .ant-modal-title {
+  color: #262626 !important;
+  font-size: 16px !important;
+  font-weight: 600 !important;
+}
+
+.variables-manager .ant-modal-close {
+  color: #8c8c8c !important;
+}
+
+.variables-manager .ant-modal-close:hover {
+  color: #262626 !important;
+}
+
+.variables-manager .ant-modal-body {
+  padding: 24px !important;
+  background: white;
+}
+
+/* Form Styles */
+.variables-manager .ant-form-item-label > label {
+  color: #262626 !important;
+  font-weight: 500 !important;
+  font-size: 14px !important;
+}
+
+.variables-manager .ant-input,
+.variables-manager .ant-select-selector {
+  border-radius: 4px !important;
+  border: 1px solid #d9d9d9 !important;
+  font-size: 14px !important;
+  color: #262626 !important;
+  transition: all 0.2s ease !important;
+}
+
+.variables-manager .ant-input:focus,
+.variables-manager .ant-select-focused .ant-select-selector {
+  border-color: #262626 !important;
+  box-shadow: 0 0 0 2px rgba(38, 38, 38, 0.1) !important;
+}
+
+/* Switch Styles */
+.variables-manager .ant-switch-checked {
+  background-color: #262626 !important;
+}
+
+.variables-manager .ant-switch {
+  background-color: #d9d9d9 !important;
+}
+
+/* Pagination Styles */
+.variables-manager .ant-pagination .ant-pagination-item {
+  border-radius: 4px !important;
+  border: 1px solid #d9d9d9 !important;
+}
+
+.variables-manager .ant-pagination .ant-pagination-item-active {
+  background: #262626 !important;
+  border-color: #262626 !important;
+}
+
+.variables-manager .ant-pagination .ant-pagination-item-active a {
+  color: white !important;
+}
+
+.variables-manager .ant-pagination .ant-pagination-prev,
+.variables-manager .ant-pagination .ant-pagination-next {
+  border-radius: 4px !important;
+  border: 1px solid #d9d9d9 !important;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .variables-manager .ant-table-thead > tr > th,
+  .variables-manager .ant-table-tbody > tr > td {
+    padding: 8px 12px !important;
+    font-size: 13px !important;
+  }
+  
+  .variables-manager .ant-btn {
+    height: 28px !important;
+    font-size: 12px !important;
+  }
+  
+  .variables-manager .ant-modal-body {
+    padding: 16px !important;
+  }
+}
+
+/* Loading States */
+.variables-manager .ant-spin {
+  color: #8c8c8c !important;
+}
+
+/* Empty State */
+.variables-manager .ant-empty {
+  color: #8c8c8c !important;
+}
+
+.variables-manager .ant-empty-description {
+  color: #bfbfbf !important;
+}
+
+/* Space Component */
+.variables-manager .ant-space {
+  gap: 6px !important;
+}
+
+/* Action Buttons Container */
+.variables-manager .ant-space-item {
+  display: flex;
+  align-items: center;
+}
