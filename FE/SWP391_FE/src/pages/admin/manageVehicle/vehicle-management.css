@@ -1,0 +1,385 @@
+/* Vehicle Management Styles */
+.vehicle-management-container {
+  padding: 20px;
+}
+
+.vehicle-table {
+  margin-top: 16px;
+  
+  .ant-table-thead > tr > th {
+    background: linear-gradient(135deg, #f6f9fc 0%, #e9ecef 100%);
+    font-weight: 600;
+    color: #343a40;
+    border-bottom: 2px solid #dee2e6;
+  }
+  
+  .ant-table-tbody > tr {
+    transition: all 0.2s ease;
+    
+    &:hover > td {
+      background-color: #f8f9fa !important;
+      transform: translateY(-1px);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    }
+  }
+}
+
+.vehicle-status-tag {
+  font-weight: 500;
+  text-transform: uppercase;
+  font-size: 11px;
+  padding: 4px 8px;
+  border-radius: 6px;
+}
+
+.vehicle-actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  
+  .ant-btn {
+    border-radius: 6px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    
+    &:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+    }
+  }
+}
+
+.vehicle-modal {
+  .ant-modal-header {
+    padding: 20px 24px;
+    border-bottom: 1px solid #f0f0f0;
+  }
+  
+  .ant-modal-body {
+    padding: 24px;
+  }
+}
+
+.vehicle-form {
+  .ant-form-item {
+    margin-bottom: 16px;
+  }
+  
+  .ant-form-item-label {
+    font-weight: 500;
+  }
+}
+
+.vehicle-stats-card {
+  margin-bottom: 16px;
+  
+  .ant-statistic-title {
+    color: #666;
+  }
+  
+  .ant-statistic-content {
+    color: #333;
+  }
+}
+
+.vehicle-filters {
+  margin-bottom: 16px;
+  padding: 16px;
+  background: #fafafa;
+  border-radius: 6px;
+}
+
+.vehicle-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.vehicle-search {
+  width: 300px;
+}
+
+@media (max-width: 768px) {
+  .vehicle-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .vehicle-search {
+    width: 100%;
+  }
+  
+  .vehicle-toolbar {
+    flex-direction: column;
+    gap: 12px;
+  }
+}
+
+/* Table responsive styles */
+.ant-table-wrapper {
+  overflow-x: auto;
+}
+
+.ant-table-thead > tr > th {
+  background-color: #fafafa;
+  font-weight: 600;
+}
+
+.ant-table-tbody > tr:hover > td {
+  background-color: #f5f5f5;
+}
+
+/* Fixed columns styling */
+.ant-table-fixed-left {
+  box-shadow: 6px 0 6px -4px rgba(0, 0, 0, 0.15);
+}
+
+.ant-table-fixed-right {
+  box-shadow: -6px 0 6px -4px rgba(0, 0, 0, 0.15);
+}
+
+/* Action dropdown styling */
+.vehicle-actions-dropdown {
+  .ant-dropdown-menu {
+    min-width: 120px;
+    padding: 4px 0;
+    border-radius: 8px;
+    box-shadow: 0 6px 16px 0 rgba(0, 0, 0, 0.08);
+  }
+  
+  .dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 14px;
+    
+    &:hover {
+      background-color: #f5f5f5;
+    }
+    
+    &.danger {
+      color: #ff4d4f;
+      
+      &:hover {
+        background-color: #fff2f0;
+        color: #ff4d4f;
+      }
+    }
+    
+    .anticon {
+      font-size: 14px;
+    }
+  }
+}
+
+/* Action button styling */
+.vehicle-action-button {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    background-color: #f5f5f5;
+    transform: scale(1.1);
+  }
+}
+
+/* Fixed column background */
+.ant-table-fixed-left .ant-table-cell,
+.ant-table-fixed-right .ant-table-cell {
+  background: inherit;
+}
+
+/* Modal form styles */
+.vehicle-modal {
+  .ant-modal-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-bottom: none;
+    padding: 20px 24px;
+    
+    .ant-modal-title {
+      color: white;
+      font-size: 18px;
+      font-weight: 600;
+    }
+  }
+  
+  .ant-modal-body {
+    padding: 32px 24px;
+    background: #fafafa;
+  }
+  
+  .ant-modal-footer {
+    background: #fafafa;
+    border-top: 1px solid #e8e8e8;
+    padding: 16px 24px;
+  }
+}
+
+.vehicle-form {
+  background: white;
+  padding: 24px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  
+  .ant-form-item {
+    margin-bottom: 20px;
+  }
+  
+  .ant-form-item-label {
+    font-weight: 600;
+    color: #262626;
+    
+    label {
+      font-size: 14px;
+      height: auto;
+    }
+    
+    .ant-form-item-required {
+      &::before {
+        color: #ff4d4f !important;
+      }
+    }
+  }
+  
+  .ant-input,
+  .ant-input-number {
+    border-radius: 8px;
+    border: 2px solid #e8e8e8;
+    padding: 12px 16px;
+    font-size: 14px;
+    transition: all 0.3s ease;
+    
+    &:hover {
+      border-color: #40a9ff;
+    }
+    
+    &:focus,
+    &.ant-input-focused {
+      border-color: #1890ff;
+      box-shadow: 0 0 0 3px rgba(24, 144, 255, 0.1);
+    }
+  }
+  
+  .ant-input-number {
+    width: 100%;
+    
+    .ant-input-number-input {
+      padding: 0;
+    }
+  }
+  
+  .ant-form-item-explain-error {
+    color: #ff4d4f;
+    font-size: 12px;
+    margin-top: 4px;
+  }
+}
+
+.vehicle-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  
+  .ant-form-item {
+    margin-bottom: 0;
+  }
+}
+
+.vehicle-form-full-width {
+  grid-column: 1 / -1;
+}
+
+.vehicle-form-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 32px;
+  padding-top: 24px;
+  border-top: 1px solid #e8e8e8;
+  
+  .ant-btn {
+    height: 40px;
+    padding: 0 24px;
+    border-radius: 8px;
+    font-weight: 500;
+    font-size: 14px;
+    
+    &.ant-btn-primary {
+      background: linear-gradient(135deg, #1890ff 0%, #096dd9 100%);
+      border: none;
+      
+      &:hover {
+        background: linear-gradient(135deg, #40a9ff 0%, #1890ff 100%);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(24, 144, 255, 0.3);
+      }
+    }
+    
+    &.ant-btn-default {
+      border: 2px solid #d9d9d9;
+      color: #595959;
+      
+      &:hover {
+        border-color: #40a9ff;
+        color: #1890ff;
+      }
+    }
+  }
+}
+
+@media (max-width: 576px) {
+  .vehicle-form-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  
+  .vehicle-form-actions {
+    flex-direction: column;
+    
+    .ant-btn {
+      width: 100%;
+    }
+  }
+}
+
+/* Status indicator styles */
+.status-active {
+  color: #52c41a;
+  font-weight: 500;
+}
+
+.status-inactive {
+  color: #ff4d4f;
+  font-weight: 500;
+}
+
+.status-maintenance {
+  color: #faad14;
+  font-weight: 500;
+}
+
+/* Loading and error states */
+.vehicle-loading {
+  text-align: center;
+  padding: 40px;
+}
+
+.vehicle-error {
+  text-align: center;
+  padding: 20px;
+}
+
+.vehicle-empty {
+  text-align: center;
+  padding: 60px 20px;
+  color: #999;
+}
