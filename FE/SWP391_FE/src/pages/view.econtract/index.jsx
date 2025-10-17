@@ -8,7 +8,7 @@ import AppFooter from "../../components/protected-route/layouts/AppFooter";
 import AdImage1 from "./picture/OIP.jpg"; // Import ad images
 import AdImage2 from "./picture/tai-khoan-dong-so-huu-joint-account-la-gi-48-1.jpg";
 import AdImage3 from "./picture/ecar.png";
-import ContractPage from "../econtract";
+
 
 import {
   LeftOutlined,

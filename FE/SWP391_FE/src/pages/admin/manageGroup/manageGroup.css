@@ -1,0 +1,23 @@
+/* Styles specific to Manage Group page */
+.manage-group-container {
+  padding: 24px;
+}
+
+.manage-group-card {
+  border-radius: 8px;
+}
+
+.manage-group-table a {
+  color: rgba(24, 144, 255, 1);
+  cursor: pointer;
+}
+
+.manage-group-details h3 {
+  margin-top: 0;
+}
+
+.manage-group-sidebar-logo {
+  height: 48px;
+  margin: 16px;
+  background: rgba(255, 255, 255, 0.2);
+}
