@@ -82,7 +82,7 @@ This project has been a great learning experience for me in:
 
 ### 👥 Contact
 **Email**: huynhdungphong2005@gmail.com
-**GitHub**: [@hdphong2k5](https://github.com/hdphong2k5)
+**GitHub**: [@fogit-hd](https://github.com/fogit-hd)
 
 ### 📄 License
 © 2025 EV Co-ownership Platform. All rights reserved. 
