@@ -3,8 +3,10 @@ import { Layout, Button, Space, Avatar, Dropdown, Typography } from "antd";
 import { UserOutlined, LogoutOutlined, HistoryOutlined } from "@ant-design/icons";
 import { Link } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
-import { logout } from "../../../redux/accountSlice";
-import "../../../pages/home/home.css";
+import { logout } from "../../redux/accountSlice";
+
+import "../../pages/home/home.css";
+
 
 const { Header } = Layout;
 const { Title, Text } = Typography;

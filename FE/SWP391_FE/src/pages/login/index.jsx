@@ -106,7 +106,7 @@ const LoginPage = () => {
       // Navigate based on role
       if (roleId === 1) {
         // Admin
-        navigate("/dashboard");
+        navigate("/admin/dashboard");
       } else {
         navigate("/");
       }

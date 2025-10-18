@@ -89,9 +89,9 @@ const { Header, Content, Footer, Sider } = Layout;
 
 const sidebarItems = [
   {
-    key: "/dashboard",
+    key: "/admin/dashboard",
     icon: <PieChartOutlined />,
-    label: <Link to="/dashboard">Dashboard</Link>,
+    label: <Link to="/admin/dashboard">Dashboard</Link>,
   },
   {
     key: "user-management",
@@ -174,7 +174,6 @@ export default function ManageGroup() {
     fetchGroups();
   }, []);
 
-  // Fetch vehicles for a group when opening details
   const fetchVehiclesForGroup = async (groupId) => {
     if (!groupId) return;
     setVehiclesLoading(true);
@@ -235,18 +234,8 @@ export default function ManageGroup() {
       key: "createdBy",
       render: (v, record) => v || record?.created_by || "-",
     },
-    {
-      title: "Created At",
-      dataIndex: ["createdAt"],
-      key: "createdAt",
-      render: (v, record) => formatDate(v || record?.created_at),
-    },
-    {
-      title: "Updated At",
-      dataIndex: ["updatedAt"],
-      key: "updatedAt",
-      render: (v, record) => formatDate(v || record?.updated_at),
-    },
+   
+    
     {
       title: "Members",
       dataIndex: ["members"],
@@ -263,7 +252,26 @@ export default function ManageGroup() {
       title: "Active",
       dataIndex: "isActive",
       key: "isActive",
-      render: (v) => (v ? <Tag color="green">Active</Tag> : <Tag>Inactive</Tag>),
+      render: (v) => (v ? <Tag color="green" className="status-tag">Active</Tag> : <Tag color="red" className="status-tag">Inactive</Tag>),
+    },
+    {
+      title: "Actions",
+      key: "actions",
+      render: (_, record) => (
+        <Space>
+          <Button
+            type="link"
+            onClick={() => {
+              setSelected(record);
+              setDetailsVisible(true);
+              setSelectedVehicles(record?.vehicles || []);
+              fetchVehiclesForGroup(record?.id);
+            }}
+          >
+            Details
+          </Button>
+        </Space>
+      ),
     },
     {
       title: "Actions",
@@ -349,8 +357,8 @@ export default function ManageGroup() {
                           const owner = g?.members?.find((m) => m.roleInGroup === "OWNER") || g?.members?.[0];
                           return (
                             <Card size="small" className="manage-group-card" style={{ marginBottom: 12 }}>
-                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                <h3 style={{ margin: 0, cursor: 'pointer' }} onClick={() => { setSelected(g); setDetailsVisible(true); setSelectedVehicles(g?.vehicles || []); fetchVehiclesForGroup(g?.id); }}>{g?.name}</h3>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
+                                <h3 style={{ margin: 0, cursor: 'pointer' }} onClick={() => { setSelected(g); setDetailsVisible(true); }}>{g?.name}</h3>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                                   <Tag color={g?.isActive ? 'green' : undefined}>{g?.isActive ? 'Active' : 'Inactive'}</Tag>
                                   <Button size="small" onClick={() => { setSelected(g); setDetailsVisible(true); setSelectedVehicles(g?.vehicles || []); fetchVehiclesForGroup(g?.id); }}>Details</Button>
@@ -432,13 +440,13 @@ export default function ManageGroup() {
                           title={v.plateNumber || v.id}
                           description={
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 4 }}>
-                              <div>
+                              <div className="vehicle-line">
                                 <strong>Make/Model:</strong> {(v.make || '-') + ' / ' + (v.model || '-')}
                                 {typeof v.modelYear !== 'undefined' && (
                                   <span> • <strong>Year:</strong> {v.modelYear}</span>
                                 )}
                               </div>
-                              <div>
+                              <div className="vehicle-line">
                                 <strong>Status:</strong> {(() => {
                                   const s = (v.status || '').toUpperCase();
                                   let color;
@@ -446,18 +454,18 @@ export default function ManageGroup() {
                                   else if (s === 'INACTIVE') color = 'red';
                                   else if (s === 'MAINTENANCE') color = 'orange';
                                   const label = s === 'ACTIVE' ? 'Active' : s === 'INACTIVE' ? 'Inactive' : (v.status || '-');
-                                  return <Tag color={color}>{label}</Tag>;
+                                  return <Tag color={color} className="status-tag">{label}</Tag>;
                                 })()}
                                 {v.color ? <span> • <strong>Color:</strong> {v.color}</span> : null}
                               </div>
-                              <div>
+                              <div className="vehicle-line">
                                 <strong>Battery:</strong> {v.batteryCapacityKwh ?? '-'} kWh • <strong>Range:</strong> {v.rangeKm ?? '-'} km
                               </div>
-                              <div>
+                              <div className="vehicle-line">
                                 <strong>Device ID:</strong> {v.telematicsDeviceId || '-'}
                                 {v.groupId ? <span> • <strong>Group ID:</strong> {v.groupId}</span> : null}
                               </div>
-                              <div style={{ opacity: 0.8 }}>
+                              <div className="vehicle-line" style={{ opacity: 0.9 }}>
                                 <strong>Vehicle ID:</strong> {v.id || '-'}
                               </div>
                             </div>

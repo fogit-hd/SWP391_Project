@@ -3,12 +3,12 @@ import { Layout, Button, Typography, Card, Space, Row, Col, Divider, Input, Date
 import { Link } from "react-router-dom";
 import "antd/dist/reset.css";
 import "./view-econtract.css";
-import AppHeader from "../../components/protected-route/layouts/AppHeader";
-import AppFooter from "../../components/protected-route/layouts/AppFooter";
+
 import AdImage1 from "./picture/OIP.jpg"; // Import ad images
 import AdImage2 from "./picture/tai-khoan-dong-so-huu-joint-account-la-gi-48-1.jpg";
 import AdImage3 from "./picture/ecar.png";
-
+import AppHeader from "../../components/reuse/AppHeader";
+import AppFooter from "../../components/reuse/AppFooter";
 
 import {
   LeftOutlined,
@@ -297,7 +297,7 @@ const ViewContract = () => {
         </Row>
       </Content>
 
-      <AppFooter />
+      <AppFooter/>
     </Layout>
   );
 };
