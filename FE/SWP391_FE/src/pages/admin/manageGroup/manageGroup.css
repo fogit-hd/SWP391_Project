@@ -21,3 +21,44 @@
   margin: 16px;
   background: rgba(255, 255, 255, 0.2);
 }
+
+/* Modal readability and status tags */
+.manage-group-modal .ant-modal-content,
+.manage-group-modal .ant-modal-body,
+.manage-group-modal {
+  color: #E6F4FF; /* light text for dark background */
+}
+
+.manage-group-modal h3,
+.manage-group-modal strong {
+  color: #E6F4FF;
+}
+
+.manage-group-modal .ant-list-item-meta-title,
+.manage-group-modal .ant-list-item-meta-description {
+  color: #E6F4FF !important;
+}
+
+.manage-group-modal .ant-list-item-meta-title > a,
+.manage-group-modal a {
+  color: #8fd6ff !important;
+}
+
+.manage-group-modal .ant-list-item-meta-description,
+.manage-group-modal .ant-typography,
+.manage-group-modal .ant-typography-secondary {
+  color: #C2D9FF !important;
+}
+
+.manage-group-modal .ant-modal-title {
+  color: #E6F4FF !important;
+}
+
+.status-tag {
+  font-weight: 600;
+  border: none;
+}
+
+.vehicle-line {
+  color: #C2D9FF;
+}

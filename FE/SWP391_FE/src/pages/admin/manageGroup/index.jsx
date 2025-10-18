@@ -124,6 +124,8 @@ export default function ManageGroup() {
   const [detailsVisible, setDetailsVisible] = useState(false);
   const [viewKey, setViewKey] = useState("card");
   const [current, setCurrent] = useState(0);
+  const [vehiclesLoading, setVehiclesLoading] = useState(false);
+  const [selectedVehicles, setSelectedVehicles] = useState([]);
 
   // Helpers: normalize API fields and format dates safely
   const normalizeGroups = (arr) =>
@@ -172,6 +174,26 @@ export default function ManageGroup() {
     fetchGroups();
   }, []);
 
+  const fetchVehiclesForGroup = async (groupId) => {
+    if (!groupId) return;
+    setVehiclesLoading(true);
+    try {
+      const res = await api.get(`/CoOwnership/${groupId}/vehicles`);
+      const payload = res.data?.data ?? res.data;
+      let list = [];
+      if (Array.isArray(payload)) list = payload;
+      else if (Array.isArray(payload?.items)) list = payload.items;
+      else if (Array.isArray(payload?.vehicles)) list = payload.vehicles;
+      setSelectedVehicles(list);
+    } catch (err) {
+      console.error("Cannot fetch vehicles for group:", groupId, err);
+      message.error("Cannot fetch vehicles for this group");
+      setSelectedVehicles([]);
+    } finally {
+      setVehiclesLoading(false);
+    }
+  };
+
   const columns = [
     {
       title: "Name",
@@ -182,6 +204,8 @@ export default function ManageGroup() {
           onClick={() => {
             setSelected(record);
             setDetailsVisible(true);
+            setSelectedVehicles(record?.vehicles || []);
+            fetchVehiclesForGroup(record?.id);
           }}
         >
           {text}
@@ -210,18 +234,8 @@ export default function ManageGroup() {
       key: "createdBy",
       render: (v, record) => v || record?.created_by || "-",
     },
-    {
-      title: "Created At",
-      dataIndex: ["createdAt"],
-      key: "createdAt",
-      render: (v, record) => formatDate(v || record?.created_at),
-    },
-    {
-      title: "Updated At",
-      dataIndex: ["updatedAt"],
-      key: "updatedAt",
-      render: (v, record) => formatDate(v || record?.updated_at),
-    },
+   
+    
     {
       title: "Members",
       dataIndex: ["members"],
@@ -238,7 +252,26 @@ export default function ManageGroup() {
       title: "Active",
       dataIndex: "isActive",
       key: "isActive",
-      render: (v) => (v ? <Tag color="green">Active</Tag> : <Tag>Inactive</Tag>),
+      render: (v) => (v ? <Tag color="green" className="status-tag">Active</Tag> : <Tag color="red" className="status-tag">Inactive</Tag>),
+    },
+    {
+      title: "Actions",
+      key: "actions",
+      render: (_, record) => (
+        <Space>
+          <Button
+            type="link"
+            onClick={() => {
+              setSelected(record);
+              setDetailsVisible(true);
+              setSelectedVehicles(record?.vehicles || []);
+              fetchVehiclesForGroup(record?.id);
+            }}
+          >
+            Details
+          </Button>
+        </Space>
+      ),
     },
   ];
 
@@ -305,9 +338,12 @@ export default function ManageGroup() {
                           const owner = g?.members?.find((m) => m.roleInGroup === "OWNER") || g?.members?.[0];
                           return (
                             <Card size="small" className="manage-group-card" style={{ marginBottom: 12 }}>
-                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
                                 <h3 style={{ margin: 0, cursor: 'pointer' }} onClick={() => { setSelected(g); setDetailsVisible(true); }}>{g?.name}</h3>
-                                <Tag color={g?.isActive ? 'green' : undefined}>{g?.isActive ? 'Active' : 'Inactive'}</Tag>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                  <Tag color={g?.isActive ? 'green' : undefined}>{g?.isActive ? 'Active' : 'Inactive'}</Tag>
+                                  <Button size="small" onClick={() => { setSelected(g); setDetailsVisible(true); setSelectedVehicles(g?.vehicles || []); fetchVehiclesForGroup(g?.id); }}>Details</Button>
+                                </div>
                               </div>
                               <div style={{ marginTop: 8, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
                                 <div><strong>ID:</strong> {g?.id}</div>
@@ -355,6 +391,7 @@ export default function ManageGroup() {
               onCancel={() => setDetailsVisible(false)}
               footer={<Button onClick={() => setDetailsVisible(false)}>Close</Button>}
               width={800}
+              className="manage-group-modal"
             >
               {selected ? (
                 <div>
@@ -375,13 +412,45 @@ export default function ManageGroup() {
 
                   <h3 style={{ marginTop: 16 }}>Vehicles</h3>
                   <List
+                    loading={vehiclesLoading}
                     itemLayout="horizontal"
-                    dataSource={selected.vehicles || []}
+                    dataSource={(selectedVehicles && selectedVehicles.length > 0) ? selectedVehicles : (selected.vehicles || [])}
                     renderItem={(v) => (
                       <List.Item>
                         <List.Item.Meta
                           title={v.plateNumber || v.id}
-                          description={`${v.make || ""} ${v.model || ""} — ${v.status || ""}`}
+                          description={
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 4 }}>
+                              <div className="vehicle-line">
+                                <strong>Make/Model:</strong> {(v.make || '-') + ' / ' + (v.model || '-')}
+                                {typeof v.modelYear !== 'undefined' && (
+                                  <span> • <strong>Year:</strong> {v.modelYear}</span>
+                                )}
+                              </div>
+                              <div className="vehicle-line">
+                                <strong>Status:</strong> {(() => {
+                                  const s = (v.status || '').toUpperCase();
+                                  let color;
+                                  if (s === 'ACTIVE') color = 'green';
+                                  else if (s === 'INACTIVE') color = 'red';
+                                  else if (s === 'MAINTENANCE') color = 'orange';
+                                  const label = s === 'ACTIVE' ? 'Active' : s === 'INACTIVE' ? 'Inactive' : (v.status || '-');
+                                  return <Tag color={color} className="status-tag">{label}</Tag>;
+                                })()}
+                                {v.color ? <span> • <strong>Color:</strong> {v.color}</span> : null}
+                              </div>
+                              <div className="vehicle-line">
+                                <strong>Battery:</strong> {v.batteryCapacityKwh ?? '-'} kWh • <strong>Range:</strong> {v.rangeKm ?? '-'} km
+                              </div>
+                              <div className="vehicle-line">
+                                <strong>Device ID:</strong> {v.telematicsDeviceId || '-'}
+                                {v.groupId ? <span> • <strong>Group ID:</strong> {v.groupId}</span> : null}
+                              </div>
+                              <div className="vehicle-line" style={{ opacity: 0.9 }}>
+                                <strong>Vehicle ID:</strong> {v.id || '-'}
+                              </div>
+                            </div>
+                          }
                         />
                       </List.Item>
                     )}
