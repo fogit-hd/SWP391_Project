@@ -133,6 +133,7 @@ function App() {
       ),
     },
     {
+      
       path: "/view.econtract",
       element: <ViewContract />,
     },
