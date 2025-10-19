@@ -40,7 +40,7 @@ const MyGroup = () => {
 				image={Empty.PRESENTED_IMAGE_SIMPLE}
 				description={<Text>You don't have any group</Text>}
 			>
-				<Link to="/create-group">
+				<Link to="/create.group">
 					<Button type="primary" icon={<PlusOutlined />}>Create group</Button>
 				</Link>
 			</Empty>
@@ -53,7 +53,7 @@ const MyGroup = () => {
 				<Title level={3} style={{ margin: 0 }}>
 					<TeamOutlined /> My Groups
 				</Title>
-				<Button type="primary" icon={<PlusOutlined />} onClick={() => navigate("/create-group")}>Create group</Button>
+				<Button type="primary" icon={<PlusOutlined />} onClick={() => navigate("/create.group")}>Create group</Button>
 			</Space>
 
 			{loading ? (

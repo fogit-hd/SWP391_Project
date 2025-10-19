@@ -69,7 +69,7 @@ const LoginPage = () => {
         Staff: 2,
         CoOwner: 3,
       };
-      const roleId = roleMapping[role] || 1;
+      const roleId = roleMapping[role] || 3;
 
       const userData = {
         ...response.data,
@@ -106,7 +106,7 @@ const LoginPage = () => {
       // Navigate based on role
       if (roleId === 1) {
         // Admin
-        navigate("/dashboard");
+        navigate("/admin/dashboard");
       } else {
         navigate("/");
       }

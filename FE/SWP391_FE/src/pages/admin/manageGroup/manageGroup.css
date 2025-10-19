@@ -22,66 +22,43 @@
   background: rgba(255, 255, 255, 0.2);
 }
 
-/* Brighter, high-contrast styles for Manage Group details modal */
-.manage-group-modal .ant-modal-content {
-  background: #16354a; /* slightly brighter navy */
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 10px;
-}
-
-.manage-group-modal .ant-modal-header,
+/* Modal readability and status tags */
+.manage-group-modal .ant-modal-content,
 .manage-group-modal .ant-modal-body,
-.manage-group-modal .ant-modal-footer {
-  background: transparent;
+.manage-group-modal {
+  color: #E6F4FF; /* light text for dark background */
 }
 
-.manage-group-modal .ant-modal-header {
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.manage-group-modal .ant-modal-title,
-.manage-group-modal .ant-modal-close-x,
-.manage-group-modal,
-.manage-group-modal .ant-typography,
-.manage-group-modal strong,
 .manage-group-modal h3,
+.manage-group-modal strong {
+  color: #E6F4FF;
+}
+
 .manage-group-modal .ant-list-item-meta-title,
 .manage-group-modal .ant-list-item-meta-description {
-  color: #e7f5ff !important; /* brighter text */
+  color: #E6F4FF !important;
 }
 
-.manage-group-modal .ant-list-item-meta-description {
-  color: #cfe9ff !important; /* slightly dimmer for secondary text */
+.manage-group-modal .ant-list-item-meta-title > a,
+.manage-group-modal a {
+  color: #8fd6ff !important;
 }
 
-.manage-group-modal .ant-tag {
+.manage-group-modal .ant-list-item-meta-description,
+.manage-group-modal .ant-typography,
+.manage-group-modal .ant-typography-secondary {
+  color: #C2D9FF !important;
+}
+
+.manage-group-modal .ant-modal-title {
+  color: #E6F4FF !important;
+}
+
+.status-tag {
   font-weight: 600;
+  border: none;
 }
 
-.manage-group-modal .ant-tag-green {
-  color: #0b3d20; /* readable dark text */
-  background: #b6f0c2; /* soft green */
-  border-color: #86e2a2;
-}
-
-.manage-group-modal .ant-tag-red {
-  color: #4a0d0d;
-  background: #ffc9c9;
-  border-color: #ffa8a8;
-}
-
-.manage-group-modal .ant-tag-orange {
-  color: #663c00;
-  background: #ffd8a8;
-  border-color: #ffc078;
-}
-
-.manage-group-modal .ant-btn-default {
-  color: #0ea5e9;
-  border-color: #0ea5e9;
-}
-
-.manage-group-modal .ant-btn-default:hover {
-  color: #0284c7;
-  border-color: #0284c7;
+.vehicle-line {
+  color: #C2D9FF;
 }

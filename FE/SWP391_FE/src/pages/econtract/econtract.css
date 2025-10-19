@@ -43,7 +43,8 @@
   border-radius: 18px;
   padding: 32px;
   border: 1px solid rgba(0, 255, 255, 0.3);
-  box-shadow: 0 0 25px rgba(0, 255, 255, 0.15), inset 0 0 15px rgba(0, 255, 255, 0.05);
+  box-shadow: 0 0 25px rgba(0, 255, 255, 0.15),
+    inset 0 0 15px rgba(0, 255, 255, 0.05);
   backdrop-filter: blur(20px);
   color: #e0faff;
   animation: fadeSlideUp 1s ease forwards;
@@ -136,39 +137,6 @@
 .econ-form input::placeholder,
 .econ-form textarea::placeholder {
   color: rgba(200, 255, 255, 0.5);
-}
-
-/* 🔘 SELECT DROPDOWN */
-.ant-select-dropdown {
-  background: rgba(10, 20, 35, 0.95);
-  color: #e0faff;
-  border: 1px solid rgba(0, 255, 255, 0.4);
-}
-
-.ant-select-item-option-content {
-  color: #aeeaff;
-}
-
-.ant-select-item-option-active {
-  background: rgba(0, 255, 255, 0.1);
-}
-
-/* 🌟 MODAL */
-.ant-modal-content {
-  background: rgba(15, 25, 40, 0.95) !important;
-  color: #e0faff !important;
-  border: 1px solid rgba(0, 255, 255, 0.3);
-  box-shadow: 0 0 25px rgba(0, 255, 255, 0.3);
-}
-
-.ant-modal-header {
-  background: transparent !important;
-  border-bottom: 1px solid rgba(0, 255, 255, 0.2) !important;
-}
-
-.ant-modal-title {
-  color: #00ffff !important;
-  text-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
 }
 
 /* 📱 RESPONSIVE */
