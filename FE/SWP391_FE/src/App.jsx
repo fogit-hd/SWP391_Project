@@ -18,6 +18,7 @@ import UpdateProfile from "./pages/update.profile";
 import ChangePassword from "./pages/change.password";
 import CreateGroup from "./pages/create.group";
 import ViewEContract from "./pages/view.econtract";
+import MyGroup from "./pages/myGroup";
 
 
 function App() {
@@ -119,8 +120,23 @@ function App() {
           <ViewEContract />
         </ProtectedRoute>
       )
-    
     },
+      {
+        path: "/my-group",
+        element: (
+          <ProtectedRoute roleId={3}>
+            <MyGroup />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/create-group",
+        element: (
+          <ProtectedRoute roleId={3}>
+            <CreateGroup />
+          </ProtectedRoute>
+        ),
+      },
   ]);
 
   return (
