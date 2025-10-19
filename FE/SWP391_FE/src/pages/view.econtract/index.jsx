@@ -1,5 +1,18 @@
 import React, { useState, useEffect } from "react";
-import { Layout, Button, Typography, Card, Space, Row, Col, Divider, Input, DatePicker, Modal, Checkbox } from "antd";
+import {
+  Layout,
+  Button,
+  Typography,
+  Card,
+  Space,
+  Row,
+  Col,
+  Divider,
+  Input,
+  DatePicker,
+  Modal,
+  Checkbox,
+} from "antd";
 import { Link } from "react-router-dom";
 import "antd/dist/reset.css";
 import "./view-econtract.css";
@@ -24,7 +37,7 @@ import {
 const { Content } = Layout;
 const { Title, Text } = Typography;
 
-const ViewContract = () => {
+const ViewEContract = () => {
   const [contracts] = useState([
     {
       id: 1,
@@ -91,12 +104,18 @@ const ViewContract = () => {
     }
   }, [filteredContracts.length]);
 
-  const nextContract = () => setCurrent((prev) => (prev + 1) % filteredContracts.length);
-  const prevContract = () => setCurrent((prev) => (prev === 0 ? filteredContracts.length - 1 : prev - 1));
+  const nextContract = () =>
+    setCurrent((prev) => (prev + 1) % filteredContracts.length);
+  const prevContract = () =>
+    setCurrent((prev) =>
+      prev === 0 ? filteredContracts.length - 1 : prev - 1
+    );
 
   const getStatusBadge = (status) => {
     const statusClass = status.toLowerCase();
-    return <span className={`contract-status-badge ${statusClass}`}>{status}</span>;
+    return (
+      <span className={`contract-status-badge ${statusClass}`}>{status}</span>
+    );
   };
 
   const DetailRow = ({ icon, label, value }) => (
@@ -112,7 +131,8 @@ const ViewContract = () => {
   );
 
   // Use the current filtered contract (or a placeholder)
-  const displayedContract = filteredContracts.length > 0 ? filteredContracts[current] : null;
+  const displayedContract =
+    filteredContracts.length > 0 ? filteredContracts[current] : null;
 
   // Demo sign state (client-side only)
   const [isSignModalVisible, setIsSignModalVisible] = useState(false);
@@ -139,13 +159,20 @@ const ViewContract = () => {
       <AppHeader />
 
       <Content className="view-content">
-        <Row gutter={[32, 32]} style={{ width: "100%", maxWidth: "1400px", marginTop: "2rem" }}>
+        <Row
+          gutter={[32, 32]}
+          style={{ width: "100%", maxWidth: "1400px", marginTop: "2rem" }}
+        >
           <Col xs={24} lg={16}>
             <Card
               title={
                 <div className="card-header-title">
                   <FileTextOutlined />
-                  <span>{displayedContract ? displayedContract.title : "No contracts found"}</span>
+                  <span>
+                    {displayedContract
+                      ? displayedContract.title
+                      : "No contracts found"}
+                  </span>
                 </div>
               }
               extra={
@@ -181,7 +208,10 @@ const ViewContract = () => {
                     }
                     const [start, end] = dates;
                     // store ISO date strings (YYYY-MM-DD)
-                    setDateRange([start ? start.format("YYYY-MM-DD") : null, end ? end.format("YYYY-MM-DD") : null]);
+                    setDateRange([
+                      start ? start.format("YYYY-MM-DD") : null,
+                      end ? end.format("YYYY-MM-DD") : null,
+                    ]);
                   }}
                   allowEmpty={[true, true]}
                 />
@@ -191,24 +221,36 @@ const ViewContract = () => {
                   <DetailRow
                     icon={<FileTextOutlined />}
                     label="Contract Number"
-                    value={displayedContract ? displayedContract.contract_number : "-"}
+                    value={
+                      displayedContract
+                        ? displayedContract.contract_number
+                        : "-"
+                    }
                   />
                   <DetailRow
                     icon={<CheckCircleOutlined />}
                     label="Status"
-                    value={displayedContract ? getStatusBadge(displayedContract.status) : "-"}
+                    value={
+                      displayedContract
+                        ? getStatusBadge(displayedContract.status)
+                        : "-"
+                    }
                   />
                 </Col>
                 <Col xs={24} md={12}>
                   <DetailRow
                     icon={<CalendarOutlined />}
                     label="Effective From"
-                    value={displayedContract ? displayedContract.effective_from : "-"}
+                    value={
+                      displayedContract ? displayedContract.effective_from : "-"
+                    }
                   />
                   <DetailRow
                     icon={<CalendarOutlined />}
                     label="Expires At"
-                    value={displayedContract ? displayedContract.expires_at : "-"}
+                    value={
+                      displayedContract ? displayedContract.expires_at : "-"
+                    }
                   />
                 </Col>
               </Row>
@@ -220,86 +262,161 @@ const ViewContract = () => {
                   <DetailRow
                     icon={<ClockCircleOutlined />}
                     label="Signed At"
-                    value={displayedContract ? displayedContract.signed_at || "Not yet signed" : "-"}
+                    value={
+                      displayedContract
+                        ? displayedContract.signed_at || "Not yet signed"
+                        : "-"
+                    }
                   />
                 </Col>
                 <Col xs={24} md={12}>
                   <DetailRow
                     icon={<EditOutlined />}
                     label="Last Updated"
-                    value={displayedContract ? displayedContract.updated_at : "-"}
+                    value={
+                      displayedContract ? displayedContract.updated_at : "-"
+                    }
                   />
                 </Col>
               </Row>
 
               <div className="view-navigation">
                 <Space>
-                  <Button icon={<LeftOutlined />} onClick={prevContract} shape="circle" className="nav-button" disabled={filteredContracts.length<=1} />
+                  <Button
+                    icon={<LeftOutlined />}
+                    onClick={prevContract}
+                    shape="circle"
+                    className="nav-button"
+                    disabled={filteredContracts.length <= 1}
+                  />
                   <Text strong>
-                    {filteredContracts.length > 0 ? `Contract ${current + 1} of ${filteredContracts.length}` : "No contracts"}
+                    {filteredContracts.length > 0
+                      ? `Contract ${current + 1} of ${filteredContracts.length}`
+                      : "No contracts"}
                   </Text>
-                  <Button icon={<RightOutlined />} onClick={nextContract} shape="circle" className="nav-button" disabled={filteredContracts.length<=1} />
+                  <Button
+                    icon={<RightOutlined />}
+                    onClick={nextContract}
+                    shape="circle"
+                    className="nav-button"
+                    disabled={filteredContracts.length <= 1}
+                  />
                 </Space>
               </div>
 
               {/* Sign / Join actions */}
-              <div className="contract-actions" style={{ marginTop: 16, display: 'flex', gap: 12, justifyContent: 'flex-end' }}>
+              <div
+                className="contract-actions"
+                style={{
+                  marginTop: 16,
+                  display: "flex",
+                  gap: 12,
+                  justifyContent: "flex-end",
+                }}
+              >
                 {signed && signedBy ? (
-                  <div className="signed-badge">Signed by {signedBy.name} — {signedBy.time}</div>
+                  <div className="signed-badge">
+                    Signed by {signedBy.name} — {signedBy.time}
+                  </div>
                 ) : (
-                  <Button type="primary" onClick={() => setIsSignModalVisible(true)} disabled={!displayedContract}>
+                  <Button
+                    type="primary"
+                    onClick={() => setIsSignModalVisible(true)}
+                    disabled={!displayedContract}
+                  >
                     Sign Contract
                   </Button>
                 )}
-                <Button onClick={() => window.open(displayedContract ? displayedContract.file_url : '#')}>View PDF</Button>
+                <Button
+                  onClick={() =>
+                    window.open(
+                      displayedContract ? displayedContract.file_url : "#"
+                    )
+                  }
+                >
+                  View PDF
+                </Button>
               </div>
 
               <Modal
                 className="view-contract-modal"
-                title={`Sign ${displayedContract ? displayedContract.contract_number : "contract"}`}
+                title={`Sign ${
+                  displayedContract
+                    ? displayedContract.contract_number
+                    : "contract"
+                }`}
                 open={isSignModalVisible}
                 onCancel={() => setIsSignModalVisible(false)}
                 onOk={() => {
                   if (!agree) return;
                   const now = new Date();
                   setSigned(true);
-                  setSignedBy({ name: signName || 'You', time: now.toLocaleString() });
+                  setSignedBy({
+                    name: signName || "You",
+                    time: now.toLocaleString(),
+                  });
                   setIsSignModalVisible(false);
                 }}
                 okButtonProps={{ disabled: !agree }}
               >
-                <p>Please confirm you agree to the terms and sign the contract.</p>
-                <Input placeholder="Type your full name as signature" value={signName} onChange={(e) => setSignName(e.target.value)} style={{ marginBottom: 12 }} />
-                <Checkbox checked={agree} onChange={(e) => setAgree(e.target.checked)}>I agree to sign this contract electronically</Checkbox>
+                <p>
+                  Please confirm you agree to the terms and sign the contract.
+                </p>
+                <Input
+                  placeholder="Type your full name as signature"
+                  value={signName}
+                  onChange={(e) => setSignName(e.target.value)}
+                  style={{ marginBottom: 12 }}
+                />
+                <Checkbox
+                  checked={agree}
+                  onChange={(e) => setAgree(e.target.checked)}
+                >
+                  I agree to sign this contract electronically
+                </Checkbox>
               </Modal>
             </Card>
           </Col>
           <Col xs={24} lg={8}>
             <div className="advertisement-panel">
-              <div className="ad-image-wrap" onClick={() => setAdPaused((p) => !p)} title={adPaused ? 'Click to resume' : 'Click to pause'}>
+              <div
+                className="ad-image-wrap"
+                onClick={() => setAdPaused((p) => !p)}
+                title={adPaused ? "Click to resume" : "Click to pause"}
+              >
                 {adImages.map((src, i) => (
-                  <img key={i} src={src} alt={`Ad ${i + 1}`} className={`ad-slide ${i === adIndex ? 'active' : ''}`} />
+                  <img
+                    key={i}
+                    src={src}
+                    alt={`Ad ${i + 1}`}
+                    className={`ad-slide ${i === adIndex ? "active" : ""}`}
+                  />
                 ))}
               </div>
               <Title level={4}>Drive the Future</Title>
               <Text>
-                Experience the thrill of electric vehicles without the full cost. Join a co-ownership group today!
+                Experience the thrill of electric vehicles without the full
+                cost. Join a co-ownership group today!
               </Text>
-             
+
               <Link to="/contract">
                 <Button type="primary" style={{ marginTop: "16px" }}>
                   Learn More
                 </Button>
               </Link>
-              <div style={{ marginTop: 8, fontSize: 12, color: '#888' }}>{adPaused ? 'Paused — click image to resume' : 'Click image to pause'}</div>
+              <div style={{ marginTop: 8, fontSize: 12, color: "#888" }}>
+                {adPaused
+                  ? "Paused — click image to resume"
+                  : "Click image to pause"}
+              </div>
             </div>
           </Col>
         </Row>
       </Content>
 
-      <AppFooter/>
+      <AppFooter />
     </Layout>
   );
 };
 
-export default ViewContract;
+export default ViewEContract;
