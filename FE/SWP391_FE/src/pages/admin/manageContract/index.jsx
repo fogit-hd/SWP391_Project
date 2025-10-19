@@ -37,6 +37,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import api from "../../../config/axios";
 import ContractPreview from "../../../components/ContractPreview";
+import ContractHtmlPreview from "../../../components/ContractHtmlPreview";
 import "./ManageContract.css";
 
 const { Header, Content, Footer, Sider } = Layout;
@@ -107,6 +108,7 @@ const ManageContract = () => {
 
   // Modal states
   const [contractPreviewVisible, setContractPreviewVisible] = useState(false);
+  const [htmlPreviewVisible, setHtmlPreviewVisible] = useState(false);
 
   // Forms
   const [templateForm] = Form.useForm();
@@ -183,12 +185,24 @@ const ManageContract = () => {
 
   const handleDeleteTemplate = async (templateId) => {
     try {
-      await api.delete(`/contract-templates/${templateId}`);
+      console.log("Attempting to delete template:", templateId);
+      const response = await api.delete(`/contract-templates/${templateId}`);
+      console.log("Delete response:", response);
       toast.success("Template deleted successfully");
       loadTemplates();
     } catch (error) {
       console.error("Error deleting template:", error);
-      toast.error("Failed to delete template");
+      
+      // Check if it's a CORS error
+      if (error.code === 'ERR_NETWORK' || error.message.includes('CORS')) {
+        toast.error("Cannot connect to server. Please check your internet connection or try again later.");
+      } else if (error.response?.status === 500) {
+        toast.error("Server error (500). Please try again later.");
+      } else if (error.response?.status === 404) {
+        toast.error("Template not found or already deleted.");
+      } else {
+        toast.error(`Failed to delete template: ${error.message}`);
+      }
     }
   };
 
@@ -365,11 +379,11 @@ const ManageContract = () => {
 
           toast.success("Template updated successfully");
         }}
-        onGenerateContract={(data) => {
-          console.log("Generated contract data:", data);
-          toast.success("Contract generated successfully!");
-        }}
-      />
+                      onGenerateContract={(data) => {
+                        console.log("Generated contract data:", data);
+                        toast.success("Contract generated successfully!");
+                      }}
+                    />
     </Layout>
   );
 };

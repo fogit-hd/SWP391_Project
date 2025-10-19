@@ -8,7 +8,6 @@ import LoginPage from "/src/pages/login";
 import RegisterPage from "/src/pages/register";
 import Dashboard from "/src/pages/admin/dashboard";
 import TermsPage from "/src/pages/terms";
-import Contract from "./pages/create.econtract";
 import ManageContract from "./pages/admin/manageContract";
 import ManageService from "./pages/admin/manageService";
 import ManageGroup from "./pages/admin/manageGroup";
@@ -19,13 +18,17 @@ import ChangePassword from "./pages/change.password";
 import CreateGroup from "./pages/create.group";
 import ViewEContract from "./pages/view.econtract";
 import MyGroup from "./pages/myGroup";
+import CreateEContract from "./pages/create.econtract";
+import MyContracts from "./pages/view.mycontract";
+import VerifyContractOTP from "./pages/verify.contract.otp/index";
+import ReviewEContract from "./pages/staff/review.econtract/index";
 
 function App() {
   const router = createBrowserRouter([
     {
       path: "/admin/dashboard",
       element: (
-        <ProtectedRoute roleId={3}>
+        <ProtectedRoute roleId={1}>
           <Dashboard />
         </ProtectedRoute>
       ),
@@ -41,7 +44,7 @@ function App() {
     {
       path: "/admin/manage-contract",
       element: (
-        <ProtectedRoute roleId={3}>
+        <ProtectedRoute roleId={1}>
           <ManageContract />
         </ProtectedRoute>
       ),
@@ -54,12 +57,20 @@ function App() {
         </ProtectedRoute>
       ),
     },
-
     {
       path: "/admin/manage-group",
       element: (
         <ProtectedRoute roleId={1}>
           <ManageGroup />
+        </ProtectedRoute>
+      ),
+    },
+
+    {
+      path: "/staff/review-econtract",
+      element: (
+        <ProtectedRoute roleId={2}>
+          <ReviewEContract />
         </ProtectedRoute>
       ),
     },
@@ -105,18 +116,27 @@ function App() {
       ),
     },
     {
-      path: "/contract",
+      path: "/create-econtract",
       element: (
         <ProtectedRoute roleId={3}>
-          <Contract />
+          <CreateEContract />
+          //{" "}
         </ProtectedRoute>
       ),
     },
     {
-      path: "/view.econtract",
+      path: "/view-econtract",
       element: (
         <ProtectedRoute roleId={3}>
           <ViewEContract />
+        </ProtectedRoute>
+      ),
+    },
+    {
+      path: "/view-mycontract",
+      element: (
+        <ProtectedRoute roleId={3}>
+          <MyContracts />
         </ProtectedRoute>
       ),
     },
@@ -133,6 +153,30 @@ function App() {
       element: (
         <ProtectedRoute roleId={3}>
           <CreateGroup />
+        </ProtectedRoute>
+      ),
+    },
+    {
+      path: "/my-contracts",
+      element: (
+        <ProtectedRoute roleId={3}>
+          <MyContracts />
+        </ProtectedRoute>
+      ),
+    },
+    {
+      path: "/verify-contract-otp/:contractId",
+      element: (
+        <ProtectedRoute roleId={3}>
+          <VerifyContractOTP />
+        </ProtectedRoute>
+      ),
+    },
+    {
+      path: "/review-econtract",
+      element: (
+        <ProtectedRoute roleId={2}>
+          <ReviewEContract />
         </ProtectedRoute>
       ),
     },
