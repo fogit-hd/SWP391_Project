@@ -495,6 +495,37 @@ const ContractEditor = ({
     return text;
   };
 
+  // Format HTML code để hiển thị dễ đọc hơn trong tab HTML Code
+  const formatHtmlForCodeDisplay = (html) => {
+    if (!html) return "";
+    
+    let formattedHtml = html;
+    
+    // Thay thế <p><br></p> thành \n\n (hiển thị rõ ràng)
+    formattedHtml = formattedHtml.replace(/<p><br><\/p>/g, '\n\\n\n');
+    
+    // Thay thế <p></p> thành \n\n (empty paragraphs - hiển thị rõ ràng)
+    formattedHtml = formattedHtml.replace(/<p><\/p>/g, '\n\\n\n');
+    
+    // Thay thế <br> thành \n (hiển thị rõ ràng)
+    formattedHtml = formattedHtml.replace(/<br\s*\/?>/g, '\n\\n');
+    
+    // Thêm newline sau các thẻ block elements
+    formattedHtml = formattedHtml.replace(/(<\/p>)/g, '$1\n');
+    formattedHtml = formattedHtml.replace(/(<\/div>)/g, '$1\n');
+    formattedHtml = formattedHtml.replace(/(<\/h[1-6]>)/g, '$1\n');
+    formattedHtml = formattedHtml.replace(/(<\/li>)/g, '$1\n');
+    
+    // Clean up multiple newlines (max 2 consecutive)
+    formattedHtml = formattedHtml.replace(/\n{3,}/g, '\n\n');
+    
+    // Trim leading/trailing whitespace
+    formattedHtml = formattedHtml.trim();
+    
+    return formattedHtml;
+  };
+
+
   // Chuyển đổi HTML thành format backend-friendly
   const convertHtmlForBackend = (html) => {
     // Tạo một div tạm để parse HTML
@@ -1087,8 +1118,8 @@ const ContractEditor = ({
               fontFamily: 'Monaco, Menlo, "Ubuntu Mono", monospace',
             }}
           >
-            {quill ? quill.root.innerHTML : content}{" "}
-            {/* Hiển thị HTML source */}
+            {quill ? formatHtmlForCodeDisplay(quill.root.innerHTML) : formatHtmlForCodeDisplay(content)}
+            {/* Hiển thị HTML source với format dễ đọc */}
           </pre>
         </div>
       ),
@@ -1112,6 +1143,7 @@ const ContractEditor = ({
           >
             Download
           </Button>
+          
 
           {/* Variables dropdown menu */}
           <Dropdown
@@ -1154,6 +1186,7 @@ const ContractEditor = ({
       >
         {content.length} characters
       </div>
+
 
     </Card>
   );
