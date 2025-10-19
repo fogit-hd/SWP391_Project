@@ -17,22 +17,24 @@ import VerifyOTP from "./pages/verify.otp";
 import UpdateProfile from "./pages/update.profile";
 import ChangePassword from "./pages/change.password";
 import CreateGroup from "./pages/create.group";
-import ViewEContract from "./pages/view.econtract";
-import MyGroup from "./pages/myGroup";
+
+import ManageVehicle from "./pages/admin/manageVehicle";
+import ViewContract from "./pages/view.econtract";
+
 
 
 function App() {
   const router = createBrowserRouter([
     {
-      path: "/dashboard",
+      path: "/admin/dashboard",
       element: (
-        <ProtectedRoute roleId={1}>
+        <ProtectedRoute roleId={3}>
           <Dashboard />
         </ProtectedRoute>
       ),
     },
     {
-      path: "/manage-account",
+      path: "/admin/manage-account",
       element: (
         <ProtectedRoute roleId={1}>
           <ManageAccount />
@@ -40,9 +42,9 @@ function App() {
       ),
     },
     {
-      path: "/manage-contract",
+      path: "/admin/manage-contract",
       element: (
-        <ProtectedRoute roleId={1}>
+        <ProtectedRoute roleId={3}>
           <ManageContract />
         </ProtectedRoute>
       ),
@@ -61,6 +63,15 @@ function App() {
       element: (
         <ProtectedRoute roleId={1}>
           <ManageGroup />
+        </ProtectedRoute>
+      ),
+    },
+
+    {
+      path: "/manage-vehicle",
+      element: (
+        <ProtectedRoute roleId={1}>
+          <ManageVehicle />
         </ProtectedRoute>
       ),
     },
@@ -114,28 +125,17 @@ function App() {
       ),
     },
     {
-      path: "/view.econtract", 
-      element: (
-        <ProtectedRoute roleId={3}>
-          <ViewEContract />
-        </ProtectedRoute>
-      )
-    },
-    {
-      path: "/myGroup",
-      element: (
-        <ProtectedRoute roleId={3}>
-          <MyGroup />
-        </ProtectedRoute>
-      ),
-    },
-    {
-      path: "/create.group",
+      path: "/create-member-group",
       element: (
         <ProtectedRoute roleId={3}>
           <CreateGroup />
         </ProtectedRoute>
       ),
+    },
+    {
+      
+      path: "/view.econtract",
+      element: <ViewContract />,
     },
   ]);
 

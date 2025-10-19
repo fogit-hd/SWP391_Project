@@ -53,25 +53,6 @@
   background: rgba(24, 144, 255, 0.1) !important;
 }
 
-/* Header nav text buttons (ensure pure white like other header text) */
-.nav-menu-button,
-.nav-menu-button.ant-btn,
-.ant-btn.nav-menu-button,
-.ant-btn-text.nav-menu-button {
-  color: #ffffff !important;
-  font-weight: 600;
-}
-
-.nav-menu-button:hover,
-.nav-menu-button:focus,
-.ant-btn.nav-menu-button:hover,
-.ant-btn.nav-menu-button:focus,
-.ant-btn-text.nav-menu-button:hover,
-.ant-btn-text.nav-menu-button:focus {
-  color: #ffffff !important; /* keep white on hover */
-  background: rgba(255, 255, 255, 0.06) !important; /* subtle highlight */
-}
-
 .header-actions {
   display: flex;
   align-items: center;
