@@ -53,6 +53,27 @@
   background: rgba(24, 144, 255, 0.1) !important;
 }
 
+/* Header nav text buttons (Available teams, My Groups, Contact Us) */
+.nav-menu-button,
+.nav-menu-button.ant-btn,
+.ant-btn.nav-menu-button {
+  color: #ffffff !important; /* brighter on dark bg */
+  font-weight: 600;
+  font-size: 16px;
+}
+
+.nav-menu-button:hover,
+.nav-menu-button:focus,
+.ant-btn.nav-menu-button:hover,
+.ant-btn.nav-menu-button:focus {
+  color: #40a9ff !important;
+  background: rgba(24, 144, 255, 0.12) !important;
+}
+
+.ant-btn-text.nav-menu-button[disabled] {
+  color: rgba(230, 247, 255, 0.45) !important;
+}
+
 .header-actions {
   display: flex;
   align-items: center;

@@ -557,6 +557,11 @@ const Homepage = () => {
               Available teams
             </Button>
           </Link>
+          <Link to="/my-group">
+            <Button type="text" className="nav-menu-button">
+              My Groups
+            </Button>
+          </Link>
           <Link to="/contact">
             <Button type="text" className="nav-menu-button">
               Contact Us
