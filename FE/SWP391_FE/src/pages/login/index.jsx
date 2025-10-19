@@ -46,11 +46,12 @@ const LoginPage = () => {
     try {
       const response = await api.post("/auth/login", values);
       toast.success("Successfully logged in!");
-      console.log(response);
+      console.log("Full API response:", response);
+      console.log("Response data:", response.data);
+      console.log("Response data.data:", response.data.data);
 
       // Extract tokens from response.data.data (nested structure)
-      const { accessToken, refreshToken, role } =
-        response.data.data || response.data;
+      const { accessToken, refreshToken } = response.data.data || response.data;
 
       // Store tokens
       console.log("Setting authentication token");
@@ -63,13 +64,33 @@ const LoginPage = () => {
 
       console.log("Setting user data");
 
-      // Tạo userData với roleId từ role
+      // Decode JWT to get role
+      const { decodeJWT } = await import("../../utils/jwt");
+      const decodedToken = decodeJWT(accessToken);
+      console.log("Decoded JWT:", decodedToken);
+      
+      const role = decodedToken?.role || decodedToken?.roleId;
+      console.log("Role from JWT:", role);
+      console.log("Role type:", typeof role);
+      
       const roleMapping = {
         Admin: 1,
         Staff: 2,
         CoOwner: 3,
+        // Handle numeric roles
+        1: 1,
+        2: 2,
+        3: 3,
       };
-      const roleId = roleMapping[role] || 3;
+      
+      const roleId = roleMapping[role];
+      console.log("Mapped roleId:", roleId);
+      
+      if (!roleId) {
+        console.error("Unknown role:", role);
+        toast.error(`Unknown role: ${role}. Please contact administrator.`);
+        return;
+      }
 
       const userData = {
         ...response.data,
@@ -107,6 +128,8 @@ const LoginPage = () => {
       if (roleId === 1) {
         // Admin
         navigate("/admin/dashboard");
+      } else if (roleId === 2) {
+        navigate("/staff/review-econtract");
       } else {
         navigate("/");
       }

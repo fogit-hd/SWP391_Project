@@ -42,6 +42,10 @@
   justify-content: center;
 }
 
+.nav-menu-button {
+  color: white !important;
+}
+
 .nav-menu .ant-menu-item {
   color: #ffffff !important;
   font-weight: 500;

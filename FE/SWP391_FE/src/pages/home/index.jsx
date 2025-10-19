@@ -34,6 +34,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { logout, restoreUser } from "../../redux/accountSlice";
 import api from "../../config/axios";
 import { toast } from "react-toastify";
+import { useAuth } from "../../hooks/useAuth";
 import "./home.css";
 import "../../../index.css";
 
@@ -41,7 +42,7 @@ const { Header, Content, Footer } = Layout;
 const { Title, Paragraph, Text } = Typography;
 
 const Homepage = () => {
-  const account = useSelector((store) => store.account);
+  const { isAuthenticated, isAdmin, isStaff, isCoOwner, user } = useAuth();
   const dispatch = useDispatch();
   const [isProfileModalVisible, setIsProfileModalVisible] = useState(false);
   const [isProfileImageLoading, setIsProfileImageLoading] = useState(false);
@@ -68,12 +69,12 @@ const Homepage = () => {
     console.log(
       "Component mount - Token exists:",
       !!token,
-      "Account exists:",
-      !!account
+      "User exists:",
+      !!user
     );
 
-    // Restore user data to Redux if we have token but no account in Redux
-    if (token && userData && !account) {
+    // Restore user data to Redux if we have token but no user in Redux
+    if (token && userData && !user) {
       try {
         const parsedUserData = JSON.parse(userData);
         dispatch(restoreUser(parsedUserData));
@@ -110,12 +111,12 @@ const Homepage = () => {
 
     // Auto-fetch profile data when conditions are met
 
-    // Only fetch from API if we have token, account data, and no profile data yet
-    if (token && account && account.data && !profileData && !savedProfileData) {
+    // Only fetch from API if we have token, user data, and no profile data yet
+    if (token && user && user.data && !profileData && !savedProfileData) {
       console.log("User is authenticated, auto-fetching profile data...");
       fetchProfileData();
     }
-  }, [isInitialized, account, profileData]); // Run when initialization, account or profileData changes
+  }, [isInitialized, user, profileData]); // Run when initialization, user or profileData changes
 
   // Function to handle user logout
   const handleLogout = () => {
@@ -552,16 +553,42 @@ const Homepage = () => {
         </Title>
 
         <Space className="nav-menu">
-          <Link to="/available">
-            <Button type="text" className="nav-menu-button">
-              Available teams
-            </Button>
-          </Link>
-          <Link to="/myGroup">
-            <Button type="text" className="nav-menu-button">
-              My Groups
-            </Button>
-          </Link>
+          {/* Admin can see manage contracts */}
+          {isAuthenticated && isAdmin && (
+            <Link to="/admin/manage-contract">
+              <Button type="text" className="nav-menu-button">
+                Manage Contracts
+              </Button>
+            </Link>
+          )}
+          
+          {/* Admin and Staff can review contracts */}
+          {isAuthenticated && (isAdmin || isStaff) && (
+            <Link to="/staff/review-econtract">
+              <Button type="text" className="nav-menu-button">
+                Review Contracts
+              </Button>
+            </Link>
+          )}
+          
+          {/* CoOwner can see their contracts */}
+          {isAuthenticated && isCoOwner && (
+            <Link to="/my-contracts">
+              <Button type="text" className="nav-menu-button">
+                My Contract
+              </Button>
+            </Link>
+          )}
+          
+          {/* All authenticated users can see groups */}
+          {isAuthenticated && (
+            <Link to="/myGroup">
+              <Button type="text" className="nav-menu-button">
+                My Groups
+              </Button>
+            </Link>
+          )}
+          
           <Link to="/contact">
             <Button type="text" className="nav-menu-button">
               Contact Us
@@ -570,7 +597,7 @@ const Homepage = () => {
         </Space>
 
         <Space className="header-actions">
-          {account ? (
+          {isAuthenticated ? (
             <Dropdown
               menu={{ items: userMenuItems }}
               placement="topCenter"
@@ -711,15 +738,12 @@ const Homepage = () => {
               Join our co-ownership community today and start saving on premium
               electric vehicles.
             </Paragraph>
-        
 
-  <Link to="/view.econtract">
-  <Button type="primary" size="large" className="cta-cta">
-    Start Co-Owning
-  </Button>
-</Link>
-
-
+            <Link to="/view.econtract">
+              <Button type="primary" size="large" className="cta-cta">
+                Start Co-Owning
+              </Button>
+            </Link>
           </div>
         </div>
       </Content>
