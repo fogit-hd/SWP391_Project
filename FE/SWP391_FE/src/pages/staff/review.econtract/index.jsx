@@ -14,18 +14,22 @@ import {
   Card,
   Row,
   Col,
+  Select,
 } from "antd";
+import { useAuth } from "../../../hooks/useAuth";
 import {
   EyeOutlined,
   CheckOutlined,
   CloseOutlined,
   FileTextOutlined,
   ArrowLeftOutlined,
+  ClockCircleOutlined,
+  CheckCircleOutlined,
+  CloseCircleOutlined,
 } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import api from "../../../config/axios";
 import { toast } from "react-toastify";
-import { useAuth } from "../../../hooks/useAuth";
 
 const { Header, Content, Sider } = Layout;
 const { Title, Paragraph } = Typography;
@@ -33,9 +37,10 @@ const { TextArea } = Input;
 
 const ReviewEContract = () => {
   const navigate = useNavigate();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isAdmin, isStaff, roleId } = useAuth();
 
   const [contracts, setContracts] = useState([]);
+  const [allContracts, setAllContracts] = useState([]); // Store all contracts
   const [loading, setLoading] = useState(false);
   const [previewModalVisible, setPreviewModalVisible] = useState(false);
   const [previewLoading, setPreviewLoading] = useState(false);
@@ -43,6 +48,9 @@ const ReviewEContract = () => {
   const [reviewModalVisible, setReviewModalVisible] = useState(false);
   const [reviewLoading, setReviewLoading] = useState(false);
   const [selectedContractId, setSelectedContractId] = useState(null);
+  const [selectedStatus, setSelectedStatus] = useState(
+    roleId === 1 ? "ALL" : "PENDING_REVIEW"
+  ); // Filter status - Admin sees all, Staff sees only PENDING_REVIEW
   const [form] = Form.useForm();
 
   useEffect(() => {
@@ -55,27 +63,70 @@ const ReviewEContract = () => {
     loadContracts();
   }, [isAuthenticated, navigate]);
 
+  // Filter contracts by status
+  const filterContractsByStatus = (contractsList, status) => {
+    // Staff (roleId = 2) can only see PENDING_REVIEW contracts
+    if (roleId === 2) {
+      const filtered = contractsList.filter((contract) => contract.status === "PENDING_REVIEW");
+      setContracts(filtered);
+      console.log("📋 Staff - Showing only PENDING_REVIEW contracts:", filtered.length);
+      return;
+    }
+    
+    // Admin (roleId = 1) can see all or filter by status
+    if (status === "ALL") {
+      setContracts(contractsList);
+      console.log("📋 Admin - Showing ALL contracts:", contractsList.length);
+    } else {
+      const filtered = contractsList.filter((contract) => contract.status === status);
+      setContracts(filtered);
+      console.log(`📋 Admin - Filtered by ${status}:`, filtered.length);
+    }
+  };
+
+  // Handle status filter change
+  const handleStatusChange = (status) => {
+    setSelectedStatus(status);
+    filterContractsByStatus(allContracts, status);
+  };
+
   const loadContracts = async () => {
     try {
       setLoading(true);
+      console.log("📞 Calling API: GET /contracts");
       const response = await api.get("/contracts");
+      console.log("📦 Full response:", response);
+      console.log("📦 Response.data:", response.data);
 
-      let allContracts = [];
+      let allContractsData = [];
       if (response.data && Array.isArray(response.data.data)) {
-        allContracts = response.data.data;
+        allContractsData = response.data.data;
+        console.log("✅ Using response.data.data");
       } else if (Array.isArray(response.data)) {
-        allContracts = response.data;
+        allContractsData = response.data;
+        console.log("✅ Using response.data");
       } else if (response.data?.contracts) {
-        allContracts = response.data.contracts;
+        allContractsData = response.data.contracts;
+        console.log("✅ Using response.data.contracts");
       }
 
-      const pendingContracts = allContracts.filter(
-        (contract) => contract.status === "PENDING_REVIEW"
-      );
-
-      setContracts(pendingContracts);
+      console.log("📊 Total contracts from API:", allContractsData.length);
+      
+      // Store all contracts
+      setAllContracts(allContractsData);
+      
+      // Apply filter based on role and selected status
+      if (roleId === 2) {
+        // Staff can only see PENDING_REVIEW contracts
+        console.log("👤 Staff role detected - filtering PENDING_REVIEW only");
+        filterContractsByStatus(allContractsData, "PENDING_REVIEW");
+      } else {
+        // Admin can see all or filter by selected status
+        console.log("👑 Admin role detected - applying selected filter:", selectedStatus);
+        filterContractsByStatus(allContractsData, selectedStatus);
+      }
     } catch (error) {
-      console.error("Error:", error);
+      console.error("❌ Error:", error);
       message.error("Không thể tải danh sách hợp đồng");
     } finally {
       setLoading(false);
@@ -136,21 +187,53 @@ const ReviewEContract = () => {
       dataIndex: "createdAt",
       key: "createdAt",
       width: 150,
-      render: (date) => new Date(date).toLocaleDateString("vi-VN"),
-    },
-    {
-      title: "Ngày hiệu lực",
-      dataIndex: "effectiveFrom",
-      key: "effectiveFrom",
-      width: 150,
-      render: (date) => new Date(date).toLocaleDateString("vi-VN"),
+      render: (date) => {
+        if (!date) return "N/A";
+        try {
+          return new Date(date).toLocaleDateString("vi-VN", {
+            year: "numeric",
+            month: "2-digit",
+            day: "2-digit",
+          });
+        } catch (error) {
+          return "Invalid Date";
+        }
+      },
     },
     {
       title: "Trạng thái",
       dataIndex: "status",
       key: "status",
       width: 120,
-      render: () => <Tag color="blue">Chờ duyệt</Tag>,
+      render: (status) => {
+        const statusMap = {
+          PENDING_REVIEW: { 
+            color: "blue", 
+            text: "Chờ duyệt",
+            icon: <ClockCircleOutlined />
+          },
+          APPROVED: { 
+            color: "green", 
+            text: "Đã duyệt",
+            icon: <CheckCircleOutlined />
+          },
+          REJECTED: { 
+            color: "red", 
+            text: "Từ chối",
+            icon: <CloseCircleOutlined />
+          },
+        };
+        const statusInfo = statusMap[status] || { 
+          color: "default", 
+          text: status,
+          icon: null
+        };
+        return (
+          <Tag color={statusInfo.color} icon={statusInfo.icon}>
+            {statusInfo.text}
+          </Tag>
+        );
+      },
     },
     {
       title: "Thao tác",
@@ -206,6 +289,30 @@ const ReviewEContract = () => {
 
         <Content style={{ margin: "24px 16px" }}>
           <Card>
+            <div style={{ marginBottom: "16px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <Title level={5} style={{ margin: 0 }}>Danh sách hợp đồng</Title>
+              {isAdmin && (
+                <Space>
+                  <span>Lọc theo trạng thái:</span>
+                  <Select
+                    value={selectedStatus}
+                    onChange={handleStatusChange}
+                    style={{ width: 200 }}
+                    options={[
+                      { value: "ALL", label: "Tất cả" },
+                      { value: "PENDING_REVIEW", label: "Chờ duyệt" },
+                      { value: "APPROVED", label: "Đã duyệt" },
+                      { value: "REJECTED", label: "Từ chối" },
+                    ]}
+                  />
+                </Space>
+              )}
+              {isStaff && (
+                <Tag color="orange" icon={<ClockCircleOutlined />}>
+                  Chỉ hiển thị hợp đồng chờ duyệt
+                </Tag>
+              )}
+            </div>
             <Spin spinning={loading}>
               <Table
                 columns={columns}
@@ -216,7 +323,7 @@ const ReviewEContract = () => {
                   showTotal: (total) => `Tổng: ${total} hợp đồng`,
                 }}
                 locale={{
-                  emptyText: "Không có hợp đồng nào để duyệt",
+                  emptyText: "Không có hợp đồng nào",
                 }}
               />
             </Spin>
