@@ -13,12 +13,11 @@ import {
 import api from "../../config/axios";
 import { useSelector } from "react-redux";
 import { toast } from "react-toastify";
-import "./econtract.css";
 
 const { Title, Paragraph } = Typography;
 const { Option } = Select;
 
-const ContractPage = () => {
+const CreateEContract = () => {
   const [form] = Form.useForm();
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -153,4 +152,4 @@ const ContractPage = () => {
   );
 };
 
-export default ContractPage;
+export default CreateEContract;

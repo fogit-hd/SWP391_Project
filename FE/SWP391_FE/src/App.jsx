@@ -8,7 +8,7 @@ import LoginPage from "/src/pages/login";
 import RegisterPage from "/src/pages/register";
 import Dashboard from "/src/pages/admin/dashboard";
 import TermsPage from "/src/pages/terms";
-import Contract from "./pages/econtract";
+import Contract from "./pages/create.econtract";
 import ManageContract from "./pages/admin/manageContract";
 import ManageService from "./pages/admin/manageService";
 import ManageGroup from "./pages/admin/manageGroup";
