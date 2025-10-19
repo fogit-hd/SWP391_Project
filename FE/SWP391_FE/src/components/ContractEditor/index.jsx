@@ -30,6 +30,8 @@ import Quill from "quill";
 import "quill/dist/quill.snow.css";
 import "./ContractEditor.css";
 
+
+
 // Import Quill modules
 const Delta = Quill.import("delta");
 const Parchment = Quill.import("parchment");
@@ -457,9 +459,14 @@ const ContractEditor = ({
 
     // Cleanup function
     return () => {
-      if (quill) {
-        quill = null;
-      }
+      // Cleanup listeners and references without reassigning state variable
+      try {
+        if (quill) {
+          quill.off?.("text-change");
+          quill.off?.("selection-change");
+        }
+      } catch (_) {}
+      quillRef.current = null;
     };
   }, []); // Remove dependencies to prevent re-initialization
 

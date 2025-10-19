@@ -19,7 +19,8 @@ import ChangePassword from "./pages/change.password";
 import CreateGroup from "./pages/create.group";
 
 import ManageVehicle from "./pages/admin/manageVehicle";
-import ViewEContract from "./pages/view.econtract";
+import ViewContract from "./pages/view.econtract";
+
 
 
 function App() {
@@ -132,7 +133,7 @@ function App() {
       ),
     },
     {
-      path: "/view-econtract",
+      path: "/view.econtract",
       element: <ViewContract />,
     },
   ]);
