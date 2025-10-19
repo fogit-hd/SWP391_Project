@@ -69,7 +69,7 @@ function App() {
     {
       path: "/staff/review-econtract",
       element: (
-        <ProtectedRoute roleId={2}>
+        <ProtectedRoute roleId={1 | 2}>
           <ReviewEContract />
         </ProtectedRoute>
       ),

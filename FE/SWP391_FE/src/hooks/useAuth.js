@@ -12,8 +12,8 @@ export const useAuth = () => {
     // Get user info from JWT and localStorage
     const userInfo = getUserInfo();
 
-    // Check if user is authenticated
-    const isAuthenticated = !!account && !!userInfo;
+    // Check if user is authenticated (either from Redux or localStorage)
+    const isAuthenticated = !!account || !!userInfo;
 
     // Check if token is expired
     const token = localStorage.getItem("token");
