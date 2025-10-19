@@ -20,19 +20,18 @@ import CreateGroup from "./pages/create.group";
 import ViewEContract from "./pages/view.econtract";
 import MyGroup from "./pages/myGroup";
 
-
 function App() {
   const router = createBrowserRouter([
     {
-      path: "/dashboard",
+      path: "/admin/dashboard",
       element: (
-        <ProtectedRoute roleId={1}>
+        <ProtectedRoute roleId={3}>
           <Dashboard />
         </ProtectedRoute>
       ),
     },
     {
-      path: "/manage-account",
+      path: "/admin/manage-account",
       element: (
         <ProtectedRoute roleId={1}>
           <ManageAccount />
@@ -40,15 +39,15 @@ function App() {
       ),
     },
     {
-      path: "/manage-contract",
+      path: "/admin/manage-contract",
       element: (
-        <ProtectedRoute roleId={1}>
+        <ProtectedRoute roleId={3}>
           <ManageContract />
         </ProtectedRoute>
       ),
     },
     {
-      path: "/manage-service",
+      path: "/admin/manage-service",
       element: (
         <ProtectedRoute roleId={1}>
           <ManageService />
@@ -57,7 +56,7 @@ function App() {
     },
 
     {
-      path: "/manage-group",
+      path: "/admin/manage-group",
       element: (
         <ProtectedRoute roleId={1}>
           <ManageGroup />
@@ -114,12 +113,12 @@ function App() {
       ),
     },
     {
-      path: "/view.econtract", 
+      path: "/view.econtract",
       element: (
         <ProtectedRoute roleId={3}>
           <ViewEContract />
         </ProtectedRoute>
-      )
+      ),
     },
     {
       path: "/myGroup",
