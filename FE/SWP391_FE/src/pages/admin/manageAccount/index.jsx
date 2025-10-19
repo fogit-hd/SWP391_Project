@@ -44,12 +44,12 @@ const items = [
       {
         key: "/manage-account",
         icon: <MdOutlineManageAccounts />,
-        label: <Link to="/manage-account">Manage Accounts</Link>,
+        label: <Link to="/admin/manageAccount">Manage Accounts</Link>,
       },
       {
         key: "/manage-group",
         icon: <TeamOutlined />,
-        label: <Link to="/manage-group">Manage Group</Link>,
+        label: <Link to="/admin/manageGroup">Manage Group</Link>,
       },
     ],
   },
@@ -59,9 +59,9 @@ const items = [
     label: "Contract Management",
     children: [
       {
-        key: "/manage-contract",
+        key: "/manageContract",
         icon: <UsergroupAddOutlined />,
-        label: <Link to="/manage-contract">Manage Contracts</Link>,
+        label: <Link to="/admin/manageContract">Manage Contracts</Link>,
       },
     ],
   },
@@ -73,7 +73,7 @@ const items = [
       {
         key: "/manage-service",
         icon: <UsergroupAddOutlined />,
-        label: <Link to="/manage-service">Manage Services</Link>,
+        label: <Link to="/admin/manageService">Manage Services</Link>,
       },
     ],
   },

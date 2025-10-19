@@ -24,7 +24,7 @@ import MyGroup from "./pages/myGroup";
 function App() {
   const router = createBrowserRouter([
     {
-      path: "/dashboard",
+      path: "/admin/dashboard",
       element: (
         <ProtectedRoute roleId={1}>
           <Dashboard />
@@ -32,7 +32,7 @@ function App() {
       ),
     },
     {
-      path: "/manage-account",
+      path: "/admin/manageAccount",
       element: (
         <ProtectedRoute roleId={1}>
           <ManageAccount />
@@ -40,7 +40,7 @@ function App() {
       ),
     },
     {
-      path: "/manage-contract",
+      path: "/admin/manageContract",
       element: (
         <ProtectedRoute roleId={1}>
           <ManageContract />
@@ -48,7 +48,7 @@ function App() {
       ),
     },
     {
-      path: "/manage-service",
+      path: "/admin/manageService",
       element: (
         <ProtectedRoute roleId={1}>
           <ManageService />
@@ -57,7 +57,7 @@ function App() {
     },
 
     {
-      path: "/manage-group",
+      path: "/admin/manageGroup",
       element: (
         <ProtectedRoute roleId={1}>
           <ManageGroup />
@@ -120,14 +120,7 @@ function App() {
           <ViewEContract />
         </ProtectedRoute>
       )
-    },
-    {
-      path: "/myGroup",
-      element: (
-        <ProtectedRoute roleId={3}>
-          <MyGroup />
-        </ProtectedRoute>
-      ),
+    
     },
     {
       path: "/create.group",
@@ -135,8 +128,16 @@ function App() {
         <ProtectedRoute roleId={3}>
           <CreateGroup />
         </ProtectedRoute>
-      ),
+      )
     },
+    {
+      path: "/myGroup",
+      element: (
+        <ProtectedRoute roleId={1}>
+          <MyGroup />
+        </ProtectedRoute>
+      )
+    }
   ]);
 
   return (

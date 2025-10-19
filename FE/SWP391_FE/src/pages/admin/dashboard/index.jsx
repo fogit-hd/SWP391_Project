@@ -42,7 +42,7 @@ const items = [
       {
         key: "manage-accounts",
         icon: <UsergroupAddOutlined />,
-        label: <Link to="/admin/manage-account">Manage Accounts</Link>,
+        label: <Link to="/admin/manageAccount">Manage Accounts</Link>,
       },
     ],
   },
@@ -54,7 +54,7 @@ const items = [
       {
         key: "manage-templates",
         icon: <PlusOutlined />,
-        label: <Link to="/admin/manage-contract">Manage Templates</Link>,
+        label: <Link to="/admin/manageContract">Manage Templates</Link>,
       },
     ],
   },
