@@ -36,9 +36,7 @@ import {
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import api from "../../../config/axios";
-import ContractEditor from "../../../components/ContractEditor";
-import VariablesManager from "../../../components/VariablesManager";
-import ClausesManager from "../../../components/ClausesManager";
+import ContractPreview from "../../../components/ContractPreview";
 import "./ManageContract.css";
 
 const { Header, Content, Footer, Sider } = Layout;
@@ -96,7 +94,6 @@ const items = [
 ];
 const ManageContract = () => {
   const [collapsed, setCollapsed] = useState(false);
-  const navigate = useNavigate();
   const {
     token: { colorBgContainer, borderRadiusLG },
   } = theme.useToken();
@@ -109,7 +106,7 @@ const ManageContract = () => {
   const [templateClauses, setTemplateClauses] = useState([]);
 
   // Modal states
-  const [templateModalVisible, setTemplateModalVisible] = useState(false);
+  const [contractPreviewVisible, setContractPreviewVisible] = useState(false);
 
   // Forms
   const [templateForm] = Form.useForm();
@@ -137,29 +134,21 @@ const ManageContract = () => {
       setLoading(false);
     }
   };
-
   // Template CRUD operations
   const handleCreateTemplate = () => {
     setSelectedTemplate(null);
     templateForm.resetFields();
-    setTemplateModalVisible(true);
+    setContractPreviewVisible(true);
   };
 
-  const handleEditTemplate = async (template) => {
+  const handlePreviewTemplate = async (template) => {
     setSelectedTemplate(template);
-    templateForm.setFieldsValue({
-      name: template.name,
-      description: template.description,
-      version: template.version,
-      minCoOwners: template.minCoOwners,
-      maxCoOwners: template.maxCoOwners,
-    });
 
-    // Load variables and clauses for this template
+    // Load variables and clauses for this template (same logic as handleEditTemplate)
     await loadTemplateVariables(template.id);
     await loadTemplateClauses(template.id);
 
-    setTemplateModalVisible(true);
+    setContractPreviewVisible(true);
   };
 
   const loadTemplateVariables = async (templateId) => {
@@ -302,24 +291,6 @@ const ManageContract = () => {
       ),
     },
     {
-      title: "Variables",
-      key: "variables",
-      render: (_, record) => (
-        <Tag className="manage-contract-tag manage-contract-tag-count">
-          {record.variables?.length || 0} variables
-        </Tag>
-      ),
-    },
-    {
-      title: "Clauses",
-      key: "clauses",
-      render: (_, record) => (
-        <Tag className="manage-contract-tag manage-contract-tag-count">
-          {record.clauses?.length || 0} clauses
-        </Tag>
-      ),
-    },
-    {
       title: "Created",
       dataIndex: "createdAt",
       key: "createdAt",
@@ -334,8 +305,8 @@ const ManageContract = () => {
             type="primary"
             size="small"
             icon={<EditOutlined />}
-            onClick={() => handleEditTemplate(record)}
-            className="manage-contract-btn manage-contract-btn-secondary"
+            onClick={() => handlePreviewTemplate(record)}
+            className="manage-contract-btn manage-contract-btn-primary"
           >
             Edit
           </Button>
@@ -440,290 +411,33 @@ const ManageContract = () => {
         </Footer>
       </Layout>
 
-      {/* Template CRUD Modal */}
-      <Modal
-        title={selectedTemplate ? "Edit Template" : "Create New Template"}
-        open={templateModalVisible}
-        onCancel={() => setTemplateModalVisible(false)}
-        footer={null}
-        width={selectedTemplate ? 1000 : 600}
-        className="manage-contract-modal"
-        style={{ top: 20 }}
-      >
-        {selectedTemplate ? (
-          <Tabs
-            defaultActiveKey="basic"
-            items={[
-              {
-                key: "basic",
-                label: "Basic Information",
-                children: (
-                  <Form
-                    form={templateForm}
-                    layout="vertical"
-                    onFinish={handleSaveTemplate}
-                    className="manage-contract-form"
-                    initialValues={{
-                      name: selectedTemplate.name,
-                      description: selectedTemplate.description,
-                      version: selectedTemplate.version || "1.0",
-                      minCoOwners: selectedTemplate.minCoOwners || 1,
-                      maxCoOwners: selectedTemplate.maxCoOwners || 5,
-                    }}
-                  >
-                    <Form.Item
-                      name="name"
-                      label="Template Name"
-                      rules={[
-                        {
-                          required: true,
-                          message: "Please input template name!",
-                        },
-                      ]}
-                    >
-                      <Input placeholder="Enter template name" />
-                    </Form.Item>
+      {/* Contract Preview Modal */}
+      <ContractPreview
+        visible={contractPreviewVisible}
+        template={selectedTemplate}
+        onClose={() => setContractPreviewVisible(false)}
+        onTemplateUpdate={(updatedTemplate) => {
+          console.log("=== TEMPLATE UPDATE CALLBACK ===");
+          console.log("Updated template:", updatedTemplate);
 
-                    <Form.Item
-                      name="description"
-                      label="Description"
-                      rules={[
-                        {
-                          required: true,
-                          message: "Please input description!",
-                        },
-                      ]}
-                    >
-                      <TextArea
-                        rows={3}
-                        placeholder="Enter template description"
-                      />
-                    </Form.Item>
+          // Update the template in the list
+          setTemplates((prevTemplates) =>
+            prevTemplates.map((template) =>
+              template.id === updatedTemplate.id ? updatedTemplate : template
+            )
+          );
+          setSelectedTemplate(updatedTemplate);
 
-                    <Form.Item
-                      name="version"
-                      label="Version"
-                      rules={[
-                        { required: true, message: "Please input version!" },
-                      ]}
-                    >
-                      <Input placeholder="e.g., 1.0" />
-                    </Form.Item>
+          // Reload templates to ensure data consistency
+          loadTemplates();
 
-                    <Row gutter={16}>
-                      <Col span={12}>
-                        <Form.Item
-                          name="minCoOwners"
-                          label="Min Co-Owners"
-                          rules={[
-                            {
-                              required: true,
-                              message: "Please input min co-owners!",
-                            },
-                          ]}
-                        >
-                          <InputNumber
-                            min={1}
-                            max={10}
-                            style={{ width: "100%" }}
-                            placeholder="Min"
-                          />
-                        </Form.Item>
-                      </Col>
-                      <Col span={12}>
-                        <Form.Item
-                          name="maxCoOwners"
-                          label="Max Co-Owners"
-                          rules={[
-                            {
-                              required: true,
-                              message: "Please input max co-owners!",
-                            },
-                          ]}
-                        >
-                          <InputNumber
-                            min={1}
-                            max={10}
-                            style={{ width: "100%" }}
-                            placeholder="Max"
-                          />
-                        </Form.Item>
-                      </Col>
-                    </Row>
-
-                    <Form.Item style={{ marginBottom: 0, textAlign: "right" }}>
-                      <Space>
-                        <Button onClick={() => setTemplateModalVisible(false)}>
-                          Cancel
-                        </Button>
-                        <Button
-                          type="primary"
-                          htmlType="submit"
-                          loading={loading}
-                        >
-                          Update Template
-                        </Button>
-                      </Space>
-                    </Form.Item>
-                  </Form>
-                ),
-              },
-              {
-                key: "content",
-                label: "Content",
-                children: (
-                  <div>
-                    <ContractPreview
-                      templateContent={selectedTemplate.content || ""}
-                      variables={templateVariables}
-                      clauses={templateClauses}
-                      onGenerateContract={(data) => {
-                        console.log("Generated contract data:", data);
-                        toast.success("Contract generated successfully!");
-                      }}
-                    />
-                    <ContractEditor
-                      initialContent={selectedTemplate.content || ""}
-                      onSave={(content) => handleSaveContent(content)}
-                      placeholder="Edit template content. e.g: Use {{variableName}} for dynamic variables."
-                      variables={templateVariables}
-                      clauses={templateClauses}
-                    />
-                  </div>
-                ),
-              },
-              {
-                key: "variables",
-                label: "Variables",
-                children: (
-                  <div className="variables-manager">
-                    {selectedTemplate ? (
-                      <VariablesManager
-                        templateId={selectedTemplate.id}
-                        visible={true}
-                        onClose={() => {}}
-                        onVariablesChange={() => {
-                          loadTemplateVariables(selectedTemplate.id);
-                        }}
-                      />
-                    ) : (
-                      <div style={{ textAlign: "center", padding: "20px" }}>
-                        Please select a template first
-                      </div>
-                    )}
-                  </div>
-                ),
-              },
-              {
-                key: "clauses",
-                label: "Clauses",
-                children: (
-                  <div className="clauses-manager">
-                    {selectedTemplate ? (
-                      <ClausesManager
-                        templateId={selectedTemplate.id}
-                        visible={true}
-                        onClose={() => {}}
-                        onClausesChange={() => {
-                          loadTemplateClauses(selectedTemplate.id);
-                        }}
-                      />
-                    ) : (
-                      <div style={{ textAlign: "center", padding: "20px" }}>
-                        Please select a template first
-                      </div>
-                    )}
-                  </div>
-                ),
-              },
-            ]}
-          />
-        ) : (
-          <Form
-            form={templateForm}
-            layout="vertical"
-            onFinish={handleSaveTemplate}
-            className="manage-contract-form"
-            initialValues={{
-              version: "1.0",
-              minCoOwners: 1,
-              maxCoOwners: 5,
-            }}
-          >
-            <Form.Item
-              name="name"
-              label="Template Name"
-              rules={[
-                { required: true, message: "Please input template name!" },
-              ]}
-            >
-              <Input placeholder="Enter template name" />
-            </Form.Item>
-
-            <Form.Item
-              name="description"
-              label="Description"
-              rules={[{ required: true, message: "Please input description!" }]}
-            >
-              <TextArea rows={3} placeholder="Enter template description" />
-            </Form.Item>
-
-            <Form.Item
-              name="version"
-              label="Version"
-              rules={[{ required: true, message: "Please input version!" }]}
-            >
-              <Input placeholder="e.g., 1.0" />
-            </Form.Item>
-
-            <Row gutter={16}>
-              <Col span={12}>
-                <Form.Item
-                  name="minCoOwners"
-                  label="Min Co-Owners"
-                  rules={[
-                    { required: true, message: "Please input min co-owners!" },
-                  ]}
-                >
-                  <InputNumber
-                    min={1}
-                    max={10}
-                    style={{ width: "100%" }}
-                    placeholder="Min"
-                  />
-                </Form.Item>
-              </Col>
-              <Col span={12}>
-                <Form.Item
-                  name="maxCoOwners"
-                  label="Max Co-Owners"
-                  rules={[
-                    { required: true, message: "Please input max co-owners!" },
-                  ]}
-                >
-                  <InputNumber
-                    min={1}
-                    max={10}
-                    style={{ width: "100%" }}
-                    placeholder="Max"
-                  />
-                </Form.Item>
-              </Col>
-            </Row>
-
-            <Form.Item style={{ marginBottom: 0, textAlign: "right" }}>
-              <Space>
-                <Button onClick={() => setTemplateModalVisible(false)}>
-                  Cancel
-                </Button>
-                <Button type="primary" htmlType="submit" loading={loading}>
-                  Create Template
-                </Button>
-              </Space>
-            </Form.Item>
-          </Form>
-        )}
-      </Modal>
+          toast.success("Template updated successfully");
+        }}
+        onGenerateContract={(data) => {
+          console.log("Generated contract data:", data);
+          toast.success("Contract generated successfully!");
+        }}
+      />
     </Layout>
   );
 };

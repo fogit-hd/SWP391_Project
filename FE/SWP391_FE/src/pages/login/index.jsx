@@ -69,7 +69,7 @@ const LoginPage = () => {
         Staff: 2,
         CoOwner: 3,
       };
-      const roleId = roleMapping[role] || 1;
+      const roleId = roleMapping[role] || 3;
 
       const userData = {
         ...response.data,
