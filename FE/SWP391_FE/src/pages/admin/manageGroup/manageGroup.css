@@ -23,35 +23,36 @@
 }
 
 /* Modal readability and status tags */
+/* Use dark text for high contrast on default white modal background */
 .manage-group-modal .ant-modal-content,
 .manage-group-modal .ant-modal-body,
 .manage-group-modal {
-  color: #E6F4FF; /* light text for dark background */
+  color: #1f2937; /* gray-800 */
 }
 
 .manage-group-modal h3,
 .manage-group-modal strong {
-  color: #E6F4FF;
+  color: #111827; /* gray-900 */
 }
 
 .manage-group-modal .ant-list-item-meta-title,
 .manage-group-modal .ant-list-item-meta-description {
-  color: #E6F4FF !important;
+  color: #1f2937 !important;
 }
 
 .manage-group-modal .ant-list-item-meta-title > a,
 .manage-group-modal a {
-  color: #8fd6ff !important;
+  color: #1677ff !important; /* Ant primary */
 }
 
 .manage-group-modal .ant-list-item-meta-description,
 .manage-group-modal .ant-typography,
 .manage-group-modal .ant-typography-secondary {
-  color: #C2D9FF !important;
+  color: #374151 !important; /* gray-700 */
 }
 
 .manage-group-modal .ant-modal-title {
-  color: #E6F4FF !important;
+  color: #111827 !important;
 }
 
 .status-tag {
@@ -60,5 +61,5 @@
 }
 
 .vehicle-line {
-  color: #C2D9FF;
+  color: #374151; /* gray-700 */
 }
