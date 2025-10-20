@@ -16,7 +16,7 @@ import { EyeOutlined, EditOutlined } from "@ant-design/icons";
 import api from "../../config/axios";
 import { useSelector } from "react-redux";
 import { toast } from "react-toastify";
-import { useAuth } from "../../hooks/useAuth";
+import { useAuth } from "../../components/hooks/useAuth";
 
 const { Title, Paragraph } = Typography;
 
@@ -36,13 +36,13 @@ const MyContracts = () => {
       navigate("/login");
       return;
     }
-    
+
     if (!isCoOwner) {
       toast.error("Bạn không có quyền truy cập trang này");
       navigate("/");
       return;
     }
-    
+
     loadContracts();
   }, [isAuthenticated, isCoOwner, navigate]);
 
@@ -54,7 +54,7 @@ const MyContracts = () => {
       console.log("Making API call to /contracts/my");
       const response = await api.get("/contracts/my");
       console.log("Contracts API response:", response.data);
-      
+
       // Handle different response structures
       let contractsData = [];
       if (response.data && Array.isArray(response.data.data)) {
@@ -63,14 +63,18 @@ const MyContracts = () => {
       } else if (Array.isArray(response.data)) {
         contractsData = response.data;
         console.log("Using response.data");
-      } else if (response.data && response.data.contracts && Array.isArray(response.data.contracts)) {
+      } else if (
+        response.data &&
+        response.data.contracts &&
+        Array.isArray(response.data.contracts)
+      ) {
         contractsData = response.data.contracts;
         console.log("Using response.data.contracts");
       } else {
         console.log("Unexpected response structure:", response.data);
         contractsData = [];
       }
-      
+
       console.log("Processed contracts data:", contractsData);
       setContracts(contractsData);
     } catch (error) {
@@ -89,14 +93,14 @@ const MyContracts = () => {
       console.log("Fetching preview for contract:", contractId);
       const response = await api.get(`/contracts/${contractId}/preview`);
       console.log("Preview API response:", response.data);
-      
+
       // Find the contract from the list to get its details
-      const contract = contracts.find(c => c.id === contractId);
-      
+      const contract = contracts.find((c) => c.id === contractId);
+
       // Set the contract with HTML content
       setSelectedContract({
         ...contract,
-        content: response.data // API returns HTML string directly
+        content: response.data, // API returns HTML string directly
       });
       setPreviewModalVisible(true);
     } catch (error) {
@@ -206,9 +210,7 @@ const MyContracts = () => {
     <div style={{ padding: "24px" }}>
       <Card>
         <Title level={2}>Hợp đồng của tôi</Title>
-        <Paragraph>
-          Danh sách tất cả các hợp đồng mà bạn tham gia
-        </Paragraph>
+        <Paragraph>Danh sách tất cả các hợp đồng mà bạn tham gia</Paragraph>
 
         <Table
           columns={columns}
@@ -236,7 +238,7 @@ const MyContracts = () => {
       {/* Preview Modal */}
       <Modal
         title={
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
             <EyeOutlined />
             <span>Xem trước hợp đồng</span>
           </div>
@@ -267,7 +269,7 @@ const MyContracts = () => {
                   backgroundColor: "#fafafa",
                   maxHeight: "600px",
                   overflowY: "auto",
-                  lineHeight: "1.6"
+                  lineHeight: "1.6",
                 }}
                 dangerouslySetInnerHTML={{ __html: selectedContract.content }}
               />

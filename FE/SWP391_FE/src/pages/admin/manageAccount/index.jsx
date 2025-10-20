@@ -10,7 +10,6 @@ import {
   Alert,
   Breadcrumb,
   Layout,
-  Menu,
   theme,
 } from "antd";
 import {
@@ -18,66 +17,11 @@ import {
   DeleteOutlined,
   PlusOutlined,
   ReloadOutlined,
-  PieChartOutlined,
-  UserOutlined,
-  UsergroupAddOutlined,
-  TeamOutlined,
 } from "@ant-design/icons";
-import { Link } from "react-router-dom";
 import api from "../../../config/axios";
-import { RiAccountCircle2Line } from "react-icons/ri";
-import { MdOutlineManageAccounts } from "react-icons/md";
+import AdminSidebar from "../../../components/admin/AdminSidebar";
 
-const { Header, Content, Footer, Sider } = Layout;
-
-const items = [
-  {
-    key: "/admin/dashboard",
-    icon: <PieChartOutlined />,
-    label: <Link to="/admin/dashboard">Dashboard</Link>,
-  },
-  {
-    key: "user-management",
-    icon: <RiAccountCircle2Line />,
-    label: "User Management",
-    children: [
-      {
-        key: "/manage-account",
-        icon: <MdOutlineManageAccounts />,
-        label: <Link to="/manage-account">Manage Accounts</Link>,
-      },
-      {
-        key: "/manage-group",
-        icon: <TeamOutlined />,
-        label: <Link to="/manage-group">Manage Group</Link>,
-      },
-    ],
-  },
-  {
-    key: "contract-management",
-    icon: <UserOutlined />,
-    label: "Contract Management",
-    children: [
-      {
-        key: "/manage-contract",
-        icon: <UsergroupAddOutlined />,
-        label: <Link to="/manage-contract">Manage Contracts</Link>,
-      },
-    ],
-  },
-  {
-    key: "service-management",
-    icon: <UserOutlined />,
-    label: "Service Management",
-    children: [
-      {
-        key: "/manage-service",
-        icon: <UsergroupAddOutlined />,
-        label: <Link to="/manage-service">Manage Services</Link>,
-      },
-    ],
-  },
-];
+const { Header, Content, Footer } = Layout;
 
 const ManageAccount = () => {
   // Layout state
@@ -95,14 +39,6 @@ const ManageAccount = () => {
     pageSize: 10,
     total: 0,
   });
-
-  // // API Endpoints
-  // const ENDPOINTS = {
-  //   GET_USERS: "/users",
-  //   DELETE_USER: "/users",
-  //   UPDATE_USER: "/users",
-  //   CREATE_USER: "/users",
-  // };
 
   const columns = [
     {
@@ -281,23 +217,12 @@ const ManageAccount = () => {
 
   return (
     <Layout style={{ minHeight: "100vh" }}>
-      <Sider
-        collapsible
+      <AdminSidebar
         collapsed={collapsed}
-        onCollapse={(value) => setCollapsed(value)}
-        width={250}
-        collapsedWidth={80}
-      >
-        <div className="demo-logo-vertical" />
-        <Menu
-          theme="dark"
-          defaultSelectedKeys={["/manage-account"]}
-          mode="inline"
-          items={items}
-          accordion
-        />
-      </Sider>
-      <Layout>
+        onCollapse={setCollapsed}
+        selectedKey="manage-accounts"
+      />
+      <Layout style={{ marginLeft: collapsed ? 80 : 280 }}>
         <Header style={{ padding: 0, background: colorBgContainer }} />
         <Content style={{ margin: "0 16px" }}>
           <Breadcrumb

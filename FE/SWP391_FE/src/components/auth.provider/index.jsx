@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { useDispatch } from "react-redux";
-import { restoreUser } from "../../redux/accountSlice";
-import { getUserInfo, isTokenExpired } from "../../utils/jwt";
+import { restoreUser } from "../redux/accountSlice";
+import { getUserInfo, isTokenExpired } from "../utils/jwt";
 
 function AuthProvider({ children }) {
   const dispatch = useDispatch();

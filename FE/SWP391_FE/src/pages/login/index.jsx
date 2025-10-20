@@ -5,7 +5,6 @@ import {
   Checkbox,
   Button,
   Card,
-  Divider,
   Row,
   Col,
   message,
@@ -15,7 +14,7 @@ import api from "../../config/axios";
 import { toast } from "react-toastify";
 import { Link, useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
-import { login } from "../../redux/accountSlice";
+import { login } from "../../components/redux/accountSlice";
 import "./login.css";
 
 const LoginPage = () => {
@@ -24,14 +23,19 @@ const LoginPage = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
-  /*
-    1. Cập nhật => dispatch
-    2. Get => selector
-  */
-
-  // Load remembered email on component mount
-
   useEffect(() => {
+    // Clear all authentication data on component mount
+    localStorage.removeItem("token");
+    localStorage.removeItem("refreshToken");
+    localStorage.removeItem("userData");
+    localStorage.removeItem("user");
+    localStorage.removeItem("userRole");
+    localStorage.removeItem("userId");
+    localStorage.removeItem("password");
+    
+    sessionStorage.clear();
+    
+    // Load remembered email
     const rememberedEmail = localStorage.getItem("rememberedEmail");
     if (rememberedEmail) {
       form.setFieldsValue({
@@ -65,7 +69,7 @@ const LoginPage = () => {
       console.log("Setting user data");
 
       // Decode JWT to get role
-      const { decodeJWT } = await import("../../utils/jwt");
+      const { decodeJWT } = await import("../../components/utils/jwt");
       const decodedToken = decodeJWT(accessToken);
       console.log("Decoded JWT:", decodedToken);
       
@@ -202,7 +206,7 @@ const LoginPage = () => {
           <div className="login-header">
             <h2 className="login-title">Welcome Back, Co-owner</h2>
             <p className="login-subtitle">
-              Sign in to access your shared vehicles
+              Please enter your credentials to continue
             </p>
           </div>
 
