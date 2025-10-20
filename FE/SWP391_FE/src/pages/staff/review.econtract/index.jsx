@@ -16,7 +16,7 @@ import {
   Col,
   Select,
 } from "antd";
-import { useAuth } from "../../../hooks/useAuth";
+import { useAuth } from "../../../components/hooks/useAuth";
 import {
   EyeOutlined,
   CheckOutlined,
@@ -59,7 +59,7 @@ const ReviewEContract = () => {
       navigate("/login");
       return;
     }
-    
+
     loadContracts();
   }, [isAuthenticated, navigate]);
 
@@ -67,18 +67,25 @@ const ReviewEContract = () => {
   const filterContractsByStatus = (contractsList, status) => {
     // Staff (roleId = 2) can only see PENDING_REVIEW contracts
     if (roleId === 2) {
-      const filtered = contractsList.filter((contract) => contract.status === "PENDING_REVIEW");
+      const filtered = contractsList.filter(
+        (contract) => contract.status === "PENDING_REVIEW"
+      );
       setContracts(filtered);
-      console.log("📋 Staff - Showing only PENDING_REVIEW contracts:", filtered.length);
+      console.log(
+        "📋 Staff - Showing only PENDING_REVIEW contracts:",
+        filtered.length
+      );
       return;
     }
-    
+
     // Admin (roleId = 1) can see all or filter by status
     if (status === "ALL") {
       setContracts(contractsList);
       console.log("📋 Admin - Showing ALL contracts:", contractsList.length);
     } else {
-      const filtered = contractsList.filter((contract) => contract.status === status);
+      const filtered = contractsList.filter(
+        (contract) => contract.status === status
+      );
       setContracts(filtered);
       console.log(`📋 Admin - Filtered by ${status}:`, filtered.length);
     }
@@ -111,10 +118,10 @@ const ReviewEContract = () => {
       }
 
       console.log("📊 Total contracts from API:", allContractsData.length);
-      
+
       // Store all contracts
       setAllContracts(allContractsData);
-      
+
       // Apply filter based on role and selected status
       if (roleId === 2) {
         // Staff can only see PENDING_REVIEW contracts
@@ -122,7 +129,10 @@ const ReviewEContract = () => {
         filterContractsByStatus(allContractsData, "PENDING_REVIEW");
       } else {
         // Admin can see all or filter by selected status
-        console.log("👑 Admin role detected - applying selected filter:", selectedStatus);
+        console.log(
+          "👑 Admin role detected - applying selected filter:",
+          selectedStatus
+        );
         filterContractsByStatus(allContractsData, selectedStatus);
       }
     } catch (error) {
@@ -156,8 +166,10 @@ const ReviewEContract = () => {
       };
 
       await api.post(`/contracts/${selectedContractId}/review`, payload);
-      toast.success(`Hợp đồng đã được ${values.approve ? "duyệt" : "từ chối"}!`);
-      
+      toast.success(
+        `Hợp đồng đã được ${values.approve ? "duyệt" : "từ chối"}!`
+      );
+
       setReviewModalVisible(false);
       form.resetFields();
       loadContracts();
@@ -207,26 +219,26 @@ const ReviewEContract = () => {
       width: 120,
       render: (status) => {
         const statusMap = {
-          PENDING_REVIEW: { 
-            color: "blue", 
+          PENDING_REVIEW: {
+            color: "blue",
             text: "Chờ duyệt",
-            icon: <ClockCircleOutlined />
+            icon: <ClockCircleOutlined />,
           },
-          APPROVED: { 
-            color: "green", 
+          APPROVED: {
+            color: "green",
             text: "Đã duyệt",
-            icon: <CheckCircleOutlined />
+            icon: <CheckCircleOutlined />,
           },
-          REJECTED: { 
-            color: "red", 
+          REJECTED: {
+            color: "red",
             text: "Từ chối",
-            icon: <CloseCircleOutlined />
+            icon: <CloseCircleOutlined />,
           },
         };
-        const statusInfo = statusMap[status] || { 
-          color: "default", 
+        const statusInfo = statusMap[status] || {
+          color: "default",
           text: status,
-          icon: null
+          icon: null,
         };
         return (
           <Tag color={statusInfo.color} icon={statusInfo.icon}>
@@ -268,7 +280,13 @@ const ReviewEContract = () => {
   return (
     <Layout style={{ minHeight: "100vh" }}>
       <Sider width={200} theme="light">
-        <div style={{ padding: "16px", textAlign: "center", borderBottom: "1px solid #f0f0f0" }}>
+        <div
+          style={{
+            padding: "16px",
+            textAlign: "center",
+            borderBottom: "1px solid #f0f0f0",
+          }}
+        >
           <Button
             type="text"
             icon={<ArrowLeftOutlined />}
@@ -281,7 +299,13 @@ const ReviewEContract = () => {
       </Sider>
 
       <Layout>
-        <Header style={{ padding: 0, background: "#fff", borderBottom: "1px solid #f0f0f0" }}>
+        <Header
+          style={{
+            padding: 0,
+            background: "#fff",
+            borderBottom: "1px solid #f0f0f0",
+          }}
+        >
           <Title level={3} style={{ margin: "16px 24px" }}>
             Review E-Contracts
           </Title>
@@ -289,8 +313,17 @@ const ReviewEContract = () => {
 
         <Content style={{ margin: "24px 16px" }}>
           <Card>
-            <div style={{ marginBottom: "16px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <Title level={5} style={{ margin: 0 }}>Danh sách hợp đồng</Title>
+            <div
+              style={{
+                marginBottom: "16px",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
+              <Title level={5} style={{ margin: 0 }}>
+                Danh sách hợp đồng
+              </Title>
               {isAdmin && (
                 <Space>
                   <span>Lọc theo trạng thái:</span>
@@ -420,11 +453,7 @@ const ReviewEContract = () => {
               >
                 Hủy
               </Button>
-              <Button
-                type="primary"
-                htmlType="submit"
-                loading={reviewLoading}
-              >
+              <Button type="primary" htmlType="submit" loading={reviewLoading}>
                 Gửi Review
               </Button>
             </Space>

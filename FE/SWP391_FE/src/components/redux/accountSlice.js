@@ -15,9 +15,7 @@ export const accountSlice = createSlice({
       localStorage.removeItem("refreshToken");
       localStorage.removeItem("userData");
       localStorage.removeItem("profileData");
-      window.location.href = '/login';
       return initialState;
-      
     },
     restoreUser: (state, action) => {
       return action.payload;
