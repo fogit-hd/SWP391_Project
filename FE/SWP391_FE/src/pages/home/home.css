@@ -57,6 +57,25 @@
   background: rgba(24, 144, 255, 0.1) !important;
 }
 
+/* Header nav text buttons (Available teams, My Groups, Contact Us) */
+.nav-menu-button,
+.nav-menu-button.ant-btn,
+.ant-btn.nav-menu-button,
+.ant-btn-text.nav-menu-button {
+  color: #ffffff !important; /* make text pure white on dark header */
+  font-weight: 600;
+}
+
+.nav-menu-button:hover,
+.nav-menu-button:focus,
+.ant-btn.nav-menu-button:hover,
+.ant-btn.nav-menu-button:focus,
+.ant-btn-text.nav-menu-button:hover,
+.ant-btn-text.nav-menu-button:focus {
+  color: #ffffff !important; /* keep white on hover for consistency */
+  background: rgba(255, 255, 255, 0.08) !important; /* subtle hover highlight */
+}
+
 .header-actions {
   display: flex;
   align-items: center;
