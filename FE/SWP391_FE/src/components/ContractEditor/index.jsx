@@ -268,7 +268,7 @@ const ContractEditor = ({
         quillInstance.root.innerHTML = content;
       }
 
-      // Inject CSS để force table chỉ có 4 cột
+      // Inject CSS để style table với unlimited columns
       const style = document.createElement('style');
       style.textContent = `
         .ql-editor table {
@@ -276,7 +276,7 @@ const ContractEditor = ({
           margin: 10px 0;
           width: 100% !important;
           display: table !important;
-          table-layout: fixed !important;
+          table-layout: auto !important;
           border: 1px solid #ccc;
         }
         .ql-editor table td,
@@ -286,7 +286,7 @@ const ContractEditor = ({
           text-align: left !important;
           display: table-cell !important;
           vertical-align: top !important;
-          max-width: 200px !important;
+          min-width: 100px !important;
           overflow: hidden !important;
           text-overflow: ellipsis !important;
         }
@@ -303,14 +303,15 @@ const ContractEditor = ({
         .ql-editor table tbody {
           display: table-row-group !important;
         }
-        /* Force chỉ có 4 cột */
-        .ql-editor table tr > *:nth-child(5),
-        .ql-editor table tr > *:nth-child(6),
-        .ql-editor table tr > *:nth-child(7),
-        .ql-editor table tr > *:nth-child(8),
-        .ql-editor table tr > *:nth-child(9),
-        .ql-editor table tr > *:nth-child(n+5) {
-          display: none !important;
+        /* Ensure all table columns are visible - override any hidden columns */
+        .ql-editor table tr > * {
+          display: table-cell !important;
+        }
+        /* Force all table cells to be visible */
+        .ql-editor table td,
+        .ql-editor table th {
+          display: table-cell !important;
+          visibility: visible !important;
         }
         .ql-editor .variable-highlight {
           background-color: #e6f3ff;
@@ -815,7 +816,7 @@ const ContractEditor = ({
     }
 
     // Tạo HTML table với loop bao bọc toàn bộ table - FORCE TABLE STRUCTURE
-    const tableHtml = `{{#CoOwners}}<br><table style="border-collapse: collapse; width: 100%; table-layout: fixed;"><tr><td style="width: 30%; border: 1px solid #ccc; background-color: #f5f5f5; font-weight: bold; padding: 8px;">Họ tên</td><td style="width: 20%; border: 1px solid #ccc; background-color: #f5f5f5; font-weight: bold; padding: 8px;">CCCD</td><td style="width: 15%; border: 1px solid #ccc; background-color: #f5f5f5; font-weight: bold; padding: 8px;">Tỷ lệ (%)</td><td style="width: 35%; border: 1px solid #ccc; background-color: #f5f5f5; font-weight: bold; padding: 8px;">Địa chỉ</td></tr><tr><td style="width: 30%; border: 1px solid #ccc; padding: 8px;">{{FullName}}</td><td style="width: 20%; border: 1px solid #ccc; padding: 8px;">{{CitizenId}}</td><td style="width: 15%; border: 1px solid #ccc; padding: 8px;">{{OwnershipRate}}</td><td style="width: 35%; border: 1px solid #ccc; padding: 8px;">{{Address}}</td></tr></table>{{/CoOwners}}`;
+    const tableHtml = `{{#CoOwners}}<br><table style="border-collapse: collapse; width: 100%; table-layout: fixed;"><tr><td style="width: 30%; border: 1px solid #ccc; padding: 8px;">{{FullName}}</td><td style="width: 20%; border: 1px solid #ccc; padding: 8px;">{{CitizenId}}</td><td style="width: 15%; border: 1px solid #ccc; padding: 8px;">{{OwnershipRate}}</td><td style="width: 35%; border: 1px solid #ccc; padding: 8px;">{{Address}}</td><td style="width: 15%; border: 1px solid #ccc; padding: 8px;">{{OwnershipRate}}</td><td style="width: 35%; border: 1px solid #ccc; padding: 8px;">{{Address}}</td><td style="width: 15%; border: 1px solid #ccc; padding: 8px;">{{OwnershipRate}}</td><td style="width: 35%; border: 1px solid #ccc; padding: 8px;">{{Address}}</td></tr></table>{{/CoOwners}}`;
 
     // Insert HTML table
     quill.clipboard.dangerouslyPasteHTML(range.index, tableHtml);
