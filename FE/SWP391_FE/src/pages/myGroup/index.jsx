@@ -178,13 +178,13 @@ const MyGroup = () => {
   };
 
   const createInvite = async (maybeId) => {
-    const gid = typeof maybeId === "string" ? maybeId : selectedGroup?.id;
-    if (!gid || typeof gid !== "string") {
+    // onClick passes event as the first argument; ignore it and use selectedGroup
+    const isClickEvent = typeof maybeId === "object" && (maybeId?.nativeEvent || maybeId?.target);
+    const gid = !isClickEvent && typeof maybeId === "string" ? maybeId : selectedGroup?.id;
+    if (!gid) {
       message.error("Missing group id");
       return;
     }
-    // Guard against event object passed accidentally
-    if (typeof maybeId === "object" && maybeId?.nativeEvent) return;
     setInviteLoading(true);
     try {
       const res = await api.post(`/GroupInvite/${gid}/create-invite`, null);
