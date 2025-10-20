@@ -74,7 +74,6 @@ import {
   Avatar,
   Tag,
   Tabs,
-  Space,
 } from "antd";
 import api from "../../../config/axios";
 import AdminSidebar from "../../../components/admin/AdminSidebar";
@@ -204,12 +203,7 @@ export default function ManageGroup() {
         return owner?.fullName || owner?.userId || "-";
       },
     },
-    {
-      title: "Created By",
-      dataIndex: ["createdBy"],
-      key: "createdBy",
-      render: (v, record) => v || record?.created_by || "-",
-    },
+   
 
     {
       title: "Members",
@@ -237,6 +231,23 @@ export default function ManageGroup() {
             Inactive
           </Tag>
         ),
+    },
+    {
+      title: "Actions",
+      key: "actions",
+      render: (_, record) => (
+        <Button
+          size="small"
+          onClick={() => {
+            setSelected(record);
+            setDetailsVisible(true);
+            setSelectedVehicles(record?.vehicles || []);
+            fetchVehiclesForGroup(record?.id);
+          }}
+        >
+          Details
+        </Button>
+      ),
     },
     
   ];
@@ -333,6 +344,8 @@ export default function ManageGroup() {
                                   onClick={() => {
                                     setSelected(g);
                                     setDetailsVisible(true);
+                                    setSelectedVehicles(g?.vehicles || []);
+                                    fetchVehiclesForGroup(g?.id);
                                   }}
                                 >
                                   {g?.name}
@@ -349,17 +362,7 @@ export default function ManageGroup() {
                                   >
                                     {g?.isActive ? "Active" : "Inactive"}
                                   </Tag>
-                                  <Button
-                                    size="small"
-                                    onClick={() => {
-                                      setSelected(g);
-                                      setDetailsVisible(true);
-                                      setSelectedVehicles(g?.vehicles || []);
-                                      fetchVehiclesForGroup(g?.id);
-                                    }}
-                                  >
-                                    Details
-                                  </Button>
+                                  {/* Details button removed as requested */}
                                 </div>
                               </div>
                               <div
@@ -378,32 +381,12 @@ export default function ManageGroup() {
                                   {owner?.fullName || owner?.userId || "-"}
                                 </div>
                                 <div>
-                                  <strong>Created By:</strong>{" "}
-                                  {g?.createdBy || g?.created_by || "-"}
-                                </div>
-                                <div>
                                   <strong>Members:</strong>{" "}
                                   {g?.members ? g.members.length : 0}
                                 </div>
                                 <div>
-                                  <strong>Created At:</strong>{" "}
-                                  {g?.createdAt || g?.created_at
-                                    ? new Date(
-                                        g.createdAt || g.created_at
-                                      ).toLocaleString()
-                                    : "-"}
-                                </div>
-                                <div>
                                   <strong>Vehicles:</strong>{" "}
                                   {g?.vehicles ? g.vehicles.length : 0}
-                                </div>
-                                <div>
-                                  <strong>Updated At:</strong>{" "}
-                                  {g?.updatedAt || g?.updated_at
-                                    ? new Date(
-                                        g.updatedAt || g.updated_at
-                                      ).toLocaleString()
-                                    : "-"}
                                 </div>
                               </div>
                             </Card>
