@@ -238,25 +238,7 @@ export default function ManageGroup() {
           </Tag>
         ),
     },
-    {
-      title: "Actions",
-      key: "actions",
-      render: (_, record) => (
-        <Space>
-          <Button
-            type="link"
-            onClick={() => {
-              setSelected(record);
-              setDetailsVisible(true);
-              setSelectedVehicles(record?.vehicles || []);
-              fetchVehiclesForGroup(record?.id);
-            }}
-          >
-            Details
-          </Button>
-        </Space>
-      ),
-    },
+    
   ];
 
   return (
