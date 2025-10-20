@@ -65,10 +65,30 @@ const ManageContract = () => {
     }
   };
   // Template CRUD operations
-  const handleCreateTemplate = () => {
-    setSelectedTemplate(null);
-    templateForm.resetFields();
-    setContractPreviewVisible(true);
+  const handleCreateTemplate = async () => {
+    try {
+      // Reset form and prepare for new template creation
+      setSelectedTemplate(null);
+      templateForm.resetFields();
+
+      // Set default values for new template
+      templateForm.setFieldsValue({
+        name: "New Template",
+        description: "Description of the new template",
+        version: "1.0",
+        content: "",
+        minCoOwners: 1,
+        maxCoOwners: 10,
+      });
+
+      // Open the contract preview modal for editing
+      setContractPreviewVisible(true);
+    } catch (error) {
+      console.error("Error preparing template creation:", error);
+      toast.error(
+        "An error occurred while preparing to create a new template."
+      );
+    }
   };
 
   const handlePreviewTemplate = async (template) => {
@@ -79,6 +99,52 @@ const ManageContract = () => {
     await loadTemplateClauses(template.id);
 
     setContractPreviewVisible(true);
+  };
+
+  const handleSaveTemplate = async (templateData) => {
+    try {
+      setLoading(true);
+
+      // Prepare the API request body according to the API documentation
+      const requestBody = {
+        name: templateData.name || "New Template",
+        description:
+          templateData.description || "Description of the new template",
+        version: templateData.version || "1.0",
+        content: templateData.content || "",
+        minCoOwners: templateData.minCoOwners || 1,
+        maxCoOwners: templateData.maxCoOwners || 10,
+      };
+
+      console.log("Creating template with data:", requestBody);
+
+      const response = await api.post("/contract-templates", requestBody);
+
+      toast.success("Template created successfully");
+
+      console.log("Template creation response:", response);
+
+      // Reload templates to show the new one
+      await loadTemplates();
+
+      // Close the modal
+      setContractPreviewVisible(false);
+    } catch (error) {
+      console.error("Error creating template:", error);
+
+      // Handle different types of errors
+      if (error.response?.status === 400) {
+        toast.error("Invalid template data. Please check all fields.");
+      } else if (error.response?.status === 500) {
+        toast.error("Server error. Please try again later.");
+      } else if (error.code === "ERR_NETWORK") {
+        toast.error("Cannot connect to server. Please check your connection.");
+      } else {
+        toast.error(`Failed to create template: ${error.message}`);
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   const loadTemplateVariables = async (templateId) => {
@@ -297,6 +363,7 @@ const ManageContract = () => {
 
           toast.success("Template updated successfully");
         }}
+        onTemplateSave={handleSaveTemplate}
         onGenerateContract={(data) => {
           console.log("Generated contract data:", data);
           toast.success("Contract generated successfully!");

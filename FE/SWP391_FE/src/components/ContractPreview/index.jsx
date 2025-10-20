@@ -45,7 +45,7 @@ const { Title, Text } = Typography;
  * - Integration with existing components
  * - Auto-save functionality
  */
-const ContractPreview = ({ visible, template, onClose, onTemplateUpdate }) => {
+const ContractPreview = ({ visible, template, onClose, onTemplateUpdate, onTemplateSave }) => {
   // State management
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("basic");
@@ -58,21 +58,45 @@ const ContractPreview = ({ visible, template, onClose, onTemplateUpdate }) => {
 
   // Initialize component data when modal opens
   useEffect(() => {
-    if (visible && template) {
-      setTemplateData(template);
+    if (visible) {
       setActiveTab("basic");
+      
+      if (template) {
+        // Existing template - load data
+        setTemplateData(template);
+        loadTemplateData(template.id);
 
-      // Load template data
-      loadTemplateData(template.id);
+        // Set form values
+        templateForm.setFieldsValue({
+          name: template.name,
+          description: template.description,
+          version: template.version,
+          minCoOwners: template.minCoOwners,
+          maxCoOwners: template.maxCoOwners,
+        });
+      } else {
+        // New template - set default values
+        const defaultTemplate = {
+          name: "New Template",
+          description: "Description of the new template",
+          version: "1.0",
+          content: "",
+          minCoOwners: 1,
+          maxCoOwners: 10,
+        };
+        setTemplateData(defaultTemplate);
+        setVariables([]);
+        setClauses([]);
 
-      // Set form values
-      templateForm.setFieldsValue({
-        name: template.name,
-        description: template.description,
-        version: template.version,
-        minCoOwners: template.minCoOwners,
-        maxCoOwners: template.maxCoOwners,
-      });
+        // Set form values
+        templateForm.setFieldsValue({
+          name: defaultTemplate.name,
+          description: defaultTemplate.description,
+          version: defaultTemplate.version,
+          minCoOwners: defaultTemplate.minCoOwners,
+          maxCoOwners: defaultTemplate.maxCoOwners,
+        });
+      }
     }
   }, [visible, template]);
 
@@ -97,6 +121,19 @@ const ContractPreview = ({ visible, template, onClose, onTemplateUpdate }) => {
     try {
       setLoading(true);
 
+      // Load full template data including content
+      const templateResponse = await api.get(`/contract-templates/${templateId}`);
+      const fullTemplateData = templateResponse.data?.data || templateResponse.data;
+      
+      // Update templateData with full template including content
+      if (fullTemplateData) {
+        setTemplateData(prevData => ({
+          ...prevData,
+          ...fullTemplateData,
+          content: fullTemplateData.content || ""
+        }));
+      }
+
       // Load variables
       const variablesResponse = await api.get(
         `/contract-templates/${templateId}/variables`
@@ -105,6 +142,7 @@ const ContractPreview = ({ visible, template, onClose, onTemplateUpdate }) => {
         ? variablesResponse.data
         : variablesResponse.data?.data || [];
       setVariables(variablesData);
+      
       // Load clauses
       const clausesResponse = await api.get(
         `/contract-templates/${templateId}/clauses`
@@ -144,30 +182,39 @@ const ContractPreview = ({ visible, template, onClose, onTemplateUpdate }) => {
         ...processedValues,
       };
 
-      const response = await api.put(
-        `/contract-templates/${templateData.id}`,
-        updateData
-      );
+      // Check if this is a new template (no ID) or existing template
+      if (!templateData.id) {
+        // New template - use onTemplateSave callback
+        if (onTemplateSave) {
+          await onTemplateSave(updateData);
+        }
+      } else {
+        // Existing template - update via API
+        const response = await api.put(
+          `/contract-templates/${templateData.id}`,
+          updateData
+        );
 
-      // Handle different response structures
-      const updatedTemplate = response.data?.data || response.data;
+        // Handle different response structures
+        const updatedTemplate = response.data?.data || response.data;
 
-      // Update local state
-      setTemplateData(updatedTemplate);
+        // Update local state
+        setTemplateData(updatedTemplate);
 
-      // Update form values to reflect changes immediately
-      templateForm.setFieldsValue({
-        name: updatedTemplate.name,
-        description: updatedTemplate.description,
-        version: updatedTemplate.version,
-        minCoOwners: updatedTemplate.minCoOwners,
-        maxCoOwners: updatedTemplate.maxCoOwners,
-      });
+        // Update form values to reflect changes immediately
+        templateForm.setFieldsValue({
+          name: updatedTemplate.name,
+          description: updatedTemplate.description,
+          version: updatedTemplate.version,
+          minCoOwners: updatedTemplate.minCoOwners,
+          maxCoOwners: updatedTemplate.maxCoOwners,
+        });
 
-      message.success("Template updated successfully");
+        message.success("Template updated successfully");
 
-      if (onTemplateUpdate) {
-        onTemplateUpdate(updatedTemplate);
+        if (onTemplateUpdate) {
+          onTemplateUpdate(updatedTemplate);
+        }
       }
     } catch (error) {
       console.error("Error updating template:", error);
@@ -187,17 +234,27 @@ const ContractPreview = ({ visible, template, onClose, onTemplateUpdate }) => {
       const contentForBackend =
         editorData.cleanHtml || editorData.backendHtml || editorData.html;
 
-      const response = await api.put(
-        `/contract-templates/${templateData.id}/content`,
-        { content: contentForBackend }
-      );
-
-      // Handle different response structures
-      const updatedTemplate = response.data?.data ||
-        response.data || { ...templateData, content: contentForBackend };
-
-      // Update local state
+      // Update local state with new content immediately
+      const updatedTemplate = {
+        ...templateData,
+        content: editorData.html || contentForBackend
+      };
       setTemplateData(updatedTemplate);
+
+      // If this is an existing template (has ID), save to backend
+      if (templateData.id) {
+        const response = await api.put(
+          `/contract-templates/${templateData.id}/content`,
+          { content: contentForBackend }
+        );
+
+        // Handle different response structures
+        const backendUpdatedTemplate = response.data?.data || response.data;
+        if (backendUpdatedTemplate) {
+          setTemplateData(backendUpdatedTemplate);
+        }
+      }
+
       message.success("Content updated successfully");
 
       if (onTemplateUpdate) {
@@ -360,6 +417,7 @@ const ContractPreview = ({ visible, template, onClose, onTemplateUpdate }) => {
       children: (
         <div style={{ height: "600px" }}>
           <ContractEditor
+            key={templateData?.id || 'new-template'}
             initialContent={templateData?.content || ""}
             onSave={handleContentSave}
             placeholder="Edit template content. Use {{variableName}} for dynamic variables."
@@ -463,7 +521,11 @@ const ContractPreview = ({ visible, template, onClose, onTemplateUpdate }) => {
         </div>
       ) : (
         <div style={{ textAlign: "center", padding: "40px" }}>
-          <Text type="secondary">Loading template data...</Text>
+          {loading ? (
+            <Text type="secondary">Loading template data...</Text>
+          ) : (
+            <Text type="secondary">Preparing template...</Text>
+          )}
         </div>
       )}
     </Modal>
