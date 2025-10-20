@@ -330,7 +330,7 @@ const MyGroup = () => {
   const EmptyState = (
     <Card>
       <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={<Text>You don't have any group</Text>}>
-        <Link to="/create.group">
+        <Link to="/create-group">
           <Button type="primary" icon={<PlusOutlined />}>Create group</Button>
         </Link>
       </Empty>
@@ -346,7 +346,7 @@ const MyGroup = () => {
         <Space>
           <Button onClick={() => navigate("/")}>Back to homepage</Button>
           <Button onClick={() => setJoinOpen(true)}>Join by code</Button>
-          <Button type="primary" icon={<PlusOutlined />} onClick={() => navigate("/create.group")}>Create group</Button>
+          <Button type="primary" icon={<PlusOutlined />} onClick={() => navigate("/create-group")}>Create group</Button>
         </Space>
       </Space>
 
@@ -463,7 +463,7 @@ const MyGroup = () => {
                                 <Button loading={inviteLoading} onClick={createInvite}>
                                   {inviteCode && inviteCountdown !== "expired" ? "Regenerate invite code" : "Create invite code"}
                                 </Button>
-                                <Link to="/create-econtract">
+                                <Link to="/create-econtract" state={{ groupId: selectedGroup?.id }}>
                                   <Button>Create contract</Button>
                                 </Link>
                                 {inviteCode ? (

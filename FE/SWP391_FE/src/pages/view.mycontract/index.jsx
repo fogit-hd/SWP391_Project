@@ -111,6 +111,79 @@ const MyContracts = () => {
     }
   };
 
+  // Check if contract can be signed - only show sign button for truly unsigned contracts
+  const canSignContract = (contract) => {
+    const status = contract.status || contract.isSigned;
+    
+    // If status is boolean
+    if (typeof status === 'boolean') {
+      return !status; // Can sign if not signed
+    }
+    
+    // If status is string - be more specific about what can be signed
+    if (typeof status === 'string') {
+      const statusLower = status.toLowerCase().trim();
+      
+      // Only allow signing for these specific "unsigned" statuses
+      const unsignedStatuses = [
+        'unsigned', 
+        'chưa ký', 
+        'draft', 
+        'nháp',
+        'not_signed',
+        'unconfirmed',
+        'signing',
+        'đang ký'
+      ];
+      
+      // Explicitly deny signing for these "signed" statuses
+      const signedStatuses = [
+        'signed',
+        'đã ký',
+        'confirmed', 
+        'xác nhận',
+        'completed',
+        'hoàn thành',
+        'approved',
+        'đã duyệt',
+        'active',
+        'hiệu lực'
+      ];
+      
+      // If it's explicitly signed, don't show sign button
+      if (signedStatuses.includes(statusLower)) {
+        return false;
+      }
+      
+      // If it's explicitly unsigned, show sign button
+      if (unsignedStatuses.includes(statusLower)) {
+        return true;
+      }
+      
+      // For pending/waiting statuses, don't show sign button (these are usually in review)
+      const pendingStatuses = [
+        'pending',
+        'chờ ký',
+        'waiting',
+        'chờ xác nhận',
+        'pending_review',
+        'chờ duyệt',
+        'in_review',
+        'đang xem xét'
+      ];
+      
+      if (pendingStatuses.includes(statusLower)) {
+        return false;
+      }
+      
+      // For unknown status, be conservative and don't show sign button
+      return false;
+    }
+    
+    // Default: don't show sign button if no status or unknown status
+    return false;
+  };
+
   // Handle sign contract
   const handleSign = async (contractId) => {
     try {
@@ -125,11 +198,49 @@ const MyContracts = () => {
     }
   };
 
-  // Get status tag
-  const getStatusTag = (isSigned) => {
-    if (isSigned) {
-      return <Tag color="green">Đã ký</Tag>;
+  // Get status tag - improved logic to handle different status formats
+  const getStatusTag = (contract) => {
+    // Handle different possible status fields and formats
+    const status = contract.status || contract.isSigned;
+    
+    // If status is boolean
+    if (typeof status === 'boolean') {
+      return status ? <Tag color="green">Đã ký</Tag> : <Tag color="orange">Chưa ký</Tag>;
     }
+    
+    // If status is string
+    if (typeof status === 'string') {
+      const statusLower = status.toLowerCase();
+      switch (statusLower) {
+        case 'signed':
+        case 'đã ký':
+        case 'confirmed':
+        case 'xác nhận':
+        case 'completed':
+        case 'hoàn thành':
+          return <Tag color="green">Đã ký</Tag>;
+        case 'pending':
+        case 'chờ ký':
+        case 'waiting':
+        case 'chờ xác nhận':
+          return <Tag color="orange">Chờ ký</Tag>;
+        case 'signing':
+        case 'đang ký':
+          return <Tag color="blue">Đang ký</Tag>;
+        case 'unsigned':
+        case 'chưa ký':
+        case 'draft':
+        case 'nháp':
+          return <Tag color="red">Chưa ký</Tag>;
+        case 'expired':
+        case 'hết hạn':
+          return <Tag color="gray">Hết hạn</Tag>;
+        default:
+          return <Tag color="blue">{status}</Tag>;
+      }
+    }
+    
+    // Default fallback
     return <Tag color="orange">Chưa ký</Tag>;
   };
 
@@ -171,10 +282,10 @@ const MyContracts = () => {
     },
     {
       title: "Trạng thái",
-      dataIndex: "isSigned",
-      key: "isSigned",
+      dataIndex: "status",
+      key: "status",
       width: 100,
-      render: (isSigned) => getStatusTag(isSigned),
+      render: (_, record) => getStatusTag(record),
     },
     {
       title: "Thao tác",
@@ -191,7 +302,7 @@ const MyContracts = () => {
           >
             Xem
           </Button>
-          {!record.isSigned && (
+          {canSignContract(record) && (
             <Button
               type="default"
               icon={<EditOutlined />}

@@ -22,7 +22,6 @@ import {
   CheckOutlined,
   CloseOutlined,
   FileTextOutlined,
-  ArrowLeftOutlined,
   ClockCircleOutlined,
   CheckCircleOutlined,
   CloseCircleOutlined,
@@ -30,6 +29,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import api from "../../../config/axios";
 import { toast } from "react-toastify";
+import StaffSidebar from "../../../components/staff/StaffSidebar";
 
 const { Header, Content, Sider } = Layout;
 const { Title, Paragraph } = Typography;
@@ -39,6 +39,7 @@ const ReviewEContract = () => {
   const navigate = useNavigate();
   const { isAuthenticated, isAdmin, isStaff, roleId } = useAuth();
 
+  const [collapsed, setCollapsed] = useState(false);
   const [contracts, setContracts] = useState([]);
   const [allContracts, setAllContracts] = useState([]); // Store all contracts
   const [loading, setLoading] = useState(false);
@@ -279,26 +280,13 @@ const ReviewEContract = () => {
 
   return (
     <Layout style={{ minHeight: "100vh" }}>
-      <Sider width={200} theme="light">
-        <div
-          style={{
-            padding: "16px",
-            textAlign: "center",
-            borderBottom: "1px solid #f0f0f0",
-          }}
-        >
-          <Button
-            type="text"
-            icon={<ArrowLeftOutlined />}
-            onClick={() => navigate("/")}
-            block
-          >
-            Về trang chủ
-          </Button>
-        </div>
-      </Sider>
+      <StaffSidebar
+        collapsed={collapsed}
+        onCollapse={setCollapsed}
+        selectedKey="review-contracts"
+      />
 
-      <Layout>
+      <Layout style={{ marginLeft: collapsed ? 80 : 280 }}>
         <Header
           style={{
             padding: 0,

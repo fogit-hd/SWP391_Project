@@ -16,7 +16,6 @@ import VerifyOTP from "./pages/verify.otp";
 import UpdateProfile from "./pages/update.profile";
 import ChangePassword from "./pages/change.password";
 import CreateGroup from "./pages/create.group";
-import ViewEContract from "./pages/view.econtract";
 import MyGroup from "./pages/myGroup";
 import CreateEContract from "./pages/create.econtract";
 import MyContracts from "./pages/view.mycontract";
@@ -120,15 +119,6 @@ function App() {
       element: (
         <ProtectedRoute roleId={3}>
           <CreateEContract />
-          //{" "}
-        </ProtectedRoute>
-      ),
-    },
-    {
-      path: "/view-econtract",
-      element: (
-        <ProtectedRoute roleId={3}>
-          <ViewEContract />
         </ProtectedRoute>
       ),
     },
@@ -141,7 +131,7 @@ function App() {
       ),
     },
     {
-      path: "/myGroup",
+      path: "/view-myGroup",
       element: (
         <ProtectedRoute roleId={3}>
           <MyGroup />
@@ -149,7 +139,7 @@ function App() {
       ),
     },
     {
-      path: "/create.group",
+      path: "/create-group",
       element: (
         <ProtectedRoute roleId={3}>
           <CreateGroup />
