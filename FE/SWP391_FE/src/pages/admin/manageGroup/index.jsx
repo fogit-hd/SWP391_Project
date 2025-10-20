@@ -58,15 +58,11 @@
 
 import React, { useState, useEffect } from "react";
 import {
-  PieChartOutlined,
-  TeamOutlined,
-  UsergroupAddOutlined,
-  UserOutlined,
+  LeftOutlined,
+  RightOutlined,
 } from "@ant-design/icons";
 import {
-  Breadcrumb,
   Layout,
-  Menu,
   theme,
   Table,
   Card,
@@ -80,37 +76,11 @@ import {
   Tabs,
   Space,
 } from "antd";
-import { Link } from "react-router-dom";
 import api from "../../../config/axios";
-import { LeftOutlined, RightOutlined } from "@ant-design/icons";
+import AdminSidebar from "../../../components/admin/AdminSidebar";
 import "./manageGroup.css";
 
-const { Header, Content, Footer, Sider } = Layout;
-
-const sidebarItems = [
-  {
-    key: "/admin/dashboard",
-    icon: <PieChartOutlined />,
-    label: <Link to="/admin/dashboard">Dashboard</Link>,
-  },
-  {
-    key: "user-management",
-    icon: <UserOutlined />,
-    label: "User Management",
-    children: [
-      {
-        key: "/manage-account",
-        icon: <UsergroupAddOutlined />,
-        label: <Link to="/manage-account">Manage Accounts</Link>,
-      },
-      {
-        key: "/manage-group",
-        icon: <TeamOutlined />,
-        label: <Link to="/manage-group">Manage Group</Link>,
-      },
-    ],
-  },
-];
+const { Header, Content, Footer } = Layout;
 
 export default function ManageGroup() {
   const [collapsed, setCollapsed] = useState(false);
@@ -131,7 +101,12 @@ export default function ManageGroup() {
   const normalizeGroups = (arr) =>
     (arr || []).map((g) => ({
       ...g,
-      createdBy: g?.createdBy ?? g?.created_by ?? g?.createdById ?? g?.createdByID ?? g?.createdby,
+      createdBy:
+        g?.createdBy ??
+        g?.created_by ??
+        g?.createdById ??
+        g?.createdByID ??
+        g?.createdby,
       createdAt: g?.createdAt ?? g?.created_at ?? g?.createdDate,
       updatedAt: g?.updatedAt ?? g?.updated_at ?? g?.updatedDate,
     }));
@@ -224,7 +199,8 @@ export default function ManageGroup() {
       key: "owner",
       render: (members) => {
         if (!members || members.length === 0) return "-";
-        const owner = members.find((m) => m.roleInGroup === "OWNER") || members[0];
+        const owner =
+          members.find((m) => m.roleInGroup === "OWNER") || members[0];
         return owner?.fullName || owner?.userId || "-";
       },
     },
@@ -234,8 +210,7 @@ export default function ManageGroup() {
       key: "createdBy",
       render: (v, record) => v || record?.created_by || "-",
     },
-   
-    
+
     {
       title: "Members",
       dataIndex: ["members"],
@@ -252,26 +227,16 @@ export default function ManageGroup() {
       title: "Active",
       dataIndex: "isActive",
       key: "isActive",
-      render: (v) => (v ? <Tag color="green" className="status-tag">Active</Tag> : <Tag color="red" className="status-tag">Inactive</Tag>),
-    },
-    {
-      title: "Actions",
-      key: "actions",
-      render: (_, record) => (
-        <Space>
-          <Button
-            type="link"
-            onClick={() => {
-              setSelected(record);
-              setDetailsVisible(true);
-              setSelectedVehicles(record?.vehicles || []);
-              fetchVehiclesForGroup(record?.id);
-            }}
-          >
-            Details
-          </Button>
-        </Space>
-      ),
+      render: (v) =>
+        v ? (
+          <Tag color="green" className="status-tag">
+            Active
+          </Tag>
+        ) : (
+          <Tag color="red" className="status-tag">
+            Inactive
+          </Tag>
+        ),
     },
     {
       title: "Actions",
@@ -296,18 +261,12 @@ export default function ManageGroup() {
 
   return (
     <Layout style={{ minHeight: "100vh" }}>
-      <Sider
-        collapsible
+      <AdminSidebar
         collapsed={collapsed}
-        onCollapse={(value) => setCollapsed(value)}
-        width={250}
-        collapsedWidth={80}
-      >
-        <div className="demo-logo-vertical" />
-        <Menu theme="dark" defaultSelectedKeys={["/manage-group"]} mode="inline" items={sidebarItems} />
-      </Sider>
-
-      <Layout>
+        onCollapse={setCollapsed}
+        selectedKey="manage-groups"
+      />
+      <Layout style={{ marginLeft: collapsed ? 80 : 280 }}>
         <Header style={{ padding: 0, background: colorBgContainer }} />
         <Content style={{ margin: "0 16px" }}>
           <div style={{ margin: "16px 0" }}>
@@ -324,91 +283,205 @@ export default function ManageGroup() {
           >
             <Card
               title={"Manage groups"}
-              extra={<Button onClick={() => {
-                (async () => {
-                  setLoading(true);
-                  try {
-                    const res = await api.get("/CoOwnership/all-groups");
-                    const payload = res.data?.data ?? res.data;
-                    const list = Array.isArray(payload) ? payload : Array.isArray(payload?.items) ? payload.items : [];
-                    setGroups(normalizeGroups(list));
-                    if (list.length > 0) setCurrent((i) => Math.min(i, list.length - 1));
-                  } catch (e) {
-                    message.error("Cannot fetch groups");
-                  } finally {
-                    setLoading(false);
-                  }
-                })();
-              }}>Refresh</Button>}
+              extra={
+                <Button
+                  onClick={() => {
+                    (async () => {
+                      setLoading(true);
+                      try {
+                        const res = await api.get("/CoOwnership/all-groups");
+                        const payload = res.data?.data ?? res.data;
+                        const list = Array.isArray(payload)
+                          ? payload
+                          : Array.isArray(payload?.items)
+                          ? payload.items
+                          : [];
+                        setGroups(normalizeGroups(list));
+                        if (list.length > 0)
+                          setCurrent((i) => Math.min(i, list.length - 1));
+                      } catch (e) {
+                        message.error("Cannot fetch groups");
+                      } finally {
+                        setLoading(false);
+                      }
+                    })();
+                  }}
+                >
+                  Refresh
+                </Button>
+              }
             >
-              <Tabs activeKey={viewKey} onChange={setViewKey} items={[
-                {
-                  key: "card",
-                  label: "Card view",
-                  children: (
-                    loading ? (
-                      <div style={{ textAlign: "center", padding: 24 }}><Spin /></div>
+              <Tabs
+                activeKey={viewKey}
+                onChange={setViewKey}
+                items={[
+                  {
+                    key: "card",
+                    label: "Card view",
+                    children: loading ? (
+                      <div style={{ textAlign: "center", padding: 24 }}>
+                        <Spin />
+                      </div>
                     ) : groups.length === 0 ? (
                       <div>No groups</div>
                     ) : (
                       <div>
                         {(() => {
                           const g = groups[current];
-                          const owner = g?.members?.find((m) => m.roleInGroup === "OWNER") || g?.members?.[0];
+                          const owner =
+                            g?.members?.find(
+                              (m) => m.roleInGroup === "OWNER"
+                            ) || g?.members?.[0];
                           return (
-                            <Card size="small" className="manage-group-card" style={{ marginBottom: 12 }}>
-                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
-                                <h3 style={{ margin: 0, cursor: 'pointer' }} onClick={() => { setSelected(g); setDetailsVisible(true); }}>{g?.name}</h3>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                                  <Tag color={g?.isActive ? 'green' : undefined}>{g?.isActive ? 'Active' : 'Inactive'}</Tag>
-                                  <Button size="small" onClick={() => { setSelected(g); setDetailsVisible(true); setSelectedVehicles(g?.vehicles || []); fetchVehiclesForGroup(g?.id); }}>Details</Button>
+                            <Card
+                              size="small"
+                              className="manage-group-card"
+                              style={{ marginBottom: 12 }}
+                            >
+                              <div
+                                style={{
+                                  display: "flex",
+                                  justifyContent: "space-between",
+                                  alignItems: "center",
+                                  gap: 12,
+                                }}
+                              >
+                                <h3
+                                  style={{ margin: 0, cursor: "pointer" }}
+                                  onClick={() => {
+                                    setSelected(g);
+                                    setDetailsVisible(true);
+                                  }}
+                                >
+                                  {g?.name}
+                                </h3>
+                                <div
+                                  style={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: 8,
+                                  }}
+                                >
+                                  <Tag
+                                    color={g?.isActive ? "green" : undefined}
+                                  >
+                                    {g?.isActive ? "Active" : "Inactive"}
+                                  </Tag>
+                                  <Button
+                                    size="small"
+                                    onClick={() => {
+                                      setSelected(g);
+                                      setDetailsVisible(true);
+                                      setSelectedVehicles(g?.vehicles || []);
+                                      fetchVehiclesForGroup(g?.id);
+                                    }}
+                                  >
+                                    Details
+                                  </Button>
                                 </div>
                               </div>
-                              <div style={{ marginTop: 8, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-                                <div><strong>ID:</strong> {g?.id}</div>
-                                <div><strong>Owner:</strong> {owner?.fullName || owner?.userId || '-'}</div>
-                                <div><strong>Created By:</strong> {g?.createdBy || g?.created_by || '-'}</div>
-                                <div><strong>Members:</strong> {g?.members ? g.members.length : 0}</div>
-                                <div><strong>Created At:</strong> {g?.createdAt || g?.created_at ? new Date(g.createdAt || g.created_at).toLocaleString() : '-'}</div>
-                                <div><strong>Vehicles:</strong> {g?.vehicles ? g.vehicles.length : 0}</div>
-                                <div><strong>Updated At:</strong> {g?.updatedAt || g?.updated_at ? new Date(g.updatedAt || g.updated_at).toLocaleString() : '-'}</div>
+                              <div
+                                style={{
+                                  marginTop: 8,
+                                  display: "grid",
+                                  gridTemplateColumns: "1fr 1fr",
+                                  gap: 8,
+                                }}
+                              >
+                                <div>
+                                  <strong>ID:</strong> {g?.id}
+                                </div>
+                                <div>
+                                  <strong>Owner:</strong>{" "}
+                                  {owner?.fullName || owner?.userId || "-"}
+                                </div>
+                                <div>
+                                  <strong>Created By:</strong>{" "}
+                                  {g?.createdBy || g?.created_by || "-"}
+                                </div>
+                                <div>
+                                  <strong>Members:</strong>{" "}
+                                  {g?.members ? g.members.length : 0}
+                                </div>
+                                <div>
+                                  <strong>Created At:</strong>{" "}
+                                  {g?.createdAt || g?.created_at
+                                    ? new Date(
+                                        g.createdAt || g.created_at
+                                      ).toLocaleString()
+                                    : "-"}
+                                </div>
+                                <div>
+                                  <strong>Vehicles:</strong>{" "}
+                                  {g?.vehicles ? g.vehicles.length : 0}
+                                </div>
+                                <div>
+                                  <strong>Updated At:</strong>{" "}
+                                  {g?.updatedAt || g?.updated_at
+                                    ? new Date(
+                                        g.updatedAt || g.updated_at
+                                      ).toLocaleString()
+                                    : "-"}
+                                </div>
                               </div>
                             </Card>
                           );
                         })()}
 
-                        <div style={{ display: 'flex', justifyContent: 'center', gap: 12 }}>
-                          <Button icon={<LeftOutlined />} onClick={() => setCurrent((i) => (i === 0 ? groups.length - 1 : i - 1))} />
-                          <span>Group {current + 1} of {groups.length}</span>
-                          <Button icon={<RightOutlined />} onClick={() => setCurrent((i) => (i + 1) % groups.length)} />
+                        <div
+                          style={{
+                            display: "flex",
+                            justifyContent: "center",
+                            gap: 12,
+                          }}
+                        >
+                          <Button
+                            icon={<LeftOutlined />}
+                            onClick={() =>
+                              setCurrent((i) =>
+                                i === 0 ? groups.length - 1 : i - 1
+                              )
+                            }
+                          />
+                          <span>
+                            Group {current + 1} of {groups.length}
+                          </span>
+                          <Button
+                            icon={<RightOutlined />}
+                            onClick={() =>
+                              setCurrent((i) => (i + 1) % groups.length)
+                            }
+                          />
                         </div>
                       </div>
-                    )
-                  ),
-                },
-                {
-                  key: "table",
-                  label: "Table view",
-                  children: (
-                    loading ? (
-                      <div style={{ textAlign: "center", padding: 24 }}><Spin /></div>
+                    ),
+                  },
+                  {
+                    key: "table",
+                    label: "Table view",
+                    children: loading ? (
+                      <div style={{ textAlign: "center", padding: 24 }}>
+                        <Spin />
+                      </div>
                     ) : (
                       <Table
                         dataSource={groups.map((g) => ({ ...g, key: g.id }))}
                         columns={columns}
                         pagination={{ pageSize: 10 }}
                       />
-                    )
-                  ),
-                },
-              ]} />
+                    ),
+                  },
+                ]}
+              />
             </Card>
 
             <Modal
               title={selected ? selected.name : "Group details"}
               open={detailsVisible}
               onCancel={() => setDetailsVisible(false)}
-              footer={<Button onClick={() => setDetailsVisible(false)}>Close</Button>}
+              footer={
+                <Button onClick={() => setDetailsVisible(false)}>Close</Button>
+              }
               width={800}
               className="manage-group-modal"
             >
@@ -421,7 +494,9 @@ export default function ManageGroup() {
                     renderItem={(m) => (
                       <List.Item>
                         <List.Item.Meta
-                          avatar={<Avatar>{(m.fullName || "?").slice(0, 1)}</Avatar>}
+                          avatar={
+                            <Avatar>{(m.fullName || "?").slice(0, 1)}</Avatar>
+                          }
                           title={m.fullName || m.userId}
                           description={m.roleInGroup}
                         />
@@ -433,40 +508,81 @@ export default function ManageGroup() {
                   <List
                     loading={vehiclesLoading}
                     itemLayout="horizontal"
-                    dataSource={(selectedVehicles && selectedVehicles.length > 0) ? selectedVehicles : (selected.vehicles || [])}
+                    dataSource={
+                      selectedVehicles && selectedVehicles.length > 0
+                        ? selectedVehicles
+                        : selected.vehicles || []
+                    }
                     renderItem={(v) => (
                       <List.Item>
                         <List.Item.Meta
                           title={v.plateNumber || v.id}
                           description={
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 4 }}>
+                            <div
+                              style={{
+                                display: "grid",
+                                gridTemplateColumns: "1fr",
+                                gap: 4,
+                              }}
+                            >
                               <div className="vehicle-line">
-                                <strong>Make/Model:</strong> {(v.make || '-') + ' / ' + (v.model || '-')}
-                                {typeof v.modelYear !== 'undefined' && (
-                                  <span> • <strong>Year:</strong> {v.modelYear}</span>
+                                <strong>Make/Model:</strong>{" "}
+                                {(v.make || "-") + " / " + (v.model || "-")}
+                                {typeof v.modelYear !== "undefined" && (
+                                  <span>
+                                    {" "}
+                                    • <strong>Year:</strong> {v.modelYear}
+                                  </span>
                                 )}
                               </div>
                               <div className="vehicle-line">
-                                <strong>Status:</strong> {(() => {
-                                  const s = (v.status || '').toUpperCase();
+                                <strong>Status:</strong>{" "}
+                                {(() => {
+                                  const s = (v.status || "").toUpperCase();
                                   let color;
-                                  if (s === 'ACTIVE') color = 'green';
-                                  else if (s === 'INACTIVE') color = 'red';
-                                  else if (s === 'MAINTENANCE') color = 'orange';
-                                  const label = s === 'ACTIVE' ? 'Active' : s === 'INACTIVE' ? 'Inactive' : (v.status || '-');
-                                  return <Tag color={color} className="status-tag">{label}</Tag>;
+                                  if (s === "ACTIVE") color = "green";
+                                  else if (s === "INACTIVE") color = "red";
+                                  else if (s === "MAINTENANCE")
+                                    color = "orange";
+                                  const label =
+                                    s === "ACTIVE"
+                                      ? "Active"
+                                      : s === "INACTIVE"
+                                      ? "Inactive"
+                                      : v.status || "-";
+                                  return (
+                                    <Tag color={color} className="status-tag">
+                                      {label}
+                                    </Tag>
+                                  );
                                 })()}
-                                {v.color ? <span> • <strong>Color:</strong> {v.color}</span> : null}
+                                {v.color ? (
+                                  <span>
+                                    {" "}
+                                    • <strong>Color:</strong> {v.color}
+                                  </span>
+                                ) : null}
                               </div>
                               <div className="vehicle-line">
-                                <strong>Battery:</strong> {v.batteryCapacityKwh ?? '-'} kWh • <strong>Range:</strong> {v.rangeKm ?? '-'} km
+                                <strong>Battery:</strong>{" "}
+                                {v.batteryCapacityKwh ?? "-"} kWh •{" "}
+                                <strong>Range:</strong> {v.rangeKm ?? "-"} km
                               </div>
                               <div className="vehicle-line">
-                                <strong>Device ID:</strong> {v.telematicsDeviceId || '-'}
-                                {v.groupId ? <span> • <strong>Group ID:</strong> {v.groupId}</span> : null}
+                                <strong>Device ID:</strong>{" "}
+                                {v.telematicsDeviceId || "-"}
+                                {v.groupId ? (
+                                  <span>
+                                    {" "}
+                                    • <strong>Group ID:</strong> {v.groupId}
+                                  </span>
+                                ) : null}
                               </div>
-                              <div className="vehicle-line" style={{ opacity: 0.9 }}>
-                                <strong>Vehicle ID:</strong> {v.id || '-'}
+                              <div
+                                className="vehicle-line"
+                                style={{ opacity: 0.9 }}
+                              >
+                                <strong>Vehicle ID:</strong> {v.id || "-"}
                               </div>
                             </div>
                           }
@@ -481,7 +597,9 @@ export default function ManageGroup() {
             </Modal>
           </div>
         </Content>
-        <Footer style={{ textAlign: "center" }}>Ant Design ©{new Date().getFullYear()} Created by Ant UED</Footer>
+        <Footer style={{ textAlign: "center" }}>
+          Ant Design ©{new Date().getFullYear()} Created by Ant UED
+        </Footer>
       </Layout>
     </Layout>
   );

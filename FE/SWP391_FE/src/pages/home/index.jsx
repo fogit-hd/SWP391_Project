@@ -31,10 +31,10 @@ import {
 } from "@ant-design/icons";
 import { Link, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { logout, restoreUser } from "../../redux/accountSlice";
+import { logout, restoreUser } from "../../components/redux/accountSlice";
 import api from "../../config/axios";
 import { toast } from "react-toastify";
-import { useAuth } from "../../hooks/useAuth";
+import { useAuth } from "../../components/hooks/useAuth";
 import "./home.css";
 import "../../../index.css";
 

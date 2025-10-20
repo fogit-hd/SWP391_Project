@@ -4,22 +4,19 @@ import {
   Card,
   Table,
   Space,
-  Popconfirm,
   message,
   Spin,
   Alert,
   Breadcrumb,
   Layout,
-  Menu,
   theme,
   Modal,
   Form,
   Input,
   InputNumber,
-  Select,
+  Dropdown,
   Tag,
   Tooltip,
-  Dropdown,
 } from "antd";
 import "./vehicle-management.css";
 import {
@@ -27,83 +24,12 @@ import {
   DeleteOutlined,
   PlusOutlined,
   ReloadOutlined,
-  PieChartOutlined,
-  UserOutlined,
-  UsergroupAddOutlined,
-  TeamOutlined,
-  CarOutlined,
-  StopOutlined,
-  CheckCircleOutlined,
   MoreOutlined,
 } from "@ant-design/icons";
-import { Link } from "react-router-dom";
 import api from "../../../config/axios";
-import { RiAccountCircle2Line } from "react-icons/ri";
-import { MdOutlineManageAccounts } from "react-icons/md";
+import AdminSidebar from "../../../components/admin/AdminSidebar";
 
-const { Header, Content, Footer, Sider } = Layout;
-const { Option } = Select;
-
-const items = [
-  {
-    key: "/dashboard",
-    icon: <PieChartOutlined />,
-    label: <Link to="/dashboard">Dashboard</Link>,
-  },
-  {
-    key: "user-management",
-    icon: <RiAccountCircle2Line />,
-    label: "User Management",
-    children: [
-      {
-        key: "/manage-account",
-        icon: <MdOutlineManageAccounts />,
-        label: <Link to="/manage-account">Manage Accounts</Link>,
-      },
-      {
-        key: "/manage-group",
-        icon: <TeamOutlined />,
-        label: <Link to="/manage-group">Manage Group</Link>,
-      },
-    ],
-  },
-  {
-    key: "vehicle-management",
-    icon: <CarOutlined />,
-    label: "Vehicle Management",
-    children: [
-      {
-        key: "/manage-vehicle",
-        icon: <CarOutlined />,
-        label: <Link to="/manage-vehicle">Manage Vehicles</Link>,
-      },
-    ],
-  },
-  {
-    key: "contract-management",
-    icon: <UserOutlined />,
-    label: "Contract Management",
-    children: [
-      {
-        key: "/manage-contract",
-        icon: <UsergroupAddOutlined />,
-        label: <Link to="/manage-contract">Manage Contracts</Link>,
-      },
-    ],
-  },
-  {
-    key: "service-management",
-    icon: <UserOutlined />,
-    label: "Service Management",
-    children: [
-      {
-        key: "/manage-service",
-        icon: <UsergroupAddOutlined />,
-        label: <Link to="/manage-service">Manage Services</Link>,
-      },
-    ],
-  },
-];
+const { Header, Content, Footer } = Layout;
 
 const ManageVehicle = () => {
   // Layout state
@@ -143,20 +69,16 @@ const ManageVehicle = () => {
       dataIndex: "id",
       key: "id",
       width: 120,
-      fixed: 'left',
+      fixed: "left",
       ellipsis: true,
-      render: (id) => (
-        <Tooltip title={id}>
-          {id.substring(0, 8)}...
-        </Tooltip>
-      ),
+      render: (id) => <Tooltip title={id}>{id.substring(0, 8)}...</Tooltip>,
     },
     {
       title: "Plate Number",
       dataIndex: "plateNumber",
       key: "plateNumber",
       width: 150,
-      fixed: 'left',
+      fixed: "left",
       sorter: true,
     },
     {
@@ -188,15 +110,13 @@ const ManageVehicle = () => {
       dataIndex: "status",
       key: "status",
       sorter: true,
-      filters: [
-        { text: "INACTIVE", value: "INACTIVE" },
-      ],
+      filters: [{ text: "INACTIVE", value: "INACTIVE" }],
       render: (status) => {
         let color = "default";
         if (status === "ACTIVE" || status === "Active") color = "green";
         if (status === "INACTIVE" || status === "Inactive") color = "red";
         if (status === "MAINTENANCE") color = "orange";
-        
+
         return <Tag color={color}>{status}</Tag>;
       },
     },
@@ -223,15 +143,15 @@ const ManageVehicle = () => {
       title: "Action",
       key: "action",
       width: 80,
-      fixed: 'right',
+      fixed: "right",
       render: (_, record) => {
         const handleMenuClick = ({ key }) => {
-          console.log('Menu item clicked:', key, 'for vehicle ID:', record.id);
-          if (key === 'edit') {
-            console.log('Edit action triggered');
+          console.log("Menu item clicked:", key, "for vehicle ID:", record.id);
+          if (key === "edit") {
+            console.log("Edit action triggered");
             handleEdit(record);
-          } else if (key === 'delete') {
-            console.log('Delete action triggered - showing confirmation modal');
+          } else if (key === "delete") {
+            console.log("Delete action triggered - showing confirmation modal");
             setVehicleToDelete(record);
             setDeleteModalVisible(true);
           }
@@ -242,23 +162,23 @@ const ManageVehicle = () => {
             menu={{
               items: [
                 {
-                  key: 'edit',
+                  key: "edit",
                   icon: <EditOutlined />,
-                  label: 'Edit',
+                  label: "Edit",
                 },
                 {
-                  type: 'divider',
+                  type: "divider",
                 },
                 {
-                  key: 'delete',
+                  key: "delete",
                   icon: <DeleteOutlined />,
-                  label: 'Delete',
+                  label: "Delete",
                   danger: true,
                 },
               ],
               onClick: handleMenuClick,
             }}
-            trigger={['click']}
+            trigger={["click"]}
             placement="bottomRight"
           >
             <Button
@@ -268,7 +188,7 @@ const ManageVehicle = () => {
               className="vehicle-action-button"
               onClick={(e) => {
                 e.stopPropagation();
-                console.log('Dropdown button clicked for vehicle:', record.id);
+                console.log("Dropdown button clicked for vehicle:", record.id);
               }}
             />
           </Dropdown>
@@ -291,19 +211,19 @@ const ManageVehicle = () => {
     try {
       const response = await api.get("/Vehicle/get-all-vehicle");
       const vehicles = response.data || [];
-      
+
       // Apply client-side filtering and sorting
       let filteredData = vehicles;
-      
+
       // Apply status filter
       if (filters.status && filters.status.length > 0) {
-        filteredData = filteredData.filter(item => 
-          filters.status.some(status => 
-            item.status.toUpperCase() === status.toUpperCase()
+        filteredData = filteredData.filter((item) =>
+          filters.status.some(
+            (status) => item.status.toUpperCase() === status.toUpperCase()
           )
         );
       }
-      
+
       // Apply sorting
       if (sortField && sortOrder) {
         filteredData.sort((a, b) => {
@@ -316,11 +236,14 @@ const ManageVehicle = () => {
           }
         });
       }
-      
+
       // Apply pagination
       const startIndex = (page - 1) * pageSize;
-      const paginatedData = filteredData.slice(startIndex, startIndex + pageSize);
-      
+      const paginatedData = filteredData.slice(
+        startIndex,
+        startIndex + pageSize
+      );
+
       setData(paginatedData);
       setPagination((prev) => ({
         ...prev,
@@ -338,8 +261,8 @@ const ManageVehicle = () => {
 
   const createVehicle = async (values) => {
     try {
-      console.log('Creating vehicle with values:', values); // Debug log
-      
+      console.log("Creating vehicle with values:", values); // Debug log
+
       const requestBody = {
         make: values.make,
         model: values.model,
@@ -351,39 +274,39 @@ const ManageVehicle = () => {
         telematicsDeviceId: values.telematicsDeviceId,
       };
 
-      console.log('Create request body:', requestBody); // Debug log
+      console.log("Create request body:", requestBody); // Debug log
       const response = await api.post("/Vehicle/create", requestBody, {
         headers: {
-          'Content-Type': 'application/json',
-        }
+          "Content-Type": "application/json",
+        },
       });
-      console.log('Create response:', response); // Debug log
-      
+      console.log("Create response:", response); // Debug log
+
       if (response.data.message) {
         message.success(response.data.message);
       } else {
         message.success("Vehicle created successfully");
       }
-      
+
       setIsAddModalVisible(false);
       addForm.resetFields();
       fetchVehicles(pagination.current, pagination.pageSize);
     } catch (err) {
-      console.error('Create error:', err); // Debug log
-      console.error('Error response:', err.response); // Debug log
-      
-      let errorMessage = 'Failed to create vehicle';
+      console.error("Create error:", err); // Debug log
+      console.error("Error response:", err.response); // Debug log
+
+      let errorMessage = "Failed to create vehicle";
       if (err.response) {
         errorMessage = `Failed to create vehicle: ${err.response.status} ${err.response.statusText}`;
         if (err.response.data && err.response.data.message) {
           errorMessage = err.response.data.message;
         }
       } else if (err.request) {
-        errorMessage = 'No response from server. Please check your connection.';
+        errorMessage = "No response from server. Please check your connection.";
       } else {
         errorMessage = err.message;
       }
-      
+
       message.error(errorMessage);
     }
   };
@@ -391,9 +314,9 @@ const ManageVehicle = () => {
   const updateVehicle = async (id, values) => {
     setIsUpdating(true);
     try {
-      console.log('Updating vehicle with ID:', id); // Debug log
-      console.log('Update values:', values); // Debug log
-      
+      console.log("Updating vehicle with ID:", id); // Debug log
+      console.log("Update values:", values); // Debug log
+
       const requestBody = {
         make: values.make,
         model: values.model,
@@ -405,36 +328,36 @@ const ManageVehicle = () => {
         telematicsDeviceId: values.telematicsDeviceId,
       };
 
-      console.log('Request body:', requestBody); // Debug log
-      console.log('API URL:', `${api.defaults.baseURL}/Vehicle/${id}`); // Debug log
-      
+      console.log("Request body:", requestBody); // Debug log
+      console.log("API URL:", `${api.defaults.baseURL}/Vehicle/${id}`); // Debug log
+
       // Check if token exists
       const token = localStorage.getItem("token");
-      console.log('Token exists:', !!token); // Debug log
-      
+      console.log("Token exists:", !!token); // Debug log
+
       const response = await api.put(`/Vehicle/${id}`, requestBody, {
         headers: {
-          'Content-Type': 'application/json',
-        }
+          "Content-Type": "application/json",
+        },
       });
-      console.log('Update response:', response); // Debug log
-      
+      console.log("Update response:", response); // Debug log
+
       if (response.data.message) {
         message.success(response.data.message);
       } else {
         message.success("Vehicle updated successfully");
       }
-      
+
       setIsEditModalVisible(false);
       editForm.resetFields();
       setEditingRecord(null);
       fetchVehicles(pagination.current, pagination.pageSize);
     } catch (err) {
-      console.error('Update error:', err); // Debug log
-      console.error('Error response:', err.response); // Debug log
-      console.error('Error request:', err.request); // Debug log
-      
-      let errorMessage = 'Failed to update vehicle';
+      console.error("Update error:", err); // Debug log
+      console.error("Error response:", err.response); // Debug log
+      console.error("Error request:", err.request); // Debug log
+
+      let errorMessage = "Failed to update vehicle";
       if (err.response) {
         // Server responded with error status
         errorMessage = `Failed to update vehicle: ${err.response.status} ${err.response.statusText}`;
@@ -443,12 +366,12 @@ const ManageVehicle = () => {
         }
       } else if (err.request) {
         // Request was made but no response received
-        errorMessage = 'No response from server. Please check your connection.';
+        errorMessage = "No response from server. Please check your connection.";
       } else {
         // Something else happened
         errorMessage = err.message;
       }
-      
+
       message.error(errorMessage);
     } finally {
       setIsUpdating(false);
@@ -458,10 +381,10 @@ const ManageVehicle = () => {
   // Status change function temporarily disabled - no API available
   // const changeVehicleStatus = async (id, newStatus) => {
   //   try {
-  //     const endpoint = newStatus === "ACTIVE" ? 
-  //       `/Vehicle/activate-vehicle?vehicleId=${id}` : 
+  //     const endpoint = newStatus === "ACTIVE" ?
+  //       `/Vehicle/activate-vehicle?vehicleId=${id}` :
   //       `/Vehicle/deactivate-vehicle?vehicleId=${id}`;
-      
+
   //     await api.patch(endpoint);
   //     message.success(`Vehicle ${newStatus.toLowerCase()}d successfully`);
   //     fetchVehicles(pagination.current, pagination.pageSize);
@@ -472,13 +395,15 @@ const ManageVehicle = () => {
 
   const deleteVehicle = async (vehicleId) => {
     try {
-      console.log('Starting delete for vehicle ID:', vehicleId); // Debug log
-      const response = await api.delete(`/Vehicle/delete-vehicle-by-id?id=${vehicleId}`);
-      console.log('Delete response:', response); // Debug log
+      console.log("Starting delete for vehicle ID:", vehicleId); // Debug log
+      const response = await api.delete(
+        `/Vehicle/delete-vehicle-by-id?id=${vehicleId}`
+      );
+      console.log("Delete response:", response); // Debug log
       message.success("Vehicle deleted successfully");
       fetchVehicles(pagination.current, pagination.pageSize);
     } catch (err) {
-      console.error('Delete error:', err); // Debug log
+      console.error("Delete error:", err); // Debug log
       message.error(`Failed to delete vehicle: ${err.message}`);
     }
   };
@@ -500,7 +425,7 @@ const ManageVehicle = () => {
   };
 
   const handleDelete = (id) => {
-    console.log('handleDelete called with ID:', id);
+    console.log("handleDelete called with ID:", id);
     deleteVehicle(id);
   };
 
@@ -529,14 +454,14 @@ const ManageVehicle = () => {
   };
 
   const onEditFinish = (values) => {
-    console.log('Edit form submitted with values:', values); // Debug log
-    console.log('Editing record:', editingRecord); // Debug log
-    
+    console.log("Edit form submitted with values:", values); // Debug log
+    console.log("Editing record:", editingRecord); // Debug log
+
     if (!editingRecord || !editingRecord.id) {
-      message.error('No vehicle selected for editing');
+      message.error("No vehicle selected for editing");
       return;
     }
-    
+
     updateVehicle(editingRecord.id, values);
   };
 
@@ -547,23 +472,12 @@ const ManageVehicle = () => {
 
   return (
     <Layout style={{ minHeight: "100vh" }}>
-      <Sider
-        collapsible
+      <AdminSidebar
         collapsed={collapsed}
-        onCollapse={(value) => setCollapsed(value)}
-        width={250}
-        collapsedWidth={80}
-      >
-        <div className="demo-logo-vertical" />
-        <Menu
-          theme="dark"
-          defaultSelectedKeys={["/manage-vehicle"]}
-          mode="inline"
-          items={items}
-          accordion
-        />
-      </Sider>
-      <Layout>
+        onCollapse={setCollapsed}
+        selectedKey="manage-vehicles"
+      />
+      <Layout style={{ marginLeft: collapsed ? 80 : 280 }}>
         <Header style={{ padding: 0, background: colorBgContainer }} />
         <Content style={{ margin: "0 16px" }}>
           <Breadcrumb
@@ -661,16 +575,14 @@ const ManageVehicle = () => {
         style={{ top: 20 }}
       >
         <div className="vehicle-form">
-          <Form
-            form={addForm}
-            layout="vertical"
-            onFinish={onAddFinish}
-          >
+          <Form form={addForm} layout="vertical" onFinish={onAddFinish}>
             <div className="vehicle-form-grid">
               <Form.Item
                 name="plateNumber"
                 label="Plate Number"
-                rules={[{ required: true, message: "Please input plate number!" }]}
+                rules={[
+                  { required: true, message: "Please input plate number!" },
+                ]}
               >
                 <Input placeholder="Enter plate number" />
               </Form.Item>
@@ -694,7 +606,9 @@ const ManageVehicle = () => {
               <Form.Item
                 name="modelYear"
                 label="Model Year"
-                rules={[{ required: true, message: "Please input model year!" }]}
+                rules={[
+                  { required: true, message: "Please input model year!" },
+                ]}
               >
                 <InputNumber
                   placeholder="Enter model year"
@@ -714,7 +628,9 @@ const ManageVehicle = () => {
               <Form.Item
                 name="batteryCapacityKwh"
                 label="Battery Capacity (kWh)"
-                rules={[{ required: true, message: "Please input battery capacity!" }]}
+                rules={[
+                  { required: true, message: "Please input battery capacity!" },
+                ]}
               >
                 <InputNumber
                   placeholder="Enter battery capacity"
@@ -728,10 +644,7 @@ const ManageVehicle = () => {
                 label="Range (km)"
                 rules={[{ required: true, message: "Please input range!" }]}
               >
-                <InputNumber
-                  placeholder="Enter vehicle range"
-                  min={0}
-                />
+                <InputNumber placeholder="Enter vehicle range" min={0} />
               </Form.Item>
 
               <Form.Item
@@ -744,10 +657,12 @@ const ManageVehicle = () => {
             </div>
 
             <div className="vehicle-form-actions">
-              <Button onClick={() => {
-                setIsAddModalVisible(false);
-                addForm.resetFields();
-              }}>
+              <Button
+                onClick={() => {
+                  setIsAddModalVisible(false);
+                  addForm.resetFields();
+                }}
+              >
                 Cancel
               </Button>
               <Button type="primary" htmlType="submit">
@@ -775,16 +690,14 @@ const ManageVehicle = () => {
         style={{ top: 20 }}
       >
         <div className="vehicle-form">
-          <Form
-            form={editForm}
-            layout="vertical"
-            onFinish={onEditFinish}
-          >
+          <Form form={editForm} layout="vertical" onFinish={onEditFinish}>
             <div className="vehicle-form-grid">
               <Form.Item
                 name="plateNumber"
                 label="Plate Number"
-                rules={[{ required: true, message: "Please input plate number!" }]}
+                rules={[
+                  { required: true, message: "Please input plate number!" },
+                ]}
               >
                 <Input placeholder="Enter plate number" />
               </Form.Item>
@@ -808,7 +721,9 @@ const ManageVehicle = () => {
               <Form.Item
                 name="modelYear"
                 label="Model Year"
-                rules={[{ required: true, message: "Please input model year!" }]}
+                rules={[
+                  { required: true, message: "Please input model year!" },
+                ]}
               >
                 <InputNumber
                   placeholder="Enter model year"
@@ -828,7 +743,9 @@ const ManageVehicle = () => {
               <Form.Item
                 name="batteryCapacityKwh"
                 label="Battery Capacity (kWh)"
-                rules={[{ required: true, message: "Please input battery capacity!" }]}
+                rules={[
+                  { required: true, message: "Please input battery capacity!" },
+                ]}
               >
                 <InputNumber
                   placeholder="Enter battery capacity"
@@ -842,10 +759,7 @@ const ManageVehicle = () => {
                 label="Range (km)"
                 rules={[{ required: true, message: "Please input range!" }]}
               >
-                <InputNumber
-                  placeholder="Enter vehicle range"
-                  min={0}
-                />
+                <InputNumber placeholder="Enter vehicle range" min={0} />
               </Form.Item>
 
               <Form.Item
@@ -858,11 +772,13 @@ const ManageVehicle = () => {
             </div>
 
             <div className="vehicle-form-actions">
-              <Button onClick={() => {
-                setIsEditModalVisible(false);
-                editForm.resetFields();
-                setEditingRecord(null);
-              }}>
+              <Button
+                onClick={() => {
+                  setIsEditModalVisible(false);
+                  editForm.resetFields();
+                  setEditingRecord(null);
+                }}
+              >
                 Cancel
               </Button>
               <Button type="primary" htmlType="submit" loading={isUpdating}>
@@ -878,13 +794,16 @@ const ManageVehicle = () => {
         title="Delete Vehicle"
         open={deleteModalVisible}
         onOk={() => {
-          console.log('Delete confirmed - calling handleDelete with ID:', vehicleToDelete?.id);
+          console.log(
+            "Delete confirmed - calling handleDelete with ID:",
+            vehicleToDelete?.id
+          );
           handleDelete(vehicleToDelete?.id);
           setDeleteModalVisible(false);
           setVehicleToDelete(null);
         }}
         onCancel={() => {
-          console.log('Delete cancelled');
+          console.log("Delete cancelled");
           setDeleteModalVisible(false);
           setVehicleToDelete(null);
         }}
@@ -893,8 +812,10 @@ const ManageVehicle = () => {
         okType="danger"
         className="delete-confirmation-modal"
       >
-        <div style={{ display: 'flex', alignItems: 'center' }}>
-          <DeleteOutlined style={{ color: '#ff4d4f', fontSize: 20, marginRight: 8 }} />
+        <div style={{ display: "flex", alignItems: "center" }}>
+          <DeleteOutlined
+            style={{ color: "#ff4d4f", fontSize: 20, marginRight: 8 }}
+          />
           <span>Are you sure you want to delete this vehicle?</span>
         </div>
       </Modal>

@@ -1,21 +1,13 @@
 import React, { useState } from "react";
 import {
-  DesktopOutlined,
-  FileOutlined,
-  PieChartOutlined,
-  TeamOutlined,
   UserOutlined,
-  UsergroupAddOutlined,
-  EditOutlined,
-  CodeOutlined,
-  SettingOutlined,
+  FileOutlined,
   PlusOutlined,
-  FileTextOutlined,
+  UsergroupAddOutlined,
 } from "@ant-design/icons";
 import {
   Breadcrumb,
   Layout,
-  Menu,
   theme,
   Button,
   Row,
@@ -23,42 +15,11 @@ import {
   Card,
   Typography,
 } from "antd";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import AdminSidebar from "../../../components/admin/AdminSidebar";
 
-const { Header, Content, Footer, Sider } = Layout;
+const { Header, Content, Footer } = Layout;
 const { Title, Paragraph } = Typography;
-
-const items = [
-  {
-    key: "dashboard",
-    icon: <PieChartOutlined />,
-    label: <Link to="/admin/dashboard">Dashboard</Link>,
-  },
-  {
-    key: "user-management",
-    icon: <UserOutlined />,
-    label: "User Management",
-    children: [
-      {
-        key: "manage-accounts",
-        icon: <UsergroupAddOutlined />,
-        label: <Link to="/admin/manage-account">Manage Accounts</Link>,
-      },
-    ],
-  },
-  {
-    key: "contract-management",
-    icon: <FileTextOutlined />,
-    label: "Contract Management",
-    children: [
-      {
-        key: "manage-templates",
-        icon: <PlusOutlined />,
-        label: <Link to="/admin/manage-contract">Manage Templates</Link>,
-      },
-    ],
-  },
-];
 
 const Dashboard = () => {
   const [collapsed, setCollapsed] = useState(false);
@@ -77,20 +38,12 @@ const Dashboard = () => {
 
   return (
     <Layout style={{ minHeight: "100vh" }}>
-      <Sider
-        collapsible
+      <AdminSidebar
         collapsed={collapsed}
-        onCollapse={(value) => setCollapsed(value)}
-      >
-        <div className="demo-logo-vertical" />
-        <Menu
-          theme="dark"
-          defaultSelectedKeys={["dashboard"]}
-          mode="inline"
-          items={items}
-        />
-      </Sider>
-      <Layout>
+        onCollapse={setCollapsed}
+        selectedKey="dashboard"
+      />
+      <Layout style={{ marginLeft: collapsed ? 80 : 280 }}>
         <Header style={{ padding: 0, background: colorBgContainer }} />
         <Content style={{ margin: "0 16px" }}>
           <Breadcrumb

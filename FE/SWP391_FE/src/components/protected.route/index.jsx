@@ -1,7 +1,7 @@
 import { Button, Result } from "antd";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { getUserInfo } from "../../utils/jwt";
+import { getUserInfo } from "../utils/jwt";
 
 function ProtectedRoute({ roleId, children }) {
   const account = useSelector((store) => store.account);

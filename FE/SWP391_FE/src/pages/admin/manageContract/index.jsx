@@ -1,98 +1,26 @@
 import React, { useState, useEffect } from "react";
-import {
-  PieChartOutlined,
-  TeamOutlined,
-  UsergroupAddOutlined,
-  UserOutlined,
-  PlusOutlined,
-  FileTextOutlined,
-  EditOutlined,
-  SettingOutlined,
-  DeleteOutlined,
-  EyeOutlined,
-  CodeOutlined,
-} from "@ant-design/icons";
+import { PlusOutlined, EditOutlined, DeleteOutlined } from "@ant-design/icons";
 import {
   Breadcrumb,
   Layout,
-  Menu,
   theme,
   Button,
-  Card,
-  Row,
-  Col,
   Typography,
   Table,
-  Modal,
-  Form,
-  Input,
-  InputNumber,
-  Select,
   Space,
   Tag,
   Popconfirm,
-  Tabs,
+  Form,
 } from "antd";
-import { Link, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import api from "../../../config/axios";
 import ContractPreview from "../../../components/ContractPreview";
-import ContractHtmlPreview from "../../../components/ContractHtmlPreview";
+import AdminSidebar from "../../../components/admin/AdminSidebar";
 import "./ManageContract.css";
 
-const { Header, Content, Footer, Sider } = Layout;
+const { Header, Content, Footer } = Layout;
 const { Title, Paragraph } = Typography;
-const { Option } = Select;
-const { TextArea } = Input;
 
-const items = [
-  {
-    key: "/admin/dashboard",
-    icon: <PieChartOutlined />,
-    label: <Link to="/admin/dashboard">Dashboard</Link>,
-  },
-  {
-    key: "user-management",
-    icon: <UserOutlined />,
-    label: "User Management",
-    children: [
-      {
-        key: "/admin/manage-account",
-        icon: <UsergroupAddOutlined />,
-        label: <Link to="/admin/manage-account">Manage Accounts</Link>,
-      },
-      {
-        key: "/admin/manage-group",
-        icon: <TeamOutlined />,
-        label: <Link to="/admin/manage-group">Manage Group</Link>,
-      },
-    ],
-  },
-  {
-    key: "contract-management",
-    icon: <FileTextOutlined />,
-    label: "Contract Management",
-    children: [
-      {
-        key: "/admin/manage-contract",
-        icon: <FileTextOutlined />,
-        label: <Link to="/admin/manage-contract">Manage Templates</Link>,
-      },
-    ],
-  },
-  {
-    key: "service-management",
-    icon: <SettingOutlined />,
-    label: "Service Management",
-    children: [
-      {
-        key: "/admin/manage-service",
-        icon: <SettingOutlined />,
-        label: <Link to="/admin/manage-service">Manage Services</Link>,
-      },
-    ],
-  },
-];
 const ManageContract = () => {
   const [collapsed, setCollapsed] = useState(false);
   const {
@@ -192,10 +120,12 @@ const ManageContract = () => {
       loadTemplates();
     } catch (error) {
       console.error("Error deleting template:", error);
-      
+
       // Check if it's a CORS error
-      if (error.code === 'ERR_NETWORK' || error.message.includes('CORS')) {
-        toast.error("Cannot connect to server. Please check your internet connection or try again later.");
+      if (error.code === "ERR_NETWORK" || error.message.includes("CORS")) {
+        toast.error(
+          "Cannot connect to server. Please check your internet connection or try again later."
+        );
       } else if (error.response?.status === 500) {
         toast.error("Server error (500). Please try again later.");
       } else if (error.response?.status === 404) {
@@ -279,24 +209,12 @@ const ManageContract = () => {
 
   return (
     <Layout className="manage-contract-container">
-      <Sider
-        collapsible
+      <AdminSidebar
         collapsed={collapsed}
-        onCollapse={(value) => setCollapsed(value)}
-        width={250}
-        collapsedWidth={80}
-        className="manage-contract-sidebar"
-      >
-        <div className="demo-logo-vertical" />
-        <Menu
-          theme="dark"
-          defaultSelectedKeys={["/admin/manage-contract"]}
-          mode="inline"
-          items={items}
-          className="manage-contract-menu"
-        />
-      </Sider>
-      <Layout>
+        onCollapse={setCollapsed}
+        selectedKey="manage-templates"
+      />
+      <Layout style={{ marginLeft: collapsed ? 80 : 280 }}>
         <Header className="manage-contract-header" />
         <Content className="manage-contract-content">
           <Breadcrumb
@@ -379,12 +297,13 @@ const ManageContract = () => {
 
           toast.success("Template updated successfully");
         }}
-                      onGenerateContract={(data) => {
-                        console.log("Generated contract data:", data);
-                        toast.success("Contract generated successfully!");
-                      }}
-                    />
+        onGenerateContract={(data) => {
+          console.log("Generated contract data:", data);
+          toast.success("Contract generated successfully!");
+        }}
+      />
     </Layout>
   );
 };
+
 export default ManageContract;
