@@ -72,7 +72,8 @@ const MyGroup = () => {
 		const getCurrentUserId = () => {
 			// Try localStorage userData first
 			try {
-				const userDataStr = localStorage.getItem("userData");
+				const userDataStr = loca
+				lStorage.getItem("userData");
 				if (userDataStr) {
 					const ud = JSON.parse(userDataStr);
 					if (ud?.data?.id) return ud.data.id;

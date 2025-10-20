@@ -228,12 +228,7 @@ export default function ManageGroup() {
         return owner?.fullName || owner?.userId || "-";
       },
     },
-    {
-      title: "Created By",
-      dataIndex: ["createdBy"],
-      key: "createdBy",
-      render: (v, record) => v || record?.created_by || "-",
-    },
+   
    
     
     {
@@ -273,25 +268,7 @@ export default function ManageGroup() {
         </Space>
       ),
     },
-    {
-      title: "Actions",
-      key: "actions",
-      render: (_, record) => (
-        <Space>
-          <Button
-            type="link"
-            onClick={() => {
-              setSelected(record);
-              setDetailsVisible(true);
-              setSelectedVehicles(record?.vehicles || []);
-              fetchVehiclesForGroup(record?.id);
-            }}
-          >
-            Details
-          </Button>
-        </Space>
-      ),
-    },
+    
   ];
 
   return (
