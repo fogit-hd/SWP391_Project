@@ -19,9 +19,6 @@ const CreateGroup = () => {
 
   const navigate = useNavigate();
 
- 
-  
-
   const onFinish = async (values) => {
     setIsLoading(true);
     try {
@@ -114,7 +111,6 @@ const CreateGroup = () => {
                 </Form.Item>
               </Col>
 
-             
               {/* Governance Policy */}
               <Col xs={24} md={24}>
                 <Form.Item
@@ -154,7 +150,7 @@ const CreateGroup = () => {
               </Form.Item>
 
               <div className="verify-login-link">
-                <Link to="/">Back to Home</Link>
+                <Link to="/view-mygroup">Back to group list</Link>
               </div>
             </Form>
           </Row>

@@ -16,9 +16,10 @@ import {
   Tag,
 } from "antd";
 import api from "../../config/axios";
-import { useSelector } from "react-redux";
+// import { useSelector } from "react-redux";
 import { toast } from "react-toastify";
 import dayjs from "dayjs";
+import { useLocation, useNavigate } from "react-router";
 
 const { Title, Paragraph } = Typography;
 const { Option } = Select;
@@ -27,6 +28,7 @@ const CreateEContract = () => {
   const [form] = Form.useForm();
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
 
   // New states for contract creation
   const [templates, setTemplates] = useState([]);
@@ -36,13 +38,15 @@ const CreateEContract = () => {
   const [ownershipShares, setOwnershipShares] = useState([]);
   const [contractDuration, setContractDuration] = useState(6); // months
 
-  const account = useSelector((state) => state.account?.user || {});
-  const localUser = JSON.parse(localStorage.getItem("user") || "{}");
-  const userData = account.email ? account : localUser;
+  const location = useLocation();
+  const groupIdFromState = location.state?.groupId;
+  const groupIdFromQuery = new URLSearchParams(location.search).get("groupId");
+  const groupId =
+    groupIdFromState || groupIdFromQuery || localStorage.getItem("groupId");
+  // const account = useSelector((state) => state.account?.user || {});
+  // const localUser = JSON.parse(localStorage.getItem("user") || "{}");
+  // const userData = account.email ? account : localUser;
 
-  // Get groupId from localStorage
-  // const groupId = localStorage.getItem("groupId");
-  const groupId = "98b7973d-ee5b-421a-9a40-c2eef237fe95";
   // Load initial data
   useEffect(() => {
     // Load templates, vehicles, and group members
@@ -50,6 +54,7 @@ const CreateEContract = () => {
     if (groupId) {
       loadVehicles();
       loadGroupMembers();
+      localStorage.setItem("groupId", groupId);
     }
   }, [groupId]);
 
@@ -197,6 +202,7 @@ const CreateEContract = () => {
       setIsModalVisible(true);
       form.resetFields();
       setOwnershipShares([]);
+      navigate("/view-econtract");
     } catch (error) {
       console.error(error);
       message.error("Failed to create contract. Please try again.");
@@ -325,7 +331,9 @@ const CreateEContract = () => {
 
                 // Add newly selected members
                 newlySelected.forEach((memberId) => {
-                  const member = groupMembers.find((m) => m.userId === memberId);
+                  const member = groupMembers.find(
+                    (m) => m.userId === memberId
+                  );
                   if (member) {
                     setSelectedMembers((prev) => {
                       const newSelected = [...prev, member];
@@ -339,7 +347,8 @@ const CreateEContract = () => {
                           {
                             userId: memberId,
                             rate: 0,
-                            userName: member.fullName || member.email || "Unknown",
+                            userName:
+                              member.fullName || member.email || "Unknown",
                           },
                         ];
                         return newShares;
@@ -353,7 +362,9 @@ const CreateEContract = () => {
                 // Remove newly deselected members
                 newlyDeselected.forEach((memberId) => {
                   setSelectedMembers((prev) => {
-                    const newSelected = prev.filter((m) => m.userId !== memberId);
+                    const newSelected = prev.filter(
+                      (m) => m.userId !== memberId
+                    );
                     return newSelected;
                   });
                   // Don't remove ownership shares, just keep them for when user re-selects

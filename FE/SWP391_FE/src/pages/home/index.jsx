@@ -561,7 +561,7 @@ const Homepage = () => {
               </Button>
             </Link>
           )}
-          
+
           {/* Admin and Staff can review contracts */}
           {isAuthenticated && (isAdmin || isStaff) && (
             <Link to="/staff/review-econtract">
@@ -570,7 +570,7 @@ const Homepage = () => {
               </Button>
             </Link>
           )}
-          
+
           {/* CoOwner can see their contracts */}
           {isAuthenticated && isCoOwner && (
             <Link to="/my-contracts">
@@ -579,16 +579,16 @@ const Homepage = () => {
               </Button>
             </Link>
           )}
-          
+
           {/* All authenticated users can see groups */}
           {isAuthenticated && (
-            <Link to="/myGroup">
+            <Link to="/view-mygroup">
               <Button type="text" className="nav-menu-button">
                 My Groups
               </Button>
             </Link>
           )}
-          
+
           <Link to="/contact">
             <Button type="text" className="nav-menu-button">
               Contact Us
@@ -645,7 +645,7 @@ const Homepage = () => {
               our co-ownership community and share the benefits of sustainable
               transportation.
             </Paragraph>
-            <Link to="/contract">
+            <Link to="/view-mygroup">
               <Button type="primary" size="large" className="hero-cta">
                 Join Co-Ownership Now
               </Button>
@@ -739,7 +739,7 @@ const Homepage = () => {
               electric vehicles.
             </Paragraph>
 
-            <Link to="/view.econtract">
+            <Link to="/view-mygroup">
               <Button type="primary" size="large" className="cta-cta">
                 Start Co-Owning
               </Button>
