@@ -344,6 +344,7 @@ const MyGroup = () => {
           <TeamOutlined /> My Groups
         </Title>
         <Space>
+          <Button onClick={() => navigate("/")}>Back to homepage</Button>
           <Button onClick={() => setJoinOpen(true)}>Join by code</Button>
           <Button type="primary" icon={<PlusOutlined />} onClick={() => navigate("/create.group")}>Create group</Button>
         </Space>
@@ -462,6 +463,9 @@ const MyGroup = () => {
                                 <Button loading={inviteLoading} onClick={createInvite}>
                                   {inviteCode && inviteCountdown !== "expired" ? "Regenerate invite code" : "Create invite code"}
                                 </Button>
+                                <Link to="/create-econtract">
+                                  <Button>Create contract</Button>
+                                </Link>
                                 {inviteCode ? (
                                   <Space>
                                     <Tag color="purple">Code: {inviteCode}</Tag>
