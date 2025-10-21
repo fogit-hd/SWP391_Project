@@ -17,7 +17,7 @@ import VerifyOTP from "./pages/verify.otp";
 import UpdateProfile from "./pages/update.profile";
 import ChangePassword from "./pages/change.password";
 import CreateGroup from "./pages/create.group";
-import MyGroup from "./pages/my.group";
+import MyGroup from "./pages/my.groups";
 import CreateEContract from "./pages/create.econtract";
 import MyContracts from "./pages/view.mycontract";
 import ReviewEContract from "./pages/staff/review.econtract/index";
