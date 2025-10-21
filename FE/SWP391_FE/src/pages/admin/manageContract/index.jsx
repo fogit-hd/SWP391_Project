@@ -138,7 +138,9 @@ const ManageContract = () => {
       } else if (error.response?.status === 500) {
         toast.error("Server error. Please try again later.");
       } else if (error.code === "ERR_NETWORK") {
-        toast.error("Cannot connect to server. Please check your connection.");
+        toast.error(
+          "The contract is currently in use; deleting it could cause a conflict."
+        );
       } else {
         toast.error(`Failed to create template: ${error.message}`);
       }
