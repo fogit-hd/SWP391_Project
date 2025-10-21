@@ -94,12 +94,14 @@ const VariablesManager = ({ templateId, visible, onVariablesChange }) => {
         await api.get(`/contract-templates/variables/${variableId}`);
       } catch (getError) {
         if (getError.response?.status === 404) {
-          message.error("Variable not found. It may have been deleted already.");
+          message.error(
+            "Variable not found. It may have been deleted already."
+          );
           loadVariables();
           return;
         }
       }
-      
+
       // Try the delete API call
       await api.delete(`/contract-templates/variables/${variableId}`);
       message.success("Variable deleted successfully");
@@ -309,6 +311,7 @@ const VariablesManager = ({ templateId, visible, onVariablesChange }) => {
               <Option value="date">Date</Option>
               <Option value="textarea">Textarea</Option>
               <Option value="select">Select</Option>
+              <Option value="group">Group</Option>
             </Select>
           </Form.Item>
 

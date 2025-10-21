@@ -202,7 +202,7 @@ const CreateEContract = () => {
       setIsModalVisible(true);
       form.resetFields();
       setOwnershipShares([]);
-      navigate("/view-econtract");
+      navigate("/my-contracts");
     } catch (error) {
       console.error(error);
       message.error("Failed to create contract. Please try again.");

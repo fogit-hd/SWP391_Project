@@ -1,39 +1,31 @@
 import React, { useState, useEffect } from "react";
 import {
   Button,
-  Card,
   Table,
-  Space,
-  Popconfirm,
   message,
-  Spin,
   Alert,
   Breadcrumb,
   Layout,
-  Menu,
   theme,
   Modal,
   Form,
   Input,
   InputNumber,
   Select,
-  Tag,
-  Tooltip,
   Dropdown,
 } from "antd";
 import "../admin/manageVehicle/vehicle-management.css";
 import {
-  PieChartOutlined,
   CarOutlined,
   UserOutlined,
   LogoutOutlined,
-  UsergroupAddOutlined,
   EditOutlined,
   DeleteOutlined,
   PlusOutlined,
   ReloadOutlined,
   MoreOutlined,
   HomeOutlined,
+  CopyOutlined,
 } from "@ant-design/icons";
 import { Link, useNavigate } from "react-router-dom";
 import api from "../../config/axios";
@@ -141,6 +133,9 @@ const MyVehicle = () => {
           if (key === 'edit') {
             console.log('Edit action triggered');
             handleEdit(record);
+          } else if (key === 'copy') {
+            console.log('Copy ID action triggered');
+            handleCopyId(record.id);
           } else if (key === 'delete') {
             console.log('Delete action triggered - showing confirmation');
             setVehicleToDelete(record);
@@ -156,6 +151,11 @@ const MyVehicle = () => {
                   key: 'edit',
                   icon: <EditOutlined />,
                   label: 'Edit',
+                },
+                {
+                  key: 'copy',
+                  icon: <CopyOutlined />,
+                  label: 'Copy ID',
                 },
                 {
                   type: 'divider',
@@ -419,6 +419,27 @@ const MyVehicle = () => {
   const handleDelete = (vehicleRecord) => {
     console.log('handleDelete called with vehicle:', vehicleRecord);
     deleteVehicle(vehicleRecord);
+  };
+
+  const handleCopyId = async (vehicleId) => {
+    try {
+      await navigator.clipboard.writeText(vehicleId);
+      message.success(`Vehicle ID copied to clipboard: ${vehicleId}`);
+    } catch (err) {
+      console.error('Failed to copy ID:', err);
+      // Fallback for older browsers
+      const textArea = document.createElement('textarea');
+      textArea.value = vehicleId;
+      document.body.appendChild(textArea);
+      textArea.select();
+      try {
+        document.execCommand('copy');
+        message.success(`Vehicle ID copied to clipboard: ${vehicleId}`);
+      } catch (fallbackErr) {
+        message.error('Failed to copy ID to clipboard');
+      }
+      document.body.removeChild(textArea);
+    }
   };
 
   const handleLogout = () => {
