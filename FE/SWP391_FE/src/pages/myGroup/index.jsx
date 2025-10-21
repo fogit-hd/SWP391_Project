@@ -1,12 +1,14 @@
 import React, { useEffect, useState } from "react";
 import { Card, List, Tag, Typography, Button, Empty, Space, Spin, message, Modal, Popconfirm, Avatar, Input, Divider, Tooltip, Tabs } from "antd";
-import { CheckCircleTwoTone, CloseCircleTwoTone, PlusOutlined, TeamOutlined } from "@ant-design/icons";
+import { CheckCircleTwoTone, CloseCircleTwoTone, PlusOutlined, TeamOutlined, ArrowLeftOutlined } from "@ant-design/icons";
 import { useNavigate, Link } from "react-router-dom";
 import api from "../../config/axios";
+import { useAuth } from "../../components/hooks/useAuth";
 
 const { Title, Text } = Typography;
 
 const MyGroup = () => {
+  const { isAuthenticated, isCoOwner, isAdmin, isStaff } = useAuth();
   const [groups, setGroups] = useState([]);
   const [loading, setLoading] = useState(false);
   const [membersVisible, setMembersVisible] = useState(false);
@@ -53,8 +55,20 @@ const MyGroup = () => {
   };
 
   useEffect(() => {
+    if (!isAuthenticated) {
+      message.error("Vui lòng đăng nhập để xem nhóm của bạn");
+      navigate("/login");
+      return;
+    }
+
+    if (!isCoOwner && !isAdmin && !isStaff) {
+      message.error("Bạn không có quyền truy cập trang này");
+      navigate("/");
+      return;
+    }
+
     reloadGroups();
-  }, []);
+  }, [isAuthenticated, isCoOwner, isAdmin, isStaff, navigate]);
 
   // Update countdown for invite code
   useEffect(() => {
@@ -327,6 +341,19 @@ const MyGroup = () => {
     }
   };
 
+  // Handle back navigation based on role
+  const handleBack = () => {
+    if (isStaff) {
+      navigate("/staff/review-econtract");
+    } else if (isAdmin) {
+      navigate("/admin/dashboard");
+    } else if (isCoOwner) {
+      navigate("/");
+    } else {
+      navigate("/");
+    }
+  };
+
   const EmptyState = (
     <Card>
       <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={<Text>You don't have any group</Text>}>
@@ -340,11 +367,19 @@ const MyGroup = () => {
   return (
     <div style={{ padding: 24 }}>
       <Space style={{ width: "100%", justifyContent: "space-between", marginBottom: 16 }}>
-        <Title level={3} style={{ margin: 0 }}>
-          <TeamOutlined /> My Groups
-        </Title>
         <Space>
-          <Button onClick={() => navigate("/")}>Back to homepage</Button>
+          <Button
+            type="text"
+            icon={<ArrowLeftOutlined />}
+            onClick={handleBack}
+          >
+            Quay lại
+          </Button>
+          <Title level={3} style={{ margin: 0 }}>
+            <TeamOutlined /> My Groups
+          </Title>
+        </Space>
+        <Space>
           <Button onClick={() => setJoinOpen(true)}>Join by code</Button>
           <Button type="primary" icon={<PlusOutlined />} onClick={() => navigate("/create-group")}>Create group</Button>
         </Space>
