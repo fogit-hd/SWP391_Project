@@ -11,16 +11,18 @@ import TermsPage from "/src/pages/terms";
 import ManageContract from "./pages/admin/manageContract";
 import ManageService from "./pages/admin/manageService";
 import ManageGroup from "./pages/admin/manageGroup";
+import ManageVehicle from "./pages/admin/manageVehicle";
 import ForgotPassword from "./pages/forgot.password";
 import VerifyOTP from "./pages/verify.otp";
 import UpdateProfile from "./pages/update.profile";
 import ChangePassword from "./pages/change.password";
 import CreateGroup from "./pages/create.group";
 import MyGroup from "./pages/myGroup";
+import MyVehicle from "./pages/my-vehicle";
 import CreateEContract from "./pages/create.econtract";
 import MyContracts from "./pages/view.mycontract";
-import VerifyContractOTP from "./pages/verify.contract.otp/index";
 import ReviewEContract from "./pages/staff/review.econtract/index";
+import SignEContract from "./pages/sign.econtract/index";
 
 function App() {
   const router = createBrowserRouter([
@@ -64,11 +66,19 @@ function App() {
         </ProtectedRoute>
       ),
     },
+    {
+      path: "/admin/manage-vehicle",
+      element: (
+        <ProtectedRoute roleId={1}>
+          <ManageVehicle />
+        </ProtectedRoute>
+      ),
+    },
 
     {
       path: "/staff/review-econtract",
       element: (
-        <ProtectedRoute roleId={1 | 2}>
+        <ProtectedRoute roleId={2}>
           <ReviewEContract />
         </ProtectedRoute>
       ),
@@ -125,7 +135,7 @@ function App() {
     {
       path: "/view-mycontract",
       element: (
-        <ProtectedRoute roleId={3}>
+        <ProtectedRoute roleId={1 | 2 | 3}>
           <MyContracts />
         </ProtectedRoute>
       ),
@@ -133,7 +143,7 @@ function App() {
     {
       path: "/view-myGroup",
       element: (
-        <ProtectedRoute roleId={3}>
+        <ProtectedRoute roleId={1 | 3}>
           <MyGroup />
         </ProtectedRoute>
       ),
@@ -147,6 +157,14 @@ function App() {
       ),
     },
     {
+      path: "/my-vehicle",
+      element: (
+        <ProtectedRoute roleId={3}>
+          <MyVehicle />
+        </ProtectedRoute>
+      ),
+    },
+    {
       path: "/my-contracts",
       element: (
         <ProtectedRoute roleId={3}>
@@ -155,10 +173,10 @@ function App() {
       ),
     },
     {
-      path: "/verify-contract-otp/:contractId",
+      path: "/sign-econtract/:contractId",
       element: (
-        <ProtectedRoute roleId={3}>
-          <VerifyContractOTP />
+        <ProtectedRoute roleId={1 | 2 | 3}>
+          <SignEContract />
         </ProtectedRoute>
       ),
     },

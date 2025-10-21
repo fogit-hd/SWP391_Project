@@ -67,10 +67,15 @@ const ReviewEContract = () => {
   // Filter contracts by status
   const filterContractsByStatus = (contractsList, status) => {
     // Staff (roleId = 2) can only see PENDING_REVIEW contracts
-    if (roleId === 2) {
-      const filtered = contractsList.filter(
-        (contract) => contract.status === "PENDING_REVIEW"
-      );
+    if (roleId === 2 || isStaff) {
+      const pendingStatuses = ["PENDING_REVIEW", "pending_review"];
+
+      const filtered = contractsList.filter((contract) => {
+        const contractStatus =
+          contract.status || contract.state || contract.contractStatus;
+        return pendingStatuses.includes(contractStatus);
+      });
+
       setContracts(filtered);
       console.log(
         "📋 Staff - Showing only PENDING_REVIEW contracts:",
@@ -84,9 +89,11 @@ const ReviewEContract = () => {
       setContracts(contractsList);
       console.log("📋 Admin - Showing ALL contracts:", contractsList.length);
     } else {
-      const filtered = contractsList.filter(
-        (contract) => contract.status === status
-      );
+      const filtered = contractsList.filter((contract) => {
+        const contractStatus =
+          contract.status || contract.state || contract.contractStatus;
+        return contractStatus === status;
+      });
       setContracts(filtered);
       console.log(`📋 Admin - Filtered by ${status}:`, filtered.length);
     }
@@ -102,6 +109,10 @@ const ReviewEContract = () => {
     try {
       setLoading(true);
       console.log("📞 Calling API: GET /contracts");
+      console.log("🔍 Current roleId:", roleId);
+      console.log("🔍 isStaff:", isStaff);
+      console.log("🔍 isAdmin:", isAdmin);
+
       const response = await api.get("/contracts");
       console.log("📦 Full response:", response);
       console.log("📦 Response.data:", response.data);
@@ -120,14 +131,42 @@ const ReviewEContract = () => {
 
       console.log("📊 Total contracts from API:", allContractsData.length);
 
+      // Debug: Log all contract statuses with detailed info
+      console.log(
+        "🔍 All contract statuses:",
+        allContractsData.map((c) => ({
+          id: c.id,
+          status: c.status,
+          state: c.state,
+          contractStatus: c.contractStatus,
+          title: c.title,
+          allFields: Object.keys(c),
+        }))
+      );
+
       // Store all contracts
       setAllContracts(allContractsData);
 
       // Apply filter based on role and selected status
-      if (roleId === 2) {
+      if (roleId === 2 || isStaff) {
         // Staff can only see PENDING_REVIEW contracts
         console.log("👤 Staff role detected - filtering PENDING_REVIEW only");
-        filterContractsByStatus(allContractsData, "PENDING_REVIEW");
+
+        // Try different possible status values for contracts that need staff review
+        const pendingStatuses = ["PENDING_REVIEW", "pending_review"];
+
+        const pendingContracts = allContractsData.filter((contract) => {
+          const status =
+            contract.status || contract.state || contract.contractStatus;
+          return pendingStatuses.includes(status);
+        });
+
+        console.log(
+          "🔍 PENDING_REVIEW contracts found:",
+          pendingContracts.length
+        );
+        console.log("🔍 PENDING_REVIEW contracts:", pendingContracts);
+        setContracts(pendingContracts);
       } else {
         // Admin can see all or filter by selected status
         console.log(
@@ -330,7 +369,7 @@ const ReviewEContract = () => {
               )}
               {isStaff && (
                 <Tag color="orange" icon={<ClockCircleOutlined />}>
-                  Chỉ hiển thị hợp đồng chờ duyệt
+                  Danh sách hợp đồng đang duyệt hoặc chờ duyệt
                 </Tag>
               )}
             </div>

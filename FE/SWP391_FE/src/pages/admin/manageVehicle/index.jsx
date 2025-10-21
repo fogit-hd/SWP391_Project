@@ -14,18 +14,17 @@ import {
   Form,
   Input,
   InputNumber,
-  Dropdown,
   Tag,
   Tooltip,
 } from "antd";
 import "./vehicle-management.css";
 import {
-  EditOutlined,
   DeleteOutlined,
   PlusOutlined,
   ReloadOutlined,
-  MoreOutlined,
 } from "@ant-design/icons";
+import { Link } from "react-router-dom";
+import { toast } from "react-toastify";
 import api from "../../../config/axios";
 import AdminSidebar from "../../../components/admin/AdminSidebar";
 
@@ -52,16 +51,9 @@ const ManageVehicle = () => {
 
   // Modal states
   const [isAddModalVisible, setIsAddModalVisible] = useState(false);
-  const [isEditModalVisible, setIsEditModalVisible] = useState(false);
-  const [isStatusModalVisible, setIsStatusModalVisible] = useState(false);
-  const [editingRecord, setEditingRecord] = useState(null);
-  const [statusChangeRecord, setStatusChangeRecord] = useState(null);
-  const [isUpdating, setIsUpdating] = useState(false);
 
   // Form instances
   const [addForm] = Form.useForm();
-  const [editForm] = Form.useForm();
-  const [statusForm] = Form.useForm();
 
   const columns = [
     {
@@ -144,54 +136,22 @@ const ManageVehicle = () => {
       key: "action",
       width: 80,
       fixed: "right",
+      align: "center",
       render: (_, record) => {
-        const handleMenuClick = ({ key }) => {
-          console.log("Menu item clicked:", key, "for vehicle ID:", record.id);
-          if (key === "edit") {
-            console.log("Edit action triggered");
-            handleEdit(record);
-          } else if (key === "delete") {
-            console.log("Delete action triggered - showing confirmation modal");
-            setVehicleToDelete(record);
-            setDeleteModalVisible(true);
-          }
-        };
-
         return (
-          <Dropdown
-            menu={{
-              items: [
-                {
-                  key: "edit",
-                  icon: <EditOutlined />,
-                  label: "Edit",
-                },
-                {
-                  type: "divider",
-                },
-                {
-                  key: "delete",
-                  icon: <DeleteOutlined />,
-                  label: "Delete",
-                  danger: true,
-                },
-              ],
-              onClick: handleMenuClick,
-            }}
-            trigger={["click"]}
-            placement="bottomRight"
-          >
+          <Tooltip title="Delete vehicle">
             <Button
-              type="text"
-              icon={<MoreOutlined />}
-              size="small"
-              className="vehicle-action-button"
-              onClick={(e) => {
-                e.stopPropagation();
-                console.log("Dropdown button clicked for vehicle:", record.id);
+              type="link"
+              icon={<DeleteOutlined />}
+              danger
+              style={{ padding: 0 }}
+              onClick={() => {
+                console.log("Delete button clicked for vehicle:", record.id);
+                setVehicleToDelete(record);
+                setDeleteModalVisible(true);
               }}
             />
-          </Dropdown>
+          </Tooltip>
         );
       },
     },
@@ -261,7 +221,7 @@ const ManageVehicle = () => {
 
   const createVehicle = async (values) => {
     try {
-      console.log("Creating vehicle with values:", values); // Debug log
+      console.log("Creating vehicle with values:", values);
 
       const requestBody = {
         make: values.make,
@@ -274,13 +234,13 @@ const ManageVehicle = () => {
         telematicsDeviceId: values.telematicsDeviceId,
       };
 
-      console.log("Create request body:", requestBody); // Debug log
+      console.log("Create request body:", requestBody);
       const response = await api.post("/Vehicle/create", requestBody, {
         headers: {
           "Content-Type": "application/json",
         },
       });
-      console.log("Create response:", response); // Debug log
+      console.log("Create response:", response);
 
       if (response.data.message) {
         message.success(response.data.message);
@@ -292,8 +252,8 @@ const ManageVehicle = () => {
       addForm.resetFields();
       fetchVehicles(pagination.current, pagination.pageSize);
     } catch (err) {
-      console.error("Create error:", err); // Debug log
-      console.error("Error response:", err.response); // Debug log
+      console.error("Create error:", err);
+      console.error("Error response:", err.response);
 
       let errorMessage = "Failed to create vehicle";
       if (err.response) {
@@ -311,135 +271,53 @@ const ManageVehicle = () => {
     }
   };
 
-  const updateVehicle = async (id, values) => {
-    setIsUpdating(true);
+  const deleteVehicle = async (vehicleRecord) => {
     try {
-      console.log("Updating vehicle with ID:", id); // Debug log
-      console.log("Update values:", values); // Debug log
-
-      const requestBody = {
-        make: values.make,
-        model: values.model,
-        modelYear: parseInt(values.modelYear),
-        color: values.color,
-        batteryCapacityKwh: parseFloat(values.batteryCapacityKwh),
-        rangeKm: parseInt(values.rangeKm),
-        plateNumber: values.plateNumber,
-        telematicsDeviceId: values.telematicsDeviceId,
-      };
-
-      console.log("Request body:", requestBody); // Debug log
-      console.log("API URL:", `${api.defaults.baseURL}/Vehicle/${id}`); // Debug log
-
-      // Check if token exists
-      const token = localStorage.getItem("token");
-      console.log("Token exists:", !!token); // Debug log
-
-      const response = await api.put(`/Vehicle/${id}`, requestBody, {
-        headers: {
-          "Content-Type": "application/json",
-        },
+      // Check if vehicle status is inactive before deleting
+      console.log('Full vehicleRecord:', vehicleRecord);
+      console.log('vehicleRecord.status:', vehicleRecord.status);
+      const status = vehicleRecord.status?.toLowerCase();
+      console.log('Checking vehicle status before delete:', status);
+      
+      if (status !== 'inactive') {
+        toast.warning('Only vehicles with INACTIVE status can be deleted');
+        return;
+      }
+      
+      console.log('Starting deleteVehicle with ID:', vehicleRecord.id);
+      const deleteUrl = `/Vehicle/delete-vehicle-by-id`;
+      console.log('Delete URL:', deleteUrl);
+      
+      const response = await api.delete(deleteUrl, {
+        params: { id: vehicleRecord.id }
       });
-      console.log("Update response:", response); // Debug log
+      console.log('Delete response:', response);
 
       if (response.data.message) {
-        message.success(response.data.message);
+        toast.success(response.data.message);
       } else {
-        message.success("Vehicle updated successfully");
+        toast.success("Vehicle deleted successfully");
       }
 
-      setIsEditModalVisible(false);
-      editForm.resetFields();
-      setEditingRecord(null);
-      fetchVehicles(pagination.current, pagination.pageSize);
+      fetchVehicles();
     } catch (err) {
-      console.error("Update error:", err); // Debug log
-      console.error("Error response:", err.response); // Debug log
-      console.error("Error request:", err.request); // Debug log
+      console.error('Delete error:', err);
+      console.error('Error response:', err.response);
 
-      let errorMessage = "Failed to update vehicle";
+      let errorMessage = "Failed to delete vehicle";
       if (err.response) {
-        // Server responded with error status
-        errorMessage = `Failed to update vehicle: ${err.response.status} ${err.response.statusText}`;
+        errorMessage = `Failed to delete vehicle: ${err.response.status} ${err.response.statusText}`;
         if (err.response.data && err.response.data.message) {
           errorMessage = err.response.data.message;
         }
-      } else if (err.request) {
-        // Request was made but no response received
-        errorMessage = "No response from server. Please check your connection.";
-      } else {
-        // Something else happened
-        errorMessage = err.message;
       }
-
-      message.error(errorMessage);
-    } finally {
-      setIsUpdating(false);
+      toast.error(errorMessage);
     }
   };
 
-  // Status change function temporarily disabled - no API available
-  // const changeVehicleStatus = async (id, newStatus) => {
-  //   try {
-  //     const endpoint = newStatus === "ACTIVE" ?
-  //       `/Vehicle/activate-vehicle?vehicleId=${id}` :
-  //       `/Vehicle/deactivate-vehicle?vehicleId=${id}`;
-
-  //     await api.patch(endpoint);
-  //     message.success(`Vehicle ${newStatus.toLowerCase()}d successfully`);
-  //     fetchVehicles(pagination.current, pagination.pageSize);
-  //   } catch (err) {
-  //     message.error(`Failed to change vehicle status: ${err.message}`);
-  //   }
-  // };
-
-  const deleteVehicle = async (vehicleId) => {
-    try {
-      console.log("Starting delete for vehicle ID:", vehicleId); // Debug log
-      const response = await api.delete(
-        `/Vehicle/delete-vehicle-by-id?id=${vehicleId}`
-      );
-      console.log("Delete response:", response); // Debug log
-      message.success("Vehicle deleted successfully");
-      fetchVehicles(pagination.current, pagination.pageSize);
-    } catch (err) {
-      console.error("Delete error:", err); // Debug log
-      message.error(`Failed to delete vehicle: ${err.message}`);
-    }
-  };
-
-  // Event Handlers
-  const handleEdit = (record) => {
-    setEditingRecord(record);
-    editForm.setFieldsValue({
-      make: record.make,
-      model: record.model,
-      modelYear: record.modelYear,
-      color: record.color,
-      batteryCapacityKwh: record.batteryCapacityKwh,
-      rangeKm: record.rangeKm,
-      plateNumber: record.plateNumber,
-      telematicsDeviceId: record.telematicsDeviceId,
-    });
-    setIsEditModalVisible(true);
-  };
-
-  const handleDelete = (id) => {
-    console.log("handleDelete called with ID:", id);
-    deleteVehicle(id);
-  };
-
-  // Status change handler temporarily disabled - no API available
-  // const handleStatusChange = (record, newStatus) => {
-  //   changeVehicleStatus(record.id, newStatus);
-  // };
-
-  const handleAddVehicle = () => {
-    setIsAddModalVisible(true);
-  };
-
-  const handleRefresh = () => {
-    fetchVehicles(pagination.current, pagination.pageSize);
+  const handleDelete = (vehicleRecord) => {
+    console.log('handleDelete called with vehicle:', vehicleRecord);
+    deleteVehicle(vehicleRecord);
   };
 
   const handleTableChange = (paginationConfig, filters, sorter) => {
@@ -449,20 +327,16 @@ const ManageVehicle = () => {
     fetchVehicles(current, pageSize, field, order, filters);
   };
 
-  const onAddFinish = (values) => {
-    createVehicle(values);
+  const handleRefresh = () => {
+    fetchVehicles(pagination.current, pagination.pageSize);
   };
 
-  const onEditFinish = (values) => {
-    console.log("Edit form submitted with values:", values); // Debug log
-    console.log("Editing record:", editingRecord); // Debug log
+  const handleAddVehicle = () => {
+    setIsAddModalVisible(true);
+  };
 
-    if (!editingRecord || !editingRecord.id) {
-      message.error("No vehicle selected for editing");
-      return;
-    }
-
-    updateVehicle(editingRecord.id, values);
+  const onAddFinish = (values) => {
+    createVehicle(values);
   };
 
   // Load data on component mount
@@ -480,14 +354,12 @@ const ManageVehicle = () => {
       <Layout style={{ marginLeft: collapsed ? 80 : 280 }}>
         <Header style={{ padding: 0, background: colorBgContainer }} />
         <Content style={{ margin: "0 16px" }}>
-          <Breadcrumb
-            style={{ margin: "16px 0" }}
-            items={[
-              { title: "Home" },
-              { title: "Dashboard" },
-              { title: "Manage Vehicles" },
-            ]}
-          />
+          <Breadcrumb style={{ margin: "16px 0" }}>
+            <Breadcrumb.Item>
+              <Link to="/dashboard">Dashboard</Link>
+            </Breadcrumb.Item>
+            <Breadcrumb.Item>Vehicle Management</Breadcrumb.Item>
+          </Breadcrumb>
           <div
             style={{
               padding: 24,
@@ -497,24 +369,15 @@ const ManageVehicle = () => {
             }}
           >
             <Card
-              title="Vehicle Management"
+              title="Manage Vehicles"
               extra={
-                <Space>
-                  <Button
-                    icon={<ReloadOutlined />}
-                    onClick={handleRefresh}
-                    loading={loading}
-                  >
-                    Refresh
-                  </Button>
-                  <Button
-                    type="primary"
-                    icon={<PlusOutlined />}
-                    onClick={handleAddVehicle}
-                  >
-                    Add Vehicle
-                  </Button>
-                </Space>
+                <Button
+                  icon={<ReloadOutlined />}
+                  onClick={handleRefresh}
+                  loading={loading}
+                >
+                  Refresh
+                </Button>
               }
             >
               {error && (
@@ -522,13 +385,9 @@ const ManageVehicle = () => {
                   message="Error"
                   description={error}
                   type="error"
-                  showIcon
+                  closable
                   style={{ marginBottom: 16 }}
-                  action={
-                    <Button size="small" onClick={handleRefresh}>
-                      Retry
-                    </Button>
-                  }
+                  onClose={() => setError(null)}
                 />
               )}
 
@@ -538,9 +397,7 @@ const ManageVehicle = () => {
                   dataSource={data}
                   rowKey="id"
                   pagination={{
-                    current: pagination.current,
-                    pageSize: pagination.pageSize,
-                    total: pagination.total,
+                    ...pagination,
                     showSizeChanger: true,
                     showQuickJumper: true,
                     showTotal: (total, range) =>
@@ -555,250 +412,19 @@ const ManageVehicle = () => {
           </div>
         </Content>
         <Footer style={{ textAlign: "center" }}>
-          Vehicle Management System ©{new Date().getFullYear()}
+          Vehicle Management System {new Date().getFullYear()}
         </Footer>
       </Layout>
 
-      {/* Add Vehicle Modal */}
-      <Modal
-        title="Add New Vehicle"
-        open={isAddModalVisible}
-        onCancel={() => {
-          setIsAddModalVisible(false);
-          addForm.resetFields();
-        }}
-        footer={null}
-        width={700}
-        className="vehicle-modal"
-        destroyOnClose
-        centered={false}
-        style={{ top: 20 }}
-      >
-        <div className="vehicle-form">
-          <Form form={addForm} layout="vertical" onFinish={onAddFinish}>
-            <div className="vehicle-form-grid">
-              <Form.Item
-                name="plateNumber"
-                label="Plate Number"
-                rules={[
-                  { required: true, message: "Please input plate number!" },
-                ]}
-              >
-                <Input placeholder="Enter plate number" />
-              </Form.Item>
-
-              <Form.Item
-                name="make"
-                label="Make"
-                rules={[{ required: true, message: "Please input make!" }]}
-              >
-                <Input placeholder="Enter vehicle make (e.g., Honda, Toyota)" />
-              </Form.Item>
-
-              <Form.Item
-                name="model"
-                label="Model"
-                rules={[{ required: true, message: "Please input model!" }]}
-              >
-                <Input placeholder="Enter vehicle model" />
-              </Form.Item>
-
-              <Form.Item
-                name="modelYear"
-                label="Model Year"
-                rules={[
-                  { required: true, message: "Please input model year!" },
-                ]}
-              >
-                <InputNumber
-                  placeholder="Enter model year"
-                  min={1900}
-                  max={new Date().getFullYear() + 1}
-                />
-              </Form.Item>
-
-              <Form.Item
-                name="color"
-                label="Color"
-                rules={[{ required: true, message: "Please input color!" }]}
-              >
-                <Input placeholder="Enter vehicle color" />
-              </Form.Item>
-
-              <Form.Item
-                name="batteryCapacityKwh"
-                label="Battery Capacity (kWh)"
-                rules={[
-                  { required: true, message: "Please input battery capacity!" },
-                ]}
-              >
-                <InputNumber
-                  placeholder="Enter battery capacity"
-                  min={0}
-                  step={0.1}
-                />
-              </Form.Item>
-
-              <Form.Item
-                name="rangeKm"
-                label="Range (km)"
-                rules={[{ required: true, message: "Please input range!" }]}
-              >
-                <InputNumber placeholder="Enter vehicle range" min={0} />
-              </Form.Item>
-
-              <Form.Item
-                name="telematicsDeviceId"
-                label="Telematics Device ID"
-                rules={[{ required: true, message: "Please input device ID!" }]}
-              >
-                <Input placeholder="Enter telematics device ID" />
-              </Form.Item>
-            </div>
-
-            <div className="vehicle-form-actions">
-              <Button
-                onClick={() => {
-                  setIsAddModalVisible(false);
-                  addForm.resetFields();
-                }}
-              >
-                Cancel
-              </Button>
-              <Button type="primary" htmlType="submit">
-                Create Vehicle
-              </Button>
-            </div>
-          </Form>
-        </div>
-      </Modal>
-
-      {/* Edit Vehicle Modal */}
-      <Modal
-        title="Edit Vehicle"
-        open={isEditModalVisible}
-        onCancel={() => {
-          setIsEditModalVisible(false);
-          editForm.resetFields();
-          setEditingRecord(null);
-        }}
-        footer={null}
-        width={700}
-        className="vehicle-modal"
-        destroyOnClose
-        centered={false}
-        style={{ top: 20 }}
-      >
-        <div className="vehicle-form">
-          <Form form={editForm} layout="vertical" onFinish={onEditFinish}>
-            <div className="vehicle-form-grid">
-              <Form.Item
-                name="plateNumber"
-                label="Plate Number"
-                rules={[
-                  { required: true, message: "Please input plate number!" },
-                ]}
-              >
-                <Input placeholder="Enter plate number" />
-              </Form.Item>
-
-              <Form.Item
-                name="make"
-                label="Make"
-                rules={[{ required: true, message: "Please input make!" }]}
-              >
-                <Input placeholder="Enter vehicle make" />
-              </Form.Item>
-
-              <Form.Item
-                name="model"
-                label="Model"
-                rules={[{ required: true, message: "Please input model!" }]}
-              >
-                <Input placeholder="Enter vehicle model" />
-              </Form.Item>
-
-              <Form.Item
-                name="modelYear"
-                label="Model Year"
-                rules={[
-                  { required: true, message: "Please input model year!" },
-                ]}
-              >
-                <InputNumber
-                  placeholder="Enter model year"
-                  min={1900}
-                  max={new Date().getFullYear() + 1}
-                />
-              </Form.Item>
-
-              <Form.Item
-                name="color"
-                label="Color"
-                rules={[{ required: true, message: "Please input color!" }]}
-              >
-                <Input placeholder="Enter vehicle color" />
-              </Form.Item>
-
-              <Form.Item
-                name="batteryCapacityKwh"
-                label="Battery Capacity (kWh)"
-                rules={[
-                  { required: true, message: "Please input battery capacity!" },
-                ]}
-              >
-                <InputNumber
-                  placeholder="Enter battery capacity"
-                  min={0}
-                  step={0.1}
-                />
-              </Form.Item>
-
-              <Form.Item
-                name="rangeKm"
-                label="Range (km)"
-                rules={[{ required: true, message: "Please input range!" }]}
-              >
-                <InputNumber placeholder="Enter vehicle range" min={0} />
-              </Form.Item>
-
-              <Form.Item
-                name="telematicsDeviceId"
-                label="Telematics Device ID"
-                rules={[{ required: true, message: "Please input device ID!" }]}
-              >
-                <Input placeholder="Enter telematics device ID" />
-              </Form.Item>
-            </div>
-
-            <div className="vehicle-form-actions">
-              <Button
-                onClick={() => {
-                  setIsEditModalVisible(false);
-                  editForm.resetFields();
-                  setEditingRecord(null);
-                }}
-              >
-                Cancel
-              </Button>
-              <Button type="primary" htmlType="submit" loading={isUpdating}>
-                Update Vehicle
-              </Button>
-            </div>
-          </Form>
-        </div>
-      </Modal>
-
-      {/* Delete Confirmation Modal */}
       <Modal
         title="Delete Vehicle"
         open={deleteModalVisible}
         onOk={() => {
           console.log(
-            "Delete confirmed - calling handleDelete with ID:",
-            vehicleToDelete?.id
+            "Delete confirmed - calling handleDelete with vehicle:",
+            vehicleToDelete
           );
-          handleDelete(vehicleToDelete?.id);
+          handleDelete(vehicleToDelete);
           setDeleteModalVisible(false);
           setVehicleToDelete(null);
         }}
@@ -812,12 +438,19 @@ const ManageVehicle = () => {
         okType="danger"
         className="delete-confirmation-modal"
       >
-        <div style={{ display: "flex", alignItems: "center" }}>
-          <DeleteOutlined
-            style={{ color: "#ff4d4f", fontSize: 20, marginRight: 8 }}
-          />
+        <div style={{ display: 'flex', alignItems: 'center' }}>
+          <DeleteOutlined style={{ color: '#ff4d4f', fontSize: 20, marginRight: 8 }} />
           <span>Are you sure you want to delete this vehicle?</span>
         </div>
+        {vehicleToDelete && vehicleToDelete.status?.toLowerCase() !== 'inactive' && (
+          <Alert
+            message="Warning"
+            description="Only vehicles with INACTIVE status can be deleted."
+            type="warning"
+            showIcon
+            style={{ marginTop: 16 }}
+          />
+        )}
       </Modal>
     </Layout>
   );

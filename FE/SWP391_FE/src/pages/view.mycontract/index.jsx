@@ -12,9 +12,9 @@ import {
   Spin,
   Empty,
 } from "antd";
-import { EyeOutlined, EditOutlined } from "@ant-design/icons";
+import { EyeOutlined, EditOutlined, ArrowLeftOutlined } from "@ant-design/icons";
 import api from "../../config/axios";
-import { useSelector } from "react-redux";
+// import { useSelector } from "react-redux";
 import { toast } from "react-toastify";
 import { useAuth } from "../../components/hooks/useAuth";
 
@@ -22,7 +22,7 @@ const { Title, Paragraph } = Typography;
 
 const MyContracts = () => {
   const navigate = useNavigate();
-  const { isAuthenticated, isCoOwner, user } = useAuth();
+  const { isAuthenticated, isCoOwner, isAdmin, isStaff, userData } = useAuth();
   const [contracts, setContracts] = useState([]);
   const [loading, setLoading] = useState(false);
   const [previewModalVisible, setPreviewModalVisible] = useState(false);
@@ -37,14 +37,14 @@ const MyContracts = () => {
       return;
     }
 
-    if (!isCoOwner) {
+    if (!isCoOwner && !isAdmin && !isStaff) {
       toast.error("Bạn không có quyền truy cập trang này");
       navigate("/");
       return;
     }
 
     loadContracts();
-  }, [isAuthenticated, isCoOwner, navigate]);
+  }, [isAuthenticated, isCoOwner, isAdmin, isStaff, navigate]);
 
   // Load contracts
   const loadContracts = async () => {
@@ -114,72 +114,72 @@ const MyContracts = () => {
   // Check if contract can be signed - only show sign button for truly unsigned contracts
   const canSignContract = (contract) => {
     const status = contract.status || contract.isSigned;
-    
+
     // If status is boolean
-    if (typeof status === 'boolean') {
+    if (typeof status === "boolean") {
       return !status; // Can sign if not signed
     }
-    
+
     // If status is string - be more specific about what can be signed
-    if (typeof status === 'string') {
+    if (typeof status === "string") {
       const statusLower = status.toLowerCase().trim();
-      
+
       // Only allow signing for these specific "unsigned" statuses
       const unsignedStatuses = [
-        'unsigned', 
-        'chưa ký', 
-        'draft', 
-        'nháp',
-        'not_signed',
-        'unconfirmed',
-        'signing',
-        'đang ký'
+        "unsigned",
+        "chưa ký",
+        "draft",
+        "nháp",
+        "not_signed",
+        "unconfirmed",
+        "signing",
+        "đang ký",
       ];
-      
+
       // Explicitly deny signing for these "signed" statuses
       const signedStatuses = [
-        'signed',
-        'đã ký',
-        'confirmed', 
-        'xác nhận',
-        'completed',
-        'hoàn thành',
-        'approved',
-        'đã duyệt',
-        'active',
-        'hiệu lực'
+        "signed",
+        "đã ký",
+        "confirmed",
+        "xác nhận",
+        "completed",
+        "hoàn thành",
+        "approved",
+        "đã duyệt",
+        "active",
+        "hiệu lực",
       ];
-      
+
       // If it's explicitly signed, don't show sign button
       if (signedStatuses.includes(statusLower)) {
         return false;
       }
-      
+
       // If it's explicitly unsigned, show sign button
       if (unsignedStatuses.includes(statusLower)) {
         return true;
       }
-      
+
       // For pending/waiting statuses, don't show sign button (these are usually in review)
       const pendingStatuses = [
-        'pending',
-        'chờ ký',
-        'waiting',
-        'chờ xác nhận',
-        'pending_review',
-        'chờ duyệt',
-        'in_review',
-        'đang xem xét'
+        "pending",
+        "chờ ký",
+        "waiting",
+        "chờ xác nhận",
+        "pending_review",
+        "chờ duyệt",
+        "in_review",
+        "đang xem xét",
       ];
-      
+
       if (pendingStatuses.includes(statusLower)) {
         return false;
       }
-      
+
       // For unknown status, be conservative and don't show sign button
       return false;
     }
-    
+
     // Default: don't show sign button if no status or unknown status
     return false;
   };
@@ -187,14 +187,26 @@ const MyContracts = () => {
   // Handle sign contract
   const handleSign = async (contractId) => {
     try {
-      // Send OTP first
-      await api.post(`/contracts/${contractId}/send-otp`);
-      message.success("Mã OTP đã được gửi đến email của bạn");
-      // Navigate to verify OTP page
-      navigate(`/verify-contract-otp/${contractId}`);
+      // Find the contract details
+      const contract = contracts.find(c => c.id === contractId);
+      const userEmail = userData?.email || "";
+      
+      // Navigate to sign contract page with full contract info
+      navigate(`/sign-econtract/${contractId}`, {
+        state: { 
+          email: userEmail,
+          contract: contract,
+          title: contract?.title || "Hợp đồng",
+          createdAt: contract?.createdAt,
+          effectiveFrom: contract?.effectiveFrom,
+          expiresAt: contract?.expiresAt,
+          status: contract?.status,
+          description: contract?.description
+        }
+      });
     } catch (error) {
-      console.error("Error sending OTP:", error);
-      message.error("Không thể gửi mã OTP");
+      console.error("Error navigating to sign page:", error);
+      message.error("Không thể chuyển đến trang ký hợp đồng");
     }
   };
 
@@ -202,46 +214,52 @@ const MyContracts = () => {
   const getStatusTag = (contract) => {
     // Handle different possible status fields and formats
     const status = contract.status || contract.isSigned;
-    
+
     // If status is boolean
-    if (typeof status === 'boolean') {
-      return status ? <Tag color="green">Đã ký</Tag> : <Tag color="orange">Chưa ký</Tag>;
+    if (typeof status === "boolean") {
+      return status ? (
+        <Tag color="green">Đã ký</Tag>
+      ) : (
+        <Tag color="orange">Chưa ký</Tag>
+      );
     }
-    
+
     // If status is string
-    if (typeof status === 'string') {
+    if (typeof status === "string") {
       const statusLower = status.toLowerCase();
       switch (statusLower) {
-        case 'signed':
-        case 'đã ký':
-        case 'confirmed':
-        case 'xác nhận':
-        case 'completed':
-        case 'hoàn thành':
-          return <Tag color="green">Đã ký</Tag>;
-        case 'pending':
-        case 'chờ ký':
-        case 'waiting':
-        case 'chờ xác nhận':
-          return <Tag color="orange">Chờ ký</Tag>;
-        case 'signing':
-        case 'đang ký':
-          return <Tag color="blue">Đang ký</Tag>;
-        case 'unsigned':
-        case 'chưa ký':
-        case 'draft':
-        case 'nháp':
-          return <Tag color="red">Chưa ký</Tag>;
-        case 'expired':
-        case 'hết hạn':
-          return <Tag color="gray">Hết hạn</Tag>;
+        case "signed":
+        case "completed":
+          return <Tag color="green">SIGNED</Tag>;
+        case "pending":
+        case "waiting":
+          return <Tag color="orange">WAITING</Tag>;
+        case "signing":
+          return <Tag color="blue">SIGNING</Tag>;
+        case "unsigned":
+          return <Tag color="red">UNSIGNED</Tag>;
+        case "expired":
+          return <Tag color="gray">EXPIRED</Tag>;
         default:
           return <Tag color="blue">{status}</Tag>;
       }
     }
-    
+
     // Default fallback
-    return <Tag color="orange">Chưa ký</Tag>;
+    return <Tag color="orange">UNSIGNED</Tag>;
+  };
+
+  // Handle back navigation based on role
+  const handleBack = () => {
+    if (isStaff) {
+      navigate("/staff/review-econtract");
+    } else if (isAdmin) {
+      navigate("/admin/dashboard");
+    } else if (isCoOwner) {
+      navigate("/");
+    } else {
+      navigate("/");
+    }
   };
 
   // Table columns
@@ -320,8 +338,20 @@ const MyContracts = () => {
   return (
     <div style={{ padding: "24px" }}>
       <Card>
-        <Title level={2}>Hợp đồng của tôi</Title>
-        <Paragraph>Danh sách tất cả các hợp đồng mà bạn tham gia</Paragraph>
+        <div style={{ display: "flex", alignItems: "center", marginBottom: "16px" }}>
+          <Button
+            type="text"
+            icon={<ArrowLeftOutlined />}
+            onClick={handleBack}
+            style={{ marginRight: "12px" }}
+          >
+            Quay lại
+          </Button>
+          <div>
+            <Title level={2} style={{ margin: 0 }}>Hợp đồng của tôi</Title>
+            <Paragraph style={{ margin: 0 }}>Danh sách tất cả các hợp đồng mà bạn tham gia</Paragraph>
+          </div>
+        </div>
 
         <Table
           columns={columns}

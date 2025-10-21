@@ -28,6 +28,7 @@ import {
   SettingOutlined,
   CameraOutlined,
   CheckOutlined,
+  CarOutlined,
 } from "@ant-design/icons";
 import { Link, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
@@ -127,6 +128,7 @@ const Homepage = () => {
     localStorage.removeItem("profileData");
     setProfileData(null);
     dispatch(logout());
+    navigate("/login");
   };
 
   // Function to handle profile menu click
@@ -529,6 +531,13 @@ const Homepage = () => {
       label: "Change Password",
       onClick: () => navigate("/change-password"),
     },
+    // Only show My Vehicle for Co-owner
+    ...(isCoOwner ? [{
+      key: "my-vehicle",
+      icon: <CarOutlined />,
+      label: "My Vehicle",
+      onClick: () => navigate("/my-vehicle"),
+    }] : []),
     {
       key: "history",
       icon: <HistoryOutlined />,

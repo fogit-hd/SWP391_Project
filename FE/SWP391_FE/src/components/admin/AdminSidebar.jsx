@@ -43,6 +43,11 @@ const items = [
         icon: <PlusOutlined />,
         label: <Link to="/admin/manage-contract">Manage Templates</Link>,
       },
+      {
+        key: "view-contracts",
+        icon: <FileTextOutlined />,
+        label: <Link to="/view-mycontract">View Contracts</Link>,
+      },
     ],
   },
   {
@@ -54,6 +59,11 @@ const items = [
         key: "manage-groups",
         icon: <TeamOutlined />,
         label: <Link to="/admin/manage-group">Manage Groups</Link>,
+      },
+      {
+        key: "view-groups",
+        icon: <TeamOutlined />,
+        label: <Link to="/view-myGroup">View Groups</Link>,
       },
     ],
   },
