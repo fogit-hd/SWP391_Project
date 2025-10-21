@@ -257,6 +257,7 @@ const LoginPage = () => {
                 </Form.Item>
               </Col>
               <Col>
+                <Link to="/forgot-password" className="login-forgot-link">
                 <a
                   onClick={handleForgotPassword}
                   className="login-forgot-link"
@@ -264,6 +265,7 @@ const LoginPage = () => {
                 >
                   Forgot Password?
                 </a>
+                </Link>
               </Col>
             </Row>
 
