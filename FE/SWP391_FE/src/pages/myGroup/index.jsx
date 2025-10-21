@@ -117,6 +117,12 @@ const MyGroup = () => {
     if (!renameTarget?.id) return;
     const newName = renameValue.trim();
     if (!newName || newName === renameTarget.name) return;
+    // Kiểm tra tên nhóm đã tồn tại chưa
+    const exists = groups.some(g => g.name?.trim().toLowerCase() === newName.toLowerCase() && g.id !== renameTarget.id);
+    if (exists) {
+      message.error("Group name already exists. Please choose another name.");
+      return;
+    }
     setRenameSubmitting(true);
     try {
       await api.put(`/CoOwnership/${renameTarget.id}/rename`, { name: newName });

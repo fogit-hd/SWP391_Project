@@ -22,6 +22,15 @@ const CreateGroup = () => {
   const onFinish = async (values) => {
     setIsLoading(true);
     try {
+      // Kiểm tra tên nhóm đã tồn tại chưa
+      const groupsRes = await api.get("/CoOwnership/my-groups");
+      let groupList = Array.isArray(groupsRes.data) ? groupsRes.data : (groupsRes.data?.data || []);
+      const exists = groupList.some(g => g.name?.trim().toLowerCase() === values.name.trim().toLowerCase());
+      if (exists) {
+        toast.error("Group name already exists. Please choose another name.");
+        setIsLoading(false);
+        return;
+      }
       // Backend expects JSON body with only name; user is inferred from token
       const payload = {
         name: values.name,
