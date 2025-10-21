@@ -1,6 +1,29 @@
 import React, { useEffect, useState } from "react";
-import { Card, List, Tag, Typography, Button, Empty, Space, Spin, message, Modal, Popconfirm, Avatar, Input, Divider, Tooltip, Tabs } from "antd";
-import { CheckCircleTwoTone, CloseCircleTwoTone, PlusOutlined, TeamOutlined, ArrowLeftOutlined } from "@ant-design/icons";
+import {
+  Card,
+  List,
+  Tag,
+  Typography,
+  Button,
+  Empty,
+  Space,
+  Spin,
+  message,
+  Modal,
+  Popconfirm,
+  Avatar,
+  Input,
+  Divider,
+  Tooltip,
+  Tabs,
+} from "antd";
+import {
+  CheckCircleTwoTone,
+  CloseCircleTwoTone,
+  PlusOutlined,
+  TeamOutlined,
+  ArrowLeftOutlined,
+} from "@ant-design/icons";
 import { useNavigate, Link } from "react-router-dom";
 import api from "../../config/axios";
 import { useAuth } from "../../components/hooks/useAuth";
@@ -47,7 +70,11 @@ const MyGroup = () => {
       }
     } catch (err) {
       console.error("Failed to load my groups:", err);
-      message.error("Failed to load your groups");
+      const errorMessage =
+        err?.response?.data?.message ||
+        err?.message ||
+        "Failed to load your groups";
+      message.error(errorMessage);
       setGroups([]);
     } finally {
       setLoading(false);
@@ -98,19 +125,30 @@ const MyGroup = () => {
         if (ud?.data?.id) return ud.data.id;
         if (ud?.id) return ud.id;
       }
-    } catch {}
+    } catch (err) {
+      console.warn("Failed to parse userData from localStorage:", err);
+    }
     // Fallback: decode JWT
     try {
       const token = localStorage.getItem("token");
       if (token && token.includes(".")) {
         const payload = JSON.parse(atob(token.split(".")[1]));
-        return payload?.UserId || payload?.userId || payload?.sub || payload?.id || null;
+        return (
+          payload?.UserId ||
+          payload?.userId ||
+          payload?.sub ||
+          payload?.id ||
+          null
+        );
       }
-    } catch {}
+    } catch (err) {
+      console.warn("Failed to decode JWT token:", err);
+    }
     return null;
   };
 
-  const getOwnerIdFromGroup = (g) => g?.createdById || g?.ownerId || g?.createdBy || null;
+  const getOwnerIdFromGroup = (g) =>
+    g?.createdById || g?.ownerId || g?.createdBy || null;
 
   const openMembers = async (group) => {
     if (!group?.id) return;
@@ -133,7 +171,9 @@ const MyGroup = () => {
     if (!newName || newName === renameTarget.name) return;
     setRenameSubmitting(true);
     try {
-      await api.put(`/CoOwnership/${renameTarget.id}/rename`, { name: newName });
+      await api.put(`/CoOwnership/${renameTarget.id}/rename`, {
+        name: newName,
+      });
       message.success("Group renamed");
       setRenameOpen(false);
       setRenameTarget(null);
@@ -150,13 +190,19 @@ const MyGroup = () => {
   const loadMembers = async (groupId) => {
     setMembersLoading(true);
     try {
-      const res = await api.get(`/GroupMember/get-all-members-in-group/${groupId}`);
+      const res = await api.get(
+        `/GroupMember/get-all-members-in-group/${groupId}`
+      );
       if (Array.isArray(res.data)) setMembers(res.data);
       else if (Array.isArray(res.data?.data)) setMembers(res.data.data);
       else setMembers([]);
     } catch (err) {
       console.error("Load members failed", err);
-      message.error("Failed to load members");
+      const errorMessage =
+        err?.response?.data?.message ||
+        err?.message ||
+        "Failed to load members";
+      message.error(errorMessage);
       setMembers([]);
     } finally {
       setMembersLoading(false);
@@ -172,7 +218,11 @@ const MyGroup = () => {
       else setVehicles([]);
     } catch (err) {
       console.error("Load vehicles failed", err);
-      message.error("Failed to load vehicles");
+      const errorMessage =
+        err?.response?.data?.message ||
+        err?.message ||
+        "Failed to load vehicles";
+      message.error(errorMessage);
       setVehicles([]);
     } finally {
       setVehiclesLoading(false);
@@ -182,19 +232,29 @@ const MyGroup = () => {
   const kickMember = async (member) => {
     if (!selectedGroup?.id || !member?.userId) return;
     try {
-      await api.delete(`/GroupMember/deleteMember/${selectedGroup.id}/${member.userId}`);
+      await api.delete(
+        `/GroupMember/deleteMember/${selectedGroup.id}/${member.userId}`
+      );
       message.success("Removed member");
       await loadMembers(selectedGroup.id);
     } catch (err) {
       console.error("Remove member failed", err);
-      message.error(err?.response?.data?.message || "Failed to remove member");
+      const errorMessage =
+        err?.response?.data?.message ||
+        err?.message ||
+        "Failed to remove member";
+      message.error(errorMessage);
     }
   };
 
   const createInvite = async (maybeId) => {
     // onClick passes event as the first argument; ignore it and use selectedGroup
-    const isClickEvent = typeof maybeId === "object" && (maybeId?.nativeEvent || maybeId?.target);
-    const gid = !isClickEvent && typeof maybeId === "string" ? maybeId : selectedGroup?.id;
+    const isClickEvent =
+      typeof maybeId === "object" && (maybeId?.nativeEvent || maybeId?.target);
+    const gid =
+      !isClickEvent && typeof maybeId === "string"
+        ? maybeId
+        : selectedGroup?.id;
     if (!gid) {
       message.error("Missing group id");
       return;
@@ -202,20 +262,30 @@ const MyGroup = () => {
     setInviteLoading(true);
     try {
       const res = await api.post(`/GroupInvite/${gid}/create-invite`, null);
-      const code = res?.data?.inviteCode || res?.data?.code || res?.data?.data?.inviteCode || res?.data?.data?.code || "";
+      const code =
+        res?.data?.inviteCode ||
+        res?.data?.code ||
+        res?.data?.data?.inviteCode ||
+        res?.data?.data?.code ||
+        "";
       if (!code) {
         message.success("Invite created");
       } else {
         setInviteCode(code);
         // Use backend expiry if provided; else 15 minutes from now
-        const expiresAt = res?.data?.expiresAt || res?.data?.data?.expiresAt || null;
+        const expiresAt =
+          res?.data?.expiresAt || res?.data?.data?.expiresAt || null;
         if (expiresAt) setInviteExpiresAt(new Date(expiresAt).getTime());
         else setInviteExpiresAt(Date.now() + 15 * 60 * 1000);
         Modal.success({ title: "Invite code", content: code });
       }
     } catch (err) {
       console.error("Create invite failed", err);
-      message.error(err?.response?.data?.message || "Failed to create invite");
+      const errorMessage =
+        err?.response?.data?.message ||
+        err?.message ||
+        "Failed to create invite";
+      message.error(errorMessage);
     } finally {
       setInviteLoading(false);
     }
@@ -246,14 +316,20 @@ const MyGroup = () => {
     }
     setJoinSubmitting(true);
     try {
-      await api.post(`/GroupInvite/join-by-invite`, null, { params: { inviteCode: code } });
+      await api.post(`/GroupInvite/join-by-invite`, null, {
+        params: { inviteCode: code },
+      });
       message.success("Joined group successfully");
       setJoinOpen(false);
       setJoinValue("");
       await reloadGroups();
     } catch (err) {
       console.error("Join by code failed", err);
-      message.error(err?.response?.data?.message || "Failed to join by code");
+      const errorMessage =
+        err?.response?.data?.message ||
+        err?.message ||
+        "Failed to join by code";
+      message.error(errorMessage);
     } finally {
       setJoinSubmitting(false);
     }
@@ -269,7 +345,10 @@ const MyGroup = () => {
     }
     setAttachSubmitting(true);
     try {
-      await api.post(`/CoOwnership/attach-vehicle`, { groupId: selectedGroup.id, vehicleId: vid });
+      await api.post(`/CoOwnership/attach-vehicle`, {
+        groupId: selectedGroup.id,
+        vehicleId: vid,
+      });
       message.success("Vehicle attached to group");
       setAttachOpen(false);
       setAttachVehicleId("");
@@ -278,7 +357,11 @@ const MyGroup = () => {
       console.error("Attach vehicle failed", err);
       const backendMsg = err?.response?.data?.message || err?.message || "";
       const status = err?.response?.status;
-      const isDuplicate = status === 409 || /already|attached|tồn tại|trùng|được gắn|đã thuộc|đã được/i.test(backendMsg);
+      const isDuplicate =
+        status === 409 ||
+        /already|attached|tồn tại|trùng|được gắn|đã thuộc|đã được/i.test(
+          backendMsg
+        );
       if (isDuplicate) {
         message.warning("Vehicle is already attached to another group");
       } else {
@@ -298,12 +381,17 @@ const MyGroup = () => {
       return;
     }
     try {
-      await api.post(`/CoOwnership/detach-vehicle`, { groupId: selectedGroup.id, vehicleId });
+      await api.post(`/CoOwnership/detach-vehicle`, {
+        groupId: selectedGroup.id,
+        vehicleId,
+      });
       message.success("Vehicle detached from group");
       await loadVehicles(selectedGroup.id);
     } catch (err) {
       console.error("Detach vehicle failed", err);
-      message.error(err?.response?.data?.message || "Detach vehicle failed");
+      const errorMessage =
+        err?.response?.data?.message || err?.message || "Detach vehicle failed";
+      message.error(errorMessage);
     }
   };
 
@@ -326,12 +414,18 @@ const MyGroup = () => {
         message.success("Vehicle deactivated");
       }
       // Optimistically update UI
-      setVehicles((prev) => prev.map((v) => (v.id === id ? { ...v, isActive: targetActive } : v)));
+      setVehicles((prev) =>
+        prev.map((v) => (v.id === id ? { ...v, isActive: targetActive } : v))
+      );
       // Optional: re-sync in background (uncomment if backend is eventually consistent)
       // setTimeout(() => loadVehicles(selectedGroup?.id), 300);
     } catch (err) {
       console.error("Toggle vehicle status failed", err);
-      message.error(err?.response?.data?.message || "Failed to update vehicle status");
+      const errorMessage =
+        err?.response?.data?.message ||
+        err?.message ||
+        "Failed to update vehicle status";
+      message.error(errorMessage);
     } finally {
       setTogglingVehicleIds((prev) => {
         const s = new Set(prev);
@@ -356,9 +450,14 @@ const MyGroup = () => {
 
   const EmptyState = (
     <Card>
-      <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={<Text>You don't have any group</Text>}>
+      <Empty
+        image={Empty.PRESENTED_IMAGE_SIMPLE}
+        description={<Text>You don't have any group</Text>}
+      >
         <Link to="/create-group">
-          <Button type="primary" icon={<PlusOutlined />}>Create group</Button>
+          <Button type="primary" icon={<PlusOutlined />}>
+            Create group
+          </Button>
         </Link>
       </Empty>
     </Card>
@@ -366,13 +465,15 @@ const MyGroup = () => {
 
   return (
     <div style={{ padding: 24 }}>
-      <Space style={{ width: "100%", justifyContent: "space-between", marginBottom: 16 }}>
+      <Space
+        style={{
+          width: "100%",
+          justifyContent: "space-between",
+          marginBottom: 16,
+        }}
+      >
         <Space>
-          <Button
-            type="text"
-            icon={<ArrowLeftOutlined />}
-            onClick={handleBack}
-          >
+          <Button type="text" icon={<ArrowLeftOutlined />} onClick={handleBack}>
             Quay lại
           </Button>
           <Title level={3} style={{ margin: 0 }}>
@@ -381,7 +482,13 @@ const MyGroup = () => {
         </Space>
         <Space>
           <Button onClick={() => setJoinOpen(true)}>Join by code</Button>
-          <Button type="primary" icon={<PlusOutlined />} onClick={() => navigate("/create-group")}>Create group</Button>
+          <Button
+            type="primary"
+            icon={<PlusOutlined />}
+            onClick={() => navigate("/create-group")}
+          >
+            Create group
+          </Button>
         </Space>
       </Space>
 
@@ -400,27 +507,63 @@ const MyGroup = () => {
               <List.Item
                 actions={[
                   item.isActive ? (
-                    <Tag color="green" icon={<CheckCircleTwoTone twoToneColor="#52c41a" />}>Active</Tag>
+                    <Tag
+                      color="green"
+                      icon={<CheckCircleTwoTone twoToneColor="#52c41a" />}
+                    >
+                      Active
+                    </Tag>
                   ) : (
-                    <Tag color="red" icon={<CloseCircleTwoTone twoToneColor="#ff4d4f" />}>Inactive</Tag>
+                    <Tag
+                      color="red"
+                      icon={<CloseCircleTwoTone twoToneColor="#ff4d4f" />}
+                    >
+                      Inactive
+                    </Tag>
                   ),
-                  <Button key="members" type="link" onClick={() => openMembers(item)}>Details</Button>,
-                  <Button key="rename" type="link" onClick={() => openRename(item)}>Rename</Button>,
+                  <Button
+                    key="members"
+                    type="link"
+                    onClick={() => openMembers(item)}
+                  >
+                    Details
+                  </Button>,
+                  <Button
+                    key="rename"
+                    type="link"
+                    onClick={() => openRename(item)}
+                  >
+                    Rename
+                  </Button>,
                   (() => {
                     const currentUserId = getCurrentUserId();
                     const ownerIdFromGroup = getOwnerIdFromGroup(item);
-                    const iAmOwnerRow = !!currentUserId && ownerIdFromGroup && currentUserId === ownerIdFromGroup;
+                    const iAmOwnerRow =
+                      !!currentUserId &&
+                      ownerIdFromGroup &&
+                      currentUserId === ownerIdFromGroup;
                     return iAmOwnerRow ? (
-                      <Button key="invite" type="link" onClick={() => handleInviteFromRow(item)} disabled={inviteLoading}>Create invite</Button>
+                      <Button
+                        key="invite"
+                        type="link"
+                        onClick={() => handleInviteFromRow(item)}
+                        disabled={inviteLoading}
+                      >
+                        Create invite
+                      </Button>
                     ) : null;
                   })(),
                 ]}
               >
                 <List.Item.Meta
                   title={item.name}
-                  description={<>
-                    <Text type="secondary">Created by: {item.createdByName || "Unknown"}</Text>
-                  </>}
+                  description={
+                    <>
+                      <Text type="secondary">
+                        Created by: {item.createdByName || "Unknown"}
+                      </Text>
+                    </>
+                  }
                 />
               </List.Item>
             )}
@@ -435,7 +578,10 @@ const MyGroup = () => {
         onOk={submitRename}
         okButtonProps={{
           loading: renameSubmitting,
-          disabled: renameSubmitting || !renameValue.trim() || (renameTarget && renameValue.trim() === renameTarget.name),
+          disabled:
+            renameSubmitting ||
+            !renameValue.trim() ||
+            (renameTarget && renameValue.trim() === renameTarget.name),
         }}
       >
         <Input
@@ -453,7 +599,10 @@ const MyGroup = () => {
         onCancel={() => setJoinOpen(false)}
         onOk={submitJoin}
         okText="Join"
-        okButtonProps={{ loading: joinSubmitting, disabled: joinSubmitting || !joinValue.trim() }}
+        okButtonProps={{
+          loading: joinSubmitting,
+          disabled: joinSubmitting || !joinValue.trim(),
+        }}
       >
         <Input
           placeholder="Enter invite code (e.g., 8A7A0D84)"
@@ -476,13 +625,17 @@ const MyGroup = () => {
               // Precompute owner permission once
               const currentUserId = getCurrentUserId();
               const ownerIdFromGroup = getOwnerIdFromGroup(selectedGroup);
-              const ownerIdFromMembers = members.find((x) => x.roleInGroup === "OWNER")?.userId;
-              const myRoleFromMembers = members.find((x) => x.userId === currentUserId)?.roleInGroup;
-              const iAmOwner = !!currentUserId && (
-                currentUserId === ownerIdFromGroup ||
-                currentUserId === ownerIdFromMembers ||
-                myRoleFromMembers === "OWNER"
-              );
+              const ownerIdFromMembers = members.find(
+                (x) => x.roleInGroup === "OWNER"
+              )?.userId;
+              const myRoleFromMembers = members.find(
+                (x) => x.userId === currentUserId
+              )?.roleInGroup;
+              const iAmOwner =
+                !!currentUserId &&
+                (currentUserId === ownerIdFromGroup ||
+                  currentUserId === ownerIdFromMembers ||
+                  myRoleFromMembers === "OWNER");
               return (
                 <Tabs
                   defaultActiveKey="members"
@@ -495,18 +648,36 @@ const MyGroup = () => {
                           {iAmOwner && (
                             <div style={{ marginBottom: 12 }}>
                               <Space>
-                                <Button loading={inviteLoading} onClick={createInvite}>
-                                  {inviteCode && inviteCountdown !== "expired" ? "Regenerate invite code" : "Create invite code"}
+                                <Button
+                                  loading={inviteLoading}
+                                  onClick={createInvite}
+                                >
+                                  {inviteCode && inviteCountdown !== "expired"
+                                    ? "Regenerate invite code"
+                                    : "Create invite code"}
                                 </Button>
-                                <Link to="/create-econtract" state={{ groupId: selectedGroup?.id }}>
+                                <Link
+                                  to="/create-econtract"
+                                  state={{ groupId: selectedGroup?.id }}
+                                >
                                   <Button>Create contract</Button>
                                 </Link>
                                 {inviteCode ? (
                                   <Space>
                                     <Tag color="purple">Code: {inviteCode}</Tag>
-                                    <Tag>Expires in {inviteCountdown === "expired" ? "00:00" : inviteCountdown || "15:00"}</Tag>
+                                    <Tag>
+                                      Expires in{" "}
+                                      {inviteCountdown === "expired"
+                                        ? "00:00"
+                                        : inviteCountdown || "15:00"}
+                                    </Tag>
                                     <Tooltip title="Copy to clipboard">
-                                      <Button onClick={copyInvite} disabled={inviteCountdown === "expired"}>Copy</Button>
+                                      <Button
+                                        onClick={copyInvite}
+                                        disabled={inviteCountdown === "expired"}
+                                      >
+                                        Copy
+                                      </Button>
                                     </Tooltip>
                                   </Space>
                                 ) : null}
@@ -519,28 +690,54 @@ const MyGroup = () => {
                             itemLayout="horizontal"
                             dataSource={members}
                             renderItem={(m) => {
-                              const canDelete = iAmOwner && m.roleInGroup === "MEMBER";
+                              const canDelete =
+                                iAmOwner && m.roleInGroup === "MEMBER";
                               return (
                                 <List.Item
                                   actions={[
-                                    <Tag key="role" color={m.roleInGroup === "OWNER" ? "gold" : "blue"}>{m.roleInGroup}</Tag>,
+                                    <Tag
+                                      key="role"
+                                      color={
+                                        m.roleInGroup === "OWNER"
+                                          ? "gold"
+                                          : "blue"
+                                      }
+                                    >
+                                      {m.roleInGroup}
+                                    </Tag>,
                                     canDelete ? (
                                       <Popconfirm
                                         key="delete"
-                                        title={`Remove ${m.fullName || m.userId}?`}
+                                        title={`Remove ${
+                                          m.fullName || m.userId
+                                        }?`}
                                         okText="Delete"
                                         okButtonProps={{ danger: true }}
                                         onConfirm={() => kickMember(m)}
                                       >
-                                        <Button danger type="link">Kick</Button>
+                                        <Button danger type="link">
+                                          Kick
+                                        </Button>
                                       </Popconfirm>
                                     ) : null,
                                   ].filter(Boolean)}
                                 >
                                   <List.Item.Meta
-                                    avatar={<Avatar>{(m.fullName || m.userId || "?").slice(0, 1).toUpperCase()}</Avatar>}
+                                    avatar={
+                                      <Avatar>
+                                        {(m.fullName || m.userId || "?")
+                                          .slice(0, 1)
+                                          .toUpperCase()}
+                                      </Avatar>
+                                    }
                                     title={m.fullName || m.userId}
-                                    description={m.inviteStatus ? <span>Invite: <Tag>{m.inviteStatus}</Tag></span> : null}
+                                    description={
+                                      m.inviteStatus ? (
+                                        <span>
+                                          Invite: <Tag>{m.inviteStatus}</Tag>
+                                        </span>
+                                      ) : null
+                                    }
                                   />
                                 </List.Item>
                               );
@@ -557,7 +754,9 @@ const MyGroup = () => {
                           {iAmOwner && (
                             <div style={{ marginBottom: 12 }}>
                               <Space>
-                                <Button onClick={() => setAttachOpen(true)}>Attach vehicle</Button>
+                                <Button onClick={() => setAttachOpen(true)}>
+                                  Attach vehicle
+                                </Button>
                               </Space>
                             </div>
                           )}
@@ -571,15 +770,31 @@ const MyGroup = () => {
                                 actions={(() => {
                                   const disabled = togglingVehicleIds.has(v.id);
                                   return [
-                                    <Tag color={v.isActive ? "green" : "red"}>{v.isActive ? "Active" : "Inactive"}</Tag>,
+                                    <Tag color={v.isActive ? "green" : "red"}>
+                                      {v.isActive ? "Active" : "Inactive"}
+                                    </Tag>,
                                     iAmOwner ? (
-                                      <Button type="link" disabled={disabled} onClick={() => toggleVehicleStatus(v)}>
+                                      <Button
+                                        type="link"
+                                        disabled={disabled}
+                                        onClick={() => toggleVehicleStatus(v)}
+                                      >
                                         {v.isActive ? "Deactivate" : "Activate"}
                                       </Button>
                                     ) : null,
                                     iAmOwner && !v.isActive ? (
-                                      <Popconfirm key="detach" title="Detach this vehicle from group?" onConfirm={() => detachVehicle(v.id)}>
-                                        <Button danger type="link" disabled={disabled}>Detach</Button>
+                                      <Popconfirm
+                                        key="detach"
+                                        title="Detach this vehicle from group?"
+                                        onConfirm={() => detachVehicle(v.id)}
+                                      >
+                                        <Button
+                                          danger
+                                          type="link"
+                                          disabled={disabled}
+                                        >
+                                          Detach
+                                        </Button>
                                       </Popconfirm>
                                     ) : null,
                                   ].filter(Boolean);
@@ -593,12 +808,19 @@ const MyGroup = () => {
                                     v.model ||
                                     v.licensePlate ||
                                     "Vehicle";
-                                  const avatarText = (displayName || "?").toString().slice(0, 1).toUpperCase();
+                                  const avatarText = (displayName || "?")
+                                    .toString()
+                                    .slice(0, 1)
+                                    .toUpperCase();
                                   return (
                                     <List.Item.Meta
                                       avatar={<Avatar>{avatarText}</Avatar>}
                                       title={displayName}
-                                      description={v.licensePlate ? <span>Plate: {v.licensePlate}</span> : null}
+                                      description={
+                                        v.licensePlate ? (
+                                          <span>Plate: {v.licensePlate}</span>
+                                        ) : null
+                                      }
                                     />
                                   );
                                 })()}
@@ -624,7 +846,10 @@ const MyGroup = () => {
         onCancel={() => setAttachOpen(false)}
         onOk={attachVehicle}
         okText="Attach"
-        okButtonProps={{ loading: attachSubmitting, disabled: attachSubmitting || !attachVehicleId.trim() }}
+        okButtonProps={{
+          loading: attachSubmitting,
+          disabled: attachSubmitting || !attachVehicleId.trim(),
+        }}
       >
         <Input
           placeholder="Enter vehicleId (UUID)"
@@ -637,4 +862,3 @@ const MyGroup = () => {
 };
 
 export default MyGroup;
- 
