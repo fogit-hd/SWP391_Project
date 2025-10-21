@@ -4,6 +4,11 @@ import {
   FileOutlined,
   PlusOutlined,
   UsergroupAddOutlined,
+  FileTextOutlined,
+  TeamOutlined,
+  CarOutlined,
+  SettingOutlined,
+  EyeOutlined,
 } from "@ant-design/icons";
 import {
   Breadcrumb,
@@ -14,6 +19,7 @@ import {
   Col,
   Card,
   Typography,
+  Divider,
 } from "antd";
 import { useNavigate } from "react-router-dom";
 import AdminSidebar from "../../../components/admin/AdminSidebar";
@@ -28,12 +34,33 @@ const Dashboard = () => {
     token: { colorBgContainer, borderRadiusLG },
   } = theme.useToken();
 
+  // Navigation handlers
   const handleManageAccount = () => {
     navigate("/admin/manage-account");
   };
 
-  const handleViewTemplate = () => {
+  const handleManageContract = () => {
     navigate("/admin/manage-contract");
+  };
+
+  const handleViewContracts = () => {
+    navigate("/view-mycontract");
+  };
+
+  const handleManageGroup = () => {
+    navigate("/admin/manage-group");
+  };
+
+  const handleViewGroups = () => {
+    navigate("/view-myGroup");
+  };
+
+  const handleManageVehicle = () => {
+    navigate("/admin/manage-vehicle");
+  };
+
+  const handleManageService = () => {
+    navigate("/admin/manage-service");
   };
 
   return (
@@ -68,43 +95,110 @@ const Dashboard = () => {
             {/* User Management Section */}
             <Card title="User Management" style={{ marginBottom: 24 }}>
               <Row gutter={[16, 16]}>
-                <Col span={8}>
+                <Col xs={24} sm={12} lg={8}>
                   <Button
                     type="primary"
                     size="large"
                     icon={<UsergroupAddOutlined />}
                     onClick={handleManageAccount}
                     block
+                    style={{ height: 60 }}
                   >
                     Manage Accounts
-                  </Button>
-                </Col>
-                <Col span={8}>
-                  <Button size="large" icon={<UserOutlined />} block>
-                    User Settings
-                  </Button>
-                </Col>
-                <Col span={8}>
-                  <Button size="large" icon={<FileOutlined />} block>
-                    Reports
                   </Button>
                 </Col>
               </Row>
             </Card>
 
             {/* Contract Management Section */}
-            <Card title="Contract Management">
+            <Card title="Contract Management" style={{ marginBottom: 24 }}>
               <Row gutter={[16, 16]}>
                 <Col xs={24} sm={12} lg={8}>
                   <Button
                     type="primary"
                     size="large"
                     icon={<PlusOutlined />}
-                    onClick={handleViewTemplate}
+                    onClick={handleManageContract}
                     block
                     style={{ height: 60 }}
                   >
-                    View templates
+                    Manage Templates
+                  </Button>
+                </Col>
+                <Col xs={24} sm={12} lg={8}>
+                  <Button
+                    size="large"
+                    icon={<EyeOutlined />}
+                    onClick={handleViewContracts}
+                    block
+                    style={{ height: 60 }}
+                  >
+                    View Contracts
+                  </Button>
+                </Col>
+              </Row>
+            </Card>
+
+            {/* Group Management Section */}
+            <Card title="Group Management" style={{ marginBottom: 24 }}>
+              <Row gutter={[16, 16]}>
+                <Col xs={24} sm={12} lg={8}>
+                  <Button
+                    type="primary"
+                    size="large"
+                    icon={<TeamOutlined />}
+                    onClick={handleManageGroup}
+                    block
+                    style={{ height: 60 }}
+                  >
+                    Manage Groups
+                  </Button>
+                </Col>
+                <Col xs={24} sm={12} lg={8}>
+                  <Button
+                    size="large"
+                    icon={<EyeOutlined />}
+                    onClick={handleViewGroups}
+                    block
+                    style={{ height: 60 }}
+                  >
+                    View Groups
+                  </Button>
+                </Col>
+              </Row>
+            </Card>
+
+            {/* Vehicle Management Section */}
+            <Card title="Vehicle Management" style={{ marginBottom: 24 }}>
+              <Row gutter={[16, 16]}>
+                <Col xs={24} sm={12} lg={8}>
+                  <Button
+                    type="primary"
+                    size="large"
+                    icon={<CarOutlined />}
+                    onClick={handleManageVehicle}
+                    block
+                    style={{ height: 60 }}
+                  >
+                    Manage Vehicles
+                  </Button>
+                </Col>
+              </Row>
+            </Card>
+
+            {/* Service Management Section */}
+            <Card title="Service Management">
+              <Row gutter={[16, 16]}>
+                <Col xs={24} sm={12} lg={8}>
+                  <Button
+                    type="primary"
+                    size="large"
+                    icon={<SettingOutlined />}
+                    onClick={handleManageService}
+                    block
+                    style={{ height: 60 }}
+                  >
+                    Manage Services
                   </Button>
                 </Col>
               </Row>
