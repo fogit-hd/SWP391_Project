@@ -598,6 +598,14 @@ const Homepage = () => {
             </Link>
           )}
 
+          {isAuthenticated && (
+            <Link to="/view-myvehicle">
+              <Button type="text" className="nav-menu-button">
+                My Vehicles
+              </Button>
+            </Link>
+          )}
+
           <Link to="/contact">
             <Button type="text" className="nav-menu-button">
               Contact Us
