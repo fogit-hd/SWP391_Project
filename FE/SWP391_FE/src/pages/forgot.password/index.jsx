@@ -28,8 +28,10 @@ const ForgotPassword = () => {
   const onFinish = async (values) => {
     setIsLoading(true);
     try {
+      const currentEmail =
+        localStorage.getItem("email") || location.state?.email || "";
       const requestData = {
-        email: localStorage.getItem("email") || email,
+        email: currentEmail,
         activationCode: values["activation-code"],
         newPassword: values.password,
       };
@@ -147,7 +149,6 @@ const ForgotPassword = () => {
               <br />
               <MailOutlined /> <strong>{localStorage.getItem("email")}</strong>
             </p>
-            Your Email is: <b>{email}</b>
           </div>
           {/* {console.log("Rendering with email:", email)}
           {console.log(
