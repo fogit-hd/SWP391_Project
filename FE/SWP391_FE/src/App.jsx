@@ -11,6 +11,7 @@ import TermsPage from "/src/pages/terms";
 import ManageContract from "./pages/admin/manageContract";
 import ManageService from "./pages/admin/manageService";
 import ManageGroup from "./pages/admin/manageGroup";
+import ManageVehicle from "./pages/admin/manageVehicle";
 import ForgotPassword from "./pages/forgot.password";
 import VerifyOTP from "./pages/verify.otp";
 import UpdateProfile from "./pages/update.profile";
@@ -21,6 +22,7 @@ import CreateEContract from "./pages/create.econtract";
 import MyContracts from "./pages/view.mycontract";
 import ReviewEContract from "./pages/staff/review.econtract/index";
 import SignEContract from "./pages/sign.econtract/index";
+import StaffDashboard from "./pages/staff/dashboard/index";
 
 function App() {
   const router = createBrowserRouter([
@@ -64,7 +66,23 @@ function App() {
         </ProtectedRoute>
       ),
     },
+    {
+      path: "/admin/manage-vehicle",
+      element: (
+        <ProtectedRoute roleId={1}>
+          <ManageVehicle />
+        </ProtectedRoute>
+      ),
+    },
 
+    {
+      path: "/staff/dashboard",
+      element: (
+        <ProtectedRoute roleId={2}>
+          <StaffDashboard />
+        </ProtectedRoute>
+      ),
+    },
     {
       path: "/staff/review-econtract",
       element: (
@@ -131,10 +149,18 @@ function App() {
       ),
     },
     {
-      path: "/view-myGroup",
+      path: "/view-mygroup",
       element: (
         <ProtectedRoute roleId={1 | 3}>
           <MyGroup />
+        </ProtectedRoute>
+      ),
+    },
+    {
+      path: "/view-myvehicle",
+      element: (
+        <ProtectedRoute roleId={1 | 2 | 3}>
+          <MyVehicle />
         </ProtectedRoute>
       ),
     },
