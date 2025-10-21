@@ -11,12 +11,14 @@ import TermsPage from "/src/pages/terms";
 import ManageContract from "./pages/admin/manageContract";
 import ManageService from "./pages/admin/manageService";
 import ManageGroup from "./pages/admin/manageGroup";
+import ManageVehicle from "./pages/admin/manageVehicle";
 import ForgotPassword from "./pages/forgot.password";
 import VerifyOTP from "./pages/verify.otp";
 import UpdateProfile from "./pages/update.profile";
 import ChangePassword from "./pages/change.password";
 import CreateGroup from "./pages/create.group";
 import MyGroup from "./pages/myGroup";
+import MyVehicle from "./pages/my-vehicle";
 import CreateEContract from "./pages/create.econtract";
 import MyContracts from "./pages/view.mycontract";
 import VerifyContractOTP from "./pages/verify.contract.otp/index";
@@ -61,6 +63,14 @@ function App() {
       element: (
         <ProtectedRoute roleId={1}>
           <ManageGroup />
+        </ProtectedRoute>
+      ),
+    },
+    {
+      path: "/admin/manage-vehicle",
+      element: (
+        <ProtectedRoute roleId={1}>
+          <ManageVehicle />
         </ProtectedRoute>
       ),
     },
@@ -143,6 +153,14 @@ function App() {
       element: (
         <ProtectedRoute roleId={3}>
           <CreateGroup />
+        </ProtectedRoute>
+      ),
+    },
+    {
+      path: "/my-vehicle",
+      element: (
+        <ProtectedRoute roleId={3}>
+          <MyVehicle />
         </ProtectedRoute>
       ),
     },
