@@ -12,7 +12,7 @@ import {
   Spin,
   Empty,
 } from "antd";
-import { EyeOutlined, EditOutlined } from "@ant-design/icons";
+import { EyeOutlined, EditOutlined, ArrowLeftOutlined } from "@ant-design/icons";
 import api from "../../config/axios";
 // import { useSelector } from "react-redux";
 import { toast } from "react-toastify";
@@ -22,7 +22,7 @@ const { Title, Paragraph } = Typography;
 
 const MyContracts = () => {
   const navigate = useNavigate();
-  const { isAuthenticated, isCoOwner, isAdmin, userData } = useAuth();
+  const { isAuthenticated, isCoOwner, isAdmin, isStaff, userData } = useAuth();
   const [contracts, setContracts] = useState([]);
   const [loading, setLoading] = useState(false);
   const [previewModalVisible, setPreviewModalVisible] = useState(false);
@@ -37,14 +37,14 @@ const MyContracts = () => {
       return;
     }
 
-    if (!isCoOwner && !isAdmin) {
+    if (!isCoOwner && !isAdmin && !isStaff) {
       toast.error("Bạn không có quyền truy cập trang này");
       navigate("/");
       return;
     }
 
     loadContracts();
-  }, [isAuthenticated, isCoOwner, isAdmin, navigate]);
+  }, [isAuthenticated, isCoOwner, isAdmin, isStaff, navigate]);
 
   // Load contracts
   const loadContracts = async () => {
@@ -249,6 +249,19 @@ const MyContracts = () => {
     return <Tag color="orange">UNSIGNED</Tag>;
   };
 
+  // Handle back navigation based on role
+  const handleBack = () => {
+    if (isStaff) {
+      navigate("/staff/review-econtract");
+    } else if (isAdmin) {
+      navigate("/admin/dashboard");
+    } else if (isCoOwner) {
+      navigate("/");
+    } else {
+      navigate("/");
+    }
+  };
+
   // Table columns
   const columns = [
     {
@@ -325,8 +338,20 @@ const MyContracts = () => {
   return (
     <div style={{ padding: "24px" }}>
       <Card>
-        <Title level={2}>Hợp đồng của tôi</Title>
-        <Paragraph>Danh sách tất cả các hợp đồng mà bạn tham gia</Paragraph>
+        <div style={{ display: "flex", alignItems: "center", marginBottom: "16px" }}>
+          <Button
+            type="text"
+            icon={<ArrowLeftOutlined />}
+            onClick={handleBack}
+            style={{ marginRight: "12px" }}
+          >
+            Quay lại
+          </Button>
+          <div>
+            <Title level={2} style={{ margin: 0 }}>Hợp đồng của tôi</Title>
+            <Paragraph style={{ margin: 0 }}>Danh sách tất cả các hợp đồng mà bạn tham gia</Paragraph>
+          </div>
+        </div>
 
         <Table
           columns={columns}
