@@ -30,8 +30,6 @@ import Quill from "quill";
 import "quill/dist/quill.snow.css";
 import "./ContractEditor.css";
 
-
-
 // Import Quill modules
 const Delta = Quill.import("delta");
 const Parchment = Quill.import("parchment");
@@ -269,7 +267,7 @@ const ContractEditor = ({
       }
 
       // Inject CSS để style table với unlimited columns
-      const style = document.createElement('style');
+      const style = document.createElement("style");
       style.textContent = `
         .ql-editor table {
           border-collapse: collapse !important;
@@ -331,7 +329,6 @@ const ContractEditor = ({
         }
       `;
       document.head.appendChild(style);
-
 
       // ==================== EVENT HANDLERS ====================
       /**
@@ -499,33 +496,32 @@ const ContractEditor = ({
   // Format HTML code để hiển thị dễ đọc hơn trong tab HTML Code
   const formatHtmlForCodeDisplay = (html) => {
     if (!html) return "";
-    
+
     let formattedHtml = html;
-    
+
     // Thay thế <p><br></p> thành \n\n (hiển thị rõ ràng)
-    formattedHtml = formattedHtml.replace(/<p><br><\/p>/g, '\n\\n\n');
-    
+    formattedHtml = formattedHtml.replace(/<p><br><\/p>/g, "\n\\n\n");
+
     // Thay thế <p></p> thành \n\n (empty paragraphs - hiển thị rõ ràng)
-    formattedHtml = formattedHtml.replace(/<p><\/p>/g, '\n\\n\n');
-    
+    formattedHtml = formattedHtml.replace(/<p><\/p>/g, "\n\\n\n");
+
     // Thay thế <br> thành \n (hiển thị rõ ràng)
-    formattedHtml = formattedHtml.replace(/<br\s*\/?>/g, '\n\\n');
-    
+    formattedHtml = formattedHtml.replace(/<br\s*\/?>/g, "\n\\n");
+
     // Thêm newline sau các thẻ block elements
-    formattedHtml = formattedHtml.replace(/(<\/p>)/g, '$1\n');
-    formattedHtml = formattedHtml.replace(/(<\/div>)/g, '$1\n');
-    formattedHtml = formattedHtml.replace(/(<\/h[1-6]>)/g, '$1\n');
-    formattedHtml = formattedHtml.replace(/(<\/li>)/g, '$1\n');
-    
+    formattedHtml = formattedHtml.replace(/(<\/p>)/g, "$1\n");
+    formattedHtml = formattedHtml.replace(/(<\/div>)/g, "$1\n");
+    formattedHtml = formattedHtml.replace(/(<\/h[1-6]>)/g, "$1\n");
+    formattedHtml = formattedHtml.replace(/(<\/li>)/g, "$1\n");
+
     // Clean up multiple newlines (max 2 consecutive)
-    formattedHtml = formattedHtml.replace(/\n{3,}/g, '\n\n');
-    
+    formattedHtml = formattedHtml.replace(/\n{3,}/g, "\n\n");
+
     // Trim leading/trailing whitespace
     formattedHtml = formattedHtml.trim();
-    
+
     return formattedHtml;
   };
-
 
   // Chuyển đổi HTML thành format backend-friendly
   const convertHtmlForBackend = (html) => {
@@ -752,16 +748,16 @@ const ContractEditor = ({
     if (isHtml) {
       // Insert HTML tại vị trí cursor
       quill.clipboard.dangerouslyPasteHTML(range.index, placeholder);
-      
+
       // Nếu có table trong HTML, cần format lại để Quill hiển thị đúng
-      if (placeholder.includes('<table')) {
+      if (placeholder.includes("<table")) {
         setTimeout(() => {
           // Force re-render để table hiển thị đúng
           const html = quill.root.innerHTML;
           quill.root.innerHTML = html;
         }, 100);
       }
-      
+
       // Di chuyển cursor đến cuối content vừa insert
       const length = quill.getLength();
       quill.setSelection(length - 1);
@@ -815,18 +811,18 @@ const ContractEditor = ({
       quill.setSelection(range.index, range.length);
     }
 
-    // Tạo HTML table với loop bao bọc toàn bộ table - FORCE TABLE STRUCTURE
-    const tableHtml = `{{#CoOwners}}<br><table style="border-collapse: collapse; width: 100%; table-layout: fixed;"><tr><td style="width: 30%; border: 1px solid #ccc; padding: 8px;">{{FullName}}</td><td style="width: 20%; border: 1px solid #ccc; padding: 8px;">{{CitizenId}}</td><td style="width: 15%; border: 1px solid #ccc; padding: 8px;">{{OwnershipRate}}</td><td style="width: 35%; border: 1px solid #ccc; padding: 8px;">{{Address}}</td><td style="width: 15%; border: 1px solid #ccc; padding: 8px;">{{OwnershipRate}}</td><td style="width: 35%; border: 1px solid #ccc; padding: 8px;">{{Address}}</td><td style="width: 15%; border: 1px solid #ccc; padding: 8px;">{{OwnershipRate}}</td><td style="width: 35%; border: 1px solid #ccc; padding: 8px;">{{Address}}</td></tr></table>{{/CoOwners}}`;
+      // Tạo HTML table với loop bao bọc toàn bộ table - FORCE TABLE STRUCTURE
+      const tableHtml = `{{#CoOwners}}<br><table style="border-collapse: collapse; width: 100%; table-layout: fixed;"><tr><td style="width: 30%; border: 1px solid #ccc; padding: 8px;">{{FullName}}</td><td style="width: 20%; border: 1px solid #ccc; padding: 8px;">{{CitizenId}}</td><td style="width: 15%; border: 1px solid #ccc; padding: 8px;">{{OwnershipRate}}</td><td style="width: 35%; border: 1px solid #ccc; padding: 8px;"><td style="width: 15%; border: 1px solid #ccc; padding: 8px;"></td><td style="width: 35%; border: 1px solid #ccc; padding: 8px;"></td></tr></table>{{/CoOwners}}`;
 
     // Insert HTML table
     quill.clipboard.dangerouslyPasteHTML(range.index, tableHtml);
-    
+
     // Force re-render để table hiển thị đúng
     setTimeout(() => {
       const html = quill.root.innerHTML;
       quill.root.innerHTML = html;
       quill.focus();
-      
+
       // Highlight variables sau khi insert
       setTimeout(() => {
         highlightVariables(quill);
@@ -1089,11 +1085,11 @@ const ContractEditor = ({
       children: (
         <div style={{ height: "600px" }}>
           {/* Edit mode: Hiển thị Quill editor */}
-            <div
-              ref={editorRef} // Reference đến editor container
-              style={{ height: "100%" }}
-              className="contract-editor"
-            />
+          <div
+            ref={editorRef} // Reference đến editor container
+            style={{ height: "100%" }}
+            className="contract-editor"
+          />
         </div>
       ),
     },
@@ -1119,7 +1115,9 @@ const ContractEditor = ({
               fontFamily: 'Monaco, Menlo, "Ubuntu Mono", monospace',
             }}
           >
-            {quill ? formatHtmlForCodeDisplay(quill.root.innerHTML) : formatHtmlForCodeDisplay(content)}
+            {quill
+              ? formatHtmlForCodeDisplay(quill.root.innerHTML)
+              : formatHtmlForCodeDisplay(content)}
             {/* Hiển thị HTML source với format dễ đọc */}
           </pre>
         </div>
@@ -1135,7 +1133,7 @@ const ContractEditor = ({
         <Space>
           <Button icon={<UndoOutlined />} onClick={handleUndo} title="Undo" />
           <Button icon={<RedoOutlined />} onClick={handleRedo} title="Redo" />
-              <Divider type="vertical" />
+          <Divider type="vertical" />
 
           <Button
             icon={<DownloadOutlined />}
@@ -1144,7 +1142,6 @@ const ContractEditor = ({
           >
             Download
           </Button>
-          
 
           {/* Variables dropdown menu */}
           <Dropdown
@@ -1156,7 +1153,6 @@ const ContractEditor = ({
               Insert Variables
             </Button>
           </Dropdown>
-
 
           <Button
             type="primary"
@@ -1187,8 +1183,6 @@ const ContractEditor = ({
       >
         {content.length} characters
       </div>
-
-
     </Card>
   );
 };

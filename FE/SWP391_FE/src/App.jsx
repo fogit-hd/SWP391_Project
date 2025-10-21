@@ -18,7 +18,7 @@ import UpdateProfile from "./pages/update.profile";
 import ChangePassword from "./pages/change.password";
 import CreateGroup from "./pages/create.group";
 import MyGroup from "./pages/myGroup";
-import MyVehicle from "./pages/my-vehicle";
+import MyVehicle from "./pages/my-vehicles";
 import CreateEContract from "./pages/create.econtract";
 import MyContracts from "./pages/view.mycontract";
 import ReviewEContract from "./pages/staff/review.econtract/index";
@@ -157,7 +157,7 @@ function App() {
       ),
     },
     {
-      path: "/my-vehicle",
+      path: "/view-myvehicle",
       element: (
         <ProtectedRoute roleId={3}>
           <MyVehicle />
