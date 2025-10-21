@@ -127,6 +127,7 @@ const Homepage = () => {
     localStorage.removeItem("profileData");
     setProfileData(null);
     dispatch(logout());
+    navigate("/login");
   };
 
   // Function to handle profile menu click

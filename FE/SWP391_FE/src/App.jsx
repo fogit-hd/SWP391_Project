@@ -19,8 +19,8 @@ import CreateGroup from "./pages/create.group";
 import MyGroup from "./pages/myGroup";
 import CreateEContract from "./pages/create.econtract";
 import MyContracts from "./pages/view.mycontract";
-import VerifyContractOTP from "./pages/verify.contract.otp/index";
 import ReviewEContract from "./pages/staff/review.econtract/index";
+import SignEContract from "./pages/sign.econtract/index";
 
 function App() {
   const router = createBrowserRouter([
@@ -68,7 +68,7 @@ function App() {
     {
       path: "/staff/review-econtract",
       element: (
-        <ProtectedRoute roleId={1 | 2}>
+        <ProtectedRoute roleId={2}>
           <ReviewEContract />
         </ProtectedRoute>
       ),
@@ -125,7 +125,7 @@ function App() {
     {
       path: "/view-mycontract",
       element: (
-        <ProtectedRoute roleId={3}>
+        <ProtectedRoute roleId={1 | 2 | 3}>
           <MyContracts />
         </ProtectedRoute>
       ),
@@ -133,7 +133,7 @@ function App() {
     {
       path: "/view-myGroup",
       element: (
-        <ProtectedRoute roleId={3}>
+        <ProtectedRoute roleId={1 | 3}>
           <MyGroup />
         </ProtectedRoute>
       ),
@@ -155,10 +155,10 @@ function App() {
       ),
     },
     {
-      path: "/verify-contract-otp/:contractId",
+      path: "/sign-econtract/:contractId",
       element: (
-        <ProtectedRoute roleId={3}>
-          <VerifyContractOTP />
+        <ProtectedRoute roleId={1 | 2 | 3}>
+          <SignEContract />
         </ProtectedRoute>
       ),
     },
