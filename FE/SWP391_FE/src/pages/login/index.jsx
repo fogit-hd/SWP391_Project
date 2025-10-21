@@ -1,14 +1,5 @@
 import React, { useState, useEffect } from "react";
-import {
-  Form,
-  Input,
-  Checkbox,
-  Button,
-  Card,
-  Row,
-  Col,
-  message,
-} from "antd";
+import { Form, Input, Checkbox, Button, Card, Row, Col, message } from "antd";
 import { MailOutlined, LockOutlined } from "@ant-design/icons";
 import api from "../../config/axios";
 import { toast } from "react-toastify";
@@ -32,9 +23,9 @@ const LoginPage = () => {
     localStorage.removeItem("userRole");
     localStorage.removeItem("userId");
     localStorage.removeItem("password");
-    
+
     sessionStorage.clear();
-    
+
     // Load remembered email
     const rememberedEmail = localStorage.getItem("rememberedEmail");
     if (rememberedEmail) {
@@ -72,11 +63,11 @@ const LoginPage = () => {
       const { decodeJWT } = await import("../../components/utils/jwt");
       const decodedToken = decodeJWT(accessToken);
       console.log("Decoded JWT:", decodedToken);
-      
+
       const role = decodedToken?.role || decodedToken?.roleId;
       console.log("Role from JWT:", role);
       console.log("Role type:", typeof role);
-      
+
       const roleMapping = {
         Admin: 1,
         Staff: 2,
@@ -86,10 +77,10 @@ const LoginPage = () => {
         2: 2,
         3: 3,
       };
-      
+
       const roleId = roleMapping[role];
       console.log("Mapped roleId:", roleId);
-      
+
       if (!roleId) {
         console.error("Unknown role:", role);
         toast.error(`Unknown role: ${role}. Please contact administrator.`);
@@ -257,14 +248,21 @@ const LoginPage = () => {
                 </Form.Item>
               </Col>
               <Col>
+                <Form.Item name="backHomepage" noStyle>
+                  <Button variant="primary" onClick={() => navigate("/")}>
+                    Back
+                  </Button>
+                </Form.Item>
+              </Col>
+              <Col>
                 <Link to="/forgot-password" className="login-forgot-link">
-                <a
-                  onClick={handleForgotPassword}
-                  className="login-forgot-link"
-                  style={{ cursor: "pointer" }}
-                >
-                  Forgot Password?
-                </a>
+                  <a
+                    onClick={handleForgotPassword}
+                    className="login-forgot-link"
+                    style={{ cursor: "pointer" }}
+                  >
+                    Forgot Password?
+                  </a>
                 </Link>
               </Col>
             </Row>

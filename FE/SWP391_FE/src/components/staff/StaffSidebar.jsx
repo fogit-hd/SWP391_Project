@@ -3,8 +3,6 @@ import { Layout, Menu, Button } from "antd";
 import {
   PieChartOutlined,
   FileTextOutlined,
-  CheckCircleOutlined,
-  ClockCircleOutlined,
   LogoutOutlined,
   EyeOutlined,
 } from "@ant-design/icons";
@@ -26,24 +24,7 @@ const items = [
       {
         key: "review-contracts",
         icon: <EyeOutlined />,
-        label: <Link to="/staff/review-contract">Review Contracts</Link>,
-      },
-    ],
-  },
-  {
-    key: "contract-status",
-    icon: <CheckCircleOutlined />,
-    label: "Contract Status",
-    children: [
-      {
-        key: "pending-contracts",
-        icon: <ClockCircleOutlined />,
-        label: <Link to="/staff/pending-contracts">Pending Contracts</Link>,
-      },
-      {
-        key: "approved-contracts",
-        icon: <CheckCircleOutlined />,
-        label: <Link to="/staff/approved-contracts">Approved Contracts</Link>,
+        label: <Link to="/staff/review-econtract">Review Contracts</Link>,
       },
     ],
   },
