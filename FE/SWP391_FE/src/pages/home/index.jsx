@@ -532,12 +532,16 @@ const Homepage = () => {
       onClick: () => navigate("/change-password"),
     },
     // Only show My Vehicle for Co-owner
-    ...(isCoOwner ? [{
-      key: "my-vehicle",
-      icon: <CarOutlined />,
-      label: "My Vehicle",
-      onClick: () => navigate("/my-vehicle"),
-    }] : []),
+    ...(isCoOwner
+      ? [
+          {
+            key: "my-vehicle",
+            icon: <CarOutlined />,
+            label: "My Vehicle",
+            onClick: () => navigate("/my-vehicle"),
+          },
+        ]
+      : []),
     {
       key: "history",
       icon: <HistoryOutlined />,
@@ -599,7 +603,7 @@ const Homepage = () => {
           )}
 
           {isAuthenticated && (
-            <Link to="/my-vehicle">
+            <Link to="/view-myvehicle">
               <Button type="text" className="nav-menu-button">
                 My Vehicles
               </Button>

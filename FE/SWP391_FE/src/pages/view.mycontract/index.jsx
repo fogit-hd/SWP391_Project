@@ -12,13 +12,15 @@ import {
   Spin,
   Empty,
 } from "antd";
-import { EyeOutlined, EditOutlined, ArrowLeftOutlined } from "@ant-design/icons";
+import {
+  EyeOutlined,
+  EditOutlined,
+  ArrowLeftOutlined,
+} from "@ant-design/icons";
 import api from "../../config/axios";
 // import { useSelector } from "react-redux";
 import { toast } from "react-toastify";
 import { useAuth } from "../../components/hooks/useAuth";
-import AppHeader from "../../components/reuse/AppHeader";
-import AppFooter from "../../components/reuse/AppFooter";
 import "./view-contract.css";
 
 const { Title, Paragraph } = Typography;
@@ -191,12 +193,12 @@ const MyContracts = () => {
   const handleSign = async (contractId) => {
     try {
       // Find the contract details
-      const contract = contracts.find(c => c.id === contractId);
+      const contract = contracts.find((c) => c.id === contractId);
       const userEmail = userData?.email || "";
-      
+
       // Navigate to sign contract page with full contract info
       navigate(`/sign-econtract/${contractId}`, {
-        state: { 
+        state: {
           email: userEmail,
           contract: contract,
           title: contract?.title || "Hợp đồng",
@@ -204,8 +206,8 @@ const MyContracts = () => {
           effectiveFrom: contract?.effectiveFrom,
           expiresAt: contract?.expiresAt,
           status: contract?.status,
-          description: contract?.description
-        }
+          description: contract?.description,
+        },
       });
     } catch (error) {
       console.error("Error navigating to sign page:", error);
@@ -340,11 +342,16 @@ const MyContracts = () => {
 
   return (
     <div className="view-contract-page">
-      <AppHeader />
       <div className="view-contract-content">
         <div className="view-contract-inner">
           <Card>
-            <div style={{ display: "flex", alignItems: "center", marginBottom: "16px" }}>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                marginBottom: "16px",
+              }}
+            >
               <Button
                 type="text"
                 icon={<ArrowLeftOutlined />}
@@ -354,8 +361,12 @@ const MyContracts = () => {
                 Quay lại
               </Button>
               <div>
-                <Title level={2} style={{ margin: 0 }}>Hợp đồng của tôi</Title>
-                <Paragraph style={{ margin: 0 }}>Danh sách tất cả các hợp đồng mà bạn tham gia</Paragraph>
+                <Title level={2} style={{ margin: 0 }}>
+                  Hợp đồng của tôi
+                </Title>
+                <Paragraph style={{ margin: 0 }}>
+                  Danh sách tất cả các hợp đồng mà bạn tham gia
+                </Paragraph>
               </div>
             </div>
 
@@ -385,7 +396,9 @@ const MyContracts = () => {
           {/* Preview Modal */}
           <Modal
             title={
-              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <div
+                style={{ display: "flex", alignItems: "center", gap: "8px" }}
+              >
                 <EyeOutlined />
                 <span>Xem trước hợp đồng</span>
               </div>
@@ -418,7 +431,9 @@ const MyContracts = () => {
                       overflowY: "auto",
                       lineHeight: "1.6",
                     }}
-                    dangerouslySetInnerHTML={{ __html: selectedContract.content }}
+                    dangerouslySetInnerHTML={{
+                      __html: selectedContract.content,
+                    }}
                   />
                 )}
               </div>
@@ -428,7 +443,6 @@ const MyContracts = () => {
           </Modal>
         </div>
       </div>
-      <AppFooter />
     </div>
   );
 };

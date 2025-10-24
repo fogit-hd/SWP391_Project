@@ -20,8 +20,6 @@ import api from "../../config/axios";
 import { toast } from "react-toastify";
 import dayjs from "dayjs";
 import { useLocation, useNavigate } from "react-router";
-import AppHeader from "../../components/reuse/AppHeader";
-import AppFooter from "../../components/reuse/AppFooter";
 import "./create-econtract.css";
 
 const { Title, Paragraph } = Typography;
@@ -216,243 +214,257 @@ const CreateEContract = () => {
 
   return (
     <div className="create-econtract-page">
-      <AppHeader />
       <div className="create-econtract-content">
         <div className="econ-wrapper-center">
           <Card className="econ-card animate-fade-up">
-        <Title level={3} className="econ-main-title">
-          Co-ownership Contract — EVCars
-        </Title>
+            <Title level={3} className="econ-main-title">
+              Co-ownership Contract — EVCars
+            </Title>
 
-        <Paragraph className="econ-intro">
-          Join the green revolution! Fill in the details below to create your
-          co-ownership contract.
-        </Paragraph>
+            <Paragraph className="econ-intro">
+              Join the green revolution! Fill in the details below to create
+              your co-ownership contract.
+            </Paragraph>
 
-        <Divider />
+            <Divider />
 
-        <Form
-          layout="vertical"
-          form={form}
-          onFinish={onFinish}
-          className="econ-form"
-          initialValues={{
-            effectiveFrom: dayjs(),
-            expiresAt: dayjs().add(6, "month"),
-          }}
-        >
-          <Form.Item
-            label="Contract Template"
-            name="templateId"
-            rules={[{ required: true, message: "Please select a template" }]}
-          >
-            <Select placeholder="Select contract template">
-              {templates.map((template) => (
-                <Option key={template.id} value={template.id}>
-                  {template.name} (v{template.version})
-                </Option>
-              ))}
-            </Select>
-          </Form.Item>
-
-          <Form.Item
-            label="Vehicle"
-            name="vehicleId"
-            rules={[{ required: true, message: "Please select a vehicle" }]}
-          >
-            <Select placeholder="Select vehicle">
-              {vehicles.map((vehicle) => (
-                <Option key={vehicle.id} value={vehicle.id}>
-                  {vehicle.model} - {vehicle.licensePlate}
-                </Option>
-              ))}
-            </Select>
-          </Form.Item>
-
-          <Form.Item
-            label="Contract Title"
-            name="title"
-            rules={[{ required: true, message: "Please enter contract title" }]}
-          >
-            <Input placeholder="Enter contract title" />
-          </Form.Item>
-
-          <Form.Item
-            label="Effective From"
-            name="effectiveFrom"
-            rules={[
-              { required: true, message: "Please select effective date" },
-            ]}
-          >
-            <DatePicker
-              style={{ width: "100%" }}
-              disabledDate={(current) =>
-                current && current < dayjs().startOf("day")
-              }
-              onChange={handleEffectiveDateChange}
-            />
-          </Form.Item>
-
-          <Form.Item
-            label="Contract Duration (months)"
-            name="duration"
-            rules={[
-              { required: true, message: "Please select contract duration" },
-            ]}
-          >
-            <Select onChange={handleDurationChange}>
-              <Option value={6}>6 months</Option>
-              <Option value={12}>12 months (1 year)</Option>
-              <Option value={24}>24 months (2 years)</Option>
-              <Option value={36}>36 months (3 years)</Option>
-            </Select>
-          </Form.Item>
-
-          <Form.Item label="Expires At" name="expiresAt">
-            <DatePicker style={{ width: "100%" }} disabled />
-          </Form.Item>
-
-          {/* Select Members Section */}
-          <Divider>Select Members to Sign Contract</Divider>
-
-          <Table
-            dataSource={groupMembers}
-            pagination={false}
-            size="small"
-            rowKey="userId"
-            rowSelection={{
-              type: "checkbox",
-              selectedRowKeys: selectedMembers.map((m) => m.userId),
-              onChange: (selectedRowKeys, selectedRows) => {
-                // Get current selected IDs
-                const currentSelectedIds = selectedMembers.map((m) => m.userId);
-
-                // Find what changed
-                const newlySelected = selectedRowKeys.filter(
-                  (id) => !currentSelectedIds.includes(id)
-                );
-                const newlyDeselected = currentSelectedIds.filter(
-                  (id) => !selectedRowKeys.includes(id)
-                );
-
-                // Add newly selected members
-                newlySelected.forEach((memberId) => {
-                  const member = groupMembers.find(
-                    (m) => m.userId === memberId
-                  );
-                  if (member) {
-                    setSelectedMembers((prev) => {
-                      const newSelected = [...prev, member];
-                      return newSelected;
-                    });
-                    setOwnershipShares((prev) => {
-                      const existing = prev.find((s) => s.userId === memberId);
-                      if (!existing) {
-                        const newShares = [
-                          ...prev,
-                          {
-                            userId: memberId,
-                            rate: 0,
-                            userName:
-                              member.fullName || member.email || "Unknown",
-                          },
-                        ];
-                        return newShares;
-                      }
-                      // If existing, keep the current rate value
-                      return prev;
-                    });
-                  }
-                });
-
-                // Remove newly deselected members
-                newlyDeselected.forEach((memberId) => {
-                  setSelectedMembers((prev) => {
-                    const newSelected = prev.filter(
-                      (m) => m.userId !== memberId
-                    );
-                    return newSelected;
-                  });
-                  // Don't remove ownership shares, just keep them for when user re-selects
-                });
-              },
-              getCheckboxProps: (record) => ({
-                // All members can be selected/deselected
-              }),
-            }}
-            columns={[
-              {
-                title: "Member",
-                dataIndex: "fullName",
-                key: "fullName",
-                render: (text, record) => <span>{text || record.email}</span>,
-              },
-              {
-                title: "Ownership %",
-                key: "ownership",
-                width: 200,
-                render: (_, record) => {
-                  const share = ownershipShares.find(
-                    (s) => s.userId === record.userId
-                  );
-                  return (
-                    <InputNumber
-                      min={0}
-                      max={100}
-                      value={share?.rate || 0}
-                      onChange={(value) =>
-                        handleOwnershipShareChange(record.userId, value || 0)
-                      }
-                      style={{ width: "100%" }}
-                      placeholder="0"
-                    />
-                  );
-                },
-              },
-            ]}
-          />
-
-          {/* Total Ownership Display */}
-          <div style={{ marginTop: 16, marginBottom: 16 }}>
-            <Typography.Text strong>
-              Total Ownership: {totalOwnership}%
-              {totalOwnership !== 100 && (
-                <Tag
-                  color={totalOwnership > 100 ? "red" : "orange"}
-                  style={{ marginLeft: 8 }}
-                >
-                  {totalOwnership > 100 ? "Exceeds 100%" : "Must be 100%"}
-                </Tag>
-              )}
-            </Typography.Text>
-          </div>
-
-          <Form.Item className="econ-submit">
-            <Button
-              type="primary"
-              htmlType="submit"
-              block
-              loading={isLoading}
-              size="large"
+            <Form
+              layout="vertical"
+              form={form}
+              onFinish={onFinish}
+              className="econ-form"
+              initialValues={{
+                effectiveFrom: dayjs(),
+                expiresAt: dayjs().add(6, "month"),
+              }}
             >
-              {isLoading ? "Creating..." : "Create Contract"}
-            </Button>
-          </Form.Item>
-        </Form>
-      </Card>
+              <Form.Item
+                label="Contract Template"
+                name="templateId"
+                rules={[
+                  { required: true, message: "Please select a template" },
+                ]}
+              >
+                <Select placeholder="Select contract template">
+                  {templates.map((template) => (
+                    <Option key={template.id} value={template.id}>
+                      {template.name} (v{template.version})
+                    </Option>
+                  ))}
+                </Select>
+              </Form.Item>
 
-      <Modal
-        title="Contract Created"
-        open={isModalVisible}
-        onOk={() => setIsModalVisible(false)}
-        onCancel={() => setIsModalVisible(false)}
-        okText="OK"
-      >
-        <p>Your contract has been successfully created and recorded.</p>
-      </Modal>
+              <Form.Item
+                label="Vehicle"
+                name="vehicleId"
+                rules={[{ required: true, message: "Please select a vehicle" }]}
+              >
+                <Select placeholder="Select vehicle">
+                  {vehicles.map((vehicle) => (
+                    <Option key={vehicle.id} value={vehicle.id}>
+                      {vehicle.model} - {vehicle.licensePlate}
+                    </Option>
+                  ))}
+                </Select>
+              </Form.Item>
+
+              <Form.Item
+                label="Contract Title"
+                name="title"
+                rules={[
+                  { required: true, message: "Please enter contract title" },
+                ]}
+              >
+                <Input placeholder="Enter contract title" />
+              </Form.Item>
+
+              <Form.Item
+                label="Effective From"
+                name="effectiveFrom"
+                rules={[
+                  { required: true, message: "Please select effective date" },
+                ]}
+              >
+                <DatePicker
+                  style={{ width: "100%" }}
+                  disabledDate={(current) =>
+                    current && current < dayjs().startOf("day")
+                  }
+                  onChange={handleEffectiveDateChange}
+                />
+              </Form.Item>
+
+              <Form.Item
+                label="Contract Duration (months)"
+                name="duration"
+                rules={[
+                  {
+                    required: true,
+                    message: "Please select contract duration",
+                  },
+                ]}
+              >
+                <Select onChange={handleDurationChange}>
+                  <Option value={6}>6 months</Option>
+                  <Option value={12}>12 months (1 year)</Option>
+                  <Option value={24}>24 months (2 years)</Option>
+                  <Option value={36}>36 months (3 years)</Option>
+                </Select>
+              </Form.Item>
+
+              <Form.Item label="Expires At" name="expiresAt">
+                <DatePicker style={{ width: "100%" }} disabled />
+              </Form.Item>
+
+              {/* Select Members Section */}
+              <Divider>Select Members to Sign Contract</Divider>
+
+              <Table
+                dataSource={groupMembers}
+                pagination={false}
+                size="small"
+                rowKey="userId"
+                rowSelection={{
+                  type: "checkbox",
+                  selectedRowKeys: selectedMembers.map((m) => m.userId),
+                  onChange: (selectedRowKeys, selectedRows) => {
+                    // Get current selected IDs
+                    const currentSelectedIds = selectedMembers.map(
+                      (m) => m.userId
+                    );
+
+                    // Find what changed
+                    const newlySelected = selectedRowKeys.filter(
+                      (id) => !currentSelectedIds.includes(id)
+                    );
+                    const newlyDeselected = currentSelectedIds.filter(
+                      (id) => !selectedRowKeys.includes(id)
+                    );
+
+                    // Add newly selected members
+                    newlySelected.forEach((memberId) => {
+                      const member = groupMembers.find(
+                        (m) => m.userId === memberId
+                      );
+                      if (member) {
+                        setSelectedMembers((prev) => {
+                          const newSelected = [...prev, member];
+                          return newSelected;
+                        });
+                        setOwnershipShares((prev) => {
+                          const existing = prev.find(
+                            (s) => s.userId === memberId
+                          );
+                          if (!existing) {
+                            const newShares = [
+                              ...prev,
+                              {
+                                userId: memberId,
+                                rate: 0,
+                                userName:
+                                  member.fullName || member.email || "Unknown",
+                              },
+                            ];
+                            return newShares;
+                          }
+                          // If existing, keep the current rate value
+                          return prev;
+                        });
+                      }
+                    });
+
+                    // Remove newly deselected members
+                    newlyDeselected.forEach((memberId) => {
+                      setSelectedMembers((prev) => {
+                        const newSelected = prev.filter(
+                          (m) => m.userId !== memberId
+                        );
+                        return newSelected;
+                      });
+                      // Don't remove ownership shares, just keep them for when user re-selects
+                    });
+                  },
+                  getCheckboxProps: (record) => ({
+                    // All members can be selected/deselected
+                  }),
+                }}
+                columns={[
+                  {
+                    title: "Member",
+                    dataIndex: "fullName",
+                    key: "fullName",
+                    render: (text, record) => (
+                      <span>{text || record.email}</span>
+                    ),
+                  },
+                  {
+                    title: "Ownership %",
+                    key: "ownership",
+                    width: 200,
+                    render: (_, record) => {
+                      const share = ownershipShares.find(
+                        (s) => s.userId === record.userId
+                      );
+                      return (
+                        <InputNumber
+                          min={0}
+                          max={100}
+                          value={share?.rate || 0}
+                          onChange={(value) =>
+                            handleOwnershipShareChange(
+                              record.userId,
+                              value || 0
+                            )
+                          }
+                          style={{ width: "100%" }}
+                          placeholder="0"
+                        />
+                      );
+                    },
+                  },
+                ]}
+              />
+
+              {/* Total Ownership Display */}
+              <div style={{ marginTop: 16, marginBottom: 16 }}>
+                <Typography.Text strong>
+                  Total Ownership: {totalOwnership}%
+                  {totalOwnership !== 100 && (
+                    <Tag
+                      color={totalOwnership > 100 ? "red" : "orange"}
+                      style={{ marginLeft: 8 }}
+                    >
+                      {totalOwnership > 100 ? "Exceeds 100%" : "Must be 100%"}
+                    </Tag>
+                  )}
+                </Typography.Text>
+              </div>
+
+              <Form.Item className="econ-submit">
+                <Button
+                  type="primary"
+                  htmlType="submit"
+                  block
+                  loading={isLoading}
+                  size="large"
+                >
+                  {isLoading ? "Creating..." : "Create Contract"}
+                </Button>
+              </Form.Item>
+            </Form>
+          </Card>
+
+          <Modal
+            title="Contract Created"
+            open={isModalVisible}
+            onOk={() => setIsModalVisible(false)}
+            onCancel={() => setIsModalVisible(false)}
+            okText="OK"
+          >
+            <p>Your contract has been successfully created and recorded.</p>
+          </Modal>
         </div>
       </div>
-      <AppFooter />
     </div>
   );
 };

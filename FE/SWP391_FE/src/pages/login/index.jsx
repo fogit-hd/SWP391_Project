@@ -6,8 +6,6 @@ import { toast } from "react-toastify";
 import { Link, useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { login } from "../../components/redux/accountSlice";
-import AppHeader from "../../components/reuse/AppHeader";
-import AppFooter from "../../components/reuse/AppFooter";
 import "./login.css";
 
 const LoginPage = () => {
@@ -191,118 +189,124 @@ const LoginPage = () => {
 
   return (
     <>
-      <AppHeader />
       <div className="login-container">
         <div className="login-background"></div>
 
         <div className="login-card-container">
-        <Card className="login-card">
-          <div className="login-header">
-            <h2 className="login-title">Welcome Back, Co-owner</h2>
-            <p className="login-subtitle">
-              Please enter your credentials to continue
-            </p>
-          </div>
+          <Card className="login-card">
+            <div className="login-header">
+              <h2 className="login-title">Welcome Back, Co-owner</h2>
+              <p className="login-subtitle">
+                Please enter your credentials to continue
+              </p>
+            </div>
 
-          <Form
-            form={form}
-            layout="vertical"
-            initialValues={{ rememberMe: false }}
-            onFinish={onFinish}
-            requiredMark={false}
-            className="login-form"
-          >
-            {/* Email Field */}
-            <Form.Item
-              label="Email"
-              name="email"
-              rules={[{ required: true, message: "Email is required" }]}
+            <Form
+              form={form}
+              layout="vertical"
+              initialValues={{ rememberMe: false }}
+              onFinish={onFinish}
+              requiredMark={false}
+              className="login-form"
             >
-              <Input
-                placeholder="Enter your email"
-                prefix={<MailOutlined />}
-                allowClear
-              />
-            </Form.Item>
-            {/* Password Field */}
-            <Form.Item
-              label="Password"
-              name="password"
-              rules={[
-                { required: true, message: "Password is required" },
-                { min: 8, message: "Password must be at least 8 characters" },
-              ]}
-              hasFeedback
-            >
-              <Input.Password
-                placeholder="Enter password"
-                prefix={<LockOutlined />}
-              />
-            </Form.Item>
-
-            <Row
-              justify="space-between"
-              align="middle"
-              className="login-remember-row"
-            >
-              <Col>
-                <Form.Item name="rememberMe" valuePropName="checked" noStyle>
-                  <Checkbox>Remember me</Checkbox>
-                </Form.Item>
-              </Col>
-              <Col>
-                <Form.Item name="backHomepage" noStyle>
-                  <Button variant="primary" onClick={() => navigate("/")}>
-                    Back
-                  </Button>
-                </Form.Item>
-              </Col>
-              <Col>
-                <Link to="/forgot-password" className="login-forgot-link">
-                  <a
-                    onClick={handleForgotPassword}
-                    className="login-forgot-link"
-                    style={{ cursor: "pointer" }}
-                  >
-                    Forgot Password?
-                  </a>
-                </Link>
-              </Col>
-            </Row>
-
-            <Row justify="center" align="middle" style={{ marginTop: "10px" }}>
-              <Col>
-                <Link to="/register" className="login-register-link">
-                  Don't have an account? Register here
-                </Link>
-              </Col>
-            </Row>
-
-            <Row justify="center" align="middle" style={{ marginTop: "10px" }}>
-              <Col>
-                <Link to="/verify-otp" className="login-verify-link">
-                  Need to verify your account? Click here
-                </Link>
-              </Col>
-            </Row>
-
-            <Form.Item>
-              <Button
-                type="primary"
-                htmlType="submit"
-                loading={isLoading}
-                block
-                size="large"
-                className="login-submit-button"
+              {/* Email Field */}
+              <Form.Item
+                label="Email"
+                name="email"
+                rules={[{ required: true, message: "Email is required" }]}
               >
-                {isLoading ? "Signing in..." : "Sign In"}
-              </Button>
-            </Form.Item>
-          </Form>
-        </Card>
+                <Input
+                  placeholder="Enter your email"
+                  prefix={<MailOutlined />}
+                  allowClear
+                />
+              </Form.Item>
+              {/* Password Field */}
+              <Form.Item
+                label="Password"
+                name="password"
+                rules={[
+                  { required: true, message: "Password is required" },
+                  { min: 8, message: "Password must be at least 8 characters" },
+                ]}
+                hasFeedback
+              >
+                <Input.Password
+                  placeholder="Enter password"
+                  prefix={<LockOutlined />}
+                />
+              </Form.Item>
+
+              <Row
+                justify="space-between"
+                align="middle"
+                className="login-remember-row"
+              >
+                <Col>
+                  <Form.Item name="rememberMe" valuePropName="checked" noStyle>
+                    <Checkbox>Remember me</Checkbox>
+                  </Form.Item>
+                </Col>
+                <Col>
+                  <Form.Item name="backHomepage" noStyle>
+                    <Button variant="primary" onClick={() => navigate("/")}>
+                      Back
+                    </Button>
+                  </Form.Item>
+                </Col>
+                <Col>
+                  <Link to="/forgot-password" className="login-forgot-link">
+                    <a
+                      onClick={handleForgotPassword}
+                      className="login-forgot-link"
+                      style={{ cursor: "pointer" }}
+                    >
+                      Forgot Password?
+                    </a>
+                  </Link>
+                </Col>
+              </Row>
+
+              <Row
+                justify="center"
+                align="middle"
+                style={{ marginTop: "10px" }}
+              >
+                <Col>
+                  <Link to="/register" className="login-register-link">
+                    Don't have an account? Register here
+                  </Link>
+                </Col>
+              </Row>
+
+              <Row
+                justify="center"
+                align="middle"
+                style={{ marginTop: "10px" }}
+              >
+                <Col>
+                  <Link to="/verify-otp" className="login-verify-link">
+                    Need to verify your account? Click here
+                  </Link>
+                </Col>
+              </Row>
+
+              <Form.Item>
+                <Button
+                  type="primary"
+                  htmlType="submit"
+                  loading={isLoading}
+                  block
+                  size="large"
+                  className="login-submit-button"
+                >
+                  {isLoading ? "Signing in..." : "Sign In"}
+                </Button>
+              </Form.Item>
+            </Form>
+          </Card>
+        </div>
       </div>
-      </div>
-      <AppFooter />
     </>
   );
 };

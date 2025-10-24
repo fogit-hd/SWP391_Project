@@ -25,8 +25,6 @@ import {
 import api from "../../config/axios";
 import { useAuth } from "../../components/hooks/useAuth";
 import { toast } from "react-toastify";
-import AppHeader from "../../components/reuse/AppHeader";
-import AppFooter from "../../components/reuse/AppFooter";
 import "./sign-econtract.css";
 
 const { Title, Paragraph, Text } = Typography;
@@ -100,7 +98,7 @@ const SignEContract = () => {
       setOtpSent(true);
       setCountdown(60); // 60 seconds countdown
       message.success("Mã OTP đã được gửi đến email của bạn");
-      
+
       // Start countdown
       const timer = setInterval(() => {
         setCountdown((prev) => {
@@ -140,7 +138,7 @@ const SignEContract = () => {
       await api.post(`/contracts/${contractId}/sign`, payload);
       message.success("Hợp đồng đã được ký thành công!");
       toast.success("Hợp đồng đã được ký thành công!");
-      
+
       // Navigate back to contracts list
       navigate("/view-mycontract");
     } catch (error) {
@@ -177,135 +175,161 @@ const SignEContract = () => {
 
   return (
     <div className="sign-econtract-page">
-      <AppHeader />
-      <div className="sign-econtract-content" style={{ minHeight: "calc(100vh - 64px - 200px)", padding: "40px 20px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <div
+        className="sign-econtract-content"
+        style={{
+          minHeight: "calc(100vh - 64px - 200px)",
+          padding: "40px 20px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
         <div style={{ maxWidth: "800px", width: "100%" }}>
           <Card>
-        <Space direction="vertical" size="large" style={{ width: "100%" }}>
-          {/* Header */}
-          <div>
-            <Button
-              icon={<ArrowLeftOutlined />}
-              onClick={() => navigate("/view-mycontract")}
-              style={{ marginBottom: "16px" }}
-            >
-              Quay lại
-            </Button>
-            <Title level={2} style={{ margin: 0, display: "flex", alignItems: "center", gap: "8px" }}>
-              <SafetyCertificateOutlined />
-              Ký hợp đồng điện tử
-            </Title>
-            <Paragraph type="secondary">
-              Vui lòng xác thực danh tính để ký hợp đồng
-            </Paragraph>
-          </div>
-
-
-          {/* OTP Section */}
-          <Card>
-            <Title level={4}>Xác thực OTP</Title>
-            
-            {!otpSent ? (
+            <Space direction="vertical" size="large" style={{ width: "100%" }}>
+              {/* Header */}
               <div>
-                <Alert
-                  message="Bước 1: Gửi mã OTP"
-                  description="Nhấn nút bên dưới để gửi mã OTP đến email của bạn"
-                  type="info"
-                  showIcon
-                  style={{ marginBottom: "16px" }}
-                />
                 <Button
-                  type="primary"
-                  icon={<SendOutlined />}
-                  size="large"
-                  loading={otpLoading}
-                  onClick={handleSendOTP}
-                  block
-                >
-                  Gửi mã OTP
-                </Button>
-              </div>
-            ) : (
-              <div>
-                <Alert
-                  message="Mã OTP đã được gửi"
-                  description={`Mã OTP đã được gửi đến ${email}. Vui lòng kiểm tra email và nhập mã OTP bên dưới.`}
-                  type="success"
-                  showIcon
+                  icon={<ArrowLeftOutlined />}
+                  onClick={() => navigate("/view-mycontract")}
                   style={{ marginBottom: "16px" }}
-                />
-
-                <Form
-                  form={form}
-                  layout="vertical"
-                  onFinish={handleSignContract}
-                  autoComplete="off"
                 >
-                  <Form.Item
-                    name="otp"
-                    label="Mã OTP"
-                    rules={[
-                      { required: true, message: "Vui lòng nhập mã OTP" },
-                      { len: 6, message: "Mã OTP phải có 6 chữ số" },
-                      { pattern: /^\d{6}$/, message: "Mã OTP chỉ được chứa số" },
-                    ]}
-                  >
-                    <Input
-                      size="large"
-                      placeholder="Nhập mã OTP 6 chữ số"
-                      maxLength={6}
-                      style={{ textAlign: "center", fontSize: "18px", letterSpacing: "4px" }}
+                  Quay lại
+                </Button>
+                <Title
+                  level={2}
+                  style={{
+                    margin: 0,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                  }}
+                >
+                  <SafetyCertificateOutlined />
+                  Ký hợp đồng điện tử
+                </Title>
+                <Paragraph type="secondary">
+                  Vui lòng xác thực danh tính để ký hợp đồng
+                </Paragraph>
+              </div>
+
+              {/* OTP Section */}
+              <Card>
+                <Title level={4}>Xác thực OTP</Title>
+
+                {!otpSent ? (
+                  <div>
+                    <Alert
+                      message="Bước 1: Gửi mã OTP"
+                      description="Nhấn nút bên dưới để gửi mã OTP đến email của bạn"
+                      type="info"
+                      showIcon
+                      style={{ marginBottom: "16px" }}
                     />
-                  </Form.Item>
-
-                  <Space direction="vertical" size="middle" style={{ width: "100%" }}>
-                    <div style={{ textAlign: "center" }}>
-                      {countdown > 0 ? (
-                        <Text type="secondary">
-                          Có thể gửi lại OTP sau {formatCountdown(countdown)}
-                        </Text>
-                      ) : (
-                        <Button
-                          type="link"
-                          icon={<ReloadOutlined />}
-                          onClick={handleResendOTP}
-                          loading={otpLoading}
-                        >
-                          Gửi lại mã OTP
-                        </Button>
-                      )}
-                    </div>
-
-                    <Divider />
-
                     <Button
                       type="primary"
-                      icon={<CheckCircleOutlined />}
+                      icon={<SendOutlined />}
                       size="large"
-                      htmlType="submit"
-                      loading={signLoading}
+                      loading={otpLoading}
+                      onClick={handleSendOTP}
                       block
                     >
-                      Xác nhận và ký hợp đồng
+                      Gửi mã OTP
                     </Button>
-                  </Space>
-                </Form>
-              </div>
-            )}
-          </Card>
+                  </div>
+                ) : (
+                  <div>
+                    <Alert
+                      message="Mã OTP đã được gửi"
+                      description={`Mã OTP đã được gửi đến ${email}. Vui lòng kiểm tra email và nhập mã OTP bên dưới.`}
+                      type="success"
+                      showIcon
+                      style={{ marginBottom: "16px" }}
+                    />
 
-          {/* Security Notice */}
-          <Alert
-            message="Lưu ý bảo mật"
-            description="Mã OTP có hiệu lực trong 5 phút. Không chia sẻ mã OTP với bất kỳ ai. Hợp đồng sau khi ký sẽ có hiệu lực pháp lý."
-            type="warning"
-            showIcon
-          />
-        </Space>
-      </Card>
+                    <Form
+                      form={form}
+                      layout="vertical"
+                      onFinish={handleSignContract}
+                      autoComplete="off"
+                    >
+                      <Form.Item
+                        name="otp"
+                        label="Mã OTP"
+                        rules={[
+                          { required: true, message: "Vui lòng nhập mã OTP" },
+                          { len: 6, message: "Mã OTP phải có 6 chữ số" },
+                          {
+                            pattern: /^\d{6}$/,
+                            message: "Mã OTP chỉ được chứa số",
+                          },
+                        ]}
+                      >
+                        <Input
+                          size="large"
+                          placeholder="Nhập mã OTP 6 chữ số"
+                          maxLength={6}
+                          style={{
+                            textAlign: "center",
+                            fontSize: "18px",
+                            letterSpacing: "4px",
+                          }}
+                        />
+                      </Form.Item>
+
+                      <Space
+                        direction="vertical"
+                        size="middle"
+                        style={{ width: "100%" }}
+                      >
+                        <div style={{ textAlign: "center" }}>
+                          {countdown > 0 ? (
+                            <Text type="secondary">
+                              Có thể gửi lại OTP sau{" "}
+                              {formatCountdown(countdown)}
+                            </Text>
+                          ) : (
+                            <Button
+                              type="link"
+                              icon={<ReloadOutlined />}
+                              onClick={handleResendOTP}
+                              loading={otpLoading}
+                            >
+                              Gửi lại mã OTP
+                            </Button>
+                          )}
+                        </div>
+
+                        <Divider />
+
+                        <Button
+                          type="primary"
+                          icon={<CheckCircleOutlined />}
+                          size="large"
+                          htmlType="submit"
+                          loading={signLoading}
+                          block
+                        >
+                          Xác nhận và ký hợp đồng
+                        </Button>
+                      </Space>
+                    </Form>
+                  </div>
+                )}
+              </Card>
+
+              {/* Security Notice */}
+              <Alert
+                message="Lưu ý bảo mật"
+                description="Mã OTP có hiệu lực trong 5 phút. Không chia sẻ mã OTP với bất kỳ ai. Hợp đồng sau khi ký sẽ có hiệu lực pháp lý."
+                type="warning"
+                showIcon
+              />
+            </Space>
+          </Card>
         </div>
       </div>
-      <AppFooter />
     </div>
   );
 };
