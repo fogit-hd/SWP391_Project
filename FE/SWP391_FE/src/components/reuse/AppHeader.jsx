@@ -7,7 +7,8 @@ import {
   CameraOutlined,
   CheckOutlined,
   CarOutlined,
-  HistoryOutlined
+  HistoryOutlined,
+  CalendarOutlined
 } from "@ant-design/icons";
 import { Link, useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
@@ -117,6 +118,13 @@ const AppHeader = () => {
       icon: <CarOutlined />,
       label: "My Vehicle",
       onClick: () => navigate("/my-vehicle"),
+    }] : []),
+    // Only show Booking for Co-owner
+    ...(isCoOwner ? [{
+      key: "booking",
+      icon: <CalendarOutlined />,
+      label: "Vehicle Booking",
+      onClick: () => navigate("/booking"),
     }] : []),
     {
       key: "history",

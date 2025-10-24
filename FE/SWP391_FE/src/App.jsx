@@ -23,6 +23,7 @@ import CreateEContract from "./pages/create.econtract";
 import MyContracts from "./pages/view.mycontract";
 import ReviewEContract from "./pages/staff/review.econtract/index";
 import SignEContract from "./pages/sign.econtract/index";
+import BookingCalendar from "./pages/booking";
 
 function App() {
   const router = createBrowserRouter([
@@ -169,6 +170,14 @@ function App() {
       element: (
         <ProtectedRoute roleId={3}>
           <MyContracts />
+        </ProtectedRoute>
+      ),
+    },
+    {
+      path: "/booking",
+      element: (
+        <ProtectedRoute roleId={3}>
+          <BookingCalendar />
         </ProtectedRoute>
       ),
     },
