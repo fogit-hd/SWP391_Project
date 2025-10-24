@@ -119,13 +119,6 @@ const MyVehicle = () => {
       width: 100,
     },
     {
-      title: "Device ID",
-      dataIndex: "telematicsDeviceId",
-      key: "telematicsDeviceId",
-      width: 120,
-      ellipsis: true,
-    },
-    {
       title: "Action",
       key: "action",
       width: 80,
@@ -245,7 +238,6 @@ const MyVehicle = () => {
         batteryCapacityKwh: parseFloat(values.batteryCapacityKwh),
         rangeKm: parseInt(values.rangeKm),
         plateNumber: values.plateNumber,
-        telematicsDeviceId: values.telematicsDeviceId,
       };
 
       console.log('Create request body:', requestBody);
@@ -296,7 +288,6 @@ const MyVehicle = () => {
         batteryCapacityKwh: parseFloat(values.batteryCapacityKwh),
         rangeKm: parseInt(values.rangeKm),
         plateNumber: values.plateNumber,
-        telematicsDeviceId: values.telematicsDeviceId,
       };
 
       console.log('Request body:', requestBody);
@@ -419,7 +410,6 @@ const MyVehicle = () => {
       batteryCapacityKwh: record.batteryCapacityKwh,
       rangeKm: record.rangeKm,
       plateNumber: record.plateNumber,
-      telematicsDeviceId: record.telematicsDeviceId,
     });
     setIsEditModalVisible(true);
   };
@@ -612,14 +602,6 @@ const MyVehicle = () => {
                   min={0}
                 />
               </Form.Item>
-
-              <Form.Item
-                name="telematicsDeviceId"
-                label="Telematics Device ID"
-                rules={[{ required: true, message: "Please input device ID!" }]}
-              >
-                <Input placeholder="Enter telematics device ID" />
-              </Form.Item>
             </div>
 
             <div className="vehicle-form-actions">
@@ -724,14 +706,6 @@ const MyVehicle = () => {
                   placeholder="Enter vehicle range"
                   min={0}
                 />
-              </Form.Item>
-
-              <Form.Item
-                name="telematicsDeviceId"
-                label="Telematics Device ID"
-                rules={[{ required: true, message: "Please input device ID!" }]}
-              >
-                <Input placeholder="Enter telematics device ID" />
               </Form.Item>
             </div>
 
