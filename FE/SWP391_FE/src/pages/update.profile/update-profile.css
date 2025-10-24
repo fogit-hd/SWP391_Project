@@ -1,0 +1,342 @@
+/* Update Profile Page - EV Co-ownership Theme */
+
+.update-profile-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(135deg, #f0f2f5 0%, #e6f7ff 100%);
+}
+
+.update-profile-content {
+  flex: 1;
+  padding-top: 80px; /* 64px header + 16px spacing */
+  padding-left: 16px;
+  padding-right: 16px;
+  padding-bottom: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.update-profile-container {
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto;
+  position: relative;
+}
+
+.update-profile-container .verify-background {
+  display: none; /* Remove background decoration for cleaner look */
+}
+
+.update-profile-container .verify-card-container {
+  position: relative;
+  z-index: 1;
+  padding: 0;
+}
+
+.update-profile-container .verify-card {
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.update-profile-container .verify-card .ant-card-body {
+  padding: 32px;
+}
+
+/* Form Header Styles */
+.update-profile-container .verify-header {
+  text-align: center;
+  margin-bottom: 32px;
+  padding-bottom: 24px;
+  border-bottom: 2px solid #f0f0f0;
+}
+
+.update-profile-container .verify-title {
+  font-size: 24px;
+  font-weight: 600;
+  color: #1890ff;
+  margin: 0 0 8px 0;
+}
+
+.update-profile-container .verify-subtitle {
+  font-size: 14px;
+  color: #8c8c8c;
+  margin: 0;
+}
+
+/* Form Styles */
+.update-profile-container .ant-form {
+  width: 100%;
+}
+
+.update-profile-container .ant-form-item {
+  margin-bottom: 20px;
+}
+
+.update-profile-container .ant-form-item-label > label {
+  font-weight: 500;
+  color: #262626;
+}
+
+.update-profile-container .ant-input,
+.update-profile-container .ant-input-number {
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 14px;
+}
+
+.update-profile-container .ant-btn {
+  border-radius: 8px;
+  height: 40px;
+  font-weight: 500;
+}
+
+.update-profile-container .verify-submit-button {
+  width: 100%;
+  height: 44px;
+  font-size: 16px;
+  margin-top: 8px;
+}
+
+.update-profile-wrapper {
+  max-width: 900px;
+  margin: 0 auto;
+  animation: fadeInUp 0.6s ease;
+}
+
+.update-profile-header-card {
+  background: linear-gradient(135deg, #1890ff 0%, #096dd9 100%);
+  border-radius: 16px;
+  padding: 32px;
+  margin-bottom: 24px;
+  box-shadow: 0 8px 24px rgba(24, 144, 255, 0.2);
+  color: white;
+}
+
+.update-profile-header-content {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.update-profile-avatar-section {
+  position: relative;
+}
+
+.update-profile-avatar {
+  border: 4px solid white;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.update-profile-avatar-upload {
+  position: absolute;
+  bottom: -8px;
+  right: -8px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: white;
+  border: 3px solid #1890ff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.update-profile-avatar-upload:hover {
+  background: #1890ff;
+  color: white;
+  transform: scale(1.1);
+}
+
+.update-profile-header-info h2 {
+  margin: 0 0 8px 0;
+  font-size: 28px;
+  font-weight: 700;
+  color: white;
+}
+
+.update-profile-header-info p {
+  margin: 0;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.update-profile-main-card {
+  background: white;
+  border-radius: 16px;
+  padding: 32px;
+  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.06);
+}
+
+.update-profile-section-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #262626;
+  margin: 0 0 24px 0;
+  padding-bottom: 12px;
+  border-bottom: 2px solid #f0f0f0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.update-profile-section-icon {
+  color: #1890ff;
+  font-size: 20px;
+}
+
+.update-profile-form .ant-form-item {
+  margin-bottom: 24px;
+}
+
+.update-profile-form .ant-form-item-label > label {
+  font-weight: 600;
+  color: #262626;
+  font-size: 14px;
+}
+
+.update-profile-form .ant-input,
+.update-profile-form .ant-select-selector,
+.update-profile-form .ant-picker {
+  border-radius: 8px;
+  border: 2px solid #e8e8e8;
+  padding: 10px 14px;
+  transition: all 0.3s ease;
+}
+
+.update-profile-form .ant-input:hover,
+.update-profile-form .ant-select-selector:hover,
+.update-profile-form .ant-picker:hover {
+  border-color: #40a9ff;
+}
+
+.update-profile-form .ant-input:focus,
+.update-profile-form .ant-select-focused .ant-select-selector,
+.update-profile-form .ant-picker-focused {
+  border-color: #1890ff;
+  box-shadow: 0 0 0 3px rgba(24, 144, 255, 0.1);
+}
+
+.update-profile-form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
+.update-profile-form-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 32px;
+  padding-top: 24px;
+  border-top: 2px solid #f0f0f0;
+}
+
+.update-profile-save-btn {
+  height: 42px;
+  padding: 0 32px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 15px;
+  background: linear-gradient(135deg, #52c41a 0%, #389e0d 100%);
+  border: none;
+  box-shadow: 0 4px 12px rgba(82, 196, 26, 0.3);
+}
+
+.update-profile-save-btn:hover {
+  background: linear-gradient(135deg, #73d13d 0%, #52c41a 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(82, 196, 26, 0.4);
+}
+
+.update-profile-cancel-btn {
+  height: 42px;
+  padding: 0 32px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 15px;
+  border: 2px solid #d9d9d9;
+  color: #595959;
+}
+
+.update-profile-cancel-btn:hover {
+  border-color: #40a9ff;
+  color: #1890ff;
+}
+
+.update-profile-info-card {
+  background: linear-gradient(135deg, #e6f7ff 0%, #f0f5ff 100%);
+  border-left: 4px solid #1890ff;
+  padding: 16px;
+  border-radius: 8px;
+  margin-top: 24px;
+}
+
+.update-profile-info-card h4 {
+  color: #0050b3;
+  font-size: 14px;
+  font-weight: 600;
+  margin: 0 0 8px 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.update-profile-info-card p {
+  margin: 0;
+  color: #096dd9;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 768px) {
+  .update-profile-container {
+    padding: 16px;
+  }
+  
+  .update-profile-header-card {
+    padding: 24px;
+  }
+  
+  .update-profile-header-content {
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .update-profile-header-info h2 {
+    font-size: 24px;
+  }
+  
+  .update-profile-main-card {
+    padding: 24px;
+  }
+  
+  .update-profile-form-row {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+  
+  .update-profile-form-actions {
+    flex-direction: column;
+  }
+  
+  .update-profile-save-btn,
+  .update-profile-cancel-btn {
+    width: 100%;
+  }
+}

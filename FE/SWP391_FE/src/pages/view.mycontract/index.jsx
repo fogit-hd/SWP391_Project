@@ -17,6 +17,9 @@ import api from "../../config/axios";
 // import { useSelector } from "react-redux";
 import { toast } from "react-toastify";
 import { useAuth } from "../../components/hooks/useAuth";
+import AppHeader from "../../components/reuse/AppHeader";
+import AppFooter from "../../components/reuse/AppFooter";
+import "./view-contract.css";
 
 const { Title, Paragraph } = Typography;
 
@@ -336,90 +339,96 @@ const MyContracts = () => {
   ];
 
   return (
-    <div style={{ padding: "24px" }}>
-      <Card>
-        <div style={{ display: "flex", alignItems: "center", marginBottom: "16px" }}>
-          <Button
-            type="text"
-            icon={<ArrowLeftOutlined />}
-            onClick={handleBack}
-            style={{ marginRight: "12px" }}
+    <div className="view-contract-page">
+      <AppHeader />
+      <div className="view-contract-content">
+        <div className="view-contract-inner">
+          <Card>
+            <div style={{ display: "flex", alignItems: "center", marginBottom: "16px" }}>
+              <Button
+                type="text"
+                icon={<ArrowLeftOutlined />}
+                onClick={handleBack}
+                style={{ marginRight: "12px" }}
+              >
+                Quay lại
+              </Button>
+              <div>
+                <Title level={2} style={{ margin: 0 }}>Hợp đồng của tôi</Title>
+                <Paragraph style={{ margin: 0 }}>Danh sách tất cả các hợp đồng mà bạn tham gia</Paragraph>
+              </div>
+            </div>
+
+            <Table
+              columns={columns}
+              dataSource={contracts}
+              loading={loading}
+              rowKey="id"
+              pagination={{
+                pageSize: 10,
+                showSizeChanger: true,
+                showQuickJumper: true,
+                showTotal: (total, range) =>
+                  `${range[0]}-${range[1]} của ${total} hợp đồng`,
+              }}
+              locale={{
+                emptyText: (
+                  <Empty
+                    description="Bạn chưa có hợp đồng nào"
+                    image={Empty.PRESENTED_IMAGE_SIMPLE}
+                  />
+                ),
+              }}
+            />
+          </Card>
+
+          {/* Preview Modal */}
+          <Modal
+            title={
+              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <EyeOutlined />
+                <span>Xem trước hợp đồng</span>
+              </div>
+            }
+            open={previewModalVisible}
+            onCancel={() => setPreviewModalVisible(false)}
+            footer={[
+              <Button key="close" onClick={() => setPreviewModalVisible(false)}>
+                Đóng
+              </Button>,
+            ]}
+            width={1000}
+            style={{ top: 20 }}
           >
-            Quay lại
-          </Button>
-          <div>
-            <Title level={2} style={{ margin: 0 }}>Hợp đồng của tôi</Title>
-            <Paragraph style={{ margin: 0 }}>Danh sách tất cả các hợp đồng mà bạn tham gia</Paragraph>
-          </div>
-        </div>
-
-        <Table
-          columns={columns}
-          dataSource={contracts}
-          loading={loading}
-          rowKey="id"
-          pagination={{
-            pageSize: 10,
-            showSizeChanger: true,
-            showQuickJumper: true,
-            showTotal: (total, range) =>
-              `${range[0]}-${range[1]} của ${total} hợp đồng`,
-          }}
-          locale={{
-            emptyText: (
-              <Empty
-                description="Bạn chưa có hợp đồng nào"
-                image={Empty.PRESENTED_IMAGE_SIMPLE}
-              />
-            ),
-          }}
-        />
-      </Card>
-
-      {/* Preview Modal */}
-      <Modal
-        title={
-          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-            <EyeOutlined />
-            <span>Xem trước hợp đồng</span>
-          </div>
-        }
-        open={previewModalVisible}
-        onCancel={() => setPreviewModalVisible(false)}
-        footer={[
-          <Button key="close" onClick={() => setPreviewModalVisible(false)}>
-            Đóng
-          </Button>,
-        ]}
-        width={1000}
-        style={{ top: 20 }}
-      >
-        {previewLoading ? (
-          <div style={{ textAlign: "center", padding: "50px" }}>
-            <Spin size="large" />
-          </div>
-        ) : selectedContract ? (
-          <div>
-            {selectedContract.content && (
-              <div
-                className="ant-typography"
-                style={{
-                  border: "1px solid #d9d9d9",
-                  padding: "24px",
-                  borderRadius: "6px",
-                  backgroundColor: "#fafafa",
-                  maxHeight: "600px",
-                  overflowY: "auto",
-                  lineHeight: "1.6",
-                }}
-                dangerouslySetInnerHTML={{ __html: selectedContract.content }}
-              />
+            {previewLoading ? (
+              <div style={{ textAlign: "center", padding: "50px" }}>
+                <Spin size="large" />
+              </div>
+            ) : selectedContract ? (
+              <div>
+                {selectedContract.content && (
+                  <div
+                    className="ant-typography"
+                    style={{
+                      border: "1px solid #d9d9d9",
+                      padding: "24px",
+                      borderRadius: "6px",
+                      backgroundColor: "#fafafa",
+                      maxHeight: "600px",
+                      overflowY: "auto",
+                      lineHeight: "1.6",
+                    }}
+                    dangerouslySetInnerHTML={{ __html: selectedContract.content }}
+                  />
+                )}
+              </div>
+            ) : (
+              <div>Không có dữ liệu</div>
             )}
-          </div>
-        ) : (
-          <div>Không có dữ liệu</div>
-        )}
-      </Modal>
+          </Modal>
+        </div>
+      </div>
+      <AppFooter />
     </div>
   );
 };

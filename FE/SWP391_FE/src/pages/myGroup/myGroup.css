@@ -1,0 +1,27 @@
+.my-groups-page {
+  min-height: calc(100vh - 64px - 200px);
+  background: #f0f2f5;
+}
+
+.my-groups-content {
+  padding: 24px;
+  padding-top: 88px;
+}
+
+.my-groups-header-section {
+  margin-bottom: 24px;
+}
+
+@media (max-width: 768px) {
+  .my-groups-content {
+    padding: 16px;
+    padding-top: 80px;
+  }
+}
+
+@media (max-width: 576px) {
+  .my-groups-content {
+    padding: 12px;
+    padding-top: 76px;
+  }
+}

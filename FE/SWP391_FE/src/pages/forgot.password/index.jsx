@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { Form, Input, Button, Card, message, Col, Row } from "antd";
-import { LockOutlined, MailOutlined, SafetyOutlined } from "@ant-design/icons";
+import { LockOutlined, MailOutlined, SafetyOutlined, ArrowLeftOutlined, InfoCircleOutlined } from "@ant-design/icons";
 import api from "../../config/axios";
 import { toast } from "react-toastify";
 import { Link, useNavigate, useLocation } from "react-router-dom";
+import "./forgot-password.css";
+import AppHeader from "../../components/reuse/AppHeader";
+import AppFooter from "../../components/reuse/AppFooter";
 
 const ForgotPassword = () => {
   const [form] = Form.useForm();
@@ -135,21 +138,22 @@ const ForgotPassword = () => {
   };
 
   return (
-    <div className="verify-container">
-      {/* Background */}
-      <div className="verify-background"></div>
+    <>
+      <AppHeader />
+      <div className="verify-container" style={{ minHeight: "calc(100vh - 64px - 200px)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        {/* Background */}
+        <div className="verify-background"></div>
 
-      <div className="verify-card-container">
-        <Card className="verify-card">
-          <div className="verify-header">
-            <h2 className="verify-title">Setting Your Account</h2>
-            <p className="verify-subtitle">
-              Please enter the Activation Code sent to your email address to
-              create a new password.
-              <br />
-              <MailOutlined /> <strong>{localStorage.getItem("email")}</strong>
-            </p>
-          </div>
+        <div className="verify-card-container">
+          <Card className="verify-card">
+            <div className="verify-header">
+              <h2 className="verify-title">Setting Your Account</h2>
+              <p className="verify-subtitle">
+                Please enter the Activation Code.
+                <br />
+                <MailOutlined /> <strong>{localStorage.getItem("email")}</strong>
+              </p>
+            </div>
           {/* {console.log("Rendering with email:", email)}
           {console.log(
             "Rendering with localstrorage email:",
@@ -281,7 +285,9 @@ const ForgotPassword = () => {
           </Row>
         </Card>
       </div>
-    </div>
+      </div>
+      <AppFooter />
+    </>
   );
 };
 

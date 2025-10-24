@@ -1,11 +1,18 @@
+import React from "react";
 import { Link } from "react-router-dom";
 import { Button, Card, Typography, Divider, List, Alert } from "antd";
+import AppHeader from "../../components/reuse/AppHeader";
+import AppFooter from "../../components/reuse/AppFooter";
+import "./terms.css";
 
 const { Title, Paragraph, Text } = Typography;
 
 function TermsPage() {
   return (
-    <div style={{ padding: "40px", maxWidth: "1000px", margin: "0 auto" }}>
+    <div className="terms-page">
+      <AppHeader />
+      <div className="terms-content" style={{ minHeight: "calc(100vh - 64px - 200px)", padding: "40px 20px" }}>
+        <div style={{ maxWidth: "1000px", margin: "0 auto" }}>
       <Card>
         <Title level={1}>EV Co-ownership & Cost-sharing System</Title>
         <Paragraph style={{ fontSize: "16px", color: "#666" }}>
@@ -181,6 +188,9 @@ function TermsPage() {
           </Button>
         </div>
       </Card>
+        </div>
+      </div>
+      <AppFooter />
     </div>
   );
 }

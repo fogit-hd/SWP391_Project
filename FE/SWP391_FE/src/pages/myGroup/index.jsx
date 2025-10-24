@@ -4,6 +4,9 @@ import { CheckCircleTwoTone, CloseCircleTwoTone, PlusOutlined, TeamOutlined, Arr
 import { useNavigate, Link } from "react-router-dom";
 import api from "../../config/axios";
 import { useAuth } from "../../components/hooks/useAuth";
+import AppHeader from "../../components/reuse/AppHeader";
+import AppFooter from "../../components/reuse/AppFooter";
+import "./myGroup.css";
 
 const { Title, Text } = Typography;
 
@@ -371,25 +374,28 @@ const MyGroup = () => {
   );
 
   return (
-    <div style={{ padding: 24 }}>
-      <Space style={{ width: "100%", justifyContent: "space-between", marginBottom: 16 }}>
-        <Space>
-          <Button
-            type="text"
-            icon={<ArrowLeftOutlined />}
-            onClick={handleBack}
-          >
-            Quay lại
-          </Button>
-          <Title level={3} style={{ margin: 0 }}>
-            <TeamOutlined /> My Groups
-          </Title>
-        </Space>
-        <Space>
-          <Button onClick={() => setJoinOpen(true)}>Join by code</Button>
-          <Button type="primary" icon={<PlusOutlined />} onClick={() => navigate("/create-group")}>Create group</Button>
-        </Space>
-      </Space>
+    <>
+      <AppHeader />
+      <div className="my-groups-page">
+        <div className="my-groups-content">
+          <Space style={{ width: "100%", justifyContent: "space-between", marginBottom: 16 }}>
+            <Space>
+              <Button
+                type="text"
+                icon={<ArrowLeftOutlined />}
+                onClick={handleBack}
+              >
+                Quay lại
+              </Button>
+              <Title level={3} style={{ margin: 0 }}>
+                <TeamOutlined /> My Groups
+              </Title>
+            </Space>
+            <Space>
+              <Button onClick={() => setJoinOpen(true)}>Join by code</Button>
+              <Button type="primary" icon={<PlusOutlined />} onClick={() => navigate("/create-group")}>Create group</Button>
+            </Space>
+          </Space>
 
       {loading ? (
         <div style={{ display: "flex", justifyContent: "center", padding: 40 }}>
@@ -638,7 +644,10 @@ const MyGroup = () => {
           onChange={(e) => setAttachVehicleId(e.target.value)}
         />
       </Modal>
-    </div>
+        </div>
+      </div>
+      <AppFooter />
+    </>
   );
 };
 

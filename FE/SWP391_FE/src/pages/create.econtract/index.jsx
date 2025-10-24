@@ -20,6 +20,9 @@ import api from "../../config/axios";
 import { toast } from "react-toastify";
 import dayjs from "dayjs";
 import { useLocation, useNavigate } from "react-router";
+import AppHeader from "../../components/reuse/AppHeader";
+import AppFooter from "../../components/reuse/AppFooter";
+import "./create-econtract.css";
 
 const { Title, Paragraph } = Typography;
 const { Option } = Select;
@@ -212,8 +215,11 @@ const CreateEContract = () => {
   };
 
   return (
-    <div className="econ-wrapper-center">
-      <Card className="econ-card animate-fade-up">
+    <div className="create-econtract-page">
+      <AppHeader />
+      <div className="create-econtract-content">
+        <div className="econ-wrapper-center">
+          <Card className="econ-card animate-fade-up">
         <Title level={3} className="econ-main-title">
           Co-ownership Contract — EVCars
         </Title>
@@ -444,6 +450,9 @@ const CreateEContract = () => {
       >
         <p>Your contract has been successfully created and recorded.</p>
       </Modal>
+        </div>
+      </div>
+      <AppFooter />
     </div>
   );
 };

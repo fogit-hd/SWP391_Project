@@ -1,0 +1,314 @@
+/* Create Group Page - EV Co-ownership Theme */
+
+.create-group-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #ffffff;
+  padding: 20px;
+  position: relative;
+  overflow: hidden;
+}
+
+.create-group-container::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -50%;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle, rgba(24, 144, 255, 0.05) 0%, transparent 70%);
+  animation: pulse 15s ease-in-out infinite;
+}
+
+.create-group-container::after {
+  content: '';
+  position: absolute;
+  bottom: -50%;
+  left: -50%;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle, rgba(24, 144, 255, 0.03) 0%, transparent 70%);
+  animation: pulse 20s ease-in-out infinite reverse;
+}
+
+.create-group-card-wrapper {
+  width: 100%;
+  max-width: 600px;
+  position: relative;
+  z-index: 10;
+  animation: fadeInScale 0.6s ease;
+}
+
+.create-group-card {
+  border-radius: 20px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  background: white;
+  border: 1px solid #e8e8e8;
+}
+
+.create-group-header {
+  background: linear-gradient(135deg, #1890ff 0%, #096dd9 100%);
+  padding: 40px 32px;
+  text-align: center;
+  position: relative;
+}
+
+.create-group-header-icon {
+  font-size: 56px;
+  color: white;
+  margin-bottom: 16px;
+  animation: bounceIn 0.8s ease;
+}
+
+.create-group-title {
+  font-size: 28px;
+  font-weight: 700;
+  margin: 0 0 8px 0;
+  color: white;
+  letter-spacing: -0.5px;
+}
+
+.create-group-subtitle {
+  font-size: 15px;
+  margin: 0;
+  color: rgba(255, 255, 255, 0.95);
+}
+
+.create-group-body {
+  padding: 40px 32px;
+  background: white;
+}
+
+.create-group-form .ant-form-item {
+  margin-bottom: 24px;
+}
+
+.create-group-form .ant-form-item-label > label {
+  font-weight: 600;
+  color: #262626;
+  font-size: 15px;
+}
+
+.create-group-form .ant-form-item-label > label::before {
+  display: none !important;
+}
+
+.create-group-form .ant-form-item-label > label::after {
+  display: inline-block;
+  margin-left: 4px;
+  color: #ff4d4f;
+  font-size: 14px;
+  content: '*';
+}
+
+.create-group-form .ant-input {
+  border-radius: 10px;
+  border: 2px solid #e8e8e8;
+  padding: 12px 16px;
+  font-size: 14px;
+  transition: all 0.3s ease;
+}
+
+.create-group-form .ant-input:hover {
+  border-color: #1890ff;
+}
+
+.create-group-form .ant-input:focus {
+  border-color: #1890ff;
+  box-shadow: 0 0 0 3px rgba(24, 144, 255, 0.1);
+}
+
+.create-group-form textarea.ant-input {
+  min-height: 100px;
+  resize: vertical;
+}
+
+.create-group-form .ant-input-prefix {
+  color: #8c8c8c;
+  margin-right: 10px;
+  font-size: 16px;
+}
+
+.create-group-form-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 32px;
+}
+
+.create-group-submit-btn {
+  flex: 1;
+  height: 48px;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 16px;
+  background: linear-gradient(135deg, #1890ff 0%, #096dd9 100%);
+  border: none;
+  box-shadow: 0 4px 12px rgba(24, 144, 255, 0.3);
+}
+
+.create-group-submit-btn:hover {
+  background: linear-gradient(135deg, #40a9ff 0%, #1890ff 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(24, 144, 255, 0.4);
+}
+
+.create-group-cancel-btn {
+  flex: 1;
+  height: 48px;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 16px;
+  border: 2px solid #d9d9d9;
+  color: #595959;
+}
+
+.create-group-cancel-btn:hover {
+  border-color: #1890ff;
+  color: #1890ff;
+}
+
+.create-group-footer {
+  padding: 0 32px 32px;
+  text-align: center;
+}
+
+.create-group-back-link {
+  color: #1890ff;
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.3s ease;
+}
+
+.create-group-back-link:hover {
+  color: #40a9ff;
+  transform: translateX(-4px);
+}
+
+.create-group-info-box {
+  background: linear-gradient(135deg, #e6f7ff 0%, #bae7ff 100%);
+  border-left: 4px solid #1890ff;
+  padding: 16px;
+  border-radius: 8px;
+  margin-bottom: 24px;
+}
+
+.create-group-info-box h4 {
+  color: #0050b3;
+  font-size: 14px;
+  font-weight: 600;
+  margin: 0 0 8px 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.create-group-info-box p {
+  margin: 0;
+  color: #096dd9;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.create-group-benefits {
+  background: #e6f7ff;
+  border: 1px solid #91d5ff;
+  border-radius: 10px;
+  padding: 20px;
+  margin-top: 24px;
+}
+
+.create-group-benefits h4 {
+  color: #096dd9;
+  font-size: 15px;
+  font-weight: 600;
+  margin: 0 0 12px 0;
+}
+
+.create-group-benefits ul {
+  margin: 0;
+  padding-left: 20px;
+  color: #1890ff;
+}
+
+.create-group-benefits li {
+  margin-bottom: 8px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes bounceIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+  70% {
+    transform: scale(0.9);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.5;
+    transform: scale(1.1);
+  }
+}
+
+@media (max-width: 768px) {
+  .create-group-card-wrapper {
+    max-width: 100%;
+  }
+  
+  .create-group-header {
+    padding: 32px 24px;
+  }
+  
+  .create-group-body {
+    padding: 32px 24px;
+  }
+  
+  .create-group-title {
+    font-size: 24px;
+  }
+  
+  .create-group-header-icon {
+    font-size: 48px;
+  }
+  
+  .create-group-form-actions {
+    flex-direction: column;
+  }
+  
+  .create-group-submit-btn,
+  .create-group-cancel-btn {
+    width: 100%;
+  }
+}

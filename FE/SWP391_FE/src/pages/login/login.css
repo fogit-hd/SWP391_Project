@@ -1,10 +1,11 @@
-/* Login Page Styles */
 .login-container {
   min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
   position: relative;
+  padding-top: 88px;
+  padding-bottom: 40px;
 }
 
 .login-background {
@@ -114,7 +115,6 @@
   margin: 1.5rem 0;
 }
 
-/* Responsive adjustments */
 @media (max-width: 768px) {
   .login-card-container {
     max-width: 24rem;

@@ -1,4 +1,3 @@
-/* Vehicle Management Styles */
 .vehicle-management-container {
   padding: 20px;
 }
@@ -116,7 +115,6 @@
   }
 }
 
-/* Table responsive styles */
 .ant-table-wrapper {
   overflow-x: auto;
 }
@@ -130,7 +128,6 @@
   background-color: #f5f5f5;
 }
 
-/* Fixed columns styling */
 .ant-table-fixed-left {
   box-shadow: 6px 0 6px -4px rgba(0, 0, 0, 0.15);
 }
@@ -139,7 +136,6 @@
   box-shadow: -6px 0 6px -4px rgba(0, 0, 0, 0.15);
 }
 
-/* Action dropdown styling */
 .vehicle-actions-dropdown {
   .ant-dropdown-menu {
     min-width: 120px;
@@ -176,7 +172,6 @@
   }
 }
 
-/* Action button styling */
 .vehicle-action-button {
   width: 32px;
   height: 32px;
@@ -192,13 +187,11 @@
   }
 }
 
-/* Fixed column background */
 .ant-table-fixed-left .ant-table-cell,
 .ant-table-fixed-right .ant-table-cell {
   background: inherit;
 }
 
-/* Modal form styles */
 .vehicle-modal {
   .ant-modal-header {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -351,7 +344,6 @@
   }
 }
 
-/* Status indicator styles */
 .status-active {
   color: #52c41a;
   font-weight: 500;
@@ -367,7 +359,6 @@
   font-weight: 500;
 }
 
-/* Loading and error states */
 .vehicle-loading {
   text-align: center;
   padding: 40px;

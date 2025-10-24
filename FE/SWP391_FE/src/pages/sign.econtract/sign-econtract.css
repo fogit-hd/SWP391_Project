@@ -1,0 +1,410 @@
+/* Sign E-Contract Page - EV Co-ownership Theme */
+
+.sign-econtract-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: #f0f2f5;
+}
+
+.sign-econtract-content {
+  flex: 1;
+  padding-top: 64px; /* Avoid header overlap */
+}
+
+.sign-econtract-header {
+  background: linear-gradient(135deg, #52c41a 0%, #389e0d 100%);
+  padding: 36px 24px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+}
+
+.sign-econtract-header-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.sign-econtract-header-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.sign-econtract-header-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 28px;
+}
+
+.sign-econtract-header-info h1 {
+  color: white;
+  font-size: 30px;
+  font-weight: 700;
+  margin: 0 0 6px 0;
+}
+
+.sign-econtract-header-info p {
+  color: rgba(255, 255, 255, 0.95);
+  font-size: 15px;
+  margin: 0;
+}
+
+.sign-econtract-status-badge {
+  padding: 8px 20px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 600;
+  text-transform: uppercase;
+  background: white;
+  color: #52c41a;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.sign-econtract-status-badge.pending {
+  background: #faad14;
+  color: white;
+}
+
+.sign-econtract-status-badge.signed {
+  background: white;
+  color: #52c41a;
+}
+
+.sign-econtract-content {
+  max-width: 1200px;
+  margin: -20px auto 0;
+  padding: 0 24px 40px;
+}
+
+.sign-econtract-progress-card {
+  background: white;
+  border-radius: 16px;
+  padding: 28px 32px;
+  margin-bottom: 24px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+}
+
+.sign-econtract-progress-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #262626;
+  margin: 0 0 20px 0;
+}
+
+.sign-econtract-main-card {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+  overflow: hidden;
+}
+
+.sign-econtract-tabs {
+  border-bottom: 2px solid #f0f0f0;
+}
+
+.sign-econtract-tab-content {
+  padding: 32px;
+}
+
+.sign-econtract-section {
+  margin-bottom: 32px;
+}
+
+.sign-econtract-section:last-child {
+  margin-bottom: 0;
+}
+
+.sign-econtract-section-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #262626;
+  margin: 0 0 20px 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid #f0f0f0;
+}
+
+.sign-econtract-section-icon {
+  color: #52c41a;
+  font-size: 20px;
+}
+
+.sign-econtract-info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.sign-econtract-info-item {
+  background: #fafafa;
+  padding: 16px;
+  border-radius: 10px;
+  border-left: 3px solid #52c41a;
+  transition: all 0.3s ease;
+}
+
+.sign-econtract-info-item:hover {
+  background: #f6ffed;
+  transform: translateX(4px);
+}
+
+.sign-econtract-info-label {
+  font-size: 12px;
+  color: #8c8c8c;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 6px;
+}
+
+.sign-econtract-info-value {
+  font-size: 15px;
+  color: #262626;
+  font-weight: 600;
+}
+
+.sign-econtract-document-viewer {
+  background: #fafafa;
+  border: 2px solid #e8e8e8;
+  border-radius: 12px;
+  padding: 32px;
+  min-height: 400px;
+  margin-bottom: 24px;
+}
+
+.sign-econtract-document-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #595959;
+  margin: 0 0 16px 0;
+  text-align: center;
+}
+
+.sign-econtract-document-content {
+  background: white;
+  padding: 24px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.sign-econtract-signature-section {
+  background: linear-gradient(135deg, #f6ffed 0%, #d9f7be 100%);
+  border: 2px solid #b7eb8f;
+  border-radius: 12px;
+  padding: 28px;
+  margin-top: 24px;
+}
+
+.sign-econtract-signature-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #389e0d;
+  margin: 0 0 20px 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.sign-econtract-signature-canvas {
+  background: white;
+  border: 2px dashed #52c41a;
+  border-radius: 8px;
+  cursor: crosshair;
+  margin-bottom: 16px;
+}
+
+.sign-econtract-signature-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.sign-econtract-agreement-box {
+  background: #f0f5ff;
+  border: 2px solid #adc6ff;
+  border-radius: 12px;
+  padding: 20px;
+  margin-top: 24px;
+}
+
+.sign-econtract-checkbox-wrapper {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.sign-econtract-checkbox-wrapper label {
+  font-size: 14px;
+  color: #262626;
+  line-height: 1.6;
+  cursor: pointer;
+}
+
+.sign-econtract-checkbox-wrapper label strong {
+  color: #1890ff;
+  font-weight: 600;
+}
+
+.sign-econtract-footer {
+  padding: 28px 32px;
+  background: #fafafa;
+  border-top: 2px solid #f0f0f0;
+  display: flex;
+  gap: 16px;
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+
+.sign-econtract-footer-left {
+  display: flex;
+  gap: 12px;
+}
+
+.sign-econtract-footer-right {
+  display: flex;
+  gap: 12px;
+}
+
+.sign-econtract-btn-sign {
+  height: 48px;
+  padding: 0 40px;
+  border-radius: 24px;
+  font-weight: 600;
+  font-size: 16px;
+  background: linear-gradient(135deg, #52c41a 0%, #389e0d 100%);
+  border: none;
+  box-shadow: 0 4px 12px rgba(82, 196, 26, 0.3);
+}
+
+.sign-econtract-btn-sign:hover {
+  background: linear-gradient(135deg, #73d13d 0%, #52c41a 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(82, 196, 26, 0.4);
+}
+
+.sign-econtract-btn-reject {
+  height: 48px;
+  padding: 0 32px;
+  border-radius: 24px;
+  font-weight: 600;
+  font-size: 16px;
+  background: white;
+  border: 2px solid #ff4d4f;
+  color: #ff4d4f;
+}
+
+.sign-econtract-btn-reject:hover {
+  background: #ff4d4f;
+  color: white;
+}
+
+.sign-econtract-btn-back {
+  height: 48px;
+  padding: 0 32px;
+  border-radius: 24px;
+  font-weight: 600;
+  font-size: 16px;
+  border: 2px solid #d9d9d9;
+  color: #595959;
+}
+
+.sign-econtract-btn-back:hover {
+  border-color: #52c41a;
+  color: #52c41a;
+}
+
+.sign-econtract-btn-download {
+  height: 48px;
+  padding: 0 32px;
+  border-radius: 24px;
+  font-weight: 600;
+  font-size: 16px;
+  background: white;
+  border: 2px solid #1890ff;
+  color: #1890ff;
+}
+
+.sign-econtract-btn-download:hover {
+  background: #1890ff;
+  color: white;
+}
+
+.sign-econtract-loading {
+  text-align: center;
+  padding: 80px 20px;
+}
+
+.sign-econtract-error {
+  text-align: center;
+  padding: 60px 20px;
+}
+
+.sign-econtract-error-icon {
+  font-size: 64px;
+  color: #ff4d4f;
+  margin-bottom: 16px;
+}
+
+.sign-econtract-error-text {
+  font-size: 18px;
+  color: #595959;
+}
+
+@media (max-width: 768px) {
+  .sign-econtract-header {
+    padding: 24px 16px;
+  }
+  
+  .sign-econtract-header-content {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .sign-econtract-header-info h1 {
+    font-size: 24px;
+  }
+  
+  .sign-econtract-content {
+    padding: 0 16px 24px;
+  }
+  
+  .sign-econtract-tab-content {
+    padding: 20px;
+  }
+  
+  .sign-econtract-progress-card {
+    padding: 20px;
+  }
+  
+  .sign-econtract-info-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .sign-econtract-footer {
+    flex-direction: column;
+    padding: 20px;
+  }
+  
+  .sign-econtract-footer-left,
+  .sign-econtract-footer-right {
+    width: 100%;
+    flex-direction: column;
+  }
+  
+  .sign-econtract-footer button {
+    width: 100%;
+  }
+}
