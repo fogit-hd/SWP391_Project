@@ -19,6 +19,7 @@
     "bootstrap": "^5.3.8",
     "dayjs": "^1.11.18",
     "formik": "^2.4.6",
+    "fullcalendar": "^6.1.19",
     "mustache": "^4.2.0",
     "prop-types": "^15.8.1",
     "quill": "^2.0.3",
