@@ -6,6 +6,8 @@ import { toast } from "react-toastify";
 import { Link, useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { login } from "../../components/redux/accountSlice";
+import AppHeader from "../../components/reuse/AppHeader";
+import AppFooter from "../../components/reuse/AppFooter";
 import "./login.css";
 
 const LoginPage = () => {
@@ -188,11 +190,12 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="login-container">
-      {/* Background */}
-      <div className="login-background"></div>
+    <>
+      <AppHeader />
+      <div className="login-container">
+        <div className="login-background"></div>
 
-      <div className="login-card-container">
+        <div className="login-card-container">
         <Card className="login-card">
           <div className="login-header">
             <h2 className="login-title">Welcome Back, Co-owner</h2>
@@ -298,7 +301,9 @@ const LoginPage = () => {
           </Form>
         </Card>
       </div>
-    </div>
+      </div>
+      <AppFooter />
+    </>
   );
 };
 

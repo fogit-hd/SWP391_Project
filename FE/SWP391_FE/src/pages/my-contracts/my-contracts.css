@@ -1,0 +1,197 @@
+/* My Contracts Page - EV Co-ownership Theme */
+
+.my-contracts-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: #f0f2f5;
+}
+
+.my-contracts-content {
+  flex: 1;
+  padding-top: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.my-contracts-inner {
+  text-align: center;
+  padding: 40px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.my-contracts-inner h2 {
+  margin-bottom: 20px;
+  color: #1890ff;
+}
+
+
+
+.my-contracts-header {
+  background: linear-gradient(135deg, #1890ff 0%, #096dd9 100%);
+  padding: 40px 24px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.my-contracts-header-content {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.my-contracts-title {
+  color: white;
+  font-size: 32px;
+  font-weight: 700;
+  margin: 0 0 8px 0;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.my-contracts-subtitle {
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 16px;
+  margin: 0;
+}
+
+
+
+.my-contracts-filters {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.my-contracts-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.my-contracts-search {
+  flex: 1;
+  max-width: 400px;
+}
+
+.my-contracts-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.my-contracts-card {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  transition: all 0.3s ease;
+  overflow: hidden;
+}
+
+.my-contracts-card:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  transform: translateY(-2px);
+}
+
+.my-contracts-table {
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.my-contracts-empty {
+  text-align: center;
+  padding: 60px 20px;
+}
+
+.my-contracts-empty-icon {
+  font-size: 64px;
+  color: #d9d9d9;
+  margin-bottom: 16px;
+}
+
+.my-contracts-empty-text {
+  color: #8c8c8c;
+  font-size: 16px;
+  margin-bottom: 24px;
+}
+
+.my-contracts-status-badge {
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.my-contracts-status-active {
+  background: #f6ffed;
+  color: #52c41a;
+  border: 1px solid #b7eb8f;
+}
+
+.my-contracts-status-pending {
+  background: #fff7e6;
+  color: #fa8c16;
+  border: 1px solid #ffd591;
+}
+
+.my-contracts-status-expired {
+  background: #fff1f0;
+  color: #ff4d4f;
+  border: 1px solid #ffccc7;
+}
+
+.my-contracts-action-btn {
+  border-radius: 6px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.my-contracts-action-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.my-contracts-loading {
+  text-align: center;
+  padding: 80px 20px;
+}
+
+@media (max-width: 768px) {
+  .my-contracts-header {
+    padding: 24px 16px;
+  }
+  
+  .my-contracts-title {
+    font-size: 24px;
+  }
+  
+  .my-contracts-content {
+    padding: 0 16px 24px;
+  }
+  
+  .my-contracts-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .my-contracts-search {
+    max-width: 100%;
+  }
+  
+  .my-contracts-actions {
+    width: 100%;
+  }
+  
+  .my-contracts-actions button {
+    flex: 1;
+  }
+}

@@ -14,7 +14,7 @@ import {
   Select,
   Dropdown,
 } from "antd";
-import "../admin/manageVehicle/vehicle-management.css";
+import "../my-vehicles/my-vehicle.css";
 import {
   CarOutlined,
   UserOutlined,
@@ -30,6 +30,8 @@ import {
 import { Link, useNavigate } from "react-router-dom";
 import api from "../../config/axios";
 import { toast } from "react-toastify";
+import AppHeader from "../../components/reuse/AppHeader";
+import AppFooter from "../../components/reuse/AppFooter";
 
 const { Header, Content, Footer, Sider } = Layout;
 const { Option } = Select;
@@ -59,6 +61,7 @@ const MyVehicle = () => {
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
   const [editingRecord, setEditingRecord] = useState(null);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
 
   // Forms
   const [addForm] = Form.useForm();
@@ -228,6 +231,9 @@ const MyVehicle = () => {
   };
 
   const createVehicle = async (values) => {
+    if (isCreating) return; // Prevent multiple submissions
+    
+    setIsCreating(true);
     try {
       console.log('Creating vehicle with values:', values);
       
@@ -271,6 +277,8 @@ const MyVehicle = () => {
         }
       }
       message.error(errorMessage);
+    } finally {
+      setIsCreating(false);
     }
   };
 
@@ -448,63 +456,16 @@ const MyVehicle = () => {
   };
 
   return (
-    <Layout style={{ minHeight: "100vh" }}>
-      <Header
-        style={{
-          padding: "0 24px",
-          background: colorBgContainer,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-        }}
-      >
-        <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-          <CarOutlined style={{ fontSize: "24px", color: "#1890ff" }} />
-          <h2 style={{ margin: 0 }}>My Vehicles</h2>
-        </div>
-        <Dropdown
-          menu={{
-            items: [
-              {
-                key: "home",
-                icon: <HomeOutlined />,
-                label: <Link to="/">Home</Link>,
-              },
-              {
-                key: "profile",
-                icon: <UserOutlined />,
-                label: "Profile",
-              },
-              {
-                type: "divider",
-              },
-              {
-                key: "logout",
-                icon: <LogoutOutlined />,
-                label: "Logout",
-                danger: true,
-                onClick: handleLogout,
-              },
-            ],
-          }}
-          placement="bottomRight"
-        >
-          <Button
-            type="text"
-            icon={<UserOutlined />}
-            style={{ height: "64px" }}
-          />
-        </Dropdown>
-      </Header>
-
-      <Content style={{ margin: "24px 16px 0" }}>
-        <Breadcrumb style={{ margin: "16px 0" }}>
-          <Breadcrumb.Item>
-            <Link to="/">Home</Link>
-          </Breadcrumb.Item>
-          <Breadcrumb.Item>My Vehicles</Breadcrumb.Item>
-        </Breadcrumb>
+    <>
+      <AppHeader />
+      <Layout style={{ minHeight: "calc(100vh - 64px - 200px)" }}>
+        <Content style={{ margin: "24px 16px 0" }}>
+          <Breadcrumb style={{ margin: "16px 0" }}>
+            <Breadcrumb.Item>
+              <Link to="/">Home</Link>
+            </Breadcrumb.Item>
+            <Breadcrumb.Item>My Vehicles</Breadcrumb.Item>
+          </Breadcrumb>
 
         <div
           style={{
@@ -565,8 +526,10 @@ const MyVehicle = () => {
         title="Add New Vehicle"
         open={isAddModalVisible}
         onCancel={() => {
-          setIsAddModalVisible(false);
-          addForm.resetFields();
+          if (!isCreating) {
+            setIsAddModalVisible(false);
+            addForm.resetFields();
+          }
         }}
         footer={null}
         width={700}
@@ -574,6 +537,8 @@ const MyVehicle = () => {
         destroyOnClose
         centered={false}
         style={{ top: 20 }}
+        closable={!isCreating}
+        maskClosable={!isCreating}
       >
         <div className="vehicle-form">
           <Form
@@ -661,10 +626,10 @@ const MyVehicle = () => {
               <Button onClick={() => {
                 setIsAddModalVisible(false);
                 addForm.resetFields();
-              }}>
+              }} disabled={isCreating}>
                 Cancel
               </Button>
-              <Button type="primary" htmlType="submit">
+              <Button type="primary" htmlType="submit" loading={isCreating}>
                 Create Vehicle
               </Button>
             </div>
@@ -811,7 +776,9 @@ const MyVehicle = () => {
           <span>Are you sure you want to delete this vehicle?</span>
         </div>
       </Modal>
-    </Layout>
+      </Layout>
+      <AppFooter />
+    </>
   );
 };
 

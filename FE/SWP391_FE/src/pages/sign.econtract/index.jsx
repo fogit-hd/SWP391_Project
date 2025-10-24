@@ -25,6 +25,9 @@ import {
 import api from "../../config/axios";
 import { useAuth } from "../../components/hooks/useAuth";
 import { toast } from "react-toastify";
+import AppHeader from "../../components/reuse/AppHeader";
+import AppFooter from "../../components/reuse/AppFooter";
+import "./sign-econtract.css";
 
 const { Title, Paragraph, Text } = Typography;
 
@@ -173,8 +176,11 @@ const SignEContract = () => {
   }
 
   return (
-    <div style={{ padding: "24px", maxWidth: "800px", margin: "0 auto" }}>
-      <Card>
+    <div className="sign-econtract-page">
+      <AppHeader />
+      <div className="sign-econtract-content" style={{ minHeight: "calc(100vh - 64px - 200px)", padding: "40px 20px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <div style={{ maxWidth: "800px", width: "100%" }}>
+          <Card>
         <Space direction="vertical" size="large" style={{ width: "100%" }}>
           {/* Header */}
           <div>
@@ -297,6 +303,9 @@ const SignEContract = () => {
           />
         </Space>
       </Card>
+        </div>
+      </div>
+      <AppFooter />
     </div>
   );
 };

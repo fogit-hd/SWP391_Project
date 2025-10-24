@@ -1,4 +1,3 @@
-/* Manage Contract Page Styles - Professional Admin Theme */
 .manage-contract-container {
   min-height: 100vh;
   background: #f5f5f5;
@@ -88,7 +87,6 @@
   color: #ffffff !important;
 }
 
-/* Table Styles */
 .manage-contract-table {
   background: white;
   border-radius: 4px;
@@ -126,7 +124,6 @@
   background: #fafafa;
 }
 
-/* Button Styles */
 .manage-contract-btn {
   border-radius: 4px !important;
   font-weight: 400 !important;
@@ -174,7 +171,6 @@
   color: #262626 !important;
 }
 
-/* Tag Styles */
 .manage-contract-tag {
   border-radius: 4px !important;
   font-weight: 400 !important;
@@ -194,7 +190,6 @@
   border: 1px solid #e8e8e8 !important;
 }
 
-/* Modal Styles */
 .manage-contract-modal .ant-modal-content {
   border-radius: 6px !important;
   overflow: hidden !important;
@@ -226,7 +221,6 @@
   background: white;
 }
 
-/* Form Styles */
 .manage-contract-form .ant-form-item-label > label {
   color: #262626 !important;
   font-weight: 500 !important;
@@ -250,7 +244,6 @@
   box-shadow: 0 0 0 2px rgba(38, 38, 38, 0.1) !important;
 }
 
-/* Action Buttons Container */
 .manage-contract-actions {
   display: flex;
   gap: 6px;
@@ -259,7 +252,6 @@
   flex-wrap: wrap;
 }
 
-/* Header Section */
 .manage-contract-header-section {
   display: flex;
   justify-content: space-between;
@@ -280,7 +272,6 @@
   min-height: 400px;
 }
 
-/* Responsive Design */
 @media (max-width: 768px) {
   .manage-contract-content {
     margin: 12px;
@@ -315,7 +306,6 @@
   }
 }
 
-/* Loading States */
 .manage-contract-loading {
   display: flex;
   justify-content: center;
@@ -326,7 +316,6 @@
   font-weight: 400;
 }
 
-/* Empty State */
 .manage-contract-empty {
   text-align: center;
   padding: 60px 20px;
@@ -345,7 +334,6 @@
   margin-bottom: 24px;
 }
 
-/* Tabs Styles */
 .manage-contract-modal .ant-tabs {
   margin-top: 16px;
 }
@@ -373,7 +361,6 @@
   padding-top: 16px;
 }
 
-/* Variables and Clauses Manager in Tabs */
 .manage-contract-modal .variables-manager,
 .manage-contract-modal .clauses-manager {
   padding: 0;

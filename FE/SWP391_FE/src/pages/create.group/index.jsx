@@ -5,13 +5,17 @@ import {
   FileTextOutlined,
   CarOutlined,
   PlusOutlined,
+  ArrowLeftOutlined,
+  InfoCircleOutlined,
 } from "@ant-design/icons";
 import api from "../../config/axios";
 import { toast } from "react-toastify";
 import { Link, useNavigate } from "react-router-dom";
+import "./create-group.css";
+import AppHeader from "../../components/reuse/AppHeader";
+import AppFooter from "../../components/reuse/AppFooter";
 
 const { TextArea } = Input;
-const { Option } = Select;
 
 const CreateGroup = () => {
   const [form] = Form.useForm();
@@ -72,100 +76,109 @@ const CreateGroup = () => {
   };
 
   return (
-    <div className="verify-container">
-      {/* Background */}
-      <div className="verify-background"></div>
+    <>
+      <AppHeader />
+      <div className="create-group-container" style={{ minHeight: "calc(100vh - 64px - 200px)" }}>
+        <div className="create-group-card-wrapper">
+          <Card className="create-group-card" bordered={false}>
+            <div className="create-group-header">
+              <TeamOutlined className="create-group-header-icon" />
+              <h2 className="create-group-title">Create New Group</h2>
+              <p className="create-group-subtitle">
+                Start a new co-ownership group to manage shared resources and vehicles
+              </p>
+            </div>
 
-      <div className="verify-card-container">
-        <Card className="verify-card">
-          <div className="verify-header">
-            <h2 className="verify-title">Create New Group</h2>
-            <p className="verify-subtitle">
-              Create a new co-ownership group to manage shared resources and
-              vehicles
-            </p>
-          </div>
+          <div className="create-group-body">
+            <div className="create-group-info-box">
+              <h4><InfoCircleOutlined /> What is a Co-ownership Group?</h4>
+              <p>A group allows multiple members to share ownership and usage of electric vehicles, reducing costs and promoting sustainable transportation.</p>
+            </div>
 
-          <Row>
             <Form
               form={form}
               layout="vertical"
               onFinish={onFinish}
               requiredMark={false}
-              className="verify-form"
+              className="create-group-form"
             >
               {/* Group Name */}
-              <Col xs={24} md={24}>
-                <Form.Item
-                  label="Group Name"
-                  name="name"
-                  rules={[
-                    { required: true, message: "Group name is required" },
-                    {
-                      min: 3,
-                      message: "Group name must be at least 3 characters",
-                    },
-                    {
-                      max: 100,
-                      message: "Group name must be less than 100 characters",
-                    },
-                  ]}
-                  hasFeedback
-                >
-                  <Input
-                    placeholder="Enter group name"
-                    prefix={<TeamOutlined />}
-                    allowClear
-                  />
-                </Form.Item>
-              </Col>
+              <Form.Item
+                label="Group Name"
+                name="name"
+                rules={[
+                  { required: true, message: "Group name is required" },
+                  {
+                    min: 3,
+                    message: "Group name must be at least 3 characters",
+                  },
+                  {
+                    max: 100,
+                    message: "Group name must be less than 100 characters",
+                  },
+                ]}
+                hasFeedback
+              >
+                <Input
+                  placeholder="Enter group name (e.g., Downtown EV Sharers)"
+                  prefix={<TeamOutlined />}
+                  allowClear
+                />
+              </Form.Item>
 
               {/* Governance Policy */}
-              <Col xs={24} md={24}>
-                <Form.Item
-                  label="Governance Policy"
-                  name="governancePolicy"
-                  rules={[
-                    {
-                      max: 1000,
-                      message:
-                        "Governance policy must be less than 1000 characters",
-                    },
-                  ]}
-                  hasFeedback
-                >
-                  <TextArea
-                    placeholder="Describe the governance policy for this group (optional)"
-                    rows={4}
-                    maxLength={1000}
-                    showCount
-                    prefix={<FileTextOutlined />}
-                  />
-                </Form.Item>
-              </Col>
+              <Form.Item
+                label="Governance Policy (Optional)"
+                name="governancePolicy"
+                rules={[
+                  {
+                    max: 1000,
+                    message: "Governance policy must be less than 1000 characters",
+                  },
+                ]}
+                hasFeedback
+              >
+                <TextArea
+                  placeholder="Describe the governance policy for this group (optional)"
+                  rows={4}
+                  maxLength={1000}
+                  showCount
+                />
+              </Form.Item>
 
-              <Form.Item>
+              <div className="create-group-form-actions">
+                <Button
+                  type="default"
+                  size="large"
+                  className="create-group-cancel-btn"
+                  onClick={() => navigate("/view-myGroup")}
+                >
+                  Cancel
+                </Button>
                 <Button
                   type="primary"
                   htmlType="submit"
                   loading={isLoading}
-                  block
                   size="large"
-                  className="verify-submit-button"
+                  className="create-group-submit-btn"
                   icon={<PlusOutlined />}
                 >
-                  {isLoading ? "Creating Group..." : "Create Group"}
+                  {isLoading ? "Creating..." : "Create Group"}
                 </Button>
-              </Form.Item>
-
-              <div className="verify-login-link">
-                <Link to="/view-mygroup">Back to group list</Link>
               </div>
             </Form>
-          </Row>
+          </div>
+
+          <div className="create-group-footer">
+            <Link to="/view-myGroup" className="create-group-back-link">
+              <ArrowLeftOutlined /> Back to My Groups
+            </Link>
+          </div>
         </Card>
       </div>
-    </div>
+      </div>
+      <AppFooter />
+    </>
   );
 };
 

@@ -157,7 +157,7 @@ function App() {
       ),
     },
     {
-      path: "/view-myvehicle",
+      path: "/my-vehicle",
       element: (
         <ProtectedRoute roleId={3}>
           <MyVehicle />

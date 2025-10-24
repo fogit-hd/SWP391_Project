@@ -29,18 +29,21 @@ const AppFooter = () => (
       <Col xs={24} md={7}>
         <Title level={4} className="footer-section-title">Follow Us</Title>
         <Space direction="vertical" size="small" className="footer-links">
-          <a
-            href="https://www.facebook.com/phong.huynh.192/?locale=vi_VN"
-            className="footer-link"
-          >
-            Facebook
-          </a>
+          {["Facebook"].map((item) => (
+            <a
+              key={item}
+              href="https://www.facebook.com/phong.huynh.192/?locale=vi_VN"
+              className="footer-link"
+            >
+              {item}
+            </a>
+          ))}
         </Space>
       </Col>
     </Row>
     <Divider className="footer-divider" />
     <div className="footer-copyright">
-      <Text>&copy; {new Date().getFullYear()} EV CoShare. All Rights Reserved.</Text>
+      <Text className="copyright-text">&copy; {new Date().getFullYear()} EV CoShare. All Rights Reserved.</Text>
     </div>
   </Footer>
 );

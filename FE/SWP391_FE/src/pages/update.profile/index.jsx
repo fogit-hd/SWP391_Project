@@ -10,6 +10,9 @@ import {
 import api from "../../config/axios";
 import { toast } from "react-toastify";
 import { Link, useNavigate, useLocation } from "react-router-dom";
+import AppHeader from "../../components/reuse/AppHeader";
+import AppFooter from "../../components/reuse/AppFooter";
+import "./update-profile.css";
 
 const UpdateProfile = () => {
   const [form] = Form.useForm();
@@ -626,12 +629,15 @@ const UpdateProfile = () => {
   };
 
   return (
-    <div className="verify-container">
-      {/* Background */}
-      <div className="verify-background"></div>
+    <div className="update-profile-page">
+      <AppHeader />
+      <div className="update-profile-content">
+        <div className="update-profile-container">
+          {/* Background */}
+          <div className="verify-background"></div>
 
-      <div className="verify-card-container">
-        <Card className="verify-card">
+          <div className="verify-card-container">
+            <Card className="verify-card">
           <div className="verify-header">
             <h2 className="verify-title">Setting Your Account</h2>
             <p className="verify-subtitle">
@@ -948,6 +954,9 @@ const UpdateProfile = () => {
           </div>
         )}
       </div>
+        </div>
+      </div>
+      <AppFooter />
     </div>
   );
 };

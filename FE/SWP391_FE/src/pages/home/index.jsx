@@ -599,7 +599,7 @@ const Homepage = () => {
           )}
 
           {isAuthenticated && (
-            <Link to="/view-myvehicle">
+            <Link to="/my-vehicle">
               <Button type="text" className="nav-menu-button">
                 My Vehicles
               </Button>

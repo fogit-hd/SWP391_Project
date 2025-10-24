@@ -21,6 +21,8 @@ import {
 import api from "../../config/axios";
 import { toast } from "react-toastify";
 import { Link, useNavigate } from "react-router-dom";
+import AppHeader from "../../components/reuse/AppHeader";
+import AppFooter from "../../components/reuse/AppFooter";
 import "./register.css";
 
 const RegisterPage = () => {
@@ -316,12 +318,14 @@ const RegisterPage = () => {
   };
 
   return (
-    <div className="register-container">
-      {/* Background */}
-      <div className="register-background"></div>
+    <>
+      <AppHeader />
+      <div className="register-container">
+        {/* Background */}
+        <div className="register-background"></div>
 
-      <div className="register-card-container">
-        <Card className="register-card">
+        <div className="register-card-container">
+          <Card className="register-card">
           <div className="register-header">
             <h2 className="register-title">Join Our Community</h2>
             <p className="register-subtitle">
@@ -646,7 +650,9 @@ const RegisterPage = () => {
           </div>
         )}
       </div>
-    </div>
+      </div>
+      <AppFooter />
+    </>
   );
 };
 

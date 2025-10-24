@@ -4,6 +4,9 @@ import { MailOutlined, SafetyOutlined } from "@ant-design/icons";
 import api from "../../config/axios";
 import { toast } from "react-toastify";
 import { Link, useNavigate, useLocation } from "react-router-dom";
+import AppHeader from "../../components/reuse/AppHeader";
+import AppFooter from "../../components/reuse/AppFooter";
+import "./verify-otp.css";
 
 const VerifyOTP = () => {
   const [form] = Form.useForm();
@@ -145,12 +148,15 @@ const VerifyOTP = () => {
   };
 
   return (
-    <div className="verify-container">
-      {/* Background */}
-      <div className="verify-background"></div>
+    <div className="verify-otp-page">
+      <AppHeader />
+      <div className="verify-otp-content" style={{ minHeight: "calc(100vh - 64px - 200px)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <div className="verify-container">
+          {/* Background */}
+          <div className="verify-background"></div>
 
-      <div className="verify-card-container">
-        <Card className="verify-card">
+          <div className="verify-card-container">
+            <Card className="verify-card">
           <div className="verify-header">
             <h2 className="verify-title">Verify Your Account</h2>
             <p className="verify-subtitle">
@@ -230,6 +236,9 @@ const VerifyOTP = () => {
           </Form>
         </Card>
       </div>
+        </div>
+      </div>
+      <AppFooter />
     </div>
   );
 };
