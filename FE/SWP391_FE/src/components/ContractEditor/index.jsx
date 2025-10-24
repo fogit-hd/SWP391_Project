@@ -811,8 +811,8 @@ const ContractEditor = ({
       quill.setSelection(range.index, range.length);
     }
 
-      // Tạo HTML table với loop bao bọc toàn bộ table - FORCE TABLE STRUCTURE
-      const tableHtml = `{{#CoOwners}}<br><table style="border-collapse: collapse; width: 100%; table-layout: fixed;"><tr><td style="width: 30%; border: 1px solid #ccc; padding: 8px;">{{FullName}}</td><td style="width: 20%; border: 1px solid #ccc; padding: 8px;">{{CitizenId}}</td><td style="width: 15%; border: 1px solid #ccc; padding: 8px;">{{OwnershipRate}}</td><td style="width: 35%; border: 1px solid #ccc; padding: 8px;"><td style="width: 15%; border: 1px solid #ccc; padding: 8px;"></td><td style="width: 35%; border: 1px solid #ccc; padding: 8px;"></td></tr></table>{{/CoOwners}}`;
+    // Tạo HTML table với loop bao bọc toàn bộ table - FORCE TABLE STRUCTURE
+    const tableHtml = `{{#CoOwners}}<br><table style="border-collapse: collapse; width: 100%; table-layout: fixed;"><tr><td style="width: 30%; border: 1px solid #ccc; padding: 8px;">{{FullName}}</td><td style="width: 20%; border: 1px solid #ccc; padding: 8px;">{{CitizenId}}</td><td style="width: 15%; border: 1px solid #ccc; padding: 8px;">{{Address}}</td><td style="width: 35%; border: 1px solid #ccc; padding: 8px;">{{OwnershipRate}}%</td><td style="width: 15%; border: 1px solid #ccc; padding: 8px;"></td><td style="width: 35%; border: 1px solid #ccc; padding: 8px;"></td></tr></table>{{/CoOwners}}`;
 
     // Insert HTML table
     quill.clipboard.dangerouslyPasteHTML(range.index, tableHtml);
