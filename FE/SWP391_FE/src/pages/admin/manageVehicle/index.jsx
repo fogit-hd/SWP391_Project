@@ -125,13 +125,6 @@ const ManageVehicle = () => {
       width: 100,
     },
     {
-      title: "Device ID",
-      dataIndex: "telematicsDeviceId",
-      key: "telematicsDeviceId",
-      width: 120,
-      ellipsis: true,
-    },
-    {
       title: "Action",
       key: "action",
       width: 80,
@@ -231,7 +224,6 @@ const ManageVehicle = () => {
         batteryCapacityKwh: parseFloat(values.batteryCapacityKwh),
         rangeKm: parseInt(values.rangeKm),
         plateNumber: values.plateNumber,
-        telematicsDeviceId: values.telematicsDeviceId,
       };
 
       console.log("Create request body:", requestBody);
