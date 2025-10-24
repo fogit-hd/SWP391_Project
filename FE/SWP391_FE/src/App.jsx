@@ -135,7 +135,7 @@ function App() {
     {
       path: "/view-mycontract",
       element: (
-        <ProtectedRoute roleId={1 | 2 | 3}>
+        <ProtectedRoute roleId={3}>
           <MyContracts />
         </ProtectedRoute>
       ),
@@ -143,7 +143,7 @@ function App() {
     {
       path: "/view-myGroup",
       element: (
-        <ProtectedRoute roleId={1 | 3}>
+        <ProtectedRoute roleId={3}>
           <MyGroup />
         </ProtectedRoute>
       ),
@@ -175,7 +175,7 @@ function App() {
     {
       path: "/sign-econtract/:contractId",
       element: (
-        <ProtectedRoute roleId={1 | 2 | 3}>
+        <ProtectedRoute roleId={3}>
           <SignEContract />
         </ProtectedRoute>
       ),

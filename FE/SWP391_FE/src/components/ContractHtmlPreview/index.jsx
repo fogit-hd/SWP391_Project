@@ -7,7 +7,7 @@ const { Title, Paragraph } = Typography;
 
 /**
  * ContractHtmlPreview Component
- * 
+ *
  * A modal component that fetches HTML content from API and renders it
  * with proper styling for contract preview
  */
@@ -27,33 +27,30 @@ const ContractHtmlPreview = ({ visible, template, onClose }) => {
     try {
       setLoading(true);
       setError(null);
-      
+
       console.log("Fetching HTML content for template:", template.id);
-      
+
       // Call API to get HTML preview
-      const response = await api.get(`/contract-templates/${template.id}/preview`);
-      
+      const response = await api.get(
+        `/contract-templates/${template.id}/preview`
+      );
+
       console.log("Preview API response:", response.data);
-      
+
       // Extract HTML content from response
       let content = "";
-      if (response.data?.html) {
-        content = response.data.html;
-      } else if (response.data?.content) {
+      if (response.data?.content) {
         content = response.data.content;
-      } else if (typeof response.data === 'string') {
-        content = response.data;
       } else {
-        content = response.data?.data?.html || response.data?.data?.content || "";
+        content = response.data?.data?.content || "";
       }
-      
+
       setHtmlContent(content);
-      
+
       if (!content) {
         setError("No HTML content found in response");
         message.warning("No preview content available");
       }
-      
     } catch (error) {
       console.error("Error fetching HTML content:", error);
       setError(error.message);
@@ -72,9 +69,9 @@ const ContractHtmlPreview = ({ visible, template, onClose }) => {
   return (
     <Modal
       title={
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
           <EyeOutlined />
-          <span>Contract Preview - {template?.name || 'Template'}</span>
+          <span>Contract Preview - {template?.name || "Template"}</span>
         </div>
       }
       open={visible}
@@ -84,52 +81,60 @@ const ContractHtmlPreview = ({ visible, template, onClose }) => {
       footer={[
         <Button key="close" onClick={handleClose} icon={<CloseOutlined />}>
           Close
-        </Button>
+        </Button>,
       ]}
       className="contract-html-preview-modal"
     >
-      <div style={{ minHeight: '400px' }}>
+      <div style={{ minHeight: "400px" }}>
         {loading ? (
-          <div style={{ 
-            display: 'flex', 
-            justifyContent: 'center', 
-            alignItems: 'center', 
-            height: '400px' 
-          }}>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              height: "400px",
+            }}
+          >
             <Spin size="large" />
-            <span style={{ marginLeft: '16px' }}>Loading preview...</span>
+            <span style={{ marginLeft: "16px" }}>Loading preview...</span>
           </div>
         ) : error ? (
-          <div style={{ 
-            textAlign: 'center', 
-            padding: '40px',
-            color: '#ff4d4f'
-          }}>
-            <Title level={4} type="danger">Preview Error</Title>
+          <div
+            style={{
+              textAlign: "center",
+              padding: "40px",
+              color: "#ff4d4f",
+            }}
+          >
+            <Title level={4} type="danger">
+              Preview Error
+            </Title>
             <Paragraph>{error}</Paragraph>
             <Button type="primary" onClick={fetchHtmlContent}>
               Retry
             </Button>
           </div>
         ) : htmlContent ? (
-          <div 
+          <div
             style={{
-              border: '1px solid #d9d9d9',
-              borderRadius: '6px',
-              padding: '20px',
-              backgroundColor: '#fafafa',
-              minHeight: '400px',
-              maxHeight: '600px',
-              overflowY: 'auto'
+              border: "1px solid #d9d9d9",
+              borderRadius: "6px",
+              padding: "20px",
+              backgroundColor: "#fafafa",
+              minHeight: "400px",
+              maxHeight: "600px",
+              overflowY: "auto",
             }}
             dangerouslySetInnerHTML={{ __html: htmlContent }}
           />
         ) : (
-          <div style={{ 
-            textAlign: 'center', 
-            padding: '40px',
-            color: '#999'
-          }}>
+          <div
+            style={{
+              textAlign: "center",
+              padding: "40px",
+              color: "#999",
+            }}
+          >
             <Title level={4}>No Preview Available</Title>
             <Paragraph>This template has no preview content.</Paragraph>
           </div>
