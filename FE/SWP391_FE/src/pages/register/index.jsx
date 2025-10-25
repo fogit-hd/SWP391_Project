@@ -21,8 +21,6 @@ import {
 import api from "../../config/axios";
 import { toast } from "react-toastify";
 import { Link, useNavigate } from "react-router-dom";
-import AppHeader from "../../components/reuse/AppHeader";
-import AppFooter from "../../components/reuse/AppFooter";
 import "./register.css";
 
 const RegisterPage = () => {
@@ -31,6 +29,17 @@ const RegisterPage = () => {
   const [isScanning, setIsScanning] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState([]);
   const [scannedData, setScannedData] = useState(null);
+  
+  // Floating label states
+  const [emailFocused, setEmailFocused] = useState(false);
+  const [emailValue, setEmailValue] = useState("");
+  const [phoneFocused, setPhoneFocused] = useState(false);
+  const [phoneValue, setPhoneValue] = useState("");
+  const [passwordFocused, setPasswordFocused] = useState(false);
+  const [passwordValue, setPasswordValue] = useState("");
+  const [confirmPasswordFocused, setConfirmPasswordFocused] = useState(false);
+  const [confirmPasswordValue, setConfirmPasswordValue] = useState("");
+  
   const navigate = useNavigate();
 
   const validateEmail = (email) => /\S+@\S+\.\S+/.test(email);
@@ -318,13 +327,11 @@ const RegisterPage = () => {
   };
 
   return (
-    <>
-      <AppHeader />
-      <div className="register-container">
-        {/* Background */}
-        <div className="register-background"></div>
+    <div className="register-container">
+      {/* Background */}
+      <div className="register-background"></div>
 
-        <div className="register-card-container">
+      <div className="register-card-container">
           <Card className="register-card">
           <div className="register-header">
             <h2 className="register-title">Join Our Community</h2>
@@ -344,7 +351,6 @@ const RegisterPage = () => {
               {/* Email */}
               <Col xs={24} md={24}>
                 <Form.Item
-                  label="Email Address"
                   name="email"
                   rules={[
                     { required: true, message: "Email is required" },
@@ -357,20 +363,29 @@ const RegisterPage = () => {
                             ),
                     },
                   ]}
+                  className="floating-label-form-item"
                 >
-                  <Input
-                    placeholder="Enter your email address"
-                    type="email"
-                    prefix={<MailOutlined />}
-                    allowClear
-                  />
+                  <div className={`floating-label-wrapper ${emailFocused || emailValue ? 'active' : ''}`}>
+                    <Input
+                      type="email"
+                      prefix={<MailOutlined />}
+                      allowClear
+                      className="floating-input"
+                      onFocus={() => setEmailFocused(true)}
+                      onBlur={(e) => {
+                        setEmailFocused(false);
+                        setEmailValue(e.target.value);
+                      }}
+                      onChange={(e) => setEmailValue(e.target.value)}
+                    />
+                    <label className="floating-label">Email Address</label>
+                  </div>
                 </Form.Item>
               </Col>
 
               {/* Phone */}
               <Col span={24}>
                 <Form.Item
-                  label="Phone Number"
                   name="phone"
                   rules={[
                     { required: true, message: "Phone number is required" },
@@ -380,19 +395,28 @@ const RegisterPage = () => {
                     },
                     { min: 10, message: "Phone must be at least 10 digits" },
                   ]}
+                  className="floating-label-form-item"
                 >
-                  <Input
-                    placeholder="Enter your phone number"
-                    prefix={<PhoneOutlined />}
-                    allowClear
-                  />
+                  <div className={`floating-label-wrapper ${phoneFocused || phoneValue ? 'active' : ''}`}>
+                    <Input
+                      prefix={<PhoneOutlined />}
+                      allowClear
+                      className="floating-input"
+                      onFocus={() => setPhoneFocused(true)}
+                      onBlur={(e) => {
+                        setPhoneFocused(false);
+                        setPhoneValue(e.target.value);
+                      }}
+                      onChange={(e) => setPhoneValue(e.target.value)}
+                    />
+                    <label className="floating-label">Phone Number</label>
+                  </div>
                 </Form.Item>
               </Col>
 
               {/* Password */}
               <Col xs={24} md={12}>
                 <Form.Item
-                  label="Password"
                   name="password"
                   rules={[
                     { required: true, message: "Password is required" },
@@ -401,22 +425,29 @@ const RegisterPage = () => {
                       message: "Password must be at least 8 characters",
                     },
                   ]}
-                  hasFeedback
+                  className="floating-label-form-item"
                 >
-                  <Input.Password
-                    placeholder="Create a password (min 8 chars)"
-                    prefix={<LockOutlined />}
-                  />
+                  <div className={`floating-label-wrapper ${passwordFocused || passwordValue ? 'active' : ''}`}>
+                    <Input.Password
+                      prefix={<LockOutlined />}
+                      className="floating-input"
+                      onFocus={() => setPasswordFocused(true)}
+                      onBlur={(e) => {
+                        setPasswordFocused(false);
+                        setPasswordValue(e.target.value);
+                      }}
+                      onChange={(e) => setPasswordValue(e.target.value)}
+                    />
+                    <label className="floating-label">Password (min 8 chars)</label>
+                  </div>
                 </Form.Item>
               </Col>
 
               {/* Confirm Password */}
               <Col xs={24} md={12}>
                 <Form.Item
-                  label="Confirm Password"
                   name="confirmPassword"
                   dependencies={["password"]}
-                  hasFeedback
                   rules={[
                     { required: true, message: "Please confirm your password" },
                     ({ getFieldValue }) => ({
@@ -430,11 +461,21 @@ const RegisterPage = () => {
                       },
                     }),
                   ]}
+                  className="floating-label-form-item"
                 >
-                  <Input.Password
-                    placeholder="Confirm your password"
-                    prefix={<LockOutlined />}
-                  />
+                  <div className={`floating-label-wrapper ${confirmPasswordFocused || confirmPasswordValue ? 'active' : ''}`}>
+                    <Input.Password
+                      prefix={<LockOutlined />}
+                      className="floating-input"
+                      onFocus={() => setConfirmPasswordFocused(true)}
+                      onBlur={(e) => {
+                        setConfirmPasswordFocused(false);
+                        setConfirmPasswordValue(e.target.value);
+                      }}
+                      onChange={(e) => setConfirmPasswordValue(e.target.value)}
+                    />
+                    <label className="floating-label">Confirm Password</label>
+                  </div>
                 </Form.Item>
               </Col>
             </Row>
@@ -559,6 +600,7 @@ const RegisterPage = () => {
               </Checkbox>
             </Form.Item>
 
+            {/* Create Account Button */}
             <Form.Item>
               <Button
                 type="primary"
@@ -569,13 +611,32 @@ const RegisterPage = () => {
                 className="register-submit-button"
                 disabled={!scannedData}
               >
-                {isLoading ? "Creating account..." : "Create account"}
+                {isLoading ? "Creating account..." : "Create Account"}
               </Button>
             </Form.Item>
 
-            <div className="register-login-link">
-              Already have an account? <Link to="/login">Sign in</Link>
-            </div>
+            {/* Sign In Link */}
+            <Row justify="center" align="middle" style={{ marginTop: "16px" }}>
+              <Col>
+                <span style={{ color: "#6b7280" }}>Already have an account? </span>
+                <Link to="/login" className="register-login-link">
+                  Sign in
+                </Link>
+              </Col>
+            </Row>
+
+            {/* Back to Homepage Button */}
+            <Row justify="center" align="middle" style={{ marginTop: "20px" }}>
+              <Col>
+                <Button 
+                  type="text" 
+                  onClick={() => navigate("/")}
+                  className="register-back-button"
+                >
+                  ← Back to Homepage
+                </Button>
+              </Col>
+            </Row>
           </Form>
         </Card>
       </div>
@@ -650,9 +711,7 @@ const RegisterPage = () => {
           </div>
         )}
       </div>
-      </div>
-      <AppFooter />
-    </>
+    </div>
   );
 };
 

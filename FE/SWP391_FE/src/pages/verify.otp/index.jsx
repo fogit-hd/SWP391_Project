@@ -4,8 +4,6 @@ import { MailOutlined, SafetyOutlined } from "@ant-design/icons";
 import api from "../../config/axios";
 import { toast } from "react-toastify";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import AppHeader from "../../components/reuse/AppHeader";
-import AppFooter from "../../components/reuse/AppFooter";
 import "./verify-otp.css";
 
 const VerifyOTP = () => {
@@ -149,96 +147,95 @@ const VerifyOTP = () => {
 
   return (
     <div className="verify-otp-page">
-      <AppHeader />
-      <div className="verify-otp-content" style={{ minHeight: "calc(100vh - 64px - 200px)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <div className="verify-otp-content">
         <div className="verify-container">
           {/* Background */}
           <div className="verify-background"></div>
 
           <div className="verify-card-container">
             <Card className="verify-card">
-          <div className="verify-header">
-            <h2 className="verify-title">Verify Your Account</h2>
-            <p className="verify-subtitle">
-              Please enter the OTP sent to your email address to change
-              password.
-              <br />
-              <MailOutlined /> <strong>{localStorage.getItem("email")}</strong>
-            </p>
-            <p>Your email is: {localStorage.getItem("email")}</p>
-          </div>
+              <div className="verify-header">
+                <h2 className="verify-title">Verify Your Account</h2>
+                <p className="verify-subtitle">
+                  Please enter the OTP sent to your email address to change
+                  password.
+                  <br />
+                  <MailOutlined />{" "}
+                  <strong>{localStorage.getItem("email")}</strong>
+                </p>
+                <p>Your email is: {localStorage.getItem("email")}</p>
+              </div>
 
-          <Form
-            form={form}
-            layout="vertical"
-            onFinish={onFinish}
-            requiredMark={false}
-            className="verify-form"
-          >
-            {/* OTP */}
-            <Form.Item
-              label="Verification Code"
-              name="otp"
-              rules={[
-                { required: true, message: "OTP is required" },
-                { min: 6, message: "OTP must be at least 6 characters" },
-                { max: 6, message: "OTP must be exactly 6 characters" },
-                {
-                  pattern: /^[0-9]+$/,
-                  message: "OTP must contain only numbers",
-                },
-              ]}
-            >
-              <Input
-                placeholder="Enter 6-digit OTP"
-                type="text"
-                prefix={<SafetyOutlined />}
-                allowClear
-                maxLength={6}
-              />
-            </Form.Item>
-
-            {/* Resend OTP Link */}
-            <div className="resend-otp-container">
-              <p>
-                Didn't receive the code?{" "}
-                <Button
-                  type="link"
-                  onClick={resendOTP}
-                  disabled={isResendDisabled}
-                  className="resend-otp-link"
-                >
-                  {isResendDisabled
-                    ? `Resend OTP (${countdown}s)`
-                    : hasRequestedResend
-                    ? "Resend OTP"
-                    : "Resend OTP"}
-                </Button>
-              </p>
-            </div>
-
-            <Form.Item>
-              <Button
-                type="primary"
-                htmlType="submit"
-                loading={isLoading}
-                block
-                size="large"
-                className="verify-submit-button"
+              <Form
+                form={form}
+                layout="vertical"
+                onFinish={onFinish}
+                requiredMark={false}
+                className="verify-form"
               >
-                {isLoading ? "Verifying..." : "Verify Account"}
-              </Button>
-            </Form.Item>
+                {/* OTP */}
+                <Form.Item
+                  label="Verification Code"
+                  name="otp"
+                  rules={[
+                    { required: true, message: "OTP is required" },
+                    { min: 6, message: "OTP must be at least 6 characters" },
+                    { max: 6, message: "OTP must be exactly 6 characters" },
+                    {
+                      pattern: /^[0-9]+$/,
+                      message: "OTP must contain only numbers",
+                    },
+                  ]}
+                >
+                  <Input
+                    placeholder="Enter 6-digit OTP"
+                    type="text"
+                    prefix={<SafetyOutlined />}
+                    allowClear
+                    maxLength={6}
+                  />
+                </Form.Item>
 
-            <div className="verify-login-link">
-              Already verified? <Link to="/login">Sign in</Link>
-            </div>
-          </Form>
-        </Card>
-      </div>
+                {/* Resend OTP Link */}
+                <div className="resend-otp-container">
+                  <p>
+                    Didn't receive the code?{" "}
+                    <Button
+                      type="link"
+                      onClick={resendOTP}
+                      disabled={isResendDisabled}
+                      className="resend-otp-link"
+                    >
+                      {isResendDisabled
+                        ? `Resend OTP (${countdown}s)`
+                        : hasRequestedResend
+                        ? "Resend OTP"
+                        : "Resend OTP"}
+                    </Button>
+                  </p>
+                </div>
+
+                <Form.Item>
+                  <Button
+                    type="primary"
+                    htmlType="submit"
+                    loading={isLoading}
+                    block
+                    size="large"
+                    className="verify-submit-button"
+                  >
+                    {isLoading ? "Verifying..." : "Verify Account"}
+                  </Button>
+                </Form.Item>
+
+                <div className="verify-login-link">
+                  Already verified? <Link to="/login">Sign in</Link>
+                </div>
+              </Form>
+            </Card>
+          </div>
         </div>
       </div>
-      <AppFooter />
     </div>
   );
 };

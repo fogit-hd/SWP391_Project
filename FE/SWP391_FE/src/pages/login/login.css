@@ -1,27 +1,29 @@
 .login-container {
   min-height: 100vh;
+  width: 100%;
+  background-color: white;
   display: flex;
   align-items: center;
   justify-content: center;
   position: relative;
-  padding-top: 88px;
-  padding-bottom: 40px;
+  padding: 40px 20px;
+  overflow: hidden;
 }
 
 .login-background {
   position: absolute;
   inset: 0;
   z-index: 0;
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
+  background-image: 
+    radial-gradient(circle 600px at 0% 200px, #bfdbfe, transparent),
+    radial-gradient(circle 600px at 100% 200px, #bfdbfe, transparent);
 }
 
 .login-background::before {
   content: "";
   position: absolute;
   inset: 0;
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: transparent;
 }
 
 .login-card-container {
@@ -56,18 +58,6 @@
   margin: 0;
 }
 
-.login-form {
-  margin-top: 1rem;
-}
-
-.login-form .ant-form-item {
-  margin-bottom: 1rem;
-}
-
-.login-form .ant-form-item-label > label {
-  font-weight: 500;
-}
-
 .login-remember-row {
   display: flex;
   justify-content: space-between;
@@ -78,6 +68,8 @@
 .login-forgot-link {
   color: #1890ff;
   text-decoration: none;
+  font-size: 0.9rem;
+  transition: all 0.3s ease;
 }
 
 .login-forgot-link:hover {
@@ -85,9 +77,19 @@
   text-decoration: underline;
 }
 
+.login-submit-button {
+  margin-top: 0.5rem;
+  height: 48px;
+  font-weight: 600;
+  font-size: 1rem;
+  border-radius: 8px;
+}
+
 .login-register-link {
   color: #1890ff;
   text-decoration: none;
+  font-weight: 500;
+  transition: all 0.3s ease;
 }
 
 .login-register-link:hover {
@@ -96,23 +98,145 @@
 }
 
 .login-verify-link {
-  color: #52c41a;
+  color: #6b7280;
   text-decoration: none;
+  font-size: 0.875rem;
+  transition: all 0.3s ease;
 }
 
 .login-verify-link:hover {
-  color: #73d13d;
+  color: #1890ff;
   text-decoration: underline;
 }
 
-.login-submit-button {
-  margin-top: 0.5rem;
-  height: 40px;
+.login-back-button {
+  color: #6b7280;
+  font-size: 0.9rem;
+  padding: 8px 16px;
+  height: auto;
+  transition: all 0.3s ease;
+}
+
+.login-back-button:hover {
+  color: #1890ff;
+  background-color: rgba(24, 144, 255, 0.05);
+}
+
+.login-form {
+  margin-top: 1rem;
+}
+
+.login-form .ant-form-item {
+  margin-bottom: 1.5rem;
+}
+
+.login-form .ant-form-item-label > label {
   font-weight: 500;
 }
 
-.login-divider {
-  margin: 1.5rem 0;
+
+.floating-label-form-item {
+  margin-bottom: 1.5rem;
+}
+
+.floating-label-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.floating-label-wrapper .floating-input {
+  width: 100%;
+  padding: 20px 12px 8px 40px;
+  font-size: 1rem;
+  border: 2px solid #d9d9d9;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  background-color: #fff;
+}
+
+.floating-label-wrapper .floating-input:focus {
+  border-color: #1890ff;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.1);
+}
+
+.floating-label-wrapper .floating-label {
+  position: absolute;
+  left: 40px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #999;
+  font-size: 1rem;
+  pointer-events: none;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  background-color: #fff;
+  padding: 0 4px;
+  z-index: 1;
+}
+
+/* When input is active (focused or has value) */
+.floating-label-wrapper.active .floating-label {
+  top: 0;
+  left: 35px;
+  font-size: 0.75rem;
+  color: #1890ff;
+  font-weight: 500;
+  transform: translateY(-50%);
+}
+
+/* For password input wrapper */
+.floating-label-wrapper .ant-input-affix-wrapper {
+  padding: 20px 12px 8px 12px;
+  border: 2px solid #d9d9d9;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.floating-label-wrapper .ant-input-affix-wrapper:focus,
+.floating-label-wrapper .ant-input-affix-wrapper-focused {
+  border-color: #1890ff;
+  box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.1);
+}
+
+.floating-label-wrapper .ant-input-affix-wrapper input {
+  padding: 0;
+  padding-left: 28px;
+}
+
+/* Icon positioning */
+.floating-label-wrapper .ant-input-prefix {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #999;
+  font-size: 1rem;
+  z-index: 2;
+  margin-right: 0;
+}
+
+.floating-label-wrapper .ant-input-suffix {
+  z-index: 2;
+}
+
+/* Clear icon positioning */
+.floating-label-wrapper .ant-input-clear-icon {
+  z-index: 2;
+}
+
+/* Error state */
+.floating-label-form-item.ant-form-item-has-error .floating-input,
+.floating-label-form-item.ant-form-item-has-error .ant-input-affix-wrapper {
+  border-color: #ff4d4f;
+}
+
+.floating-label-form-item.ant-form-item-has-error .ant-input-affix-wrapper:focus,
+.floating-label-form-item.ant-form-item-has-error .ant-input-affix-wrapper-focused {
+  box-shadow: 0 0 0 2px rgba(255, 77, 79, 0.1);
+}
+
+.floating-label-form-item.ant-form-item-has-error .floating-label-wrapper.active .floating-label {
+  color: #ff4d4f;
 }
 
 @media (max-width: 768px) {
@@ -127,9 +251,5 @@
 
   .login-title {
     font-size: 1.25rem;
-  }
-
-  .login-social-buttons {
-    grid-template-columns: 1fr;
   }
 }

@@ -1,27 +1,29 @@
 .register-container {
   min-height: 100vh;
+  width: 100%;
+  background-color: white;
   display: flex;
   align-items: center;
   justify-content: center;
   position: relative;
-  padding-top: 88px;
-  padding-bottom: 40px;
+  padding: 40px 20px;
+  overflow: hidden;
 }
 
 .register-background {
   position: absolute;
   inset: 0;
   z-index: 0;
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
+  background-image: 
+    radial-gradient(circle 600px at 0% 200px, #bfdbfe, transparent),
+    radial-gradient(circle 600px at 100% 200px, #bfdbfe, transparent);
 }
 
 .register-background::before {
   content: "";
   position: absolute;
   inset: 0;
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: transparent;
 }
 
 .register-card-container {
@@ -62,11 +64,116 @@
 }
 
 .register-form .ant-form-item {
-  margin-bottom: 1rem;
+  margin-bottom: 1.5rem;
 }
 
 .register-form .ant-form-item-label > label {
   font-weight: 500;
+}
+
+/* Floating Label Styles */
+.floating-label-form-item {
+  margin-bottom: 1.5rem;
+}
+
+.floating-label-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.floating-label-wrapper .floating-input {
+  width: 100%;
+  padding: 20px 12px 8px 40px;
+  font-size: 1rem;
+  border: 2px solid #d9d9d9;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  background-color: #fff;
+}
+
+.floating-label-wrapper .floating-input:focus {
+  border-color: #1890ff;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.1);
+}
+
+.floating-label-wrapper .floating-label {
+  position: absolute;
+  left: 40px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #999;
+  font-size: 1rem;
+  pointer-events: none;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  background-color: #fff;
+  padding: 0 4px;
+  z-index: 1;
+}
+
+/* When input is active (focused or has value) */
+.floating-label-wrapper.active .floating-label {
+  top: 0;
+  left: 35px;
+  font-size: 0.75rem;
+  color: #1890ff;
+  font-weight: 500;
+  transform: translateY(-50%);
+}
+
+/* For password input wrapper */
+.floating-label-wrapper .ant-input-affix-wrapper {
+  padding: 20px 12px 8px 12px;
+  border: 2px solid #d9d9d9;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.floating-label-wrapper .ant-input-affix-wrapper:focus,
+.floating-label-wrapper .ant-input-affix-wrapper-focused {
+  border-color: #1890ff;
+  box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.1);
+}
+
+.floating-label-wrapper .ant-input-affix-wrapper input {
+  padding: 0;
+  padding-left: 28px;
+}
+
+/* Icon positioning */
+.floating-label-wrapper .ant-input-prefix {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #999;
+  font-size: 1rem;
+  z-index: 2;
+  margin-right: 0;
+}
+
+.floating-label-wrapper .ant-input-suffix {
+  z-index: 2;
+}
+
+/* Clear icon positioning */
+.floating-label-wrapper .ant-input-clear-icon {
+  z-index: 2;
+}
+
+/* Error state */
+.floating-label-form-item.ant-form-item-has-error .floating-input,
+.floating-label-form-item.ant-form-item-has-error .ant-input-affix-wrapper {
+  border-color: #ff4d4f;
+}
+
+.floating-label-form-item.ant-form-item-has-error .ant-input-affix-wrapper:focus,
+.floating-label-form-item.ant-form-item-has-error .ant-input-affix-wrapper-focused {
+  box-shadow: 0 0 0 2px rgba(255, 77, 79, 0.1);
+}
+
+.floating-label-form-item.ant-form-item-has-error .floating-label-wrapper.active .floating-label {
+  color: #ff4d4f;
 }
 
 .register-form-row {
@@ -89,12 +196,13 @@
 }
 
 .register-terms-checkbox {
-  margin: 1rem 0;
+  margin: 1.5rem 0 1rem 0;
 }
 
 .register-terms-link {
   color: #1890ff;
   text-decoration: none;
+  transition: all 0.3s ease;
 }
 
 .register-terms-link:hover {
@@ -103,26 +211,36 @@
 }
 
 .register-submit-button {
-  margin-top: 1rem;
-  height: 40px;
-  font-weight: 500;
+  margin-top: 0.5rem;
+  height: 48px;
+  font-weight: 600;
+  font-size: 1rem;
+  border-radius: 8px;
 }
 
 .register-login-link {
-  text-align: center;
-  font-size: 0.875rem;
-  color: #6b7280;
-  margin-top: 1rem;
-}
-
-.register-login-link a {
   color: #1890ff;
   text-decoration: none;
+  font-weight: 500;
+  transition: all 0.3s ease;
 }
 
-.register-login-link a:hover {
+.register-login-link:hover {
   color: #40a9ff;
   text-decoration: underline;
+}
+
+.register-back-button {
+  color: #6b7280;
+  font-size: 0.9rem;
+  padding: 8px 16px;
+  height: auto;
+  transition: all 0.3s ease;
+}
+
+.register-back-button:hover {
+  color: #1890ff;
+  background-color: rgba(24, 144, 255, 0.05);
 }
 
 .cccd-info-table {

@@ -13,6 +13,8 @@ import {
   InputNumber,
   Select,
   Dropdown,
+  Space,
+  Typography,
 } from "antd";
 import "../view.myvehicle/my-vehicle.css";
 import {
@@ -23,16 +25,20 @@ import {
   MoreOutlined,
   HomeOutlined,
   CopyOutlined,
+  ArrowLeftOutlined,
 } from "@ant-design/icons";
 import { Link, useNavigate } from "react-router-dom";
 import api from "../../config/axios";
 import { toast } from "react-toastify";
+import { useAuth } from "../../components/hooks/useAuth";
 
 const { Header, Content, Footer, Sider } = Layout;
 const { Option } = Select;
+const { Title } = Typography;
 
 const MyVehicle = () => {
   const navigate = useNavigate();
+  const { isAuthenticated, isCoOwner, isAdmin, isStaff } = useAuth();
   const {
     token: { colorBgContainer, borderRadiusLG },
   } = theme.useToken();
@@ -435,16 +441,43 @@ const MyVehicle = () => {
     }
   };
 
+  // Handle back navigation based on role
+  const handleBack = () => {
+    if (isStaff) {
+      navigate("/staff/dashboard");
+    } else if (isAdmin) {
+      navigate("/admin/dashboard");
+    } else if (isCoOwner) {
+      navigate("/");
+    } else {
+      navigate("/");
+    }
+  };
+
   return (
     <>
       <Layout style={{ minHeight: "calc(100vh - 64px - 200px)" }}>
         <Content style={{ margin: "24px 16px 0" }}>
-          <Breadcrumb style={{ margin: "16px 0" }}>
-            <Breadcrumb.Item>
-              <Link to="/">Home</Link>
-            </Breadcrumb.Item>
-            <Breadcrumb.Item>My Vehicles</Breadcrumb.Item>
-          </Breadcrumb>
+          <Space
+            style={{
+              width: "100%",
+              justifyContent: "space-between",
+              marginBottom: 16,
+            }}
+          >
+            <Space>
+              <Button
+                type="text"
+                icon={<ArrowLeftOutlined />}
+                onClick={handleBack}
+              >
+                Quay lại
+              </Button>
+              <Title level={3} style={{ margin: 0 }}>
+                My Vehicles
+              </Title>
+            </Space>
+          </Space>
 
           <div
             style={{

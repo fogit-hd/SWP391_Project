@@ -11,6 +11,10 @@ import "./login.css";
 const LoginPage = () => {
   const [form] = Form.useForm();
   const [isLoading, setIsLoading] = useState(false);
+  const [emailFocused, setEmailFocused] = useState(false);
+  const [passwordFocused, setPasswordFocused] = useState(false);
+  const [emailValue, setEmailValue] = useState("");
+  const [passwordValue, setPasswordValue] = useState("");
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
@@ -31,7 +35,6 @@ const LoginPage = () => {
     if (rememberedEmail) {
       form.setFieldsValue({
         email: rememberedEmail,
-        rememberMe: true,
       });
     }
   }, [form]);
@@ -188,126 +191,152 @@ const LoginPage = () => {
   };
 
   return (
-    <>
-      <div className="login-container">
-        <div className="login-background"></div>
+    <div className="login-container">
+      <div className="login-background"></div>
 
-        <div className="login-card-container">
-          <Card className="login-card">
-            <div className="login-header">
-              <h2 className="login-title">Welcome Back, Co-owner</h2>
-              <p className="login-subtitle">
-                Please enter your credentials to continue
-              </p>
-            </div>
+      <div className="login-card-container">
+        <Card className="login-card">
+          <div className="login-header">
+            <h2 className="login-title">Welcome Back, Co-owner</h2>
+            <p className="login-subtitle">
+              Please enter your credentials to continue
+            </p>
+          </div>
 
-            <Form
-              form={form}
-              layout="vertical"
-              initialValues={{ rememberMe: false }}
-              onFinish={onFinish}
-              requiredMark={false}
-              className="login-form"
+          <Form
+            form={form}
+            layout="vertical"
+            initialValues={{ rememberMe: false }}
+            onFinish={onFinish}
+            requiredMark={false}
+            className="login-form"
+          >
+            {/* Email Field */}
+            <Form.Item
+              name="email"
+              rules={[{ required: true, message: "Email is required" }]}
+              className="floating-label-form-item"
             >
-              {/* Email Field */}
-              <Form.Item
-                label="Email"
-                name="email"
-                rules={[{ required: true, message: "Email is required" }]}
+              <div
+                className={`floating-label-wrapper ${
+                  emailFocused || emailValue ? "active" : ""
+                }`}
               >
                 <Input
-                  placeholder="Enter your email"
                   prefix={<MailOutlined />}
                   allowClear
+                  className="floating-input"
+                  onFocus={() => setEmailFocused(true)}
+                  onBlur={(e) => {
+                    setEmailFocused(false);
+                    setEmailValue(e.target.value);
+                  }}
+                  onChange={(e) => setEmailValue(e.target.value)}
                 />
-              </Form.Item>
-              {/* Password Field */}
-              <Form.Item
-                label="Password"
-                name="password"
-                rules={[
-                  { required: true, message: "Password is required" },
-                  { min: 8, message: "Password must be at least 8 characters" },
-                ]}
-                hasFeedback
+                <label className="floating-label">Email</label>
+              </div>
+            </Form.Item>
+            {/* Password Field */}
+            <Form.Item
+              name="password"
+              rules={[
+                { required: true, message: "Password is required" },
+                { min: 8, message: "Password must be at least 8 characters" },
+              ]}
+              className="floating-label-form-item"
+            >
+              <div
+                className={`floating-label-wrapper ${
+                  passwordFocused || passwordValue ? "active" : ""
+                }`}
               >
                 <Input.Password
-                  placeholder="Enter password"
                   prefix={<LockOutlined />}
+                  className="floating-input"
+                  onFocus={() => setPasswordFocused(true)}
+                  onBlur={(e) => {
+                    setPasswordFocused(false);
+                    setPasswordValue(e.target.value);
+                  }}
+                  onChange={(e) => setPasswordValue(e.target.value)}
                 />
-              </Form.Item>
+                <label className="floating-label">Password</label>
+              </div>
+            </Form.Item>
 
-              <Row
-                justify="space-between"
-                align="middle"
-                className="login-remember-row"
-              >
-                <Col>
-                  <Form.Item name="rememberMe" valuePropName="checked" noStyle>
-                    <Checkbox>Remember me</Checkbox>
-                  </Form.Item>
-                </Col>
-                <Col>
-                  <Form.Item name="backHomepage" noStyle>
-                    <Button variant="primary" onClick={() => navigate("/")}>
-                      Back
-                    </Button>
-                  </Form.Item>
-                </Col>
-                <Col>
-                  <Link to="/forgot-password" className="login-forgot-link">
-                    <a
-                      onClick={handleForgotPassword}
-                      className="login-forgot-link"
-                      style={{ cursor: "pointer" }}
-                    >
-                      Forgot Password?
-                    </a>
-                  </Link>
-                </Col>
-              </Row>
-
-              <Row
-                justify="center"
-                align="middle"
-                style={{ marginTop: "10px" }}
-              >
-                <Col>
-                  <Link to="/register" className="login-register-link">
-                    Don't have an account? Register here
-                  </Link>
-                </Col>
-              </Row>
-
-              <Row
-                justify="center"
-                align="middle"
-                style={{ marginTop: "10px" }}
-              >
-                <Col>
-                  <Link to="/verify-otp" className="login-verify-link">
-                    Need to verify your account? Click here
-                  </Link>
-                </Col>
-              </Row>
-
-              <Form.Item>
-                <Button
-                  type="primary"
-                  htmlType="submit"
-                  loading={isLoading}
-                  block
-                  size="large"
-                  className="login-submit-button"
+            {/* Remember Me & Forgot Password */}
+            <Row
+              justify="space-between"
+              align="middle"
+              className="login-remember-row"
+            >
+              <Col>
+                <Form.Item name="rememberMe" valuePropName="checked" noStyle>
+                  <Checkbox>Remember me</Checkbox>
+                </Form.Item>
+              </Col>
+              <Col>
+                <a
+                  onClick={handleForgotPassword}
+                  className="login-forgot-link"
+                  style={{ cursor: "pointer" }}
                 >
-                  {isLoading ? "Signing in..." : "Sign In"}
+                  Forgot Password?
+                </a>
+              </Col>
+            </Row>
+
+            {/* Sign In Button */}
+            <Form.Item>
+              <Button
+                type="primary"
+                htmlType="submit"
+                loading={isLoading}
+                block
+                size="large"
+                className="login-submit-button"
+              >
+                {isLoading ? "Signing in..." : "Sign In"}
+              </Button>
+            </Form.Item>
+
+            {/* Register Link */}
+            <Row justify="center" align="middle" style={{ marginTop: "16px" }}>
+              <Col>
+                <span style={{ color: "#6b7280" }}>
+                  Don't have an account?{" "}
+                </span>
+                <Link to="/register" className="login-register-link">
+                  Register here
+                </Link>
+              </Col>
+            </Row>
+
+            {/* Verify OTP Link */}
+            <Row justify="center" align="middle" style={{ marginTop: "12px" }}>
+              <Col>
+                <Link to="/verify-otp" className="login-verify-link">
+                  Need to verify your account?
+                </Link>
+              </Col>
+            </Row>
+
+            {/* Back to Homepage Button */}
+            <Row justify="center" align="middle" style={{ marginTop: "20px" }}>
+              <Col>
+                <Button
+                  type="text"
+                  onClick={() => navigate("/")}
+                  className="login-back-button"
+                >
+                  ← Back to Homepage
                 </Button>
-              </Form.Item>
-            </Form>
-          </Card>
-        </div>
+              </Col>
+            </Row>
+          </Form>
+        </Card>
       </div>
-    </>
+    </div>
   );
 };
 
