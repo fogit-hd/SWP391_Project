@@ -1,14 +1,26 @@
 import React, { useState, useEffect } from "react";
-import { Layout, Button, Space, Avatar, Dropdown, Typography, Modal, Card, Row, Col, Spin } from "antd";
-import { 
-  UserOutlined, 
-  LogoutOutlined, 
+import {
+  Layout,
+  Button,
+  Space,
+  Avatar,
+  Dropdown,
+  Typography,
+  Modal,
+  Card,
+  Row,
+  Col,
+  Spin,
+} from "antd";
+import {
+  UserOutlined,
+  LogoutOutlined,
   SettingOutlined,
   CameraOutlined,
   CheckOutlined,
   CarOutlined,
   HistoryOutlined,
-  CalendarOutlined
+  CalendarOutlined,
 } from "@ant-design/icons";
 import { Link, useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
@@ -24,7 +36,7 @@ const AppHeader = () => {
   const { isAuthenticated, isAdmin, isStaff, isCoOwner, user } = useAuth();
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  
+
   const [isProfileModalVisible, setIsProfileModalVisible] = useState(false);
   const [profileData, setProfileData] = useState(null);
   const [isProfileLoading, setIsProfileLoading] = useState(false);
@@ -59,7 +71,9 @@ const AppHeader = () => {
 
   const handleUpdateProfile = () => {
     const savedProfileData = localStorage.getItem("profileData");
-    const parsedProfileData = savedProfileData ? JSON.parse(savedProfileData) : null;
+    const parsedProfileData = savedProfileData
+      ? JSON.parse(savedProfileData)
+      : null;
 
     navigate("/update-profile", {
       state: {
@@ -113,19 +127,27 @@ const AppHeader = () => {
       onClick: () => navigate("/change-password"),
     },
     // Only show My Vehicle for Co-owner
-    ...(isCoOwner ? [{
-      key: "my-vehicle",
-      icon: <CarOutlined />,
-      label: "My Vehicle",
-      onClick: () => navigate("/my-vehicle"),
-    }] : []),
+    ...(isCoOwner
+      ? [
+          {
+            key: "my-vehicle",
+            icon: <CarOutlined />,
+            label: "My Vehicle",
+            onClick: () => navigate("/my-vehicle"),
+          },
+        ]
+      : []),
     // Only show Booking for Co-owner
-    ...(isCoOwner ? [{
-      key: "booking",
-      icon: <CalendarOutlined />,
-      label: "Vehicle Booking",
-      onClick: () => navigate("/booking"),
-    }] : []),
+    ...(isCoOwner
+      ? [
+          {
+            key: "booking",
+            icon: <CalendarOutlined />,
+            label: "Vehicle Booking",
+            onClick: () => navigate("/booking"),
+          },
+        ]
+      : []),
     {
       key: "history",
       icon: <HistoryOutlined />,
@@ -145,8 +167,8 @@ const AppHeader = () => {
   return (
     <>
       <Header className="header">
-        <Link to="/" style={{ textDecoration: 'none' }}>
-          <Title level={2} className="site-title" style={{ cursor: 'pointer' }}>
+        <Link to="/" style={{ textDecoration: "none" }}>
+          <Title level={2} className="site-title" style={{ cursor: "pointer" }}>
             EVCS
           </Title>
         </Link>
@@ -239,7 +261,7 @@ const AppHeader = () => {
                   size={40}
                   className="user-avatar"
                   onClick={handleProfileClick}
-                  style={{ cursor: 'pointer' }}
+                  style={{ cursor: "pointer" }}
                 />
               </Space>
             </Dropdown>

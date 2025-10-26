@@ -1,0 +1,105 @@
+.star-border-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.star-border-button {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(135deg, #1890ff 0%, #096dd9 100%) !important;
+  border: 2px solid transparent !important;
+  background-clip: padding-box;
+  z-index: 1;
+  transition: all 0.3s ease !important;
+}
+
+.star-border-button::before {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  background: linear-gradient(
+    45deg,
+    #1890ff,
+    #40a9ff,
+    #69c0ff,
+    #91d5ff,
+    #bae7ff,
+    #91d5ff,
+    #69c0ff,
+    #40a9ff,
+    #1890ff
+  );
+  background-size: 300% 300%;
+  border-radius: inherit;
+  z-index: -1;
+  animation: borderRotate 3s linear infinite;
+  opacity: 0.8;
+}
+
+@keyframes borderRotate {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.star-border-content {
+  position: relative;
+  z-index: 2;
+  font-weight: 600;
+}
+
+.star-border-overlay {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.star {
+  position: absolute;
+  width: 2px;
+  height: 2px;
+  background: white;
+  border-radius: 50%;
+  box-shadow: 0 0 4px 1px rgba(255, 255, 255, 0.8);
+  animation: twinkle 2s ease-in-out infinite;
+  opacity: 0;
+}
+
+@keyframes twinkle {
+  0%,
+  100% {
+    opacity: 0;
+    transform: scale(0);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.star-border-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 30px rgba(24, 144, 255, 0.4) !important;
+}
+
+.star-border-button:hover::before {
+  animation-duration: 1.5s;
+  opacity: 1;
+}
+
+.star-border-button:hover .star {
+  animation-duration: 1s;
+}
+
+.star-border-button:active {
+  transform: translateY(0px);
+}
+

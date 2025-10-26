@@ -163,7 +163,6 @@ const VerifyOTP = () => {
                   <MailOutlined />{" "}
                   <strong>{localStorage.getItem("email")}</strong>
                 </p>
-                <p>Your email is: {localStorage.getItem("email")}</p>
               </div>
 
               <Form
