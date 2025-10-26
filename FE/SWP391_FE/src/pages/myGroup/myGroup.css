@@ -1,0 +1,23 @@
+/* Align list items and actions on My Groups page */
+.my-groups-list .ant-list-item {
+  align-items: center;
+}
+
+.my-groups-list .ant-list-item-meta {
+  align-items: center;
+}
+
+/* AntD adds a small top margin on actions; reset so actions align with title */
+.my-groups-list .ant-list-item-action {
+  margin-top: 0 !important;
+}
+
+/* Keep title and description tightly grouped */
+.my-groups-list .ant-list-item-meta-title {
+  margin-bottom: 0;
+}
+
+/* Ensure status tags sit on the same baseline */
+.my-groups-list .ant-tag {
+  vertical-align: middle;
+}

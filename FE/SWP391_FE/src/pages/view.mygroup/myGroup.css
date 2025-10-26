@@ -12,6 +12,22 @@
   margin-bottom: 24px;
 }
 
+/* Align list rows and right-side actions */
+.my-groups-list .ant-list-item {
+  align-items: center;
+  padding: 14px 8px;
+}
+.my-groups-list .ant-list-item-meta {
+  margin: 0;
+}
+.my-groups-list .ant-list-item-action {
+  margin-left: auto;
+}
+.my-groups-list .ant-tag {
+  display: inline-flex;
+  align-items: center;
+}
+
 @media (max-width: 768px) {
   .my-groups-content {
     padding: 16px;
