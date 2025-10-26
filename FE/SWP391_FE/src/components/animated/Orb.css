@@ -1,0 +1,155 @@
+.orb-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.orb-wrapper {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  animation: background-shift 20s ease-in-out infinite;
+}
+
+/* Background shift animation */
+@keyframes background-shift {
+  0%, 100% {
+    filter: hue-rotate(0deg);
+  }
+  50% {
+    filter: hue-rotate(15deg);
+  }
+}
+
+.orb {
+  position: absolute;
+  border-radius: 50%;
+  opacity: 1;
+  animation: float-orb linear infinite, pulse-glow 4s ease-in-out infinite;
+  will-change: transform, filter, opacity;
+  pointer-events: none;
+  box-shadow: 0 0 60px rgba(24, 144, 255, 0.6);
+}
+
+/* Particle ring effect */
+.orb::before {
+  content: '';
+  position: absolute;
+  inset: -20px;
+  border-radius: 50%;
+  border: 2px solid rgba(24, 144, 255, 0.3);
+  animation: particle-ring 3s linear infinite;
+}
+
+.orb::after {
+  content: '';
+  position: absolute;
+  inset: -40px;
+  border-radius: 50%;
+  border: 1px solid rgba(24, 144, 255, 0.2);
+  animation: particle-ring 4s linear infinite reverse;
+}
+
+@keyframes particle-ring {
+  0% {
+    transform: rotate(0deg) scale(1);
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    transform: rotate(360deg) scale(1.2);
+    opacity: 0;
+  }
+}
+
+/* Single orb centered around hero text content */
+.orb:nth-child(1) {
+  left: 35%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  animation-delay: 0s, 0s;
+}
+
+/* Floating animation with rotation - subtle for single orb */
+@keyframes float-orb {
+  0% {
+    transform: translate(-50%, -50%) scale(1) rotate(0deg);
+    opacity: 0.6;
+  }
+  25% {
+    transform: translate(-50%, -50%) scale(1.05) rotate(90deg);
+    opacity: 0.7;
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1.1) rotate(180deg);
+    opacity: 0.65;
+  }
+  75% {
+    transform: translate(-50%, -50%) scale(1.05) rotate(270deg);
+    opacity: 0.7;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1) rotate(360deg);
+    opacity: 0.6;
+  }
+}
+
+/* Pulse glow animation */
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 
+      0 0 40px rgba(24, 144, 255, 0.4),
+      0 0 80px rgba(24, 144, 255, 0.2),
+      inset 0 0 40px rgba(24, 144, 255, 0.1);
+    filter: brightness(1);
+  }
+  50% {
+    box-shadow: 
+      0 0 80px rgba(24, 144, 255, 0.8),
+      0 0 120px rgba(24, 144, 255, 0.4),
+      inset 0 0 60px rgba(24, 144, 255, 0.3);
+    filter: brightness(1.3);
+  }
+}
+
+/* Content wrapper */
+.orb-content {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .orb:nth-child(1) {
+    left: 50%;
+    transform: translate(-50%, -50%);
+  }
+  
+  .orb {
+    opacity: 0.5;
+  }
+  
+  @keyframes float-orb {
+    0%, 100% {
+      transform: translate(-50%, -50%) scale(0.9);
+      opacity: 0.5;
+    }
+    50% {
+      transform: translate(-50%, -50%) scale(1);
+      opacity: 0.6;
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .orb {
+    opacity: 0.3;
+  }
+}
+

@@ -29,6 +29,7 @@ import {
   CameraOutlined,
   CheckOutlined,
   CarOutlined,
+  LoginOutlined,
 } from "@ant-design/icons";
 import { Link, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
@@ -38,6 +39,11 @@ import { toast } from "react-toastify";
 import { useAuth } from "../../components/hooks/useAuth";
 import "./home.css";
 import "../../../index.css";
+import CardNav from "../../components/animated/CardNav";
+import FadeInSection from "../../components/animated/FadeInSection";
+import CardSwap, { Card as SwapCard } from "../../components/animated/CardSwap";
+import StarBorder from "../../components/animated/StarBorder";
+import Orb from "../../components/animated/Orb";
 
 const { Header, Content, Footer } = Layout;
 const { Title, Paragraph, Text } = Typography;
@@ -51,7 +57,17 @@ const Homepage = () => {
   const [profileData, setProfileData] = useState(null);
   const [isProfileLoading, setIsProfileLoading] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
+  const [authKey, setAuthKey] = useState(0); // Force re-render key
   const navigate = useNavigate();
+
+  // Debug: Log user state changes
+  useEffect(() => {
+    console.log("=== Auth State Debug ===");
+    console.log("user:", user);
+    console.log("isAuthenticated:", isAuthenticated);
+    console.log("authKey:", authKey);
+    console.log("=====================");
+  }, [user, isAuthenticated, authKey]);
 
   // Log profileData changes for debugging (keep for important state changes)
   useEffect(() => {
@@ -121,14 +137,24 @@ const Homepage = () => {
 
   // Function to handle user logout
   const handleLogout = () => {
-    console.log("refreshToken:", localStorage.getItem("refreshToken"));
     console.log("Logging out user...");
 
-    // Clear profile data from localStorage
-    localStorage.removeItem("profileData");
+    // Clear all auth-related state
     setProfileData(null);
+    setProfileImage(null);
+    setIsProfileModalVisible(false);
+    
+    // Dispatch logout action (this will clear all localStorage items)
     dispatch(logout());
-    navigate("/login");
+    
+    // Force re-render by updating auth key
+    setAuthKey(prev => prev + 1);
+    
+    // Show success message
+    toast.success("Logged out successfully!");
+    
+    // Stay on homepage - no navigation
+    console.log("User logged out, staying on homepage");
   };
 
   // Function to handle profile menu click
@@ -500,12 +526,6 @@ const Homepage = () => {
     },
     {
       quote:
-        "As someone who only uses an e-bike on weekends, co-ownership made perfect sense. I pay a fraction of the cost and get access to top-tier adventure bikes when I need them.",
-      author: "DavidVy M.",
-      rating: 4.6,
-    },
-    {
-      quote:
         "Our family shares a fleet with two other families in our building. The kids love having different bikes to choose from, and we've built amazing friendships through this community.",
       author: "SarahNgyn L.",
       rating: 4.9,
@@ -558,215 +578,195 @@ const Homepage = () => {
     },
   ];
 
+  const items = [
+    {
+      label: "About",
+      bgColor: "#0D0716",
+      textColor: "#fff",
+      links: [
+        { label: "Company", ariaLabel: "About Company" },
+        { label: "Careers", ariaLabel: "About Careers" },
+      ],
+    },
+    {
+      label: "Projects",
+      bgColor: "#170D27",
+      textColor: "#fff",
+      links: [
+        { label: "Featured", ariaLabel: "Featured Projects" },
+        { label: "Case Studies", ariaLabel: "Project Case Studies" },
+      ],
+    },
+    {
+      label: "Contact",
+      bgColor: "#271E37",
+      textColor: "#fff",
+      links: [
+        { label: "Email", ariaLabel: "Email us" },
+        { label: "Twitter", ariaLabel: "Twitter" },
+        { label: "LinkedIn", ariaLabel: "LinkedIn" },
+      ],
+    },
+  ];
+
   return (
     <Layout className="page-layout">
-      <Header className="header">
-        <Title level={2} className="site-title">
-          EVCS
-        </Title>
-
-        <Space className="nav-menu">
-          {/* Admin can see manage contracts */}
-          {isAuthenticated && isAdmin && (
-            <Link to="/admin/manage-contract">
-              <Button type="text" className="nav-menu-button">
-                Manage Contracts
-              </Button>
-            </Link>
-          )}
-
-          {/* Admin and Staff can review contracts */}
-          {isAuthenticated && (isAdmin || isStaff) && (
-            <Link to="/staff/review-econtract">
-              <Button type="text" className="nav-menu-button">
-                Review Contracts
-              </Button>
-            </Link>
-          )}
-
-          {/* CoOwner can see their contracts */}
-          {isAuthenticated && isCoOwner && (
-            <Link to="/my-contracts">
-              <Button type="text" className="nav-menu-button">
-                My Contract
-              </Button>
-            </Link>
-          )}
-
-          {/* All authenticated users can see groups */}
-          {isAuthenticated && (
-            <Link to="/view-mygroup">
-              <Button type="text" className="nav-menu-button">
-                My Groups
-              </Button>
-            </Link>
-          )}
-
-          {isAuthenticated && (
-            <Link to="/view-myvehicle">
-              <Button type="text" className="nav-menu-button">
-                My Vehicles
-              </Button>
-            </Link>
-          )}
-
-          <Link to="/contact">
-            <Button type="text" className="nav-menu-button">
-              Contact Us
-            </Button>
-          </Link>
-        </Space>
-
-        <Space className="header-actions">
-          {isAuthenticated ? (
-            <Dropdown
-              menu={{ items: userMenuItems }}
-              placement="topCenter"
-              arrow
-            >
-              <Space className="user-profile">
-                <Text className="user-name">
-                  {profileData?.fullName || "N/A User"}
-                </Text>
-                <Avatar
-                  src={profileData?.imageUrl}
-                  size={40}
-                  className="user-avatar"
-                  onClick={handleProfileClick}
-                />
-              </Space>
-            </Dropdown>
-          ) : (
-            <Space className="auth-buttons">
-              <Link to="/login">
-                <Button ghost className="nav-button">
-                  Login
-                </Button>
-              </Link>
-              <Link to="/register">
-                <Button type="primary" className="nav-button">
-                  Register
-                </Button>
-              </Link>
-            </Space>
-          )}
-        </Space>
-      </Header>
+      {/* Integrated Navigation Bar */}
+            <CardNav
+              key={authKey}
+              logo="EVCS"
+              logoAlt="EVCS Logo"
+              items={items}
+              baseColor="transparent"
+              menuColor="#fff"
+              buttonBgColor="#1890ff"
+              buttonTextColor="#fff"
+              ease="power3.out"
+              user={user}
+              profileData={profileData}
+              userMenuItems={userMenuItems}
+              onProfileClick={handleProfileClick}
+              isAuthenticated={isAuthenticated}
+            />
 
       <Content className="page-content">
         {/* Hero Section */}
         <div className="hero">
-          <div className="hero-overlay" />
-          <div className="hero-content">
-            <Title level={1} className="hero-title">
-              Share the Future.
-            </Title>
-            <Paragraph className="hero-paragraph">
-              Experience premium electric vehicles without the full cost. Join
-              our co-ownership community and share the benefits of sustainable
-              transportation.
-            </Paragraph>
-            <Link to="/view-mygroup">
-              <Button type="primary" size="large" className="hero-cta">
-                Join Co-Ownership Now
-              </Button>
-            </Link>
+          <Orb
+            orbCount={1}
+            colors={['#1890ff']}
+            blur={100}
+            duration={30}
+            className="hero-orb-background"
+          >
+            <div className="hero-split-layout">
+              <div className="hero-content-left">
+                <Title level={1} className="hero-title">
+                  Share the Future.
+                </Title>
+                <Paragraph className="hero-paragraph">
+                  Experience premium electric vehicles without the full cost. Join
+                  our co-ownership community and share the benefits of sustainable
+                  transportation.
+                </Paragraph>
+                <Link to="/view-mygroup">
+                  <StarBorder type="primary" size="large" className="hero-cta">
+                    Join Co-Ownership Now
+                  </StarBorder>
+                </Link>
+              </div>
+              
+              <div className="hero-cards-right">
+                  <CardSwap
+                    width={500}
+                    height={550}
+                    cardDistance={80}
+                    verticalDistance={90}
+                    delay={5000}
+                    pauseOnHover={true}
+                    skewAmount={10}
+                    easing="elastic"
+                  >
+                <SwapCard>
+                  <div className="card-badge-hero">Reliable</div>
+                  <div className="feature-icon-hero">
+                    <RocketOutlined />
+                  </div>
+                  <Title level={2} className="feature-title-hero">
+                    Cost Savings
+                  </Title>
+                  <Paragraph className="feature-text-hero">
+                    Save up to 70% on electric vehicle costs. Split purchase costs, insurance, maintenance, and charging expenses.
+                  </Paragraph>
+                </SwapCard>
+
+                <SwapCard>
+                  <div className="card-badge-hero">Smooth</div>
+                  <div className="feature-icon-hero">
+                    <FireOutlined />
+                  </div>
+                  <Title level={2} className="feature-title-hero">
+                    Premium Access
+                  </Title>
+                  <Paragraph className="feature-text-hero">
+                    Access top-tier electric vehicles and bikes. Drive Tesla, BMW, and other premium EVs.
+                  </Paragraph>
+                </SwapCard>
+
+                <SwapCard>
+                  <div className="card-badge-hero">Customizable</div>
+                  <div className="feature-icon-hero">
+                    <ThunderboltOutlined />
+                  </div>
+                  <Title level={2} className="feature-title-hero">
+                    Flexible Usage
+                  </Title>
+                  <Paragraph className="feature-text-hero">
+                    Use vehicles when you need them, share costs when you don't. Book through our app easily.
+                  </Paragraph>
+                </SwapCard>
+              </CardSwap>
+            </div>
           </div>
+          </Orb>
         </div>
 
-        {/* Features Section */}
-        <div className="features-section">
-          <Row justify="center" className="section-header">
-            <Col>
-              <Title level={1} className="section-title">
-                Why Choose Co-Ownership?
-              </Title>
-            </Col>
-          </Row>
-          <div className="features-grid">
-            {[
-              {
-                icon: <RocketOutlined />,
-                title: "Cost Savings",
-                text: "Save up to 70% on electric vehicle costs by sharing ownership with like-minded individuals.",
-              },
-              {
-                icon: <FireOutlined />,
-                title: "Premium Access",
-                text: "Access top-tier electric vehicles and bikes without the full purchase price.",
-              },
-              {
-                icon: <ThunderboltOutlined />,
-                title: "Flexible Usage",
-                text: "Use vehicles when you need them, share costs when you don't. Perfect for occasional users.",
-              },
-            ].map((feature, index) => (
-              <Card key={index} className="feature-card" hoverable>
-                <div className="feature-icon-container">
-                  <div className="feature-icon">{feature.icon}</div>
-                </div>
-                <Title level={3} className="feature-title">
-                  {feature.title}
-                </Title>
-                <Paragraph className="feature-description">
-                  {feature.text}
-                </Paragraph>
-              </Card>
-            ))}
-          </div>
-        </div>
 
         {/* Testimonials Section */}
-        <div className="testimonials-section">
-          <Row justify="center" className="section-header">
-            <Col>
-              <Title level={1} className="section-title">
-                Trusted by Co-Owners
-              </Title>
-            </Col>
-          </Row>
-          <Row justify="center">
-            <Col xs={24} lg={16}>
-              <Carousel autoplay className="testimonials-carousel">
-                {testimonials.map((testimonial, index) => (
-                  <div key={index} className="testimonial-item">
-                    <Rate
-                      disabled
-                      value={testimonial.rating}
-                      className="testimonial-rating"
-                    />
-                    <Paragraph className="testimonial-quote">
-                      "{testimonial.quote}"
-                    </Paragraph>
-                    <Text className="testimonial-author">
-                      - {testimonial.author}
-                    </Text>
-                  </div>
-                ))}
-              </Carousel>
-            </Col>
-          </Row>
-        </div>
+        <FadeInSection>
+          <div className="testimonials-section">
+            <Row justify="center" className="section-header">
+              <Col>
+                <Title level={1} className="section-title">
+                  Trusted by Co-Owners
+                </Title>
+              </Col>
+            </Row>
+            <Row justify="center">
+              <Col xs={24} lg={16}>
+                <Carousel autoplay className="testimonials-carousel">
+                  {testimonials.map((testimonial, index) => (
+                    <div key={index} className="testimonial-item">
+                      <Rate
+                        disabled
+                        value={testimonial.rating}
+                        className="testimonial-rating"
+                      />
+                      <Paragraph className="testimonial-quote">
+                        "{testimonial.quote}"
+                      </Paragraph>
+                      <Text className="testimonial-author">
+                        - {testimonial.author}
+                      </Text>
+                    </div>
+                  ))}
+                </Carousel>
+              </Col>
+            </Row>
+          </div>
+        </FadeInSection>
 
         {/* Call to Action Section */}
-        <div className="cta-section">
-          <div className="cta-overlay" />
-          <div className="cta-content">
-            <Title level={1} className="cta-title">
-              Ready to Start Sharing?
-            </Title>
-            <Paragraph className="cta-paragraph">
-              Join our co-ownership community today and start saving on premium
-              electric vehicles.
-            </Paragraph>
+        <FadeInSection>
+          <div className="cta-section">
+            <div className="cta-overlay" />
+            <div className="cta-content">
+              <Title level={1} className="cta-title">
+                Ready to Start Sharing?
+              </Title>
+              <Paragraph className="cta-paragraph">
+                Join our co-ownership community today and start saving on premium
+                electric vehicles.
+              </Paragraph>
 
-            <Link to="/view-mygroup">
-              <Button type="primary" size="large" className="cta-cta">
-                Start Co-Owning
-              </Button>
-            </Link>
+              <Link to="/view-mygroup">
+                <StarBorder type="primary" size="large" className="cta-cta">
+                  Start Co-Owning
+                </StarBorder>
+              </Link>
+            </div>
           </div>
-        </div>
+        </FadeInSection>
       </Content>
 
       {/* Footer */}

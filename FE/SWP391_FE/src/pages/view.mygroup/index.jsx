@@ -27,8 +27,6 @@ import {
 import { useNavigate, Link } from "react-router-dom";
 import api from "../../config/axios";
 import { useAuth } from "../../components/hooks/useAuth";
-import AppHeader from "../../components/reuse/AppHeader";
-import AppFooter from "../../components/reuse/AppFooter";
 import "./myGroup.css";
 
 const { Title, Text } = Typography;

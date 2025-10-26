@@ -1,0 +1,54 @@
+.animated-button {
+  position: relative;
+  overflow: hidden;
+  animation: bounceIn 1s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
+  animation-delay: 0.6s;
+  opacity: 0 !important;
+  transform: scale(0.8);
+  animation-fill-mode: forwards !important;
+}
+
+@keyframes bounceIn {
+  0% {
+    opacity: 0 !important;
+    transform: scale(0.8);
+  }
+  50% {
+    opacity: 1 !important;
+    transform: scale(1.1);
+  }
+  100% {
+    opacity: 1 !important;
+    transform: scale(1);
+  }
+}
+
+.animated-button::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  transform: translate(-50%, -50%);
+  transition: width 0.6s, height 0.6s;
+}
+
+.animated-button:hover::before {
+  width: 300px;
+  height: 300px;
+}
+
+.animated-button:hover {
+  transform: scale(1.05) translateY(-3px);
+  box-shadow: 0 10px 30px rgba(24, 144, 255, 0.4);
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.animated-button:active {
+  transform: scale(0.95);
+  transition: transform 0.1s;
+}
+
