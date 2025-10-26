@@ -74,6 +74,7 @@ import {
   Avatar,
   Tag,
   Tabs,
+  Popconfirm,
 } from "antd";
 import api from "../../../config/axios";
 import AdminSidebar from "../../../components/admin/AdminSidebar";
@@ -95,6 +96,46 @@ export default function ManageGroup() {
   const [current, setCurrent] = useState(0);
   const [vehiclesLoading, setVehiclesLoading] = useState(false);
   const [selectedVehicles, setSelectedVehicles] = useState([]);
+
+  // Determine if a group already has any contract based on common backend shapes
+  const hasAnyContract = (g) => {
+    if (!g) return false;
+    if (typeof g.hasContract === "boolean") return g.hasContract;
+    if (Array.isArray(g.contracts)) return g.contracts.length > 0;
+    if (typeof g.contractCount === "number") return g.contractCount > 0;
+    if (g.latestContract || g.contract) return true;
+    // Fallback: some APIs might already map this to isActive
+    return !!g.isActive;
+  };
+
+  const deleteGroup = async (group) => {
+    if (!group?.id) return;
+    try {
+      // Try a few conventional endpoints; stop at first success
+      const tryEndpoints = [
+        { method: "delete", url: `/CoOwnership/${group.id}` },
+        { method: "delete", url: `/CoOwnership/delete/${group.id}` },
+        { method: "post", url: `/CoOwnership/${group.id}/delete` },
+      ];
+      let ok = false, lastErr;
+      for (const ep of tryEndpoints) {
+        try {
+          // eslint-disable-next-line no-await-in-loop
+          const res = await api[ep.method](ep.url);
+          if ((res.status || 200) >= 200 && (res.status || 200) < 300) {
+            ok = true; break;
+          }
+        } catch (e) { lastErr = e; }
+      }
+      if (!ok) throw lastErr || new Error("Cannot delete group");
+      message.success("Group deleted");
+      // remove locally
+      setGroups((prev) => prev.filter((x) => x.id !== group.id));
+    } catch (err) {
+      console.error("Delete group failed", err);
+      message.error(err?.response?.data?.message || "Failed to delete group");
+    }
+  };
 
   // Helpers: normalize API fields and format dates safely
   const normalizeGroups = (arr) =>
@@ -130,13 +171,43 @@ export default function ManageGroup() {
       try {
         const res = await api.get("/CoOwnership/all-groups");
         const payload = res.data?.data ?? res.data;
-        if (Array.isArray(payload)) {
-          setGroups(normalizeGroups(payload));
-        } else if (Array.isArray(payload?.items)) {
-          setGroups(normalizeGroups(payload.items));
-        } else {
-          setGroups([]);
-        }
+        let list = [];
+        if (Array.isArray(payload)) list = payload;
+        else if (Array.isArray(payload?.items)) list = payload.items;
+        else list = [];
+
+        // helper to check active contracts for a group
+        const fetchHasContract = async (groupId) => {
+          try {
+            const r = await api.get("/contracts", { params: { groupId, status: "active" } });
+            const payload2 = Array.isArray(r.data) ? r.data : Array.isArray(r.data?.data) ? r.data.data : [];
+            return Array.isArray(payload2) && payload2.length > 0;
+          } catch {
+            return null; // unknown
+          }
+        };
+
+        const mapWithConcurrency = async (items, limit, mapper) => {
+          const results = new Array(items.length);
+          let i = 0;
+          const workers = new Array(Math.min(limit, items.length)).fill(0).map(async () => {
+            while (i < items.length) {
+              const idx = i++;
+              /* eslint-disable no-await-in-loop */
+              results[idx] = await mapper(items[idx], idx);
+            }
+          });
+          await Promise.all(workers);
+          return results;
+        };
+
+        const normalized = normalizeGroups(list);
+        // Enrich groups with _hasContract flag (concurrent)
+        const enriched = await mapWithConcurrency(normalized, 5, async (g) => {
+          const hasC = await fetchHasContract(g.id);
+          return { ...g, _hasContract: hasC };
+        });
+        setGroups(enriched);
       } catch (err) {
         console.error("Failed to fetch groups", err);
         message.error("Cannot fetch groups");
@@ -219,34 +290,53 @@ export default function ManageGroup() {
     },
     {
       title: "Active",
-      dataIndex: "isActive",
-      key: "isActive",
-      render: (v) =>
-        v ? (
-          <Tag color="green" className="status-tag">
-            Active
-          </Tag>
-        ) : (
-          <Tag color="red" className="status-tag">
-            Inactive
-          </Tag>
-        ),
+      key: "activeByContract",
+      render: (_, record) =>
+        (() => {
+          const activeByContract =
+            record?._hasContract !== null && record?._hasContract !== undefined
+              ? record._hasContract
+              : hasAnyContract(record);
+          return activeByContract ? (
+            <Tag color="green" className="status-tag">Active</Tag>
+          ) : (
+            <Tag color="red" className="status-tag">Inactive</Tag>
+          );
+        })(),
     },
     {
       title: "Actions",
       key: "actions",
       render: (_, record) => (
-        <Button
-          size="small"
-          onClick={() => {
-            setSelected(record);
-            setDetailsVisible(true);
-            setSelectedVehicles(record?.vehicles || []);
-            fetchVehiclesForGroup(record?.id);
-          }}
-        >
-          Details
-        </Button>
+        <div style={{ display: "flex", gap: 8 }}>
+          <Button
+            size="small"
+            onClick={() => {
+              setSelected(record);
+              setDetailsVisible(true);
+              setSelectedVehicles(record?.vehicles || []);
+              fetchVehiclesForGroup(record?.id);
+            }}
+          >
+            Details
+          </Button>
+          {(() => {
+            const activeByContract =
+              record?._hasContract !== null && record?._hasContract !== undefined
+                ? record._hasContract
+                : hasAnyContract(record);
+            return !activeByContract ? (
+            <Popconfirm
+              title="Delete this group?"
+              okText="Delete"
+              okButtonProps={{ danger: true }}
+              onConfirm={() => deleteGroup(record)}
+            >
+              <Button size="small" danger>Delete</Button>
+            </Popconfirm>
+            ) : null;
+          })()}
+        </div>
       ),
     },
     
@@ -357,11 +447,17 @@ export default function ManageGroup() {
                                     gap: 8,
                                   }}
                                 >
-                                  <Tag
-                                    color={g?.isActive ? "green" : undefined}
-                                  >
-                                    {g?.isActive ? "Active" : "Inactive"}
-                                  </Tag>
+                                  {(() => {
+                                    const activeByContract =
+                                      g?._hasContract !== null && g?._hasContract !== undefined
+                                        ? g._hasContract
+                                        : hasAnyContract(g);
+                                    return (
+                                      <Tag color={activeByContract ? "green" : "red"}>
+                                        {activeByContract ? "Active" : "Inactive"}
+                                      </Tag>
+                                    );
+                                  })()}
                                   {/* Details button removed as requested */}
                                 </div>
                               </div>

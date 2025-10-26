@@ -62,13 +62,83 @@ const MyGroup = () => {
     setLoading(true);
     try {
       const res = await api.get("/CoOwnership/my-groups");
-      if (Array.isArray(res.data)) {
-        setGroups(res.data);
-      } else if (res.data?.data && Array.isArray(res.data.data)) {
-        setGroups(res.data.data);
-      } else {
-        setGroups([]);
-      }
+      let list = [];
+      if (Array.isArray(res.data)) list = res.data;
+      else if (res.data?.data && Array.isArray(res.data.data)) list = res.data.data;
+      else list = [];
+
+      // filter out locally hidden groups per-user
+      const hiddenKey = (() => {
+        const userDataStr = localStorage.getItem("userData");
+        try {
+          const ud = userDataStr ? JSON.parse(userDataStr) : null;
+          const uid = ud?.data?.id || ud?.id || null;
+          return uid ? `hidden_groups_${uid}` : "hidden_groups";
+        } catch {
+          return "hidden_groups";
+        }
+      })();
+      const hiddenIds = (() => {
+        try {
+          const raw = localStorage.getItem(hiddenKey);
+          const arr = raw ? JSON.parse(raw) : [];
+          return Array.isArray(arr) ? new Set(arr) : new Set();
+        } catch {
+          return new Set();
+        }
+      })();
+      list = list.filter((g) => !hiddenIds.has(g.id));
+
+      // helpers for API-driven flags
+      const fetchHasContract = async (groupId) => {
+        try {
+          const r = await api.get("/contracts", { params: { groupId, status: "active" } });
+          const payload = Array.isArray(r.data) ? r.data : Array.isArray(r.data?.data) ? r.data.data : [];
+          return Array.isArray(payload) && payload.length > 0;
+        } catch {
+          return null;
+        }
+      };
+      const fetchSingleOwnerOnly = async (groupId) => {
+        try {
+          const r = await api.get(`/GroupMember/get-all-members-in-group/${groupId}`);
+          const payload = r.data?.data ?? r.data;
+          const arr = Array.isArray(payload) ? payload : Array.isArray(payload?.items) ? payload.items : [];
+          const owner = arr.find((m) => m.roleInGroup === "OWNER" || m.role === "OWNER");
+          const singleOwnerOnly = arr.length === 1 && !!owner;
+          const ownerUserId = owner?.userId || owner?.id || owner?.userID || null;
+          return { singleOwnerOnly, ownerUserId };
+        } catch {
+          return { singleOwnerOnly: null, ownerUserId: null };
+        }
+      };
+      const mapWithConcurrency = async (items, limit, mapper) => {
+        const results = new Array(items.length);
+        let i = 0;
+        const workers = new Array(Math.min(limit, items.length)).fill(0).map(async () => {
+          while (i < items.length) {
+            const idx = i++;
+            results[idx] = await mapper(items[idx], idx);
+          }
+        });
+        await Promise.all(workers);
+        return results;
+      };
+
+      const enriched = await mapWithConcurrency(list, 5, async (g) => {
+        const [hasC, ownInfo] = await Promise.all([
+          fetchHasContract(g.id),
+          fetchSingleOwnerOnly(g.id),
+        ]);
+        return {
+          ...g,
+          _hasContract: hasC,
+          _singleOwnerOnly: ownInfo.singleOwnerOnly,
+          _ownerUserId: ownInfo.ownerUserId,
+        };
+      });
+
+      setGroups(enriched);
     } catch (err) {
       console.error("Failed to load my groups:", err);
       message.error("Failed to load your groups");
@@ -143,6 +213,39 @@ const MyGroup = () => {
   const getOwnerIdFromGroup = (g) =>
     g?.createdById || g?.ownerId || g?.createdBy || null;
 
+  // Hide locally (no API delete)
+  const getHiddenKey = () => {
+    try {
+      const ud = JSON.parse(localStorage.getItem("userData") || "null");
+      const uid = ud?.data?.id || ud?.id || null;
+      return uid ? `hidden_groups_${uid}` : "hidden_groups";
+    } catch {
+      return "hidden_groups";
+    }
+  };
+  const getHiddenIds = () => {
+    try {
+      const raw = localStorage.getItem(getHiddenKey());
+      const arr = raw ? JSON.parse(raw) : [];
+      return Array.isArray(arr) ? arr : [];
+    } catch {
+      return [];
+    }
+  };
+  const setHiddenIds = (ids) => {
+    try {
+      localStorage.setItem(getHiddenKey(), JSON.stringify(ids || []));
+    } catch {}
+  };
+  const hideGroup = (group) => {
+    if (!group?.id) return;
+    const ids = getHiddenIds();
+    if (!ids.includes(group.id)) ids.push(group.id);
+    setHiddenIds(ids);
+    setGroups((prev) => prev.filter((x) => x.id !== group.id));
+    message.success("Group hidden on this device");
+  };
+
   const openMembers = async (group) => {
     if (!group?.id) return;
     setSelectedGroup(group);
@@ -212,9 +315,25 @@ const MyGroup = () => {
     setVehiclesLoading(true);
     try {
       const res = await api.get(`/CoOwnership/${groupId}/vehicles`);
-      if (Array.isArray(res.data)) setVehicles(res.data);
-      else if (Array.isArray(res.data?.data)) setVehicles(res.data.data);
-      else setVehicles([]);
+      let raw = [];
+      if (Array.isArray(res.data)) raw = res.data;
+      else if (Array.isArray(res.data?.data)) raw = res.data.data;
+      else raw = [];
+      // Normalize active flag from multiple possible shapes
+      const normalized = (raw || []).map((v) => {
+        const statusStr = (v.status || v.vehicleStatus || "").toString();
+        const boolFromStatus = ["ACTIVE", "ON", "ENABLED", "TRUE"].includes(
+          statusStr.toUpperCase()
+        );
+        const isActive =
+          typeof v.isActive === "boolean"
+            ? v.isActive
+            : typeof v.active === "boolean"
+            ? v.active
+            : boolFromStatus;
+        return { ...v, isActive };
+      });
+      setVehicles(normalized);
     } catch (err) {
       console.error("Load vehicles failed", err);
       message.error("Failed to load vehicles");
@@ -292,6 +411,38 @@ const MyGroup = () => {
       message.success("Copied invite code");
     } catch {
       message.info("Invite code: " + inviteCode);
+    }
+  };
+
+  // Delete a group (owner only). Try multiple conventional endpoints to be compatible
+  const deleteGroup = async (group) => {
+    if (!group?.id) return;
+    try {
+      const tryEndpoints = [
+        { method: "delete", url: `/CoOwnership/${group.id}` },
+        { method: "delete", url: `/CoOwnership/delete/${group.id}` },
+        { method: "post", url: `/CoOwnership/${group.id}/delete` },
+      ];
+      let ok = false, lastErr;
+      for (const ep of tryEndpoints) {
+        try {
+          // eslint-disable-next-line no-await-in-loop
+          const res = await api[ep.method](ep.url);
+          if ((res.status || 200) >= 200 && (res.status || 200) < 300) {
+            ok = true; break;
+          }
+        } catch (e) { lastErr = e; }
+      }
+      if (!ok) throw lastErr || new Error("Cannot delete group");
+      message.success("Group deleted");
+      setGroups((prev) => prev.filter((x) => x.id !== group.id));
+      if (selectedGroup?.id === group.id) {
+        setMembersVisible(false);
+        setSelectedGroup(null);
+      }
+    } catch (err) {
+      console.error("Delete group failed", err);
+      message.error(err?.response?.data?.message || "Failed to delete group");
     }
   };
 
@@ -398,8 +549,27 @@ const MyGroup = () => {
       setVehicles((prev) =>
         prev.map((v) => (v.id === id ? { ...v, isActive: targetActive } : v))
       );
-      // Optional: re-sync in background (uncomment if backend is eventually consistent)
-      // setTimeout(() => loadVehicles(selectedGroup?.id), 300);
+      // Re-sync in background with small retry to handle eventual consistency
+      const gid = selectedGroup?.id;
+      if (gid) {
+        const retry = async (times, delay) => {
+          for (let i = 0; i < times; i++) {
+            try {
+              // eslint-disable-next-line no-await-in-loop
+              await new Promise((r) => setTimeout(r, i === 0 ? delay : delay * 2));
+              // eslint-disable-next-line no-await-in-loop
+              await loadVehicles(gid);
+              // After reload, verify current vehicle state matches target
+              const now = (vs) => vs.find((x) => x.id === id)?.isActive;
+              // eslint-disable-next-line no-loop-func
+              if (now(vehicles) === targetActive) break;
+            } catch {
+              // continue retry
+            }
+          }
+        };
+        retry(3, 300);
+      }
     } catch (err) {
       console.error("Toggle vehicle status failed", err);
       message.error(
@@ -459,7 +629,7 @@ const MyGroup = () => {
                 icon={<ArrowLeftOutlined />}
                 onClick={handleBack}
               >
-                Quay lại
+                Back to homepage
               </Button>
               <Title level={3} style={{ margin: 0 }}>
                 <TeamOutlined /> My Groups
@@ -488,26 +658,51 @@ const MyGroup = () => {
           ) : (
             <Card>
               <List
+                className="my-groups-list"
                 itemLayout="horizontal"
                 dataSource={groups}
-                renderItem={(item) => (
-                  <List.Item
-                    actions={[
-                      item.isActive ? (
+                renderItem={(item) => {
+                  const hasAnyContract = (g) => {
+                    if (!g) return false;
+                    if (typeof g.hasContract === "boolean") return g.hasContract;
+                    if (Array.isArray(g.contracts)) return g.contracts.length > 0;
+                    if (typeof g.contractCount === "number") return g.contractCount > 0;
+                    if (g.latestContract || g.contract) return true;
+                    return !!g.isActive;
+                  };
+                  const activeByContract =
+                    item._hasContract !== null && item._hasContract !== undefined
+                      ? item._hasContract
+                      : hasAnyContract(item);
+                  const currentUserId = getCurrentUserId();
+                  const ownerIdFromGroup = getOwnerIdFromGroup(item);
+                  const ownerIdFromMembers = item._ownerUserId;
+                  const iAmOwnerRow = !!currentUserId && (
+                    (ownerIdFromGroup && currentUserId === ownerIdFromGroup) ||
+                    (ownerIdFromMembers && currentUserId === ownerIdFromMembers)
+                  );
+                  const singleOwnerOnly =
+                    item._singleOwnerOnly !== null && item._singleOwnerOnly !== undefined
+                      ? item._singleOwnerOnly
+                      : false;
+                  return (
+                    <List.Item
+                      actions={[
+                        activeByContract ? (
                         <Tag
                           color="green"
                           icon={<CheckCircleTwoTone twoToneColor="#52c41a" />}
                         >
                           Active
                         </Tag>
-                      ) : (
+                        ) : (
                         <Tag
                           color="red"
                           icon={<CloseCircleTwoTone twoToneColor="#ff4d4f" />}
                         >
                           Inactive
                         </Tag>
-                      ),
+                        ),
                       <Button
                         key="members"
                         type="link"
@@ -515,33 +710,9 @@ const MyGroup = () => {
                       >
                         Details
                       </Button>,
-                      <Button
-                        key="rename"
-                        type="link"
-                        onClick={() => openRename(item)}
-                      >
-                        Rename
-                      </Button>,
-                      (() => {
-                        const currentUserId = getCurrentUserId();
-                        const ownerIdFromGroup = getOwnerIdFromGroup(item);
-                        const iAmOwnerRow =
-                          !!currentUserId &&
-                          ownerIdFromGroup &&
-                          currentUserId === ownerIdFromGroup;
-                        return iAmOwnerRow ? (
-                          <Button
-                            key="invite"
-                            type="link"
-                            onClick={() => handleInviteFromRow(item)}
-                            disabled={inviteLoading}
-                          >
-                            Create invite
-                          </Button>
-                        ) : null;
-                      })(),
-                    ]}
-                  >
+                      // No delete on the row; only inside Details for owners
+                    ].filter(Boolean)}
+                    >
                     <List.Item.Meta
                       title={item.name}
                       description={
@@ -553,7 +724,8 @@ const MyGroup = () => {
                       }
                     />
                   </List.Item>
-                )}
+                  );
+                }}
               />
             </Card>
           )}
@@ -650,12 +822,25 @@ const MyGroup = () => {
                                         ? "Regenerate invite code"
                                         : "Create invite code"}
                                     </Button>
+                                    <Button onClick={() => openRename(selectedGroup)}>
+                                      Rename group
+                                    </Button>
                                     <Link
                                       to="/create-econtract"
                                       state={{ groupId: selectedGroup?.id }}
                                     >
                                       <Button>Create contract</Button>
                                     </Link>
+                                    {/* Owner-only delete, shown inside Details */}
+                                    <Popconfirm
+                                      key="delete-group"
+                                      title="Delete this group permanently?"
+                                      okText="Delete"
+                                      okButtonProps={{ danger: true }}
+                                      onConfirm={() => deleteGroup(selectedGroup)}
+                                    >
+                                      <Button danger>Delete group</Button>
+                                    </Popconfirm>
                                     {inviteCode ? (
                                       <Space>
                                         <Tag color="purple">
