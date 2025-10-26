@@ -227,20 +227,48 @@ const CardNav = ({
             >
               <div className="nav-card-label">{item.label}</div>
               <div className="nav-card-links">
-                {item.links?.map((lnk, i) => (
-                  <a
-                    key={`${lnk.label}-${i}`}
-                    className="nav-card-link"
-                    href={lnk.href || "#"}
-                    aria-label={lnk.ariaLabel}
-                  >
-                    <GoArrowUpRight
-                      className="nav-card-link-icon"
-                      aria-hidden="true"
-                    />
-                    {lnk.label}
-                  </a>
-                ))}
+                {item.links?.map((lnk, i) => {
+                  // If onClick is provided, render as clickable div
+                  if (lnk.onClick) {
+                    return (
+                      <div
+                        key={`${lnk.label}-${i}`}
+                        className="nav-card-link"
+                        onClick={lnk.onClick}
+                        aria-label={lnk.ariaLabel}
+                        style={{ cursor: "pointer" }}
+                        role="button"
+                        tabIndex={0}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            lnk.onClick();
+                          }
+                        }}
+                      >
+                        <GoArrowUpRight
+                          className="nav-card-link-icon"
+                          aria-hidden="true"
+                        />
+                        {lnk.label}
+                      </div>
+                    );
+                  }
+                  // Otherwise render as normal anchor tag
+                  return (
+                    <a
+                      key={`${lnk.label}-${i}`}
+                      className="nav-card-link"
+                      href={lnk.href || "#"}
+                      aria-label={lnk.ariaLabel}
+                    >
+                      <GoArrowUpRight
+                        className="nav-card-link-icon"
+                        aria-hidden="true"
+                      />
+                      {lnk.label}
+                    </a>
+                  );
+                })}
               </div>
             </div>
           ))}

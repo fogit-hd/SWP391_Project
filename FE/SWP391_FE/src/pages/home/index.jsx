@@ -2,9 +2,7 @@ import React, { useState, useEffect } from "react";
 import {
   Button,
   Layout,
-  Menu,
   Avatar,
-  Dropdown,
   Typography,
   Row,
   Col,
@@ -14,7 +12,6 @@ import {
   Rate,
   Divider,
   Modal,
-  Descriptions,
   Spin,
   Tag,
 } from "antd";
@@ -143,16 +140,16 @@ const Homepage = () => {
     setProfileData(null);
     setProfileImage(null);
     setIsProfileModalVisible(false);
-    
+
     // Dispatch logout action (this will clear all localStorage items)
     dispatch(logout());
-    
+
     // Force re-render by updating auth key
-    setAuthKey(prev => prev + 1);
-    
+    setAuthKey((prev) => prev + 1);
+
     // Show success message
     toast.success("Logged out successfully!");
-    
+
     // Stay on homepage - no navigation
     console.log("User logged out, staying on homepage");
   };
@@ -584,27 +581,45 @@ const Homepage = () => {
       bgColor: "#0D0716",
       textColor: "#fff",
       links: [
-        { label: "Company", ariaLabel: "About Company" },
-        { label: "Careers", ariaLabel: "About Careers" },
+        {
+          key: "group",
+          label: "Group",
+          onClick: () => navigate("/view-mygroup"),
+        },
+        {
+          key: "contract",
+          label: "Contract",
+          onClick: () => navigate("/view-mycontract"),
+        },
+        {
+          key: "vehicle",
+          label: "Vehicle",
+          onClick: () => navigate("/view-myvehicle"),
+        },
       ],
     },
     {
-      label: "Projects",
-      bgColor: "#170D27",
+      label: "Service",
+      bgColor: "#0D0716",
       textColor: "#fff",
       links: [
-        { label: "Featured", ariaLabel: "Featured Projects" },
-        { label: "Case Studies", ariaLabel: "Project Case Studies" },
+        {
+          key: "Vehicle Service",
+          label: "Vehicle Service",
+          onClick: () => navigate("/view-myservice"),
+        },
       ],
     },
     {
       label: "Contact",
-      bgColor: "#271E37",
+      bgColor: "#0D0716",
       textColor: "#fff",
       links: [
-        { label: "Email", ariaLabel: "Email us" },
-        { label: "Twitter", ariaLabel: "Twitter" },
-        { label: "LinkedIn", ariaLabel: "LinkedIn" },
+        {
+          key: "email",
+          label: "Email",
+          onClick: () => navigate("contact-us"),
+        },
       ],
     },
   ];
@@ -612,29 +627,29 @@ const Homepage = () => {
   return (
     <Layout className="page-layout">
       {/* Integrated Navigation Bar */}
-            <CardNav
-              key={authKey}
-              logo="EVCS"
-              logoAlt="EVCS Logo"
-              items={items}
-              baseColor="transparent"
-              menuColor="#fff"
-              buttonBgColor="#1890ff"
-              buttonTextColor="#fff"
-              ease="power3.out"
-              user={user}
-              profileData={profileData}
-              userMenuItems={userMenuItems}
-              onProfileClick={handleProfileClick}
-              isAuthenticated={isAuthenticated}
-            />
+      <CardNav
+        key={authKey}
+        logo="EVCS"
+        logoAlt="EVCS Logo"
+        items={items}
+        baseColor="transparent"
+        menuColor="#fff"
+        buttonBgColor="#1890ff"
+        buttonTextColor="#fff"
+        ease="power3.out"
+        user={user}
+        profileData={profileData}
+        userMenuItems={userMenuItems}
+        onProfileClick={handleProfileClick}
+        isAuthenticated={isAuthenticated}
+      />
 
       <Content className="page-content">
         {/* Hero Section */}
         <div className="hero">
           <Orb
             orbCount={1}
-            colors={['#1890ff']}
+            colors={["#1890ff"]}
             blur={100}
             duration={30}
             className="hero-orb-background"
@@ -645,9 +660,9 @@ const Homepage = () => {
                   Share the Future.
                 </Title>
                 <Paragraph className="hero-paragraph">
-                  Experience premium electric vehicles without the full cost. Join
-                  our co-ownership community and share the benefits of sustainable
-                  transportation.
+                  Experience premium electric vehicles without the full cost.
+                  Join our co-ownership community and share the benefits of
+                  sustainable transportation.
                 </Paragraph>
                 <Link to="/view-mygroup">
                   <StarBorder type="primary" size="large" className="hero-cta">
@@ -655,62 +670,64 @@ const Homepage = () => {
                   </StarBorder>
                 </Link>
               </div>
-              
+
               <div className="hero-cards-right">
-                  <CardSwap
-                    width={500}
-                    height={550}
-                    cardDistance={80}
-                    verticalDistance={90}
-                    delay={5000}
-                    pauseOnHover={true}
-                    skewAmount={10}
-                    easing="elastic"
-                  >
-                <SwapCard>
-                  <div className="card-badge-hero">Reliable</div>
-                  <div className="feature-icon-hero">
-                    <RocketOutlined />
-                  </div>
-                  <Title level={2} className="feature-title-hero">
-                    Cost Savings
-                  </Title>
-                  <Paragraph className="feature-text-hero">
-                    Save up to 70% on electric vehicle costs. Split purchase costs, insurance, maintenance, and charging expenses.
-                  </Paragraph>
-                </SwapCard>
+                <CardSwap
+                  width={500}
+                  height={550}
+                  cardDistance={80}
+                  verticalDistance={90}
+                  delay={5000}
+                  pauseOnHover={true}
+                  skewAmount={10}
+                  easing="elastic"
+                >
+                  <SwapCard>
+                    <div className="card-badge-hero">Reliable</div>
+                    <div className="feature-icon-hero">
+                      <RocketOutlined />
+                    </div>
+                    <Title level={2} className="feature-title-hero">
+                      Cost Savings
+                    </Title>
+                    <Paragraph className="feature-text-hero">
+                      Save up to 70% on electric vehicle costs. Split purchase
+                      costs, insurance, maintenance, and charging expenses.
+                    </Paragraph>
+                  </SwapCard>
 
-                <SwapCard>
-                  <div className="card-badge-hero">Smooth</div>
-                  <div className="feature-icon-hero">
-                    <FireOutlined />
-                  </div>
-                  <Title level={2} className="feature-title-hero">
-                    Premium Access
-                  </Title>
-                  <Paragraph className="feature-text-hero">
-                    Access top-tier electric vehicles and bikes. Drive Tesla, BMW, and other premium EVs.
-                  </Paragraph>
-                </SwapCard>
+                  <SwapCard>
+                    <div className="card-badge-hero">Smooth</div>
+                    <div className="feature-icon-hero">
+                      <FireOutlined />
+                    </div>
+                    <Title level={2} className="feature-title-hero">
+                      Premium Access
+                    </Title>
+                    <Paragraph className="feature-text-hero">
+                      Access top-tier electric vehicles and bikes. Drive Tesla,
+                      BMW, and other premium EVs.
+                    </Paragraph>
+                  </SwapCard>
 
-                <SwapCard>
-                  <div className="card-badge-hero">Customizable</div>
-                  <div className="feature-icon-hero">
-                    <ThunderboltOutlined />
-                  </div>
-                  <Title level={2} className="feature-title-hero">
-                    Flexible Usage
-                  </Title>
-                  <Paragraph className="feature-text-hero">
-                    Use vehicles when you need them, share costs when you don't. Book through our app easily.
-                  </Paragraph>
-                </SwapCard>
-              </CardSwap>
+                  <SwapCard>
+                    <div className="card-badge-hero">Customizable</div>
+                    <div className="feature-icon-hero">
+                      <ThunderboltOutlined />
+                    </div>
+                    <Title level={2} className="feature-title-hero">
+                      Flexible Usage
+                    </Title>
+                    <Paragraph className="feature-text-hero">
+                      Use vehicles when you need them, share costs when you
+                      don't. Book through our app easily.
+                    </Paragraph>
+                  </SwapCard>
+                </CardSwap>
+              </div>
             </div>
-          </div>
           </Orb>
         </div>
-
 
         {/* Testimonials Section */}
         <FadeInSection>
@@ -755,8 +772,8 @@ const Homepage = () => {
                 Ready to Start Sharing?
               </Title>
               <Paragraph className="cta-paragraph">
-                Join our co-ownership community today and start saving on premium
-                electric vehicles.
+                Join our co-ownership community today and start saving on
+                premium electric vehicles.
               </Paragraph>
 
               <Link to="/view-mygroup">

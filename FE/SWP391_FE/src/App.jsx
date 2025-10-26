@@ -141,7 +141,7 @@ function App() {
       ),
     },
     {
-      path: "/view-myGroup",
+      path: "/view-mygroup",
       element: (
         <ProtectedRoute roleId={3}>
           <MyGroup />
