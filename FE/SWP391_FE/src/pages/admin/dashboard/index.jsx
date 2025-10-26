@@ -198,7 +198,18 @@ const Dashboard = () => {
                     block
                     style={{ height: 60 }}
                   >
-                    Manage Services
+                    Manage Service Centers
+                  </Button>
+                </Col>
+                <Col xs={24} sm={12} lg={8}>
+                  <Button
+                    size="large"
+                    icon={<EyeOutlined />}
+                    onClick={handleManageService}
+                    block
+                    style={{ height: 60 }}
+                  >
+                    View Service Centers
                   </Button>
                 </Col>
               </Row>
