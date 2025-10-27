@@ -24,6 +24,8 @@ import MyContracts from "./pages/view.mycontract";
 import ReviewEContract from "./pages/staff/review.econtract/index";
 import SignEContract from "./pages/sign.econtract/index";
 import StaffDashboard from "./pages/staff/dashboard/index";
+import BookingCalendar from "./pages/booking";
+
 function App() {
   const router = createBrowserRouter([
     {
@@ -161,6 +163,14 @@ function App() {
       element: (
         <ProtectedRoute roleId={3}>
           <MyVehicle />
+        </ProtectedRoute>
+      ),
+    },
+    {
+      path: "/booking",
+      element: (
+        <ProtectedRoute roleId={3}>
+          <BookingCalendar />
         </ProtectedRoute>
       ),
     },
