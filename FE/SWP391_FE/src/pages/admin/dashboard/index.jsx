@@ -47,6 +47,11 @@ const Dashboard = () => {
     navigate("/view-mycontract");
   };
 
+  const handleReviewEContracts = () => {
+    // Admin can access staff pages via ProtectedRoute; navigate to review screen
+    navigate("/staff/review-econtract");
+  };
+
   const handleManageGroup = () => {
     navigate("/admin/manage-group");
   };
@@ -134,6 +139,17 @@ const Dashboard = () => {
                     style={{ height: 60 }}
                   >
                     View Contracts
+                  </Button>
+                </Col>
+                <Col xs={24} sm={12} lg={8}>
+                  <Button
+                    size="large"
+                    icon={<FileTextOutlined />}
+                    onClick={handleReviewEContracts}
+                    block
+                    style={{ height: 60 }}
+                  >
+                    Review E-Contracts
                   </Button>
                 </Col>
               </Row>
