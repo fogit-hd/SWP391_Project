@@ -1,11 +1,16 @@
 .my-groups-page {
-  min-height: calc(100vh - 64px - 200px);
+  /* Make the page take full viewport height and push footer to bottom */
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
   background: #f0f2f5;
 }
 
 .my-groups-content {
   padding: 24px;
   padding-top: 88px;
+  /* Occupy remaining space above footer */
+  flex: 1;
 }
 
 .my-groups-header-section {

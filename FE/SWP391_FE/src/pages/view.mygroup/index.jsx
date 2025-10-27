@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   Card,
   List,
@@ -27,6 +27,7 @@ import {
 import { useNavigate, Link } from "react-router-dom";
 import api from "../../config/axios";
 import { useAuth } from "../../components/hooks/useAuth";
+import AppFooter from "../../components/reuse/AppFooter";
 import "./myGroup.css";
 
 const { Title, Text } = Typography;
@@ -56,6 +57,8 @@ const MyGroup = () => {
   const [attachVehicleId, setAttachVehicleId] = useState("");
   const [attachSubmitting, setAttachSubmitting] = useState(false);
   const [togglingVehicleIds, setTogglingVehicleIds] = useState(new Set());
+  const [searchText, setSearchText] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all"); // all | active | inactive
   const navigate = useNavigate();
 
   const reloadGroups = async () => {
@@ -90,11 +93,43 @@ const MyGroup = () => {
       list = list.filter((g) => !hiddenIds.has(g.id));
 
       // helpers for API-driven flags
+      // Determine if group has any contract (treat as Active when there is
+      // at least one contract in any of these states: DRAFT/APPROVED/SIGNING).
+      // Strategy: try without status first (if backend supports it). If that
+      // returns nothing, fall back to querying by a whitelist of statuses.
       const fetchHasContract = async (groupId) => {
+        const normalize = (r) =>
+          Array.isArray(r?.data)
+            ? r.data
+            : Array.isArray(r?.data?.data)
+            ? r.data.data
+            : [];
         try {
-          const r = await api.get("/contracts", { params: { groupId, status: "active" } });
-          const payload = Array.isArray(r.data) ? r.data : Array.isArray(r.data?.data) ? r.data.data : [];
-          return Array.isArray(payload) && payload.length > 0;
+          // 1) Try without status filter (may return all contracts)
+          const rAll = await api.get("/contracts", { params: { groupId } });
+          const all = normalize(rAll);
+          if (Array.isArray(all) && all.length > 0) return true;
+        } catch {
+          // ignore and try per-status fallbacks
+        }
+        // 2) Try explicit statuses that should count as "has contract"
+        const statuses = [
+          "DRAFT",
+          "APPROVED",
+          "APPROVE", // some backends use APPROVE
+          "SIGNING",
+          "PENDING_REVIEW", // safety: often used between DRAFT and APPROVED
+        ];
+        try {
+          const results = await Promise.all(
+            statuses.map((st) =>
+              api
+                .get("/contracts", { params: { groupId, status: st } })
+                .then((r) => normalize(r))
+                .catch(() => [])
+            )
+          );
+          return results.some((arr) => Array.isArray(arr) && arr.length > 0);
         } catch {
           return null;
         }
@@ -150,13 +185,13 @@ const MyGroup = () => {
 
   useEffect(() => {
     if (!isAuthenticated) {
-      message.error("Vui lòng đăng nhập để xem nhóm của bạn");
+      message.error("Please login to view your groups");
       navigate("/login");
       return;
     }
 
     if (!isCoOwner && !isAdmin && !isStaff) {
-      message.error("Bạn không có quyền truy cập trang này");
+      message.error("You don't have permission to access this page");
       navigate("/");
       return;
     }
@@ -213,7 +248,26 @@ const MyGroup = () => {
   const getOwnerIdFromGroup = (g) =>
     g?.createdById || g?.ownerId || g?.createdBy || null;
 
-  // Hide locally (no API delete)
+  // Check if current user is owner of a group, based on group and members list
+  const isCurrentUserOwner = (group, memberList) => {
+    if (!group) return false;
+    const currentUserId = getCurrentUserId();
+    const ownerIdFromGroup = getOwnerIdFromGroup(group);
+    const ownerIdFromMembers = (memberList || []).find(
+      (x) => x.roleInGroup === "OWNER"
+    )?.userId;
+    const myRoleFromMembers = (memberList || []).find(
+      (x) => x.userId === currentUserId
+    )?.roleInGroup;
+    return (
+      !!currentUserId &&
+      (currentUserId === ownerIdFromGroup ||
+        currentUserId === ownerIdFromMembers ||
+        myRoleFromMembers === "OWNER")
+    );
+  };
+
+  // delete locally (just hide)
   const getHiddenKey = () => {
     try {
       const ud = JSON.parse(localStorage.getItem("userData") || "null");
@@ -245,6 +299,30 @@ const MyGroup = () => {
     setGroups((prev) => prev.filter((x) => x.id !== group.id));
     message.success("Group hidden on this device");
   };
+
+  const hasAnyContract = (g) => {
+    if (!g) return false;
+    if (typeof g.hasContract === "boolean") return g.hasContract;
+    if (Array.isArray(g.contracts)) return g.contracts.length > 0;
+    if (typeof g.contractCount === "number") return g.contractCount > 0;
+    if (g.latestContract || g.contract) return true;
+    return !!g.isActive;
+  };
+
+  const isActiveByContract = (item) =>
+    item._hasContract !== null && item._hasContract !== undefined
+      ? item._hasContract
+      : hasAnyContract(item);
+
+  const filteredGroups = useMemo(() => {
+    const q = searchText.trim().toLowerCase();
+    const list = groups.filter((g) =>
+      q ? (g.name || "").toLowerCase().includes(q) : true
+    );
+    if (statusFilter === "active") return list.filter((g) => isActiveByContract(g));
+    if (statusFilter === "inactive") return list.filter((g) => !isActiveByContract(g));
+    return list;
+  }, [groups, searchText, statusFilter]);
 
   const openMembers = async (group) => {
     if (!group?.id) return;
@@ -414,36 +492,15 @@ const MyGroup = () => {
     }
   };
 
-  // Delete a group (owner only). Try multiple conventional endpoints to be compatible
+  // 'Delete' without backend API: hide the group locally for this user/device
   const deleteGroup = async (group) => {
     if (!group?.id) return;
-    try {
-      const tryEndpoints = [
-        { method: "delete", url: `/CoOwnership/${group.id}` },
-        { method: "delete", url: `/CoOwnership/delete/${group.id}` },
-        { method: "post", url: `/CoOwnership/${group.id}/delete` },
-      ];
-      let ok = false, lastErr;
-      for (const ep of tryEndpoints) {
-        try {
-          // eslint-disable-next-line no-await-in-loop
-          const res = await api[ep.method](ep.url);
-          if ((res.status || 200) >= 200 && (res.status || 200) < 300) {
-            ok = true; break;
-          }
-        } catch (e) { lastErr = e; }
-      }
-      if (!ok) throw lastErr || new Error("Cannot delete group");
-      message.success("Group deleted");
-      setGroups((prev) => prev.filter((x) => x.id !== group.id));
-      if (selectedGroup?.id === group.id) {
-        setMembersVisible(false);
-        setSelectedGroup(null);
-      }
-    } catch (err) {
-      console.error("Delete group failed", err);
-      message.error(err?.response?.data?.message || "Failed to delete group");
+    hideGroup(group);
+    if (selectedGroup?.id === group.id) {
+      setMembersVisible(false);
+      setSelectedGroup(null);
     }
+    message.success("Group hidden on this device");
   };
 
   const submitJoin = async () => {
@@ -635,7 +692,24 @@ const MyGroup = () => {
                 <TeamOutlined /> My Groups
               </Title>
             </Space>
-            <Space>
+            <Space wrap>
+              <Input
+                placeholder="Search by group name"
+                value={searchText}
+                onChange={(e) => setSearchText(e.target.value)}
+                style={{ width: 220 }}
+                allowClear
+              />
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                style={{ padding: 6, borderRadius: 6, border: "1px solid #d9d9d9" }}
+              >
+                <option value="all">All</option>
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+              </select>
+              <Button onClick={() => { setSearchText(""); setStatusFilter("all"); }}>Clear</Button>
               <Button onClick={() => setJoinOpen(true)}>Join by code</Button>
               <Button
                 type="primary"
@@ -660,20 +734,9 @@ const MyGroup = () => {
               <List
                 className="my-groups-list"
                 itemLayout="horizontal"
-                dataSource={groups}
+                dataSource={filteredGroups}
                 renderItem={(item) => {
-                  const hasAnyContract = (g) => {
-                    if (!g) return false;
-                    if (typeof g.hasContract === "boolean") return g.hasContract;
-                    if (Array.isArray(g.contracts)) return g.contracts.length > 0;
-                    if (typeof g.contractCount === "number") return g.contractCount > 0;
-                    if (g.latestContract || g.contract) return true;
-                    return !!g.isActive;
-                  };
-                  const activeByContract =
-                    item._hasContract !== null && item._hasContract !== undefined
-                      ? item._hasContract
-                      : hasAnyContract(item);
+                  const activeByContract = isActiveByContract(item);
                   const currentUserId = getCurrentUserId();
                   const ownerIdFromGroup = getOwnerIdFromGroup(item);
                   const ownerIdFromMembers = item._ownerUserId;
@@ -775,12 +838,40 @@ const MyGroup = () => {
 
           <Modal
             title={
-              selectedGroup ? `Group: ${selectedGroup.name}` : "Group details"
+              selectedGroup ? (
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <span>Group: {selectedGroup.name}</span>
+                  {isCurrentUserOwner(selectedGroup, members) && (
+                    <Button type="link" size="small" onClick={() => openRename(selectedGroup)}>
+                      Rename
+                    </Button>
+                  )}
+                </div>
+              ) : (
+                "Group details"
+              )
             }
             open={membersVisible}
             onCancel={() => setMembersVisible(false)}
             footer={
-              <Button onClick={() => setMembersVisible(false)}>Close</Button>
+              <div style={{ display: "flex", justifyContent: "space-between", width: "100%" }}>
+                <div>
+                  {isCurrentUserOwner(selectedGroup, members) ? (
+                    <Popconfirm
+                      key="delete-group-footer"
+                      title="Delete this group permanently?"
+                      okText="Delete"
+                      okButtonProps={{ danger: true }}
+                      onConfirm={() => deleteGroup(selectedGroup)}
+                    >
+                      <Button danger>Delete group</Button>
+                    </Popconfirm>
+                  ) : null}
+                </div>
+                <div>
+                  <Button onClick={() => setMembersVisible(false)}>Close</Button>
+                </div>
+              </div>
             }
             width={700}
           >
@@ -822,25 +913,12 @@ const MyGroup = () => {
                                         ? "Regenerate invite code"
                                         : "Create invite code"}
                                     </Button>
-                                    <Button onClick={() => openRename(selectedGroup)}>
-                                      Rename group
-                                    </Button>
                                     <Link
                                       to="/create-econtract"
                                       state={{ groupId: selectedGroup?.id }}
                                     >
                                       <Button>Create contract</Button>
                                     </Link>
-                                    {/* Owner-only delete, shown inside Details */}
-                                    <Popconfirm
-                                      key="delete-group"
-                                      title="Delete this group permanently?"
-                                      okText="Delete"
-                                      okButtonProps={{ danger: true }}
-                                      onConfirm={() => deleteGroup(selectedGroup)}
-                                    >
-                                      <Button danger>Delete group</Button>
-                                    </Popconfirm>
                                     {inviteCode ? (
                                       <Space>
                                         <Tag color="purple">
@@ -1054,6 +1132,7 @@ const MyGroup = () => {
             />
           </Modal>
         </div>
+        <AppFooter />
       </div>
     </>
   );

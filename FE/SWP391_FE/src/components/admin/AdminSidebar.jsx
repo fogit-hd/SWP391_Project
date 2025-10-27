@@ -48,6 +48,11 @@ const items = [
         icon: <FileTextOutlined />,
         label: <Link to="/view-mycontract">View Contracts</Link>,
       },
+      {
+        key: "review-econtracts",
+        icon: <FileTextOutlined />,
+        label: <Link to="/staff/review-econtract">Review E-Contracts</Link>,
+      },
     ],
   },
   {

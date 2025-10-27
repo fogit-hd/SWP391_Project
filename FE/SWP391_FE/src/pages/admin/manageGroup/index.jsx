@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   LeftOutlined,
   RightOutlined,
@@ -38,6 +38,27 @@ export default function ManageGroup() {
   const [current, setCurrent] = useState(0);
   const [vehiclesLoading, setVehiclesLoading] = useState(false);
   const [selectedVehicles, setSelectedVehicles] = useState([]);
+  const [searchText, setSearchText] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all"); // all | active | inactive
+
+  // Local hide store for admin view (no real delete API per requirements)
+  const ADMIN_HIDDEN_KEY = "admin_hidden_groups";
+  const getHiddenIds = () => {
+    try {
+      const raw = localStorage.getItem(ADMIN_HIDDEN_KEY);
+      const arr = raw ? JSON.parse(raw) : [];
+      return Array.isArray(arr) ? new Set(arr) : new Set();
+    } catch {
+      return new Set();
+    }
+  };
+  const addHiddenId = (id) => {
+    try {
+      const set = getHiddenIds();
+      set.add(id);
+      localStorage.setItem(ADMIN_HIDDEN_KEY, JSON.stringify([...set]));
+    } catch {}
+  };
 
   // Determine if a group already has any contract based on common backend shapes
   const hasAnyContract = (g) => {
@@ -50,33 +71,28 @@ export default function ManageGroup() {
     return !!g.isActive;
   };
 
+  const isActiveByContract = (g) =>
+    g?._hasContract !== null && g?._hasContract !== undefined
+      ? g._hasContract
+      : hasAnyContract(g);
+
+  const filteredGroups = useMemo(() => {
+    const q = searchText.trim().toLowerCase();
+    const list = groups.filter((g) =>
+      q ? (g.name || "").toLowerCase().includes(q) : true
+    );
+    if (statusFilter === "active") return list.filter((g) => isActiveByContract(g));
+    if (statusFilter === "inactive")
+      return list.filter((g) => !isActiveByContract(g));
+    return list;
+  }, [groups, searchText, statusFilter]);
+
   const deleteGroup = async (group) => {
     if (!group?.id) return;
-    try {
-      // Try a few conventional endpoints; stop at first success
-      const tryEndpoints = [
-        { method: "delete", url: `/CoOwnership/${group.id}` },
-        { method: "delete", url: `/CoOwnership/delete/${group.id}` },
-        { method: "post", url: `/CoOwnership/${group.id}/delete` },
-      ];
-      let ok = false, lastErr;
-      for (const ep of tryEndpoints) {
-        try {
-          // eslint-disable-next-line no-await-in-loop
-          const res = await api[ep.method](ep.url);
-          if ((res.status || 200) >= 200 && (res.status || 200) < 300) {
-            ok = true; break;
-          }
-        } catch (e) { lastErr = e; }
-      }
-      if (!ok) throw lastErr || new Error("Cannot delete group");
-      message.success("Group deleted");
-      // remove locally
-      setGroups((prev) => prev.filter((x) => x.id !== group.id));
-    } catch (err) {
-      console.error("Delete group failed", err);
-      message.error(err?.response?.data?.message || "Failed to delete group");
-    }
+    // Hide in UI and persist in localStorage; no backend call
+    addHiddenId(group.id);
+    setGroups((prev) => prev.filter((x) => x.id !== group.id));
+    message.success("Group hidden in this view");
   };
 
   // Helpers: normalize API fields and format dates safely
@@ -118,12 +134,39 @@ export default function ManageGroup() {
         else if (Array.isArray(payload?.items)) list = payload.items;
         else list = [];
 
-        // helper to check active contracts for a group
+        // helper to check if a group has ANY contract (DRAFT/APPROVED/SIGNING/...)
         const fetchHasContract = async (groupId) => {
+          const normalize = (r) =>
+            Array.isArray(r?.data)
+              ? r.data
+              : Array.isArray(r?.data?.data)
+              ? r.data.data
+              : [];
           try {
-            const r = await api.get("/contracts", { params: { groupId, status: "active" } });
-            const payload2 = Array.isArray(r.data) ? r.data : Array.isArray(r.data?.data) ? r.data.data : [];
-            return Array.isArray(payload2) && payload2.length > 0;
+            // Try without status to get all contracts for the group
+            const rAll = await api.get("/contracts", { params: { groupId } });
+            const all = normalize(rAll);
+            if (Array.isArray(all) && all.length > 0) return true;
+          } catch {
+            // ignore and try per-status fallbacks
+          }
+          const statuses = [
+            "DRAFT",
+            "APPROVED",
+            "APPROVE",
+            "SIGNING",
+            "PENDING_REVIEW",
+          ];
+          try {
+            const results = await Promise.all(
+              statuses.map((st) =>
+                api
+                  .get("/contracts", { params: { groupId, status: st } })
+                  .then((r) => normalize(r))
+                  .catch(() => [])
+              )
+            );
+            return results.some((arr) => Array.isArray(arr) && arr.length > 0);
           } catch {
             return null; // unknown
           }
@@ -144,8 +187,11 @@ export default function ManageGroup() {
         };
 
         const normalized = normalizeGroups(list);
+        // filter out locally hidden groups for admin
+        const hidden = getHiddenIds();
+        const filtered = normalized.filter((g) => !hidden.has(g.id));
         // Enrich groups with _hasContract flag (concurrent)
-        const enriched = await mapWithConcurrency(normalized, 5, async (g) => {
+        const enriched = await mapWithConcurrency(filtered, 5, async (g) => {
           const hasC = await fetchHasContract(g.id);
           return { ...g, _hasContract: hasC };
         });
@@ -263,10 +309,7 @@ export default function ManageGroup() {
             Details
           </Button>
           {(() => {
-            const activeByContract =
-              record?._hasContract !== null && record?._hasContract !== undefined
-                ? record._hasContract
-                : hasAnyContract(record);
+            const activeByContract = isActiveByContract(record);
             return !activeByContract ? (
             <Popconfirm
               title="Delete this group?"
@@ -321,9 +364,29 @@ export default function ManageGroup() {
                           : Array.isArray(payload?.items)
                           ? payload.items
                           : [];
-                        setGroups(normalizeGroups(list));
-                        if (list.length > 0)
-                          setCurrent((i) => Math.min(i, list.length - 1));
+                        const normalized = normalizeGroups(list);
+                        const hidden = getHiddenIds();
+                        const filtered = normalized.filter((g) => !hidden.has(g.id));
+                        // Reuse the same enrichment logic used on initial load
+                        const mapWithConcurrency = async (items, limit, mapper) => {
+                          const results = new Array(items.length);
+                          let i = 0;
+                          const workers = new Array(Math.min(limit, items.length)).fill(0).map(async () => {
+                            while (i < items.length) {
+                              const idx = i++;
+                              /* eslint-disable no-await-in-loop */
+                              results[idx] = await mapper(items[idx], idx);
+                            }
+                          });
+                          await Promise.all(workers);
+                          return results;
+                        };
+                        const enriched = await mapWithConcurrency(filtered, 5, async (g) => {
+                          const hasC = await fetchHasContract(g.id);
+                          return { ...g, _hasContract: hasC };
+                        });
+                        setGroups(enriched);
+                        setCurrent(0);
                       } catch (e) {
                         message.error("Cannot fetch groups");
                       } finally {
@@ -336,6 +399,35 @@ export default function ManageGroup() {
                 </Button>
               }
             >
+              {/* Filters */}
+              <div style={{
+                display: "flex",
+                gap: 12,
+                flexWrap: "wrap",
+                marginBottom: 12,
+                alignItems: "center",
+                justifyContent: "space-between",
+              }}>
+                <input
+                  type="text"
+                  placeholder="Search by group name"
+                  value={searchText}
+                  onChange={(e) => { setSearchText(e.target.value); setCurrent(0); }}
+                  style={{ padding: 8, borderRadius: 6, border: "1px solid #d9d9d9", minWidth: 240 }}
+                />
+                <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                  <select
+                    value={statusFilter}
+                    onChange={(e) => { setStatusFilter(e.target.value); setCurrent(0); }}
+                    style={{ padding: 8, borderRadius: 6, border: "1px solid #d9d9d9" }}
+                  >
+                    <option value="all">All</option>
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                  </select>
+                  <Button onClick={() => { setSearchText(""); setStatusFilter("all"); setCurrent(0); }}>Clear</Button>
+                </div>
+              </div>
               <Tabs
                 activeKey={viewKey}
                 onChange={setViewKey}
@@ -347,12 +439,12 @@ export default function ManageGroup() {
                       <div style={{ textAlign: "center", padding: 24 }}>
                         <Spin />
                       </div>
-                    ) : groups.length === 0 ? (
+                    ) : filteredGroups.length === 0 ? (
                       <div>No groups</div>
                     ) : (
                       <div>
                         {(() => {
-                          const g = groups[current];
+                          const g = filteredGroups[Math.min(current, Math.max(filteredGroups.length - 1, 0))];
                           const owner =
                             g?.members?.find(
                               (m) => m.roleInGroup === "OWNER"
@@ -390,10 +482,7 @@ export default function ManageGroup() {
                                   }}
                                 >
                                   {(() => {
-                                    const activeByContract =
-                                      g?._hasContract !== null && g?._hasContract !== undefined
-                                        ? g._hasContract
-                                        : hasAnyContract(g);
+                                    const activeByContract = isActiveByContract(g);
                                     return (
                                       <Tag color={activeByContract ? "green" : "red"}>
                                         {activeByContract ? "Active" : "Inactive"}
@@ -440,20 +529,14 @@ export default function ManageGroup() {
                         >
                           <Button
                             icon={<LeftOutlined />}
-                            onClick={() =>
-                              setCurrent((i) =>
-                                i === 0 ? groups.length - 1 : i - 1
-                              )
-                            }
+                            onClick={() => setCurrent((i) => (i === 0 ? filteredGroups.length - 1 : i - 1))}
                           />
                           <span>
-                            Group {current + 1} of {groups.length}
+                            Group {Math.min(current + 1, filteredGroups.length)} of {filteredGroups.length}
                           </span>
                           <Button
                             icon={<RightOutlined />}
-                            onClick={() =>
-                              setCurrent((i) => (i + 1) % groups.length)
-                            }
+                            onClick={() => setCurrent((i) => (i + 1) % filteredGroups.length)}
                           />
                         </div>
                       </div>
@@ -468,7 +551,7 @@ export default function ManageGroup() {
                       </div>
                     ) : (
                       <Table
-                        dataSource={groups.map((g) => ({ ...g, key: g.id }))}
+                        dataSource={filteredGroups.map((g) => ({ ...g, key: g.id }))}
                         columns={columns}
                         pagination={{ pageSize: 10 }}
                       />

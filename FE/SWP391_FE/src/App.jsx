@@ -23,6 +23,7 @@ import CreateEContract from "./pages/create.econtract";
 import MyContracts from "./pages/view.mycontract";
 import ReviewEContract from "./pages/staff/review.econtract/index";
 import SignEContract from "./pages/sign.econtract/index";
+import StaffDashboard from "./pages/staff/dashboard/index";
 import BookingCalendar from "./pages/booking";
 
 function App() {
@@ -197,7 +198,18 @@ function App() {
         </ProtectedRoute>
       ),
     },
+
+
+    {
+      path: "/staff/dashboard",
+      element: (
+        <ProtectedRoute roleId={2}>
+          <StaffDashboard />
+        </ProtectedRoute>
+      ),
+    }
   ]);
+  
 
   return (
     <AuthProvider>

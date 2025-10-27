@@ -30,6 +30,7 @@ import "./myGroup.css";
 
 const { Title, Text } = Typography;
 
+
 const MyGroup = () => {
 	const { isAdmin, isStaff, isCoOwner } = useAuth();
 	const [groups, setGroups] = useState([]);
@@ -723,7 +724,16 @@ const MyGroup = () => {
 				)}
 			</Modal>
 		</div>
+    
+
+    
 	);
+  
+  
+
+
+ 
 };
+
 
 export default MyGroup;

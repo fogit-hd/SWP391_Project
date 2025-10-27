@@ -47,9 +47,9 @@ const CreateGroup = () => {
       hide();
 
       if (response.status === 200 || response.status === 201) {
-        toast.success("Create group successfully");
-        // Optionally, you can read response.data.group for new group info
-        navigate("/myGroup");
+  toast.success("Create group successfully");
+  // Navigate to the routed My Groups page
+  navigate("/view-mygroup");
       } else {
         throw new Error(`Unexpected response status: ${response.status}`);
       }
@@ -151,7 +151,7 @@ const CreateGroup = () => {
                   type="default"
                   size="large"
                   className="create-group-cancel-btn"
-                  onClick={() => navigate("/view-myGroup")}
+                  onClick={() => navigate("/view-mygroup")}
                 >
                   Cancel
                 </Button>
@@ -170,7 +170,7 @@ const CreateGroup = () => {
           </div>
 
           <div className="create-group-footer">
-            <Link to="/view-myGroup" className="create-group-back-link">
+            <Link to="/view-mygroup" className="create-group-back-link">
               <ArrowLeftOutlined /> Back to My Groups
             </Link>
           </div>
