@@ -10,8 +10,6 @@ import {
 import api from "../../config/axios";
 import { toast } from "react-toastify";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import AppHeader from "../../components/reuse/AppHeader";
-import AppFooter from "../../components/reuse/AppFooter";
 import "./update-profile.css";
 
 const UpdateProfile = () => {
@@ -630,7 +628,6 @@ const UpdateProfile = () => {
 
   return (
     <div className="update-profile-page">
-      <AppHeader />
       <div className="update-profile-content">
         <div className="update-profile-container">
           {/* Background */}
@@ -638,325 +635,336 @@ const UpdateProfile = () => {
 
           <div className="verify-card-container">
             <Card className="verify-card">
-          <div className="verify-header">
-            <h2 className="verify-title">Setting Your Account</h2>
-            <p className="verify-subtitle">
-              Please enter the Verification Code sent to your email address to
-              create a new password.
-            </p>
-          </div>
-
-          <Row>
-            <Form
-              form={form}
-              layout="vertical"
-              onFinish={onFinish}
-              requiredMark={false}
-              className="verify-form"
-            >
-              {/* Current Email (Read-only) */}
-              <Form.Item label="Current Email">
-                <Input
-                  value={email || "N/A"}
-                  prefix={<MailOutlined />}
-                  disabled
-                  style={{ backgroundColor: "#f5f5f5" }}
-                />
-              </Form.Item>
-
-              {/* New Email */}
-              <Form.Item
-                label="New Email Address (Optional)"
-                name="newEmail"
-                rules={[
-                  {
-                    type: "email",
-                    message: "Please enter a valid email address",
-                  },
-                ]}
-              >
-                <Input
-                  placeholder="Enter your new email address (leave blank to keep current)"
-                  type="email"
-                  prefix={<MailOutlined />}
-                  allowClear
-                />
-              </Form.Item>
-
-              {/* Current Phone (Read-only) */}
-              <Form.Item label="Current Phone Number">
-                <Input
-                  value={location.state?.profileData?.phone || "N/A"}
-                  prefix={<PhoneOutlined />}
-                  disabled
-                  style={{ backgroundColor: "#f5f5f5" }}
-                />
-              </Form.Item>
-
-              {/* New Phone */}
-              <Form.Item
-                label="New Phone Number (Optional)"
-                name="newPhone"
-                rules={[
-                  {
-                    pattern: /^[0-9]+$/,
-                    message: "Phone must contain only numbers",
-                  },
-                  { min: 10, message: "Phone must be at least 10 digits" },
-                ]}
-              >
-                <Input
-                  placeholder="Enter your new phone number (leave blank to keep current)"
-                  prefix={<PhoneOutlined />}
-                  allowClear
-                />
-              </Form.Item>
-              {/* CCCD Upload Section */}
-              <div className="upload-section">
-                <h3
-                  style={{
-                    textAlign: "center",
-                    marginBottom: "20px",
-                    color: "#1f2937",
-                  }}
-                >
-                  CCCD Verification
-                </h3>
-                <div className="upload-item">
-                  <Upload
-                    accept=".png,.jpg,.jpeg"
-                    multiple
-                    maxCount={2}
-                    beforeUpload={(file) => {
-                      const isPng = file.type === "image/png";
-                      const isJpeg =
-                        file.type === "image/jpeg" ||
-                        file.type === "image/jpg" ||
-                        /\.jpe?g$/i.test(file.name);
-                      if (!isPng && !isJpeg) {
-                        message.error(`${file.name} must be PNG or JPG/JPEG.`);
-                        return Upload.LIST_IGNORE;
-                      }
-                      const isLt5M = file.size / 1024 / 1024 < 5;
-                      if (!isLt5M) {
-                        message.error("Image must be smaller than 5MB!");
-                        return Upload.LIST_IGNORE;
-                      }
-                      return false;
-                    }}
-                    fileList={uploadedFiles}
-                    onRemove={(file) => {
-                      const newList = uploadedFiles.filter(
-                        (f) => f.uid !== file.uid
-                      );
-                      setUploadedFiles(newList);
-                      if (newList.length < 2) {
-                        setScannedData(null);
-                      }
-                    }}
-                    onChange={(info) => {
-                      let list = info.fileList || [];
-                      list = list.filter((f) => {
-                        const t = f.type || "";
-                        const name = f.name || "";
-                        const isP = t === "image/png";
-                        const isJ =
-                          t === "image/jpeg" ||
-                          t === "image/jpg" ||
-                          /\.jpe?g$/i.test(name);
-                        return isP || isJ;
-                      });
-                      if (list.length > 2) list = list.slice(list.length - 2);
-                      setUploadedFiles(list);
-
-                      // Reset scanned data when files change
-                      setScannedData(null);
-                    }}
-                  >
-                    <Button icon={<UploadOutlined />}>
-                      Upload CCCD Images (2 files)
-                    </Button>
-                  </Upload>
-
-                  {/* Manual Scan Button */}
-                  {uploadedFiles.length === 2 && (
-                    <div style={{ marginTop: "10px", textAlign: "center" }}>
-                      <Button
-                        type="primary"
-                        icon={<IdcardOutlined />}
-                        loading={isScanning}
-                        onClick={() => {
-                          const files = uploadedFiles.map(
-                            (file) => file.originFileObj || file
-                          );
-                          scanCCCD(files);
-                        }}
-                        style={{ marginTop: "10px" }}
-                      >
-                        {isScanning ? "Scanning CCCD..." : "Scan CCCD"}
-                      </Button>
-                      <p
-                        style={{
-                          fontSize: "12px",
-                          color: "#666",
-                          marginTop: "5px",
-                        }}
-                      >
-                        Click to scan and extract information from your CCCD
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Verification Code */}
-              <Form.Item
-                label="Verification Code"
-                name="verification-code"
-                rules={[
-                  { required: true, message: "Verification Code is required" },
-                  {
-                    min: 6,
-                    message: "Verification Code must be at least 6 characters",
-                  },
-                  {
-                    max: 6,
-                    message: "Verification Code must be exactly 6 characters",
-                  },
-                  {
-                    pattern: /^[0-9]+$/,
-                    message: "Verification Code must contain only numbers",
-                  },
-                ]}
-              >
-                <Input
-                  placeholder="Enter 6-digit Verification Code"
-                  type="text"
-                  prefix={<SafetyOutlined />}
-                  allowClear
-                  maxLength={6}
-                />
-              </Form.Item>
-              {/* Resend Activation Code Link */}
-              <div className="send-activation-code-container">
-                <p>
-                  Didn't receive the code?{" "}
-                  <Button
-                    type="link"
-                    onClick={sendVerificationCode}
-                    disabled={isResendDisabled}
-                    className="send-verification-code-link"
-                  >
-                    {isResendDisabled
-                      ? `Send Verification Code (${countdown}s)`
-                      : hasRequestedResend
-                      ? "Send Verification Code"
-                      : "Send Verification Code"}
-                  </Button>
+              <div className="verify-header">
+                <h2 className="verify-title">Setting Your Account</h2>
+                <p className="verify-subtitle">
+                  Please enter the Verification Code sent to your email address
+                  to create a new password.
                 </p>
               </div>
-              <Form.Item>
-                <Button
-                  type="primary"
-                  htmlType="submit"
-                  loading={isLoading}
-                  onClick={onFinish}
-                  block
-                  size="large"
-                  className="verify-submit-button"
+
+              <Row>
+                <Form
+                  form={form}
+                  layout="vertical"
+                  onFinish={onFinish}
+                  requiredMark={false}
+                  className="verify-form"
                 >
-                  {isLoading ? "Verifying..." : "Verify your Account"}
-                </Button>
-              </Form.Item>
-              <div className="verify-login-link">
-                <Link
-                  to="/"
-                  state={{
-                    profileData: location.state?.profileData,
-                    email: location.state?.email || email,
-                    updated: true,
-                  }}
-                >
-                  Back
-                </Link>
-              </div>
-            </Form>
-          </Row>
-        </Card>
-      </div>
-      {/* Independent CCCD Info Table */}
-      <div className={`cccd-info-table ${!scannedData ? "hidden" : ""}`}>
-        <div className="cccd-info-header">
-          <h3>📋 Identify card Information</h3>
-        </div>
-        {scannedData && (
-          <div className="cccd-info-grid">
-            <div className="cccd-info-item">
-              <span className="cccd-info-label">Full Name:</span>
-              <span className="cccd-info-value">{scannedData.fullName}</span>
-            </div>
-            <div className="cccd-info-item">
-              <span className="cccd-info-label">ID Number:</span>
-              <span className="cccd-info-value">{scannedData.idNumber}</span>
-            </div>
-            <div className="cccd-info-item">
-              <span className="cccd-info-label">Date of Birth:</span>
-              <span className="cccd-info-value">
-                {formatDate(scannedData.dateOfBirth)}
-              </span>
-            </div>
-            <div className="cccd-info-item">
-              <span className="cccd-info-label">Gender:</span>
-              <span className="cccd-info-value">
-                {scannedData.gender === true ||
-                scannedData.gender === "true" ||
-                scannedData.gender === "Male" ||
-                scannedData.gender === "Nam"
-                  ? "Male"
-                  : scannedData.gender === false ||
-                    scannedData.gender === "false" ||
-                    scannedData.gender === "Female" ||
-                    scannedData.gender === "Nữ"
-                  ? "Female"
-                  : scannedData.gender}
-              </span>
-            </div>
-            <div className="cccd-info-item">
-              <span className="cccd-info-label">Place of Birth:</span>
-              <span className="cccd-info-value">
-                {scannedData.placeOfBirth || "N/A"}
-              </span>
-            </div>
-            <div className="cccd-info-item">
-              <span className="cccd-info-label">Address:</span>
-              <span className="cccd-info-value">
-                {scannedData.address || "N/A"}
-              </span>
-            </div>
-            <div className="cccd-info-item">
-              <span className="cccd-info-label">Issue Date:</span>
-              <span className="cccd-info-value">
-                {formatDate(scannedData.issueDate)}
-              </span>
-            </div>
-            <div className="cccd-info-item">
-              <span className="cccd-info-label">Expiry Date:</span>
-              <span className="cccd-info-value">
-                {formatDate(scannedData.expiryDate)}
-              </span>
-            </div>
-            <div className="cccd-info-item">
-              <span className="cccd-info-label">Place of Issue:</span>
-              <span className="cccd-info-value">
-                {scannedData.placeOfIssue || "N/A"}
-              </span>
-            </div>
+                  {/* Current Email (Read-only) */}
+                  <Form.Item label="Current Email">
+                    <Input
+                      value={email || "N/A"}
+                      prefix={<MailOutlined />}
+                      disabled
+                      style={{ backgroundColor: "#f5f5f5" }}
+                    />
+                  </Form.Item>
+
+                  {/* New Email */}
+                  <Form.Item
+                    label="New Email Address (Optional)"
+                    name="newEmail"
+                    rules={[
+                      {
+                        type: "email",
+                        message: "Please enter a valid email address",
+                      },
+                    ]}
+                  >
+                    <Input
+                      placeholder="Enter your new email address (leave blank to keep current)"
+                      type="email"
+                      prefix={<MailOutlined />}
+                      allowClear
+                    />
+                  </Form.Item>
+
+                  {/* Current Phone (Read-only) */}
+                  <Form.Item label="Current Phone Number">
+                    <Input
+                      value={location.state?.profileData?.phone || "N/A"}
+                      prefix={<PhoneOutlined />}
+                      disabled
+                      style={{ backgroundColor: "#f5f5f5" }}
+                    />
+                  </Form.Item>
+
+                  {/* New Phone */}
+                  <Form.Item
+                    label="New Phone Number (Optional)"
+                    name="newPhone"
+                    rules={[
+                      {
+                        pattern: /^[0-9]+$/,
+                        message: "Phone must contain only numbers",
+                      },
+                      { min: 10, message: "Phone must be at least 10 digits" },
+                    ]}
+                  >
+                    <Input
+                      placeholder="Enter your new phone number (leave blank to keep current)"
+                      prefix={<PhoneOutlined />}
+                      allowClear
+                    />
+                  </Form.Item>
+                  {/* CCCD Upload Section */}
+                  <div className="upload-section">
+                    <h3
+                      style={{
+                        textAlign: "center",
+                        marginBottom: "20px",
+                        color: "#1f2937",
+                      }}
+                    >
+                      CCCD Verification
+                    </h3>
+                    <div className="upload-item">
+                      <Upload
+                        accept=".png,.jpg,.jpeg"
+                        multiple
+                        maxCount={2}
+                        beforeUpload={(file) => {
+                          const isPng = file.type === "image/png";
+                          const isJpeg =
+                            file.type === "image/jpeg" ||
+                            file.type === "image/jpg" ||
+                            /\.jpe?g$/i.test(file.name);
+                          if (!isPng && !isJpeg) {
+                            message.error(
+                              `${file.name} must be PNG or JPG/JPEG.`
+                            );
+                            return Upload.LIST_IGNORE;
+                          }
+                          const isLt5M = file.size / 1024 / 1024 < 5;
+                          if (!isLt5M) {
+                            message.error("Image must be smaller than 5MB!");
+                            return Upload.LIST_IGNORE;
+                          }
+                          return false;
+                        }}
+                        fileList={uploadedFiles}
+                        onRemove={(file) => {
+                          const newList = uploadedFiles.filter(
+                            (f) => f.uid !== file.uid
+                          );
+                          setUploadedFiles(newList);
+                          if (newList.length < 2) {
+                            setScannedData(null);
+                          }
+                        }}
+                        onChange={(info) => {
+                          let list = info.fileList || [];
+                          list = list.filter((f) => {
+                            const t = f.type || "";
+                            const name = f.name || "";
+                            const isP = t === "image/png";
+                            const isJ =
+                              t === "image/jpeg" ||
+                              t === "image/jpg" ||
+                              /\.jpe?g$/i.test(name);
+                            return isP || isJ;
+                          });
+                          if (list.length > 2)
+                            list = list.slice(list.length - 2);
+                          setUploadedFiles(list);
+
+                          // Reset scanned data when files change
+                          setScannedData(null);
+                        }}
+                      >
+                        <Button icon={<UploadOutlined />}>
+                          Upload CCCD Images (2 files)
+                        </Button>
+                      </Upload>
+
+                      {/* Manual Scan Button */}
+                      {uploadedFiles.length === 2 && (
+                        <div style={{ marginTop: "10px", textAlign: "center" }}>
+                          <Button
+                            type="primary"
+                            icon={<IdcardOutlined />}
+                            loading={isScanning}
+                            onClick={() => {
+                              const files = uploadedFiles.map(
+                                (file) => file.originFileObj || file
+                              );
+                              scanCCCD(files);
+                            }}
+                            style={{ marginTop: "10px" }}
+                          >
+                            {isScanning ? "Scanning CCCD..." : "Scan CCCD"}
+                          </Button>
+                          <p
+                            style={{
+                              fontSize: "12px",
+                              color: "#666",
+                              marginTop: "5px",
+                            }}
+                          >
+                            Click to scan and extract information from your CCCD
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Verification Code */}
+                  <Form.Item
+                    label="Verification Code"
+                    name="verification-code"
+                    rules={[
+                      {
+                        required: true,
+                        message: "Verification Code is required",
+                      },
+                      {
+                        min: 6,
+                        message:
+                          "Verification Code must be at least 6 characters",
+                      },
+                      {
+                        max: 6,
+                        message:
+                          "Verification Code must be exactly 6 characters",
+                      },
+                      {
+                        pattern: /^[0-9]+$/,
+                        message: "Verification Code must contain only numbers",
+                      },
+                    ]}
+                  >
+                    <Input
+                      placeholder="Enter 6-digit Verification Code"
+                      type="text"
+                      prefix={<SafetyOutlined />}
+                      allowClear
+                      maxLength={6}
+                    />
+                  </Form.Item>
+                  {/* Resend Activation Code Link */}
+                  <div className="send-activation-code-container">
+                    <p>
+                      Didn't receive the code?{" "}
+                      <Button
+                        type="link"
+                        onClick={sendVerificationCode}
+                        disabled={isResendDisabled}
+                        className="send-verification-code-link"
+                      >
+                        {isResendDisabled
+                          ? `Send Verification Code (${countdown}s)`
+                          : hasRequestedResend
+                          ? "Send Verification Code"
+                          : "Send Verification Code"}
+                      </Button>
+                    </p>
+                  </div>
+                  <Form.Item>
+                    <Button
+                      type="primary"
+                      htmlType="submit"
+                      loading={isLoading}
+                      onClick={onFinish}
+                      block
+                      size="large"
+                      className="verify-submit-button"
+                    >
+                      {isLoading ? "Verifying..." : "Verify your Account"}
+                    </Button>
+                  </Form.Item>
+                  <div className="verify-login-link">
+                    <Link
+                      to="/"
+                      state={{
+                        profileData: location.state?.profileData,
+                        email: location.state?.email || email,
+                        updated: true,
+                      }}
+                    >
+                      Back
+                    </Link>
+                  </div>
+                </Form>
+              </Row>
+            </Card>
           </div>
-        )}
-      </div>
+          {/* Independent CCCD Info Table */}
+          <div className={`cccd-info-table ${!scannedData ? "hidden" : ""}`}>
+            <div className="cccd-info-header">
+              <h3>📋 Identify card Information</h3>
+            </div>
+            {scannedData && (
+              <div className="cccd-info-grid">
+                <div className="cccd-info-item">
+                  <span className="cccd-info-label">Full Name:</span>
+                  <span className="cccd-info-value">
+                    {scannedData.fullName}
+                  </span>
+                </div>
+                <div className="cccd-info-item">
+                  <span className="cccd-info-label">ID Number:</span>
+                  <span className="cccd-info-value">
+                    {scannedData.idNumber}
+                  </span>
+                </div>
+                <div className="cccd-info-item">
+                  <span className="cccd-info-label">Date of Birth:</span>
+                  <span className="cccd-info-value">
+                    {formatDate(scannedData.dateOfBirth)}
+                  </span>
+                </div>
+                <div className="cccd-info-item">
+                  <span className="cccd-info-label">Gender:</span>
+                  <span className="cccd-info-value">
+                    {scannedData.gender === true ||
+                    scannedData.gender === "true" ||
+                    scannedData.gender === "Male" ||
+                    scannedData.gender === "Nam"
+                      ? "Male"
+                      : scannedData.gender === false ||
+                        scannedData.gender === "false" ||
+                        scannedData.gender === "Female" ||
+                        scannedData.gender === "Nữ"
+                      ? "Female"
+                      : scannedData.gender}
+                  </span>
+                </div>
+                <div className="cccd-info-item">
+                  <span className="cccd-info-label">Place of Birth:</span>
+                  <span className="cccd-info-value">
+                    {scannedData.placeOfBirth || "N/A"}
+                  </span>
+                </div>
+                <div className="cccd-info-item">
+                  <span className="cccd-info-label">Address:</span>
+                  <span className="cccd-info-value">
+                    {scannedData.address || "N/A"}
+                  </span>
+                </div>
+                <div className="cccd-info-item">
+                  <span className="cccd-info-label">Issue Date:</span>
+                  <span className="cccd-info-value">
+                    {formatDate(scannedData.issueDate)}
+                  </span>
+                </div>
+                <div className="cccd-info-item">
+                  <span className="cccd-info-label">Expiry Date:</span>
+                  <span className="cccd-info-value">
+                    {formatDate(scannedData.expiryDate)}
+                  </span>
+                </div>
+                <div className="cccd-info-item">
+                  <span className="cccd-info-label">Place of Issue:</span>
+                  <span className="cccd-info-value">
+                    {scannedData.placeOfIssue || "N/A"}
+                  </span>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
-      <AppFooter />
     </div>
   );
 };

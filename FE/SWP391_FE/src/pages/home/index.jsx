@@ -46,7 +46,7 @@ const { Header, Content, Footer } = Layout;
 const { Title, Paragraph, Text } = Typography;
 
 const Homepage = () => {
-  const { isAuthenticated, isAdmin, isStaff, isCoOwner, user } = useAuth();
+  const { isAuthenticated, isCoOwner, user } = useAuth();
   const dispatch = useDispatch();
   const [isProfileModalVisible, setIsProfileModalVisible] = useState(false);
   const [isProfileImageLoading, setIsProfileImageLoading] = useState(false);
@@ -604,9 +604,14 @@ const Homepage = () => {
       textColor: "#fff",
       links: [
         {
-          key: "Vehicle Service",
-          label: "Vehicle Service",
-          onClick: () => navigate("/view-myservice"),
+          key: "service-request",
+          label: "Service Request",
+          onClick: () => navigate("/create-service-request"),
+        },
+        {
+          key: "view-myservice",
+          label: "View My Service",
+          // onClick: () => navigate("/view-myservice"),
         },
       ],
     },
