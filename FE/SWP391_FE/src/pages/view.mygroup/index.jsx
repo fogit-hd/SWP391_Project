@@ -42,6 +42,8 @@ const MyGroup = () => {
   const [members, setMembers] = useState([]);
   const [vehicles, setVehicles] = useState([]);
   const [vehiclesLoading, setVehiclesLoading] = useState(false);
+  const [serviceRequests, setServiceRequests] = useState([]);
+  const [serviceRequestsLoading, setServiceRequestsLoading] = useState(false);
   const [renameOpen, setRenameOpen] = useState(false);
   const [renameSubmitting, setRenameSubmitting] = useState(false);
   const [renameTarget, setRenameTarget] = useState(null);
@@ -180,6 +182,48 @@ const MyGroup = () => {
       setGroups([]);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadServiceRequests = async (groupId) => {
+    setServiceRequestsLoading(true);
+    try {
+      // First try to ask the backend for service requests scoped to this group
+      const r = await api.get("/service-requests", { params: { groupId } });
+      let raw = [];
+      if (Array.isArray(r.data)) raw = r.data;
+      else if (Array.isArray(r.data?.data)) raw = r.data.data;
+      else raw = [];
+
+      // If backend returned nothing, fetch all and try to filter by common fields
+      if (!raw || raw.length === 0) {
+        const allRes = await api.get("/service-requests");
+        let all = [];
+        if (Array.isArray(allRes.data)) all = allRes.data;
+        else if (Array.isArray(allRes.data?.data)) all = allRes.data.data;
+        else all = [];
+        const filtered = all.filter((sr) => {
+          // Common field names that might reference group id
+          if (!groupId) return false;
+          if (sr.groupId && sr.groupId === groupId) return true;
+          if (sr.coOwnershipId && sr.coOwnershipId === groupId) return true;
+          if (sr.group_id && sr.group_id === groupId) return true;
+          if (sr.group && (sr.group.id === groupId || sr.groupId === groupId)) return true;
+          // If service request references a vehicle, include it when the vehicle
+          // belongs to this group (vehicles state is available after loadVehicles)
+          if (sr.vehicleId && vehicles && vehicles.some((v) => v.id === sr.vehicleId)) return true;
+          return false;
+        });
+        setServiceRequests(filtered);
+      } else {
+        setServiceRequests(raw);
+      }
+    } catch (err) {
+      console.error("Load service requests failed", err);
+      message.error("Failed to load service requests");
+      setServiceRequests([]);
+    } finally {
+      setServiceRequestsLoading(false);
     }
   };
 
@@ -330,7 +374,10 @@ const MyGroup = () => {
     setMembersVisible(true);
     setInviteCode("");
     setInviteExpiresAt(null);
+    // Load members and vehicles first, then service requests (so we can
+    // associate service requests with vehicles if needed)
     await Promise.all([loadMembers(group.id), loadVehicles(group.id)]);
+    await loadServiceRequests(group.id);
   };
 
   const openRename = (group) => {
@@ -1098,6 +1145,62 @@ const MyGroup = () => {
                                         />
                                       );
                                     })()}
+                                  </List.Item>
+                                )}
+                              />
+                            </>
+                          ),
+                        },
+                        {
+                          key: "serviceRequests",
+                          label: "Service Requests",
+                          children: (
+                            <>
+                              <List
+                                loading={serviceRequestsLoading}
+                                itemLayout="horizontal"
+                                dataSource={serviceRequests}
+                                renderItem={(sr) => (
+                                  <List.Item
+                                    actions={[
+                                      sr.type ? (
+                                        <Tag key="type" color="blue">
+                                          {sr.type}
+                                        </Tag>
+                                      ) : null,
+                                      sr.status ? (
+                                        <Tag
+                                          key="status"
+                                          color={
+                                            sr.status === "IN_PROGRESS"
+                                              ? "orange"
+                                              : sr.status === "APPROVED"
+                                              ? "green"
+                                              : "default"
+                                          }
+                                        >
+                                          {sr.status}
+                                        </Tag>
+                                      ) : null,
+                                    ].filter(Boolean)}
+                                  >
+                                    <List.Item.Meta
+                                      title={sr.title || sr.id}
+                                      description={
+                                        <div>
+                                          {sr.costEstimate ? (
+                                            <span>
+                                              Estimate: {sr.costEstimate}{" "}
+                                            </span>
+                                          ) : null}
+                                          {sr.createdAt ? (
+                                            <span>
+                                              - {new Date(sr.createdAt).toLocaleString()}
+                                            </span>
+                                          ) : null}
+                                        </div>
+                                      }
+                                    />
                                   </List.Item>
                                 )}
                               />
