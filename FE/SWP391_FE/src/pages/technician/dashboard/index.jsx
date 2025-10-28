@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from "react";
-import {
-  EyeOutlined,
-} from "@ant-design/icons";
+import { EyeOutlined } from "@ant-design/icons";
 import {
   Breadcrumb,
   Layout,
@@ -16,15 +14,15 @@ import {
 } from "antd";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../../components/hooks/useAuth";
-import StaffSidebar from "../../../components/staff/StaffSidebar";
+import TechnicianSidebar from "../../../components/technician/TechnicianSidebar";
 
 const { Header, Content, Footer } = Layout;
 const { Title, Paragraph } = Typography;
 
-const StaffDashboard = () => {
+const TechnicianDashboard = () => {
   const [collapsed, setCollapsed] = useState(false);
   const navigate = useNavigate();
-  const { isStaff, isAuthenticated } = useAuth();
+  const { isTechnician, isAuthenticated } = useAuth();
   const [isLoading, setIsLoading] = useState(true);
 
   const {
@@ -32,26 +30,26 @@ const StaffDashboard = () => {
   } = theme.useToken();
 
   useEffect(() => {
-    console.log("[STAFF-DASHBOARD] Role check:", {
+    console.log("[TECHNICIAN-DASHBOARD] Role check:", {
       isAuthenticated,
-      isStaff,
+      isTechnician,
     });
 
     if (!isAuthenticated) {
-      console.log("[STAFF-DASHBOARD] ✗ Not authenticated - redirecting to login");
+      console.log("[TECHNICIAN-DASHBOARD] ✗ Not authenticated - redirecting to login");
       navigate("/login");
       return;
     }
 
-    if (!isStaff) {
-      console.log("[STAFF-DASHBOARD] ✗ Not staff role - redirecting to home");
+    if (!isTechnician) {
+      console.log("[TECHNICIAN-DASHBOARD] ✗ Not technician role - redirecting to home");
       navigate("/");
       return;
     }
 
-    console.log("[STAFF-DASHBOARD] ✓ Staff access granted");
+    console.log("[TECHNICIAN-DASHBOARD] ✓ Technician access granted");
     setIsLoading(false);
-  }, [isAuthenticated, isStaff, navigate]);
+  }, [isAuthenticated, isTechnician, navigate]);
 
   if (isLoading) {
     return (
@@ -63,7 +61,7 @@ const StaffDashboard = () => {
     );
   }
 
-  if (!isStaff) {
+  if (!isTechnician) {
     return (
       <Result
         status="403"
@@ -78,13 +76,13 @@ const StaffDashboard = () => {
     );
   }
 
-  const handleReviewContracts = () => {
-    navigate("/staff/review-econtract");
+  const handleReviewService = () => {
+    navigate("/technician/review-service");
   };
 
   return (
     <Layout style={{ minHeight: "100vh" }}>
-      <StaffSidebar
+      <TechnicianSidebar
         collapsed={collapsed}
         onCollapse={setCollapsed}
         selectedKey="dashboard"
@@ -105,25 +103,23 @@ const StaffDashboard = () => {
             }}
           >
             <div style={{ marginBottom: 24 }}>
-              <Title level={2}>Staff Dashboard</Title>
-              <Paragraph>
-                Review and manage contracts from here.
-              </Paragraph>
+              <Title level={2}>Technician Dashboard</Title>
+              <Paragraph>Review and manage services from here.</Paragraph>
             </div>
 
-            {/* Contract Review Section */}
-            <Card title="Contract Review">
+            {/* Service Review Section */}
+            <Card title="Service Review">
               <Row gutter={[16, 16]}>
                 <Col xs={24} sm={12} lg={8}>
                   <Button
                     type="primary"
                     size="large"
                     icon={<EyeOutlined />}
-                    onClick={handleReviewContracts}
+                    onClick={handleReviewService}
                     block
                     style={{ height: 60 }}
                   >
-                    Review Contracts
+                    Review Service
                   </Button>
                 </Col>
               </Row>
@@ -138,5 +134,4 @@ const StaffDashboard = () => {
   );
 };
 
-export default StaffDashboard;
-
+export default TechnicianDashboard;

@@ -23,9 +23,14 @@ import CreateEContract from "./pages/create.econtract";
 import MyContracts from "./pages/view.mycontract";
 import ReviewEContract from "./pages/staff/review.econtract/index";
 import SignEContract from "./pages/sign.econtract/index";
+import StaffDashboard from "./pages/staff/dashboard";
+import TechnicianDashboard from "./pages/technician/dashboard";
+import ReviewService from "./pages/technician/review.service";
+import CreateServiceRequest from "./pages/create.service";
 
 function App() {
   const router = createBrowserRouter([
+    // ADMIN PAGE
     {
       path: "/admin/dashboard",
       element: (
@@ -75,6 +80,17 @@ function App() {
       ),
     },
 
+    // STAFF PAGE
+
+    {
+      path: "/staff/dashboard",
+      element: (
+        <ProtectedRoute roleId={2}>
+          <StaffDashboard />
+        </ProtectedRoute>
+      ),
+    },
+
     {
       path: "/staff/review-econtract",
       element: (
@@ -83,6 +99,27 @@ function App() {
         </ProtectedRoute>
       ),
     },
+    // TECHNICIAN PAGE
+
+    {
+      path: "/technician/dashboard",
+      element: (
+        <ProtectedRoute roleId={4}>
+          <TechnicianDashboard />
+        </ProtectedRoute>
+      ),
+    },
+
+    {
+      path: "/technician/review-service",
+      element: (
+        <ProtectedRoute roleId={4}>
+          <ReviewService />
+        </ProtectedRoute>
+      ),
+    },
+
+    // GUEST PAGE
 
     {
       path: "/",
@@ -108,6 +145,8 @@ function App() {
       path: "/terms",
       element: <TermsPage />,
     },
+
+    // CO-OWNER PAGE
     {
       path: "/update-profile",
       element: (
@@ -165,14 +204,6 @@ function App() {
       ),
     },
     {
-      path: "/my-contracts",
-      element: (
-        <ProtectedRoute roleId={3}>
-          <MyContracts />
-        </ProtectedRoute>
-      ),
-    },
-    {
       path: "/sign-econtract/:contractId",
       element: (
         <ProtectedRoute roleId={3}>
@@ -183,8 +214,26 @@ function App() {
     {
       path: "/review-econtract",
       element: (
-        <ProtectedRoute roleId={2}>
+        <ProtectedRoute roleId={3}>
           <ReviewEContract />
+        </ProtectedRoute>
+      ),
+    },
+
+    {
+      path: "/review-econtract",
+      element: (
+        <ProtectedRoute roleId={3}>
+          <ReviewEContract />
+        </ProtectedRoute>
+      ),
+    },
+
+    {
+      path: "/create-service-request",
+      element: (
+        <ProtectedRoute roleId={3}>
+          <CreateServiceRequest />
         </ProtectedRoute>
       ),
     },
