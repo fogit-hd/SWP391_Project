@@ -22,6 +22,7 @@ import {
   DeleteOutlined,
   PlusOutlined,
   ReloadOutlined,
+  SearchOutlined,
 } from "@ant-design/icons";
 import { Link } from "react-router-dom";
 import { toast } from "react-toastify";
@@ -43,6 +44,9 @@ const ManageVehicle = () => {
   const [error, setError] = useState(null);
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
   const [vehicleToDelete, setVehicleToDelete] = useState(null);
+  const [searchText, setSearchText] = useState("");
+  const [filteredData, setFilteredData] = useState([]);
+  const [allVehicles, setAllVehicles] = useState([]);
   const [pagination, setPagination] = useState({
     current: 1,
     pageSize: 10,
@@ -54,6 +58,37 @@ const ManageVehicle = () => {
 
   // Form instances
   const [addForm] = Form.useForm();
+
+  // Filter data when searchText changes
+  useEffect(() => {
+    if (!searchText.trim()) {
+      setFilteredData(allVehicles);
+    } else {
+      const filtered = allVehicles.filter((vehicle) => {
+        const searchLower = searchText.toLowerCase();
+        return (
+          vehicle.plateNumber?.toLowerCase().includes(searchLower) ||
+          vehicle.make?.toLowerCase().includes(searchLower) ||
+          vehicle.model?.toLowerCase().includes(searchLower)
+        );
+      });
+      setFilteredData(filtered);
+    }
+  }, [searchText, allVehicles]);
+
+  // Update displayed data when filteredData or pagination changes
+  useEffect(() => {
+    const startIndex = (pagination.current - 1) * pagination.pageSize;
+    const paginatedData = filteredData.slice(
+      startIndex,
+      startIndex + pagination.pageSize
+    );
+    setData(paginatedData);
+    setPagination((prev) => ({
+      ...prev,
+      total: filteredData.length,
+    }));
+  }, [filteredData, pagination.current, pagination.pageSize]);
 
   const columns = [
     {
@@ -71,25 +106,25 @@ const ManageVehicle = () => {
       key: "plateNumber",
       width: 150,
       fixed: "left",
-      sorter: true,
+      sorter: (a, b) => (a.plateNumber || "").localeCompare(b.plateNumber || ""),
     },
     {
       title: "Make",
       dataIndex: "make",
       key: "make",
-      sorter: true,
+      sorter: (a, b) => (a.make || "").localeCompare(b.make || ""),
     },
     {
       title: "Model",
       dataIndex: "model",
       key: "model",
-      sorter: true,
+      sorter: (a, b) => (a.model || "").localeCompare(b.model || ""),
     },
     {
       title: "Year",
       dataIndex: "modelYear",
       key: "modelYear",
-      sorter: true,
+      sorter: (a, b) => a.modelYear - b.modelYear,
       width: 80,
     },
     {
@@ -101,8 +136,7 @@ const ManageVehicle = () => {
       title: "Status",
       dataIndex: "status",
       key: "status",
-      sorter: true,
-      filters: [{ text: "INACTIVE", value: "INACTIVE" }],
+      sorter: (a, b) => (a.status || "").localeCompare(b.status || ""),
       render: (status) => {
         let color = "default";
         if (status === "ACTIVE" || status === "Active") color = "green";
@@ -165,10 +199,12 @@ const ManageVehicle = () => {
       const response = await api.get("/Vehicle/get-all-vehicle");
       const vehicles = response.data || [];
 
-      // Apply client-side filtering and sorting
-      let filteredData = vehicles;
+      // Store all vehicles for search filtering
+      setAllVehicles(vehicles);
+      setFilteredData(vehicles);
 
-      // Apply status filter
+      // Apply status filter if exists
+      let filteredData = vehicles;
       if (filters.status && filters.status.length > 0) {
         filteredData = filteredData.filter((item) =>
           filters.status.some(
@@ -313,10 +349,11 @@ const ManageVehicle = () => {
   };
 
   const handleTableChange = (paginationConfig, filters, sorter) => {
-    const { current, pageSize } = paginationConfig;
-    const { field, order } = sorter;
-
-    fetchVehicles(current, pageSize, field, order, filters);
+    setPagination((prev) => ({
+      ...prev,
+      current: paginationConfig.current,
+      pageSize: paginationConfig.pageSize,
+    }));
   };
 
   const handleRefresh = () => {
@@ -329,6 +366,16 @@ const ManageVehicle = () => {
 
   const onAddFinish = (values) => {
     createVehicle(values);
+  };
+
+  // Handle search
+  const handleSearch = (e) => {
+    const value = e.target.value;
+    setSearchText(value);
+  };
+
+  const handleClearSearch = () => {
+    setSearchText("");
   };
 
   // Load data on component mount
@@ -348,7 +395,7 @@ const ManageVehicle = () => {
         <Content style={{ margin: "0 16px" }}>
           <Breadcrumb style={{ margin: "16px 0" }}>
             <Breadcrumb.Item>
-              <Link to="/dashboard">Dashboard</Link>
+              <Link to="/admin/dashboard">Dashboard</Link>
             </Breadcrumb.Item>
             <Breadcrumb.Item>Vehicle Management</Breadcrumb.Item>
           </Breadcrumb>
@@ -363,13 +410,24 @@ const ManageVehicle = () => {
             <Card
               title="Manage Vehicles"
               extra={
-                <Button
-                  icon={<ReloadOutlined />}
-                  onClick={handleRefresh}
-                  loading={loading}
-                >
-                  Refresh
-                </Button>
+                <Space>
+                  <Input
+                    placeholder="Search by Plate Number, Make or Model"
+                    prefix={<SearchOutlined />}
+                    value={searchText}
+                    onChange={handleSearch}
+                    allowClear
+                    onClear={handleClearSearch}
+                    style={{ width: 300 }}
+                  />
+                  <Button
+                    icon={<ReloadOutlined />}
+                    onClick={handleRefresh}
+                    loading={loading}
+                  >
+                    Refresh
+                  </Button>
+                </Space>
               }
             >
               {error && (

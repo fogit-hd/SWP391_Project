@@ -26,6 +26,7 @@ import {
   HomeOutlined,
   CopyOutlined,
   ArrowLeftOutlined,
+  SearchOutlined,
 } from "@ant-design/icons";
 import { Link, useNavigate } from "react-router-dom";
 import api from "../../config/axios";
@@ -49,6 +50,8 @@ const MyVehicle = () => {
   const [error, setError] = useState(null);
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
   const [vehicleToDelete, setVehicleToDelete] = useState(null);
+  const [searchText, setSearchText] = useState("");
+  const [filteredData, setFilteredData] = useState([]);
   const [pagination, setPagination] = useState({
     current: 1,
     pageSize: 10,
@@ -72,6 +75,23 @@ const MyVehicle = () => {
     fetchVehicles(pagination.current, pagination.pageSize);
   }, []);
 
+  // Filter data when searchText or data changes
+  useEffect(() => {
+    if (!searchText.trim()) {
+      setFilteredData(data);
+    } else {
+      const filtered = data.filter((vehicle) => {
+        const searchLower = searchText.toLowerCase();
+        return (
+          vehicle.plateNumber?.toLowerCase().includes(searchLower) ||
+          vehicle.make?.toLowerCase().includes(searchLower) ||
+          vehicle.model?.toLowerCase().includes(searchLower)
+        );
+      });
+      setFilteredData(filtered);
+    }
+  }, [searchText, data]);
+
   // Table columns definition
   const columns = [
     {
@@ -80,26 +100,28 @@ const MyVehicle = () => {
       key: "plateNumber",
       width: 120,
       fixed: "left",
-      sorter: true,
+      sorter: (a, b) => (a.plateNumber || "").localeCompare(b.plateNumber || ""),
     },
     {
       title: "Make",
       dataIndex: "make",
       key: "make",
       width: 120,
+      sorter: (a, b) => (a.make || "").localeCompare(b.make || ""),
     },
     {
       title: "Model",
       dataIndex: "model",
       key: "model",
       width: 120,
+      sorter: (a, b) => (a.model || "").localeCompare(b.model || ""),
     },
     {
       title: "Year",
       dataIndex: "modelYear",
       key: "modelYear",
       width: 80,
-      sorter: true,
+      sorter: (a, b) => a.modelYear - b.modelYear,
     },
     {
       title: "Color",
@@ -209,6 +231,7 @@ const MyVehicle = () => {
       const total = response.data.total || vehiclesData.length;
 
       setData(vehiclesData);
+      setFilteredData(vehiclesData);
       setPagination((prev) => ({
         ...prev,
         current: page,
@@ -376,16 +399,13 @@ const MyVehicle = () => {
   };
 
   // Event handlers
-  const handleTableChange = (pagination, filters, sorter) => {
-    setSortField(sorter.field);
-    setSortOrder(sorter.order);
-    fetchVehicles(
-      pagination.current,
-      pagination.pageSize,
-      sorter.field,
-      sorter.order,
-      filters
-    );
+  const handleTableChange = (paginationConfig, filters, sorter) => {
+    console.log("Table change:", { paginationConfig, filters, sorter });
+    setPagination({
+      current: paginationConfig.current,
+      pageSize: paginationConfig.pageSize,
+      total: filteredData.length,
+    });
   };
 
   const onAddFinish = (values) => {
@@ -454,6 +474,22 @@ const MyVehicle = () => {
     }
   };
 
+  // Handle search
+  const handleSearch = (e) => {
+    const value = e.target.value;
+    setSearchText(value);
+    
+    // If search is cleared, reset to full data
+    if (!value || value.trim() === "") {
+      setFilteredData(data);
+    }
+  };
+
+  const handleClearSearch = () => {
+    setSearchText("");
+    setFilteredData(data);
+  };
+
   return (
     <>
       <Layout style={{ minHeight: "calc(100vh - 64px - 200px)" }}>
@@ -497,31 +533,44 @@ const MyVehicle = () => {
               />
             )}
 
-            <div style={{ marginBottom: 16, display: "flex", gap: "8px" }}>
-              <Button
-                type="primary"
-                icon={<PlusOutlined />}
-                onClick={() => setIsAddModalVisible(true)}
-              >
-                Add Vehicle
-              </Button>
-              <Button
-                icon={<ReloadOutlined />}
-                onClick={() =>
-                  fetchVehicles(pagination.current, pagination.pageSize)
-                }
-              >
-                Refresh
-              </Button>
+            <div style={{ marginBottom: 16, display: "flex", gap: "8px", justifyContent: "space-between", flexWrap: "wrap" }}>
+              <Space>
+                <Button
+                  type="primary"
+                  icon={<PlusOutlined />}
+                  onClick={() => setIsAddModalVisible(true)}
+                >
+                  Add Vehicle
+                </Button>
+                <Button
+                  icon={<ReloadOutlined />}
+                  onClick={() =>
+                    fetchVehicles(pagination.current, pagination.pageSize)
+                  }
+                >
+                  Refresh
+                </Button>
+              </Space>
+              
+              <Input
+                placeholder="Search by Plate Number, Make or Model"
+                prefix={<SearchOutlined />}
+                value={searchText}
+                onChange={handleSearch}
+                allowClear
+                onClear={handleClearSearch}
+                style={{ width: 350 }}
+              />
             </div>
 
             <Table
               columns={columns}
-              dataSource={data}
+              dataSource={filteredData}
               rowKey="id"
               loading={loading}
               pagination={{
                 ...pagination,
+                total: filteredData.length,
                 showSizeChanger: true,
                 showTotal: (total) => `Total ${total} vehicles`,
               }}

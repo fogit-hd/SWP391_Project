@@ -27,6 +27,7 @@ import StaffDashboard from "./pages/staff/dashboard";
 import TechnicianDashboard from "./pages/technician/dashboard";
 import ReviewService from "./pages/technician/review.service";
 import CreateServiceRequest from "./pages/create.service";
+import BookingCalendar from "./pages/booking";
 
 function App() {
   const router = createBrowserRouter([
@@ -203,8 +204,24 @@ function App() {
         </ProtectedRoute>
       ),
     },
-    {
+        {
       path: "/sign-econtract/:contractId",
+      element: (
+        <ProtectedRoute roleId={3}>
+          <SignEContract />
+        </ProtectedRoute>
+      ),
+    },
+    {
+      path: "/booking",
+      element: (
+        <ProtectedRoute roleId={3}>
+          <BookingCalendar />
+        </ProtectedRoute>
+      ),
+    },
+    {
+      path: "/my-contracts",
       element: (
         <ProtectedRoute roleId={3}>
           <SignEContract />
@@ -237,7 +254,17 @@ function App() {
         </ProtectedRoute>
       ),
     },
+
+    {
+      path: "/staff/dashboard",
+      element: (
+        <ProtectedRoute roleId={2}>
+          <StaffDashboard />
+        </ProtectedRoute>
+      ),
+    }
   ]);
+  
 
   return (
     <AuthProvider>
