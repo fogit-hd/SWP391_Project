@@ -75,10 +75,14 @@ const LoginPage = () => {
         Admin: 1,
         Staff: 2,
         CoOwner: 3,
+        
+       
         // Handle numeric roles
         1: 1,
         2: 2,
-        3: 3,
+        3: 3, 
+        
+     
       };
 
       const roleId = roleMapping[role];

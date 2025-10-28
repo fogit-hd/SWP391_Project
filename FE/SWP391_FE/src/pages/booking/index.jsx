@@ -14,6 +14,7 @@ import BookingDetailModal from "./BookingDetailModal";
 import { BOOKING_STATUS_COLORS, BOOKING_STATUS_LABELS } from "./booking.types";
 import "./booking.css";
 
+
 const BookingCalendar = () => {
   const { isAuthenticated, isCoOwner } = useAuth();
   const navigate = useNavigate();
