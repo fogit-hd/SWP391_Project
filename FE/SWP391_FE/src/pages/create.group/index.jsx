@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Form, Input, Button, Card, message, Row, Col, Select } from "antd";
 import {
   TeamOutlined,
@@ -49,9 +49,9 @@ const CreateGroup = () => {
       hide();
 
       if (response.status === 200 || response.status === 201) {
-  toast.success("Create group successfully");
-  // Navigate to the routed My Groups page
-  navigate("/view-mygroup");
+        toast.success("Create group successfully");
+        // Navigate to the routed My Groups page
+        navigate("/view-mygroup");
       } else {
         throw new Error(`Unexpected response status: ${response.status}`);
       }
@@ -129,20 +129,6 @@ const CreateGroup = () => {
                     },
                   ]}
                   hasFeedback
-                <TextArea
-                  placeholder="Describe the governance policy for this group (optional)"
-                  rows={4}
-                  maxLength={1000}
-                  showCount
-                />
-              </Form.Item>
-
-              <div className="create-group-form-actions">
-                <Button
-                  type="default"
-                  size="large"
-                  className="create-group-cancel-btn"
-                  onClick={() => navigate("/view-mygroup")}
                 >
                   <Input
                     placeholder="Enter group name (e.g., Downtown EV Sharers)"
@@ -201,7 +187,7 @@ const CreateGroup = () => {
               </Link>
             </div>
           </Card>
-      </div>
+        </div>
       </div>
     </>
   );
