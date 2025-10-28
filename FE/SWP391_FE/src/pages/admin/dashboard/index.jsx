@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   UserOutlined,
   FileOutlined,
@@ -20,8 +20,11 @@ import {
   Card,
   Typography,
   Divider,
+  Result,
+  Spin,
 } from "antd";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../../components/hooks/useAuth";
 import AdminSidebar from "../../../components/admin/AdminSidebar";
 
 const { Header, Content, Footer } = Layout;
@@ -30,9 +33,59 @@ const { Title, Paragraph } = Typography;
 const Dashboard = () => {
   const [collapsed, setCollapsed] = useState(false);
   const navigate = useNavigate();
+  const { isAdmin, isAuthenticated } = useAuth();
+  const [isLoading, setIsLoading] = useState(true);
+
   const {
     token: { colorBgContainer, borderRadiusLG },
   } = theme.useToken();
+
+  useEffect(() => {
+    console.log("[ADMIN-DASHBOARD] Role check:", {
+      isAuthenticated,
+      isAdmin,
+    });
+
+    if (!isAuthenticated) {
+      console.log("[ADMIN-DASHBOARD] ✗ Not authenticated - redirecting to login");
+      navigate("/login");
+      return;
+    }
+
+    if (!isAdmin) {
+      console.log("[ADMIN-DASHBOARD] ✗ Not admin role - redirecting to home");
+      navigate("/");
+      return;
+    }
+
+    console.log("[ADMIN-DASHBOARD] ✓ Admin access granted");
+    setIsLoading(false);
+  }, [isAuthenticated, isAdmin, navigate]);
+
+  if (isLoading) {
+    return (
+      <Layout style={{ minHeight: "100vh" }}>
+        <div style={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "100vh" }}>
+          <Spin size="large" tip="Loading..." />
+        </div>
+      </Layout>
+    );
+  }
+
+  if (!isAdmin) {
+    return (
+      <Result
+        status="403"
+        title="403"
+        subTitle="You don't have permission to access this page."
+        extra={
+          <Button type="primary" onClick={() => navigate("/")}>
+            Go Home
+          </Button>
+        }
+      />
+    );
+  }
 
   // Navigation handlers
   const handleManageAccount = () => {

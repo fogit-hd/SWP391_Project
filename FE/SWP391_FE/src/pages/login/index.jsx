@@ -42,34 +42,52 @@ const LoginPage = () => {
   const onFinish = async (values) => {
     setIsLoading(true);
     try {
+      console.log("\n[LOGIN] === LOGIN PROCESS START ===");
+      console.log("[LOGIN] User input:", {
+        email: values.email,
+        rememberMe: values.rememberMe,
+      });
+
       const response = await api.post("/auth/login", values);
       toast.success("Successfully logged in!");
-      console.log("Full API response:", response);
-      console.log("Response data:", response.data);
-      console.log("Response data.data:", response.data.data);
+
+      console.log("[LOGIN] API Response received");
+      console.log("[LOGIN] Full API response:", response);
+      console.log("[LOGIN] response.data:", response.data);
+      console.log("[LOGIN] response.data.data:", response.data.data);
 
       // Extract tokens from response.data.data (nested structure)
       const { accessToken, refreshToken } = response.data.data || response.data;
 
+      console.log("[LOGIN] Tokens extracted:", {
+        accessToken: accessToken ? accessToken.substring(0, 20) + "..." : null,
+        refreshToken: refreshToken
+          ? refreshToken.substring(0, 20) + "..."
+          : null,
+      });
+
       // Store tokens
-      console.log("Setting authentication token");
-      console.log("Access token:", accessToken);
-      console.log("Refresh token:", refreshToken);
+      console.log("[LOGIN] Storing tokens in localStorage");
       localStorage.setItem("token", accessToken);
       if (refreshToken) {
         localStorage.setItem("refreshToken", refreshToken);
       }
 
-      console.log("Setting user data");
+      console.log("[LOGIN] Decoding JWT token");
 
       // Decode JWT to get role
       const { decodeJWT } = await import("../../components/utils/jwt");
       const decodedToken = decodeJWT(accessToken);
-      console.log("Decoded JWT:", decodedToken);
+      console.log("[LOGIN] Decoded JWT:", decodedToken);
 
       const role = decodedToken?.role || decodedToken?.roleId;
-      console.log("Role from JWT:", role);
-      console.log("Role type:", typeof role);
+      console.log(
+        "[LOGIN] Raw role from JWT:",
+        role,
+        "(type:",
+        typeof role,
+        ")"
+      );
 
       const roleMapping = {
         Admin: 1,
@@ -83,13 +101,23 @@ const LoginPage = () => {
         3: 3, 
         
      
+        Technician: 4,
+        // Handle numeric roles
+        1: 1,
+        2: 2,
+        3: 3,
+        4: 4,
       };
 
       const roleId = roleMapping[role];
-      console.log("Mapped roleId:", roleId);
+      console.log("[LOGIN] Role mapping result:", {
+        rawRole: role,
+        mappedRoleId: roleId,
+        mappingFound: !!roleId,
+      });
 
       if (!roleId) {
-        console.error("Unknown role:", role);
+        console.error("[LOGIN] ✗ Unknown role from server:", role);
         toast.error(`Unknown role: ${role}. Please contact administrator.`);
         return;
       }
@@ -100,44 +128,63 @@ const LoginPage = () => {
         role: role,
       };
 
+      console.log("[LOGIN] Storing userData in localStorage");
       localStorage.setItem("userData", JSON.stringify(userData));
 
       // Verify tokens were set
-      console.log("Verifying authentication tokens");
-      console.log("Token in localStorage:", localStorage.getItem("token"));
+      console.log("[LOGIN] Verifying tokens stored in localStorage");
       console.log(
-        "RefreshToken in localStorage:",
-        localStorage.getItem("refreshToken")
+        "[LOGIN] Token in localStorage:",
+        localStorage.getItem("token") ? "✓ Exists" : "✗ Missing"
+      );
+      console.log(
+        "[LOGIN] RefreshToken in localStorage:",
+        localStorage.getItem("refreshToken") ? "✓ Exists" : "✗ Missing"
       );
 
       //Handle password for change password
       localStorage.setItem("password", values.password);
-      console.log("Password saved to localStorage for change password");
-      console.log("Password:", values.password);
-      console.log("Password:", localStorage.getItem("password"));
+      console.log("[LOGIN] Password stored for change password feature");
 
       // Handle Remember me functionality
       if (values.rememberMe) {
         localStorage.setItem("rememberedEmail", values.email);
+        console.log("[LOGIN] Email remembered");
       } else {
         localStorage.removeItem("rememberedEmail");
       }
 
+      console.log("[LOGIN] Dispatching login action to Redux");
       // lưu state
       dispatch(login(userData));
 
+      console.log("[LOGIN] ✓ Role check - roleId:", roleId);
+
       // Navigate based on role
       if (roleId === 1) {
-        // Admin
+        console.log("[LOGIN] ✓ Admin login - redirecting to /admin/dashboard");
         navigate("/admin/dashboard");
       } else if (roleId === 2) {
-        navigate("/staff/review-econtract");
+        console.log("[LOGIN] ✓ Staff login - redirecting to /staff/dashboard");
+        navigate("/staff/dashboard");
+      } else if (roleId === 3) {
+        console.log("[LOGIN] ✓ CoOwner login - redirecting to /");
+        navigate("/");
+      } else if (roleId === 4) {
+        console.log(
+          "[LOGIN] ✓ Technician login - redirecting to /technician/dashboard"
+        );
+        navigate("/technician/dashboard");
       } else {
+        console.warn("[LOGIN] ⚠ Unknown roleId - redirecting to homepage");
         navigate("/");
       }
+
+      console.log("[LOGIN] === LOGIN PROCESS END (SUCCESS) ===\n");
     } catch (e) {
-      console.error("Login error:", e);
-      console.error("Error response:", e.response?.data);
+      console.error("[LOGIN] === LOGIN PROCESS END (ERROR) ===");
+      console.error("[LOGIN] Error:", e);
+      console.error("[LOGIN] Error response:", e.response?.data);
 
       let errorMessage = "Login failed. Please try again.";
 

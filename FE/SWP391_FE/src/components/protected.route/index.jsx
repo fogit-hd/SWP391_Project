@@ -37,13 +37,18 @@ function ProtectedRoute({ roleId, children }) {
     return children;
   }
 
-  // Staff (2) can access Staff and CoOwner pages  
+  // Staff (2) can access Staff and CoOwner pages
   if (currentRoleId === 2 && roleId >= 2) {
     return children;
   }
 
-  // CoOwner (3) can only access CoOwner pages
-  if (currentRoleId === 3 && roleId === 3) {
+  // Technician (3) can only access CoOwner pages
+  if (currentRoleId === 3 && roleId >= 3) {
+    return children;
+  }
+
+  // Co-Owner (4) has the most limited access
+  if (currentRoleId === 4 && roleId >= 4) {
     return children;
   }
 
