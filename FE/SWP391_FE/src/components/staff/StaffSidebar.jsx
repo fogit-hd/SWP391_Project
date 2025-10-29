@@ -10,11 +10,31 @@ import { Link, useNavigate } from "react-router-dom";
 
 const { Sider } = Layout;
 
-const items = [
+/**
+ * Get menu items for Staff Sidebar
+ * @param {Function} navigate - Navigation function from useNavigate hook
+ * @returns {Array} Menu items configuration
+ */
+const getMenuItems = (navigate) => [
   {
     key: "dashboard",
     icon: <PieChartOutlined />,
-    label: <Link to="/staff/dashboard">Dashboard</Link>,
+    label: "Dashboard",
+    onClick: () => {
+      // Smart redirect based on user role
+      const userData = JSON.parse(localStorage.getItem("userData") || "{}");
+      const roleId = userData?.roleId;
+
+      if (roleId === 1) {
+        navigate("/admin/dashboard");
+      } else if (roleId === 2) {
+        navigate("/staff/dashboard");
+      } else if (roleId === 4) {
+        navigate("/technician/dashboard");
+      } else {
+        navigate("/staff/dashboard"); // Default to staff
+      }
+    },
   },
   {
     key: "contract-review",
@@ -30,11 +50,23 @@ const items = [
   },
 ];
 
+/**
+ * Staff Sidebar Component
+ * @param {Object} props - Component props
+ * @param {boolean} props.collapsed - Sidebar collapse state
+ * @param {Function} props.onCollapse - Callback when sidebar collapse changes
+ * @param {string} props.selectedKey - Currently selected menu key
+ */
 const StaffSidebar = ({ collapsed, onCollapse, selectedKey }) => {
   const navigate = useNavigate();
+  const menuItems = getMenuItems(navigate);
 
+  /**
+   * Handle user logout
+   * Clears all authentication data and redirects to login
+   */
   const handleLogout = () => {
-    // Xóa toàn bộ dữ liệu authentication từ localStorage
+    // Clear localStorage
     localStorage.removeItem("token");
     localStorage.removeItem("refreshToken");
     localStorage.removeItem("userData");
@@ -43,10 +75,10 @@ const StaffSidebar = ({ collapsed, onCollapse, selectedKey }) => {
     localStorage.removeItem("userId");
     localStorage.removeItem("password");
 
-    // Xóa toàn bộ sessionStorage
+    // Clear sessionStorage
     sessionStorage.clear();
 
-    // Chuyển hướng về trang login
+    // Redirect to login
     navigate("/login");
   };
 
@@ -65,14 +97,27 @@ const StaffSidebar = ({ collapsed, onCollapse, selectedKey }) => {
         bottom: 0,
       }}
     >
-      <div className="demo-logo-vertical" style={{ height: 32, margin: 16 }} />
+      {/* Logo Area */}
+      <div
+        className="demo-logo-vertical"
+        style={{
+          height: 32,
+          margin: 16,
+          background: "rgba(255, 255, 255, 0.2)",
+          borderRadius: 6,
+        }}
+      />
+
+      {/* Menu */}
       <Menu
         theme="dark"
         selectedKeys={[selectedKey]}
         mode="inline"
-        items={items}
+        items={menuItems}
         style={{ marginBottom: 60 }}
       />
+
+      {/* Logout Button */}
       <div
         style={{
           position: "absolute",
