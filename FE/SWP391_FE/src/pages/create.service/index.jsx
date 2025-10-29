@@ -168,35 +168,88 @@ const CreateServiceRequest = () => {
     setIsLoading(true);
 
     try {
+      // Validate and sanitize payload
       const payload = {
-        groupId: values.groupId,
-        vehicleId: values.vehicleId,
-        serviceCenterId: values.serviceCenterId,
-        type: values.type,
-        title: values.title,
-        description: values.description,
+        groupId: values.groupId?.toString().trim() || null,
+        vehicleId: values.vehicleId?.toString().trim() || null,
+        serviceCenterId: values.serviceCenterId?.toString().trim() || null,
+        type: values.type?.toString().trim().toUpperCase() || null,
+        title: values.title?.toString().trim() || null,
+        description: values.description?.toString().trim() || null,
       };
 
+      // Validation checks
+      const missingFields = Object.entries(payload)
+        .filter(([key, value]) => !value)
+        .map(([key]) => key);
+
+      if (missingFields.length > 0) {
+        console.error("[CREATE-SERVICE] ✗ Missing required fields:", missingFields);
+        toast.error(`Missing required fields: ${missingFields.join(", ")}`);
+        setIsLoading(false);
+        return;
+      }
+
+      // Validate field formats
+      const validation = {
+        groupId: /^[a-f0-9\-]{36}$/i.test(payload.groupId),
+        vehicleId: /^[a-f0-9\-]{36}$/i.test(payload.vehicleId),
+        serviceCenterId: /^[a-f0-9\-]{36}$/i.test(payload.serviceCenterId),
+        type: /^(MAINTENANCE|REPAIR|INSPECTION|CLEANING|UPGRADE)$/.test(payload.type),
+        title: payload.title.length >= 5 && payload.title.length <= 200,
+        description: payload.description.length >= 10 && payload.description.length <= 1000,
+      };
+
+      const failedValidation = Object.entries(validation)
+        .filter(([key, isValid]) => !isValid)
+        .map(([key]) => key);
+
+      if (failedValidation.length > 0) {
+        console.error("[CREATE-SERVICE] ✗ Validation failed for:", failedValidation);
+        toast.error(`Invalid format for: ${failedValidation.join(", ")}`);
+        setIsLoading(false);
+        return;
+      }
+
+      console.log("[CREATE-SERVICE] ✓ Payload validation passed");
       console.log("[CREATE-SERVICE] Sending payload:", JSON.stringify(payload, null, 2));
       console.log("[CREATE-SERVICE] API endpoint: /service-requests");
 
+      const formData = new FormData();
+      Object.keys(payload).forEach(key => {
+        formData.append(key, payload[key]);
+      });
+
+      console.log("[CREATE-SERVICE] FormData prepared for multipart/form-data");
+
       const hide = message.loading("Creating service request...", 0);
-      const response = await api.post("/service-requests", payload, {
-        headers: { "Content-Type": "application/json" },
+      const response = await api.post("/service-requests", formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
       });
       hide();
 
       console.log("[CREATE-SERVICE] ✓ Service request created:", response.data);
 
       if (response.status === 200 || response.status === 201) {
+        console.log("[CREATE-SERVICE] ✓ Response status:", response.status);
+        console.log("[CREATE-SERVICE] Service request details:", {
+          id: response.data?.data?.id || response.data?.id,
+          title: response.data?.data?.title || response.data?.title,
+          type: response.data?.data?.type || response.data?.type,
+          status: response.data?.data?.status || response.data?.status,
+          serviceCenterName: response.data?.data?.serviceCenterName || response.data?.serviceCenterName,
+          createdAt: response.data?.data?.createdAt || response.data?.createdAt,
+        });
         toast.success("Service request created successfully");
-        navigate("/view-myservice");
+        navigate("/");
       } else {
         throw new Error(`Unexpected response status: ${response.status}`);
       }
     } catch (error) {
       message.destroy();
-      console.error("[CREATE-SERVICE] Error creating service request:", error);
+      console.error("[CREATE-SERVICE] ✗ Error creating service request:", error);
       console.error("[CREATE-SERVICE] Error response data:", error.response?.data);
       console.error("[CREATE-SERVICE] Error response status:", error.response?.status);
       console.error("[CREATE-SERVICE] Error message:", error.message);

@@ -53,6 +53,7 @@ const ManageService = () => {
     setLoading(true);
     try {
       const response = await api.get("/service-centers");
+      toast.success("Service centers loaded successfully");
       console.log("Service Centers Response:", response.data);
 
       if (response.data && response.data.data) {
@@ -64,7 +65,7 @@ const ManageService = () => {
       }
     } catch (error) {
       console.error("Error fetching service centers:", error);
-      message.error("Failed to fetch service centers");
+      toast.error("Failed to load service centers");
     } finally {
       setLoading(false);
     }
@@ -80,7 +81,8 @@ const ManageService = () => {
       // Ensure isActive is a boolean, default to false if not provided
       const payload = {
         ...values,
-        isActive: values.isActive !== undefined ? Boolean(values.isActive) : false,
+        isActive:
+          values.isActive !== undefined ? Boolean(values.isActive) : false,
       };
       const response = await api.post("/service-centers", payload);
       message.success("Service center created successfully!");
@@ -203,9 +205,7 @@ const ManageService = () => {
       dataIndex: "name",
       key: "name",
       width: 130,
-      render: (text) => (
-        <strong style={{ fontSize: "9px" }}>{text}</strong>
-      ),
+      render: (text) => <strong style={{ fontSize: "9px" }}>{text}</strong>,
       sorter: (a, b) => a.name.localeCompare(b.name),
       ellipsis: true,
     },
@@ -214,9 +214,7 @@ const ManageService = () => {
       dataIndex: "address",
       key: "address",
       width: 180,
-      render: (text) => (
-        <span style={{ fontSize: "9px" }}>{text}</span>
-      ),
+      render: (text) => <span style={{ fontSize: "9px" }}>{text}</span>,
       ellipsis: true,
     },
     {
@@ -224,9 +222,7 @@ const ManageService = () => {
       dataIndex: "phone",
       key: "phone",
       width: 95,
-      render: (text) => (
-        <span style={{ fontSize: "9px" }}>{text}</span>
-      ),
+      render: (text) => <span style={{ fontSize: "9px" }}>{text}</span>,
     },
     {
       title: <span style={{ fontSize: "9px" }}>Created</span>,
@@ -256,7 +252,10 @@ const ManageService = () => {
       align: "center",
       render: (isActive) => {
         // Handle null/undefined values, default to true
-        const active = isActive === undefined || isActive === null ? true : Boolean(isActive);
+        const active =
+          isActive === undefined || isActive === null
+            ? true
+            : Boolean(isActive);
         return (
           <Tag
             color={active ? "green" : "red"}
@@ -289,7 +288,11 @@ const ManageService = () => {
             onConfirm={() => handleDelete(record.id)}
             okText="Yes"
             cancelText="No"
-            okButtonProps={{ danger: true, size: "small", style: { fontSize: "10px" } }}
+            okButtonProps={{
+              danger: true,
+              size: "small",
+              style: { fontSize: "10px" },
+            }}
             cancelButtonProps={{ size: "small", style: { fontSize: "10px" } }}
           >
             <Button
@@ -321,7 +324,11 @@ const ManageService = () => {
             items={[
               { title: <span style={{ fontSize: "10px" }}>Home</span> },
               { title: <span style={{ fontSize: "10px" }}>Dashboard</span> },
-              { title: <span style={{ fontSize: "10px" }}>Service Centers</span> },
+              {
+                title: (
+                  <span style={{ fontSize: "10px" }}>Service Centers</span>
+                ),
+              },
             ]}
           />
           <div
@@ -334,7 +341,10 @@ const ManageService = () => {
           >
             <Card className="service-card" bodyStyle={{ padding: "16px" }}>
               <div className="service-header" style={{ marginBottom: "12px" }}>
-                <Title level={5} style={{ fontSize: "13px", margin: 0, fontWeight: 600 }}>
+                <Title
+                  level={5}
+                  style={{ fontSize: "13px", margin: 0, fontWeight: 600 }}
+                >
                   Service Center Management
                 </Title>
                 <Button
@@ -354,12 +364,12 @@ const ManageService = () => {
                 prefix={<SearchOutlined style={{ fontSize: "10px" }} />}
                 value={searchText}
                 onChange={(e) => setSearchText(e.target.value)}
-                style={{ 
-                  marginBottom: 12, 
-                  width: "100%", 
+                style={{
+                  marginBottom: 12,
+                  width: "100%",
                   maxWidth: 300,
                   fontSize: "10px",
-                  height: "26px"
+                  height: "26px",
                 }}
                 size="small"
                 allowClear
@@ -378,9 +388,7 @@ const ManageService = () => {
                     showSizeChanger: true,
                     pageSizeOptions: ["10", "20", "50"],
                     showTotal: (total) => (
-                      <span style={{ fontSize: "9px" }}>
-                        Total {total}
-                      </span>
+                      <span style={{ fontSize: "9px" }}>Total {total}</span>
                     ),
                     size: "small",
                   }}
@@ -391,7 +399,13 @@ const ManageService = () => {
             </Card>
           </div>
         </Content>
-        <Footer style={{ textAlign: "center", fontSize: "11px", padding: "12px 50px" }}>
+        <Footer
+          style={{
+            textAlign: "center",
+            fontSize: "11px",
+            padding: "12px 50px",
+          }}
+        >
           Ant Design ©{new Date().getFullYear()} Created by Ant UED
         </Footer>
       </Layout>
@@ -422,7 +436,9 @@ const ManageService = () => {
           style={{ marginTop: 8 }}
         >
           <Form.Item
-            label={<span style={{ fontSize: "10px", fontWeight: 500 }}>Name</span>}
+            label={
+              <span style={{ fontSize: "10px", fontWeight: 500 }}>Name</span>
+            }
             name="name"
             rules={[
               {
@@ -440,7 +456,9 @@ const ManageService = () => {
           </Form.Item>
 
           <Form.Item
-            label={<span style={{ fontSize: "10px", fontWeight: 500 }}>Address</span>}
+            label={
+              <span style={{ fontSize: "10px", fontWeight: 500 }}>Address</span>
+            }
             name="address"
             rules={[{ required: true, message: "Please input the address!" }]}
             style={{ marginBottom: 12 }}
@@ -454,7 +472,9 @@ const ManageService = () => {
           </Form.Item>
 
           <Form.Item
-            label={<span style={{ fontSize: "10px", fontWeight: 500 }}>Phone</span>}
+            label={
+              <span style={{ fontSize: "10px", fontWeight: 500 }}>Phone</span>
+            }
             name="phone"
             rules={[
               { required: true, message: "Please input the phone!" },
@@ -473,7 +493,11 @@ const ManageService = () => {
           </Form.Item>
 
           <Form.Item
-            label={<span style={{ fontSize: "10px", fontWeight: 500 }}>Active Status</span>}
+            label={
+              <span style={{ fontSize: "10px", fontWeight: 500 }}>
+                Active Status
+              </span>
+            }
             name="isActive"
             valuePropName="checked"
             style={{ marginBottom: 8 }}

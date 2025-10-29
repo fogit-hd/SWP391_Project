@@ -36,13 +36,17 @@ const TechnicianDashboard = () => {
     });
 
     if (!isAuthenticated) {
-      console.log("[TECHNICIAN-DASHBOARD] ✗ Not authenticated - redirecting to login");
+      console.log(
+        "[TECHNICIAN-DASHBOARD] ✗ Not authenticated - redirecting to login"
+      );
       navigate("/login");
       return;
     }
 
     if (!isTechnician) {
-      console.log("[TECHNICIAN-DASHBOARD] ✗ Not technician role - redirecting to home");
+      console.log(
+        "[TECHNICIAN-DASHBOARD] ✗ Not technician role - redirecting to home"
+      );
       navigate("/");
       return;
     }
@@ -54,7 +58,14 @@ const TechnicianDashboard = () => {
   if (isLoading) {
     return (
       <Layout style={{ minHeight: "100vh" }}>
-        <div style={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "100vh" }}>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            minHeight: "100vh",
+          }}
+        >
           <Spin size="large" tip="Loading..." />
         </div>
       </Layout>
@@ -77,7 +88,7 @@ const TechnicianDashboard = () => {
   }
 
   const handleReviewService = () => {
-    navigate("/technician/review-service");
+    navigate("/technician/review-services");
   };
 
   return (

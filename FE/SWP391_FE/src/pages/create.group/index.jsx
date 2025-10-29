@@ -129,20 +129,6 @@ const CreateGroup = () => {
                     },
                   ]}
                   hasFeedback
-                <TextArea
-                  placeholder="Describe the governance policy for this group (optional)"
-                  rows={4}
-                  maxLength={1000}
-                  showCount
-                />
-              </Form.Item>
-
-              <div className="create-group-form-actions">
-                <Button
-                  type="default"
-                  size="large"
-                  className="create-group-cancel-btn"
-                  onClick={() => navigate("/view-mygroup")}
                 >
                   <Input
                     placeholder="Enter group name (e.g., Downtown EV Sharers)"

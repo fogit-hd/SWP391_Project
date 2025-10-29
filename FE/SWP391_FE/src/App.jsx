@@ -112,7 +112,7 @@ function App() {
     },
 
     {
-      path: "/technician/review-service",
+      path: "/technician/review-services",
       element: (
         <ProtectedRoute roleId={4}>
           <ReviewService />
@@ -204,7 +204,7 @@ function App() {
         </ProtectedRoute>
       ),
     },
-        {
+    {
       path: "/sign-econtract/:contractId",
       element: (
         <ProtectedRoute roleId={3}>
@@ -262,9 +262,8 @@ function App() {
           <StaffDashboard />
         </ProtectedRoute>
       ),
-    }
+    },
   ]);
-  
 
   return (
     <AuthProvider>

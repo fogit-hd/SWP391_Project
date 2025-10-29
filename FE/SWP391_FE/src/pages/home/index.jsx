@@ -135,7 +135,7 @@ const Homepage = () => {
   // Function to handle user logout
   const handleLogout = () => {
     console.log("Logging out user...");
-
+    navigate("/login");
     // Clear all auth-related state
     setProfileData(null);
     setProfileImage(null);
@@ -143,7 +143,6 @@ const Homepage = () => {
 
     // Dispatch logout action (this will clear all localStorage items)
     dispatch(logout());
-
     // Force re-render by updating auth key
     setAuthKey((prev) => prev + 1);
 
@@ -343,7 +342,30 @@ const Homepage = () => {
     }
   };
 
+  // Helper function to check authentication before navigation
+  const handleProtectedNavigation = (path) => {
+    if (!isAuthenticated) {
+      toast.warning("You have not login yet. Please login first!", {
+        position: "top-center",
+        autoClose: 3000,
+      });
+      navigate("/login");
+      return false;
+    }
+    navigate(path);
+    return true;
+  };
+
   const handleUpdateProfile = () => {
+    if (!isAuthenticated) {
+      toast.warning("You have not login yet. Please login first!", {
+        position: "top-center",
+        autoClose: 3000,
+      });
+      navigate("/login");
+      return;
+    }
+
     // Pass the parsed profileData object instead of localStorage string
     const savedProfileData = localStorage.getItem("profileData");
     const parsedProfileData = savedProfileData
@@ -546,7 +568,7 @@ const Homepage = () => {
       key: "change-password",
       icon: <CheckOutlined />,
       label: "Change Password",
-      onClick: () => navigate("/change-password"),
+      onClick: () => handleProtectedNavigation("/change-password"),
     },
     // Only show My Vehicle for Co-owner
     ...(isCoOwner
@@ -555,7 +577,7 @@ const Homepage = () => {
             key: "my-vehicle",
             icon: <CarOutlined />,
             label: "My Vehicle",
-            onClick: () => navigate("/my-vehicle"),
+            onClick: () => handleProtectedNavigation("/my-vehicle"),
           },
         ]
       : []),
@@ -584,17 +606,17 @@ const Homepage = () => {
         {
           key: "group",
           label: "Group",
-          onClick: () => navigate("/view-mygroup"),
+          onClick: () => handleProtectedNavigation("/view-mygroup"),
         },
         {
           key: "contract",
           label: "Contract",
-          onClick: () => navigate("/view-mycontract"),
+          onClick: () => handleProtectedNavigation("/view-mycontract"),
         },
         {
           key: "vehicle",
           label: "Vehicle",
-          onClick: () => navigate("/view-myvehicle"),
+          onClick: () => handleProtectedNavigation("/view-myvehicle"),
         },
       ],
     },
@@ -606,12 +628,12 @@ const Homepage = () => {
         {
           key: "service-request",
           label: "Service Request",
-          onClick: () => navigate("/create-service-request"),
+          onClick: () => handleProtectedNavigation("/create-service-request"),
         },
         {
           key: "view-myservice",
           label: "View My Service",
-          // onClick: () => navigate("/view-myservice"),
+          // onClick: () => handleProtectedNavigation("/view-myservice"),
         },
       ],
     },
@@ -669,11 +691,15 @@ const Homepage = () => {
                   Join our co-ownership community and share the benefits of
                   sustainable transportation.
                 </Paragraph>
-                <Link to="/view-mygroup">
-                  <StarBorder type="primary" size="large" className="hero-cta">
-                    Join Co-Ownership Now
-                  </StarBorder>
-                </Link>
+                <StarBorder
+                  type="primary"
+                  size="large"
+                  className="hero-cta"
+                  onClick={() => handleProtectedNavigation("/view-mygroup")}
+                  style={{ cursor: "pointer" }}
+                >
+                  Join Co-Ownership Now
+                </StarBorder>
               </div>
 
               <div className="hero-cards-right">
@@ -781,11 +807,15 @@ const Homepage = () => {
                 premium electric vehicles.
               </Paragraph>
 
-              <Link to="/view-mygroup">
-                <StarBorder type="primary" size="large" className="cta-cta">
-                  Start Co-Owning
-                </StarBorder>
-              </Link>
+              <StarBorder
+                type="primary"
+                size="large"
+                className="cta-cta"
+                onClick={() => handleProtectedNavigation("/view-mygroup")}
+                style={{ cursor: "pointer" }}
+              >
+                Start Co-Owning
+              </StarBorder>
             </div>
           </div>
         </FadeInSection>
@@ -794,7 +824,7 @@ const Homepage = () => {
       {/* Footer */}
       <Footer className="site-footer">
         <Row gutter={[32, 32]} className="footer-content">
-          <Col xs={24} md={10}>
+          <Col xs={24} md={12}>
             <Title level={5} className="footer-brand-title">
               EV CoShare - Electric Vehicle Co-Ownership
             </Title>
@@ -805,20 +835,18 @@ const Homepage = () => {
             </Paragraph>
           </Col>
           <Col xs={24} md={7}>
-            <Title level={4} className="footer-section-title">
+            <Title level={6} className="footer-section-title">
               Company
             </Title>
             <Space direction="vertical" size="small" className="footer-links">
-              {["How It Works", "Success Stories", "Partner With Us"].map(
-                (item) => (
-                  <a key={item} href="#" className="footer-link">
-                    {item}
-                  </a>
-                )
-              )}
+              {["How It Works"].map((item) => (
+                <a key={item} href="/" className="footer-link">
+                  {item}
+                </a>
+              ))}
             </Space>
           </Col>
-          <Col xs={24} md={7}>
+          <Col xs={24} md={5}>
             <Title level={4} className="footer-section-title">
               Follow Us
             </Title>
