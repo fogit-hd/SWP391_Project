@@ -31,7 +31,8 @@ const CreateGroup = () => {
         : groupsRes.data?.data || [];
       const exists = groupList.some(
         (g) => g.name?.trim().toLowerCase() === values.name.trim().toLowerCase()
-      );
+      ); 
+      // nếu tồn tại
       if (exists) {
         toast.error("Group name already exists. Please choose another name.");
         setIsLoading(false);
@@ -50,7 +51,7 @@ const CreateGroup = () => {
 
       if (response.status === 200 || response.status === 201) {
         toast.success("Create group successfully");
-        // Navigate to the routed My Groups page
+        // khi tạo group xong sẽ quay lại trang view mygroup
         navigate("/view-mygroup");
       } else {
         throw new Error(`Unexpected response status: ${response.status}`);

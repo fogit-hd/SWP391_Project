@@ -52,6 +52,31 @@ const MyGroup = () => {
   const [inviteCode, setInviteCode] = useState("");
   const [inviteExpiresAt, setInviteExpiresAt] = useState(null); // timestamp in ms
   const [inviteCountdown, setInviteCountdown] = useState("");
+  const [inviteModalVisible, setInviteModalVisible] = useState(false);
+
+  // Persist invite codes per-group so re-opening details keeps the countdown
+  const INVITE_STORAGE_KEY = "group_invites_v1";
+  const saveInviteToStorage = (groupId, code, expiresAt) => {
+    if (!groupId) return;
+    try {
+      const raw = localStorage.getItem(INVITE_STORAGE_KEY) || "{}";
+      const map = JSON.parse(raw || "{}") || {};
+      map[groupId] = { code, expiresAt };
+      localStorage.setItem(INVITE_STORAGE_KEY, JSON.stringify(map));
+    } catch (e) {
+      // ignore storage errors
+    }
+  };
+  const loadInviteFromStorage = (groupId) => {
+    if (!groupId) return null;
+    try {
+      const raw = localStorage.getItem(INVITE_STORAGE_KEY) || "{}";
+      const map = JSON.parse(raw || "{}") || {};
+      return map[groupId] || null;
+    } catch (e) {
+      return null;
+    }
+  };
   const [joinOpen, setJoinOpen] = useState(false);
   const [joinValue, setJoinValue] = useState("");
   const [joinSubmitting, setJoinSubmitting] = useState(false);
@@ -704,6 +729,17 @@ const MyGroup = () => {
       const left = inviteExpiresAt - Date.now();
       if (left <= 0) {
         setInviteCountdown("expired");
+        // clear saved invite for this group
+        try {
+          const raw = localStorage.getItem(INVITE_STORAGE_KEY) || "{}";
+          const map = JSON.parse(raw || "{}") || {};
+          if (selectedGroup?.id && map[selectedGroup.id]) {
+            delete map[selectedGroup.id];
+            localStorage.setItem(INVITE_STORAGE_KEY, JSON.stringify(map));
+          }
+        } catch {}
+        // auto-close invite modal when expired
+        if (inviteModalVisible) setInviteModalVisible(false);
         return;
       }
       const totalSec = Math.floor(left / 1000);
@@ -869,8 +905,27 @@ const MyGroup = () => {
     if (!group?.id) return;
     setSelectedGroup(group);
     setMembersVisible(true);
-    setInviteCode("");
-    setInviteExpiresAt(null);
+    // Restore saved invite for this group if present and not expired
+    const saved = loadInviteFromStorage(group.id);
+    if (saved && saved.code) {
+      if (saved.expiresAt && saved.expiresAt > Date.now()) {
+        setInviteCode(saved.code);
+        setInviteExpiresAt(saved.expiresAt);
+      } else {
+        // expired - clear saved
+        setInviteCode("");
+        setInviteExpiresAt(null);
+        try {
+          const raw = localStorage.getItem(INVITE_STORAGE_KEY) || "{}";
+          const map = JSON.parse(raw || "{}") || {};
+          delete map[group.id];
+          localStorage.setItem(INVITE_STORAGE_KEY, JSON.stringify(map));
+        } catch {}
+      }
+    } else {
+      setInviteCode("");
+      setInviteExpiresAt(null);
+    }
     setActiveTabKey("members"); // Reset to default tab
     // Load members, vehicles, confirmations first, then service requests, expenses and invoices
     await Promise.all([
@@ -1015,9 +1070,14 @@ const MyGroup = () => {
         // Use backend expiry if provided; else 15 minutes from now
         const expiresAt =
           res?.data?.expiresAt || res?.data?.data?.expiresAt || null;
-        if (expiresAt) setInviteExpiresAt(new Date(expiresAt).getTime());
-        else setInviteExpiresAt(Date.now() + 15 * 60 * 1000);
-        Modal.success({ title: "Invite code", content: code });
+        const expiresAtVal = expiresAt
+          ? new Date(expiresAt).getTime()
+          : Date.now() + 15 * 60 * 1000;
+        setInviteExpiresAt(expiresAtVal);
+        // Persist to storage so re-opening details retains countdown
+        saveInviteToStorage(gid, code, expiresAtVal);
+        // Open custom invite modal instead of simple Modal.success
+        setInviteModalVisible(true);
       }
     } catch (err) {
       console.error("Create invite failed", err);
@@ -1255,26 +1315,27 @@ const MyGroup = () => {
     <>
       <div className="my-groups-page">
         <div className="my-groups-content">
-          <Space
-            style={{
-              width: "100%",
-              justifyContent: "space-between",
-              marginBottom: 16,
-            }}
-          >
-            <Space>
-              <Button
-                type="text"
-                icon={<ArrowLeftOutlined />}
-                onClick={handleBack}
-              >
-                Back to homepage
-              </Button>
-              <Title level={3} style={{ margin: 0 }}>
-                <TeamOutlined /> My Groups
-              </Title>
-            </Space>
-            <Space wrap>
+          <div className="my-groups-header-card">
+            <Space
+              style={{
+                width: "100%",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
+              <Space>
+                <Button
+                  type="text"
+                  icon={<ArrowLeftOutlined />}
+                  onClick={handleBack}
+                >
+                  Back to homepage
+                </Button>
+                <Title level={3} style={{ margin: 0 }}>
+                  <TeamOutlined /> My Groups
+                </Title>
+              </Space>
+              <Space wrap>
               <Input
                 placeholder="Search by group name"
                 value={searchText}
@@ -1313,6 +1374,7 @@ const MyGroup = () => {
               </Button>
             </Space>
           </Space>
+          </div>
 
           {loading ? (
             <div
@@ -1431,6 +1493,41 @@ const MyGroup = () => {
             />
           </Modal>
 
+          {/* Invite modal - professional popup for showing invite code */}
+          <Modal
+            title="Invite code"
+            open={inviteModalVisible}
+            onCancel={() => setInviteModalVisible(false)}
+            footer={
+              <div style={{ display: "flex", justifyContent: "space-between", width: "100%" }}>
+                <div>
+                  {inviteCode ? (
+                    <Button onClick={copyInvite}>Copy code</Button>
+                  ) : null}
+                </div>
+                <div>
+                  <Button onClick={() => setInviteModalVisible(false)}>Close</Button>
+                </div>
+              </div>
+            }
+          >
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              <div style={{ fontSize: 14, color: "#595959" }}>Share this code with others to let them join the group.</div>
+              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                <Input readOnly value={inviteCode} style={{ fontSize: 18, fontWeight: 600 }} />
+                <Tag color="purple">{inviteCode}</Tag>
+              </div>
+              <div style={{ color: "#8c8c8c" }}>
+                Expires in {inviteCountdown === "expired" ? "00:00" : inviteCountdown || "15:00"}
+              </div>
+              <div>
+                <Button type="link" onClick={() => { navigator.clipboard.writeText(inviteCode); message.success("Copied invite code"); }}>
+                  Copy to clipboard
+                </Button>
+              </div>
+            </div>
+          </Modal>
+
           <Modal
             title={
               selectedGroup ? (
@@ -1461,7 +1558,12 @@ const MyGroup = () => {
                 }}
               >
                 <div>
-                  {isCurrentUserOwner(selectedGroup, members) ? (
+                  {/* Show Delete only when user is owner, group has no contract and
+                      the group contains only the owner (single owner only) */}
+                  {selectedGroup &&
+                  isCurrentUserOwner(selectedGroup, members) &&
+                  selectedGroup._singleOwnerOnly &&
+                  !selectedGroup._hasContract ? (
                     <Popconfirm
                       key="delete-group-footer"
                       title="Delete this group permanently?"
@@ -1560,7 +1662,10 @@ const MyGroup = () => {
                                 dataSource={members}
                                 renderItem={(m) => {
                                   const canDelete =
-                                    iAmOwner && m.roleInGroup === "MEMBER";
+                                    iAmOwner &&
+                                    m.roleInGroup === "MEMBER" &&
+                                    // Do not allow kicking members when the group already has contracts
+                                    !selectedGroup?._hasContract;
                                   return (
                                     <List.Item
                                       actions={[
