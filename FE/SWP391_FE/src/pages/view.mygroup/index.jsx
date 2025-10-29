@@ -24,9 +24,10 @@ import {
   TeamOutlined,
   ArrowLeftOutlined,
 } from "@ant-design/icons";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useLocation } from "react-router-dom";
 import api from "../../config/axios";
 import { useAuth } from "../../components/hooks/useAuth";
+import { toast } from "react-toastify";
 import "./myGroup.css";
 
 const { Title, Text } = Typography;
@@ -60,7 +61,38 @@ const MyGroup = () => {
   const [togglingVehicleIds, setTogglingVehicleIds] = useState(new Set());
   const [searchText, setSearchText] = useState("");
   const [statusFilter, setStatusFilter] = useState("all"); // all | active | inactive
+  const [myVehicles, setMyVehicles] = useState([]);
+  const [myVehiclesLoading, setMyVehiclesLoading] = useState(false);
+  const [vehicleContractFilter, setVehicleContractFilter] = useState("all"); // all | with_contract | without_contract
+  const [createServiceOpen, setCreateServiceOpen] = useState(false);
+  const [createServiceSubmitting, setCreateServiceSubmitting] = useState(false);
+  const [serviceForm, setServiceForm] = useState({
+    vehicleId: "",
+    serviceCenterId: "",
+    type: "MAINTENANCE",
+    title: "",
+    description: "",
+  });
+  const [serviceCenters, setServiceCenters] = useState([]);
+  const [loadingServiceCenters, setLoadingServiceCenters] = useState(false);
+  const [confirmModalOpen, setConfirmModalOpen] = useState(false);
+  const [confirmingRequest, setConfirmingRequest] = useState(null);
+  const [confirmAction, setConfirmAction] = useState(true); // true = confirm, false = reject
+  const [confirmReason, setConfirmReason] = useState("");
+  const [confirmSubmitting, setConfirmSubmitting] = useState(false);
+  const [myConfirmations, setMyConfirmations] = useState([]); // Danh sách confirmations của user hiện tại
+  const [confirmationsLoading, setConfirmationsLoading] = useState(false);
+  const [groupExpenses, setGroupExpenses] = useState([]);
+  const [expensesLoading, setExpensesLoading] = useState(false);
+  const [myInvoices, setMyInvoices] = useState([]);
+  const [invoicesLoading, setInvoicesLoading] = useState(false);
+  const [invoiceDetailOpen, setInvoiceDetailOpen] = useState(false);
+  const [selectedInvoice, setSelectedInvoice] = useState(null);
+  const [invoiceDetailLoading, setInvoiceDetailLoading] = useState(false);
+  const [paymentLoading, setPaymentLoading] = useState(false);
+  const [activeTabKey, setActiveTabKey] = useState("members");
   const navigate = useNavigate();
+  const location = useLocation();
 
   const reloadGroups = async () => {
     setLoading(true);
@@ -197,44 +229,454 @@ const MyGroup = () => {
   };
 
   const loadServiceRequests = async (groupId) => {
+    if (!groupId) {
+      console.warn("[LOAD-SERVICE-REQUESTS] No groupId provided");
+      setServiceRequests([]);
+      return;
+    }
+
     setServiceRequestsLoading(true);
     try {
-      // First try to ask the backend for service requests scoped to this group
-      const r = await api.get("/service-requests", { params: { groupId } });
-      let raw = [];
-      if (Array.isArray(r.data)) raw = r.data;
-      else if (Array.isArray(r.data?.data)) raw = r.data.data;
-      else raw = [];
+      console.log(
+        "[LOAD-SERVICE-REQUESTS] Fetching service requests for group:",
+        groupId
+      );
 
-      // If backend returned nothing, fetch all and try to filter by common fields
-      if (!raw || raw.length === 0) {
-        const allRes = await api.get("/service-requests");
-        let all = [];
-        if (Array.isArray(allRes.data)) all = allRes.data;
-        else if (Array.isArray(allRes.data?.data)) all = allRes.data.data;
-        else all = [];
-        const filtered = all.filter((sr) => {
-          // Common field names that might reference group id
-          if (!groupId) return false;
-          if (sr.groupId && sr.groupId === groupId) return true;
-          if (sr.coOwnershipId && sr.coOwnershipId === groupId) return true;
-          if (sr.group_id && sr.group_id === groupId) return true;
-          if (sr.group && (sr.group.id === groupId || sr.groupId === groupId)) return true;
-          // If service request references a vehicle, include it when the vehicle
-          // belongs to this group (vehicles state is available after loadVehicles)
-          if (sr.vehicleId && vehicles && vehicles.some((v) => v.id === sr.vehicleId)) return true;
-          return false;
-        });
-        setServiceRequests(filtered);
-      } else {
-        setServiceRequests(raw);
+      let raw = [];
+
+      // Use group-specific endpoint
+      try {
+        const endpoint = `/service-requests/my-group/${groupId}`;
+        console.log("[LOAD-SERVICE-REQUESTS] Using endpoint:", endpoint);
+        const response = await api.get(endpoint);
+        console.log("[LOAD-SERVICE-REQUESTS] Response:", response.data);
+
+        if (Array.isArray(response.data)) {
+          raw = response.data;
+        } else if (Array.isArray(response.data?.data)) {
+          raw = response.data.data;
+        }
+
+        console.log(
+          "[LOAD-SERVICE-REQUESTS] Loaded",
+          raw.length,
+          "service request(s)"
+        );
+      } catch (err) {
+        console.error(
+          "[LOAD-SERVICE-REQUESTS] Error loading service requests:",
+          err
+        );
+        console.error(
+          "[LOAD-SERVICE-REQUESTS] Error response:",
+          err.response?.data
+        );
+        throw err;
+      }
+
+      setServiceRequests(raw);
+
+      if (raw.length > 0) {
+        console.log(
+          "[LOAD-SERVICE-REQUESTS] Service requests loaded successfully"
+        );
       }
     } catch (err) {
-      console.error("Load service requests failed", err);
-      message.error("Failed to load service requests");
+      console.error("[LOAD-SERVICE-REQUESTS] Failed to load service requests");
+      toast.error("Failed to load service requests");
       setServiceRequests([]);
     } finally {
       setServiceRequestsLoading(false);
+    }
+  };
+
+  const loadServiceCenters = async () => {
+    setLoadingServiceCenters(true);
+    try {
+      console.log("[LOAD-SERVICE-CENTERS] Fetching service centers...");
+      const response = await api.get("/service-centers");
+      let centerList = Array.isArray(response.data)
+        ? response.data
+        : response.data?.data || [];
+      console.log(
+        "[LOAD-SERVICE-CENTERS] Loaded",
+        centerList.length,
+        "centers"
+      );
+      setServiceCenters(centerList);
+    } catch (error) {
+      console.error("[LOAD-SERVICE-CENTERS] Error:", error);
+      toast.error("Failed to load service centers");
+      setServiceCenters([]);
+    } finally {
+      setLoadingServiceCenters(false);
+    }
+  };
+
+  const loadMyConfirmations = async () => {
+    setConfirmationsLoading(true);
+    try {
+      console.log("[LOAD-MY-CONFIRMATIONS] Fetching my confirmations...");
+      const response = await api.get("/service-request-confirmations/my");
+      let confirmationList = Array.isArray(response.data)
+        ? response.data
+        : response.data?.data || [];
+      console.log(
+        "[LOAD-MY-CONFIRMATIONS] Loaded",
+        confirmationList.length,
+        "confirmations"
+      );
+      setMyConfirmations(confirmationList);
+    } catch (error) {
+      console.error("[LOAD-MY-CONFIRMATIONS] Error:", error);
+      // Don't show error toast, just log it
+      setMyConfirmations([]);
+    } finally {
+      setConfirmationsLoading(false);
+    }
+  };
+
+  // Check if current user has already confirmed/rejected a service request
+  const hasUserDecided = (requestId) => {
+    const currentUserId = getCurrentUserId();
+    if (!currentUserId || !requestId) return false;
+
+    return myConfirmations.some(
+      (conf) =>
+        (conf.requestId === requestId || conf.serviceRequestId === requestId) &&
+        (conf.userId === currentUserId || conf.user_id === currentUserId)
+    );
+  };
+
+  // Get user's decision for a request
+  const getUserDecision = (requestId) => {
+    const currentUserId = getCurrentUserId();
+    if (!currentUserId || !requestId) return null;
+
+    return myConfirmations.find(
+      (conf) =>
+        (conf.requestId === requestId || conf.serviceRequestId === requestId) &&
+        (conf.userId === currentUserId || conf.user_id === currentUserId)
+    );
+  };
+
+  const loadGroupExpenses = async (groupId) => {
+    if (!groupId) {
+      console.warn("[LOAD-GROUP-EXPENSES] No groupId provided");
+      setGroupExpenses([]);
+      return;
+    }
+
+    setExpensesLoading(true);
+    try {
+      console.log(
+        "[LOAD-GROUP-EXPENSES] Fetching expenses for group:",
+        groupId
+      );
+
+      const endpoint = `/group-expenses/group/${groupId}`;
+      console.log("[LOAD-GROUP-EXPENSES] Using endpoint:", endpoint);
+      const response = await api.get(endpoint);
+      console.log("[LOAD-GROUP-EXPENSES] Response:", response.data);
+
+      let expenseList = [];
+      if (Array.isArray(response.data)) {
+        expenseList = response.data;
+      } else if (Array.isArray(response.data?.data)) {
+        expenseList = response.data.data;
+      }
+
+      console.log(
+        "[LOAD-GROUP-EXPENSES] Loaded",
+        expenseList.length,
+        "expense(s)"
+      );
+      setGroupExpenses(expenseList);
+    } catch (err) {
+      console.error("[LOAD-GROUP-EXPENSES] Error:", err);
+      console.error(
+        "[LOAD-GROUP-EXPENSES] Error response:",
+        err.response?.data
+      );
+      toast.error("Failed to load group expenses");
+      setGroupExpenses([]);
+    } finally {
+      setExpensesLoading(false);
+    }
+  };
+
+  const loadMyInvoices = async () => {
+    setInvoicesLoading(true);
+    try {
+      console.log("[LOAD-MY-INVOICES] Fetching my invoices...");
+
+      const endpoint = "/member-invoices/my";
+      console.log("[LOAD-MY-INVOICES] Using endpoint:", endpoint);
+      const response = await api.get(endpoint);
+      console.log("[LOAD-MY-INVOICES] Response:", response.data);
+
+      let invoiceList = [];
+      if (Array.isArray(response.data)) {
+        invoiceList = response.data;
+      } else if (Array.isArray(response.data?.data)) {
+        invoiceList = response.data.data;
+      }
+
+      console.log(
+        "[LOAD-MY-INVOICES] Loaded",
+        invoiceList.length,
+        "invoice(s)"
+      );
+      setMyInvoices(invoiceList);
+    } catch (err) {
+      console.error("[LOAD-MY-INVOICES] Error:", err);
+      console.error("[LOAD-MY-INVOICES] Error response:", err.response?.data);
+      toast.error("Failed to load invoices");
+      setMyInvoices([]);
+    } finally {
+      setInvoicesLoading(false);
+    }
+  };
+
+  const loadInvoiceDetail = async (invoiceId) => {
+    if (!invoiceId) return;
+
+    setInvoiceDetailLoading(true);
+    try {
+      console.log("[LOAD-INVOICE-DETAIL] Fetching invoice detail:", invoiceId);
+
+      const endpoint = `/member-invoices/${invoiceId}`;
+      console.log("[LOAD-INVOICE-DETAIL] Using endpoint:", endpoint);
+      const response = await api.get(endpoint);
+      console.log("[LOAD-INVOICE-DETAIL] Response:", response.data);
+
+      let invoiceDetail = response.data?.data || response.data;
+      setSelectedInvoice(invoiceDetail);
+      setInvoiceDetailOpen(true);
+    } catch (err) {
+      console.error("[LOAD-INVOICE-DETAIL] Error:", err);
+      console.error(
+        "[LOAD-INVOICE-DETAIL] Error response:",
+        err.response?.data
+      );
+      toast.error("Failed to load invoice details");
+    } finally {
+      setInvoiceDetailLoading(false);
+    }
+  };
+
+  const handlePayment = async (invoiceId) => {
+    if (!invoiceId) return;
+
+    setPaymentLoading(true);
+    try {
+      const returnUrl = `${window.location.origin}/view-mygroup?payment=success&invoiceId=${invoiceId}`;
+      const cancelUrl = `${window.location.origin}/view-mygroup?payment=cancelled&invoiceId=${invoiceId}`;
+      
+      console.log("[PAYMENT] ========== PAYMENT INITIATED ==========");
+      console.log("[PAYMENT] Invoice ID:", invoiceId);
+      console.log("[PAYMENT] API:", `/invoice-payments/${invoiceId}`);
+      console.log("[PAYMENT] Return URL:", returnUrl);
+      console.log("[PAYMENT] Cancel URL:", cancelUrl);
+
+      const response = await api.post(`/invoice-payments/${invoiceId}`, null, {
+        params: {
+          returnUrl: returnUrl,
+          cancelUrl: cancelUrl,
+        },
+      });
+
+      console.log("[PAYMENT] ========== RESPONSE RECEIVED ==========");
+      console.log("[PAYMENT] Full Response:", response);
+      console.log("[PAYMENT] Response Data:", response.data);
+      console.log("[PAYMENT] Response Data Type:", typeof response.data);
+
+      // Try multiple ways to get payment URL
+      const paymentUrl =
+        response.data?.checkoutUrl ||
+        response.data?.data?.checkoutUrl ||
+        response.data?.paymentUrl ||
+        response.data?.data?.paymentUrl ||
+        response.data?.url ||
+        response.data?.data?.url ||
+        response.data?.payment_url ||
+        response.data?.data?.payment_url;
+
+      console.log("[PAYMENT] Extracted Payment URL:", paymentUrl);
+
+      if (paymentUrl) {
+        console.log(
+          "[PAYMENT] ✅ Payment URL found! Redirecting to:",
+          paymentUrl
+        );
+        toast.success("Redirecting to payment gateway...");
+
+        // Small delay to show toast
+        setTimeout(() => {
+          console.log("[PAYMENT] 🚀 Now redirecting...");
+          window.location.href = paymentUrl;
+        }, 500);
+      } else {
+        console.warn("[PAYMENT] ⚠️ No payment URL found in response");
+        console.log(
+          "[PAYMENT] Available keys in response.data:",
+          Object.keys(response.data || {})
+        );
+        console.log(
+          "[PAYMENT] Full response.data structure:",
+          JSON.stringify(response.data, null, 2)
+        );
+        toast.error("Payment URL not found in response");
+      }
+    } catch (err) {
+      console.error("[PAYMENT] ========== ERROR OCCURRED ==========");
+      console.error("[PAYMENT] Error:", err);
+      console.error("[PAYMENT] Error Response:", err.response);
+      console.error("[PAYMENT] Error Data:", err.response?.data);
+      toast.error(err?.response?.data?.message || "Failed to initiate payment");
+    } finally {
+      setPaymentLoading(false);
+    }
+  };
+
+  const createServiceRequest = async () => {
+    if (!selectedGroup?.id) {
+      toast.warning("No group selected");
+      return;
+    }
+    if (
+      !serviceForm.vehicleId ||
+      !serviceForm.serviceCenterId ||
+      !serviceForm.title
+    ) {
+      toast.warning(
+        "Please fill in required fields (Vehicle, Service Center & Title)"
+      );
+      return;
+    }
+
+    setCreateServiceSubmitting(true);
+    console.log("[CREATE-SERVICE-REQUEST] Starting creation with data:", {
+      groupId: selectedGroup.id,
+      vehicleId: serviceForm.vehicleId,
+      serviceCenterId: serviceForm.serviceCenterId,
+      type: serviceForm.type,
+      title: serviceForm.title,
+    });
+
+    try {
+      const formData = new FormData();
+      formData.append("GroupId", selectedGroup.id);
+      formData.append("VehicleId", serviceForm.vehicleId);
+      formData.append("ServiceCenterId", serviceForm.serviceCenterId);
+      formData.append("Type", serviceForm.type);
+      formData.append("Title", serviceForm.title);
+      if (serviceForm.description) {
+        formData.append("Description", serviceForm.description);
+      }
+
+      const response = await api.post("/service-requests", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      console.log("[CREATE-SERVICE-REQUEST] Response:", response.data);
+      toast.success("Service request created successfully!");
+
+      setCreateServiceOpen(false);
+      setServiceForm({
+        vehicleId: "",
+        serviceCenterId: "",
+        type: "MAINTENANCE",
+        title: "",
+        description: "",
+      });
+
+      console.log(
+        "[CREATE-SERVICE-REQUEST] Reloading service requests for group:",
+        selectedGroup.id
+      );
+      await loadServiceRequests(selectedGroup.id);
+    } catch (err) {
+      console.error("[CREATE-SERVICE-REQUEST] Error:", err);
+      console.error(
+        "[CREATE-SERVICE-REQUEST] Error response:",
+        err.response?.data
+      );
+      toast.error(
+        err?.response?.data?.message || "Failed to create service request"
+      );
+    } finally {
+      setCreateServiceSubmitting(false);
+    }
+  };
+
+  const openConfirmModal = (request, isConfirm) => {
+    setConfirmingRequest(request);
+    setConfirmAction(isConfirm);
+    setConfirmReason("");
+    setConfirmModalOpen(true);
+  };
+
+  const submitConfirmation = async () => {
+    if (!confirmingRequest?.id) {
+      toast.warning("No service request selected");
+      return;
+    }
+
+    // Require reason for rejection
+    if (!confirmAction && !confirmReason.trim()) {
+      toast.warning("Please provide a reason for rejection");
+      return;
+    }
+
+    setConfirmSubmitting(true);
+    console.log("[CONFIRM-SERVICE-REQUEST] Submitting confirmation:", {
+      requestId: confirmingRequest.id,
+      confirm: confirmAction,
+      reason: confirmReason,
+    });
+
+    try {
+      const payload = {
+        requestId: confirmingRequest.id,
+        confirm: confirmAction,
+        reason: confirmReason.trim() || undefined,
+      };
+
+      const response = await api.post(
+        "/service-request-confirmations",
+        payload
+      );
+      console.log("[CONFIRM-SERVICE-REQUEST] Response:", response.data);
+
+      toast.success(
+        confirmAction
+          ? "Service request confirmed successfully!"
+          : "Service request rejected"
+      );
+
+      setConfirmModalOpen(false);
+      setConfirmingRequest(null);
+      setConfirmReason("");
+
+      // Reload confirmations and service requests to update the list
+      await loadMyConfirmations();
+      if (selectedGroup?.id) {
+        await loadServiceRequests(selectedGroup.id);
+      }
+    } catch (err) {
+      console.error("[CONFIRM-SERVICE-REQUEST] Error:", err);
+      console.error(
+        "[CONFIRM-SERVICE-REQUEST] Error response:",
+        err.response?.data
+      );
+      toast.error(
+        err?.response?.data?.message || "Failed to submit confirmation"
+      );
+    } finally {
+      setConfirmSubmitting(false);
     }
   };
 
@@ -272,6 +714,45 @@ const MyGroup = () => {
     const id = setInterval(update, 1000);
     return () => clearInterval(id);
   }, [inviteExpiresAt]);
+
+  // Handle payment return from payment gateway
+  useEffect(() => {
+    const searchParams = new URLSearchParams(location.search);
+    const paymentStatus = searchParams.get("payment");
+    const invoiceId = searchParams.get("invoiceId");
+
+    if (paymentStatus && invoiceId && groups.length > 0) {
+      console.log("[PAYMENT-RETURN] Payment status:", paymentStatus);
+      console.log("[PAYMENT-RETURN] Invoice ID:", invoiceId);
+
+      // Show notification based on payment status
+      if (paymentStatus === "success") {
+        toast.success("Payment completed successfully!");
+      } else if (paymentStatus === "cancelled") {
+        toast.info("Payment was cancelled");
+      }
+
+      // Just open invoice detail modal, no need to open group modal
+      const handlePaymentReturn = async () => {
+        try {
+          console.log("[PAYMENT-RETURN] Loading invoices...");
+          // Load all invoices first to refresh the list
+          await loadMyInvoices();
+          
+          console.log("[PAYMENT-RETURN] Opening invoice detail modal for:", invoiceId);
+          // Load invoice detail and open modal (standalone)
+          await loadInvoiceDetail(invoiceId);
+        } catch (err) {
+          console.error("[PAYMENT-RETURN] Error:", err);
+        }
+      };
+
+      handlePaymentReturn();
+
+      // Clean up URL
+      navigate("/view-mygroup", { replace: true });
+    }
+  }, [location.search, groups]);  
 
   const getCurrentUserId = () => {
     // Try localStorage userData first
@@ -386,10 +867,18 @@ const MyGroup = () => {
     setMembersVisible(true);
     setInviteCode("");
     setInviteExpiresAt(null);
-    // Load members and vehicles first, then service requests (so we can
-    // associate service requests with vehicles if needed)
-    await Promise.all([loadMembers(group.id), loadVehicles(group.id)]);
-    await loadServiceRequests(group.id);
+    setActiveTabKey("members"); // Reset to default tab
+    // Load members, vehicles, confirmations first, then service requests, expenses and invoices
+    await Promise.all([
+      loadMembers(group.id),
+      loadVehicles(group.id),
+      loadMyConfirmations(),
+    ]);
+    await Promise.all([
+      loadServiceRequests(group.id),
+      loadGroupExpenses(group.id),
+      loadMyInvoices(),
+    ]);
   };
 
   const openRename = (group) => {
@@ -585,26 +1074,49 @@ const MyGroup = () => {
     }
   };
 
-  // Vehicle actions (owner only)
-  const attachVehicle = async () => {
-    if (!selectedGroup?.id) return;
-    const vid = (attachVehicleId || "").trim();
-    if (!vid) {
-      message.warning("Enter a vehicleId to attach");
-      return;
-    }
-    setAttachSubmitting(true);
+  // Load my vehicles for attach modal
+  const loadMyVehicles = async () => {
+    setMyVehiclesLoading(true);
     try {
-      await api.post(`/CoOwnership/attach-vehicle`, {
-        groupId: selectedGroup.id,
-        vehicleId: vid,
-      });
-      message.success("Vehicle attached to group");
-      setAttachOpen(false);
-      setAttachVehicleId("");
-      await loadVehicles(selectedGroup.id);
+      console.log("[LOAD-MY-VEHICLES] Fetching vehicles...");
+      const res = await api.get("/Vehicle/my-vehicles");
+      let list = [];
+      if (Array.isArray(res.data)) list = res.data;
+      else if (Array.isArray(res.data?.data)) list = res.data.data;
+      else list = [];
+      console.log("[LOAD-MY-VEHICLES] Loaded", list.length, "vehicles");
+      setMyVehicles(list);
     } catch (err) {
-      console.error("Attach vehicle failed", err);
+      console.error("[LOAD-MY-VEHICLES] Error:", err);
+      toast.error("Failed to load your vehicles");
+      setMyVehicles([]);
+    } finally {
+      setMyVehiclesLoading(false);
+    }
+  };
+
+  // Vehicle actions (owner only)
+  const attachVehicle = async (vehicleId) => {
+    if (!selectedGroup?.id || !vehicleId) return;
+    setAttachSubmitting(true);
+    console.log(
+      "[ATTACH-VEHICLE] Attaching vehicle:",
+      vehicleId,
+      "to group:",
+      selectedGroup.id
+    );
+
+    try {
+      const response = await api.post(`/CoOwnership/attach-vehicle`, {
+        groupId: selectedGroup.id,
+        vehicleId: vehicleId,
+      });
+      console.log("[ATTACH-VEHICLE] Success:", response.data);
+      toast.success("Vehicle attached to group successfully!");
+      await Promise.all([loadVehicles(selectedGroup.id), loadMyVehicles()]);
+    } catch (err) {
+      console.error("[ATTACH-VEHICLE] Error:", err);
+      console.error("[ATTACH-VEHICLE] Error response:", err.response?.data);
       const backendMsg = err?.response?.data?.message || err?.message || "";
       const status = err?.response?.status;
       const isDuplicate =
@@ -613,13 +1125,18 @@ const MyGroup = () => {
           backendMsg
         );
       if (isDuplicate) {
-        message.warning("Vehicle is already attached to another group");
+        toast.warning("Vehicle is already attached to another group");
       } else {
-        message.error(backendMsg || "Attach vehicle failed");
+        toast.error(backendMsg || "Failed to attach vehicle");
       }
     } finally {
       setAttachSubmitting(false);
     }
+  };
+
+  const openAttachModal = async () => {
+    setAttachOpen(true);
+    await loadMyVehicles();
   };
 
   const detachVehicle = async (vehicleId) => {
@@ -980,7 +1497,8 @@ const MyGroup = () => {
                       myRoleFromMembers === "OWNER");
                   return (
                     <Tabs
-                      defaultActiveKey="members"
+                      activeKey={activeTabKey}
+                      onChange={(key) => setActiveTabKey(key)}
                       items={[
                         {
                           key: "members",
@@ -1102,7 +1620,7 @@ const MyGroup = () => {
                               {iAmOwner && (
                                 <div style={{ marginBottom: 12 }}>
                                   <Space>
-                                    <Button onClick={() => setAttachOpen(true)}>
+                                    <Button onClick={openAttachModal}>
                                       Attach vehicle
                                     </Button>
                                   </Space>
@@ -1195,53 +1713,436 @@ const MyGroup = () => {
                           label: "Service Requests",
                           children: (
                             <>
+                              <div style={{ marginBottom: 12 }}>
+                                <Button
+                                  type="primary"
+                                  onClick={() => {
+                                    setCreateServiceOpen(true);
+                                    loadServiceCenters();
+                                  }}
+                                >
+                                  Create Service Request
+                                </Button>
+                              </div>
+                              <Divider style={{ margin: "12px 0" }} />
                               <List
                                 loading={serviceRequestsLoading}
                                 itemLayout="horizontal"
                                 dataSource={serviceRequests}
-                                renderItem={(sr) => (
-                                  <List.Item
-                                    actions={[
-                                      sr.type ? (
-                                        <Tag key="type" color="blue">
-                                          {sr.type}
-                                        </Tag>
-                                      ) : null,
-                                      sr.status ? (
+                                locale={{
+                                  emptyText: "No service requests yet",
+                                }}
+                                renderItem={(sr) => {
+                                  const statusMap = {
+                                    draft: { color: "default", text: "Draft" },
+                                    DRAFT: { color: "default", text: "Draft" },
+                                    pending_quote: {
+                                      color: "blue",
+                                      text: "Pending Quote",
+                                    },
+                                    PENDING_QUOTE: {
+                                      color: "blue",
+                                      text: "Pending Quote",
+                                    },
+                                    voting: { color: "orange", text: "Voting" },
+                                    VOTING: { color: "orange", text: "Voting" },
+                                    approved: {
+                                      color: "green",
+                                      text: "Approved",
+                                    },
+                                    APPROVED: {
+                                      color: "green",
+                                      text: "Approved",
+                                    },
+                                    rejected: {
+                                      color: "red",
+                                      text: "Rejected",
+                                    },
+                                    REJECTED: {
+                                      color: "red",
+                                      text: "Rejected",
+                                    },
+                                    in_progress: {
+                                      color: "processing",
+                                      text: "In Progress",
+                                    },
+                                    IN_PROGRESS: {
+                                      color: "processing",
+                                      text: "In Progress",
+                                    },
+                                    completed: {
+                                      color: "success",
+                                      text: "Completed",
+                                    },
+                                    COMPLETED: {
+                                      color: "success",
+                                      text: "Completed",
+                                    },
+                                  };
+                                  const typeMap = {
+                                    MAINTENANCE: {
+                                      color: "blue",
+                                      text: "Maintenance",
+                                    },
+                                    REPAIR: { color: "orange", text: "Repair" },
+                                    INSPECTION: {
+                                      color: "green",
+                                      text: "Inspection",
+                                    },
+                                    CLEANING: {
+                                      color: "cyan",
+                                      text: "Cleaning",
+                                    },
+                                    UPGRADE: {
+                                      color: "purple",
+                                      text: "Upgrade",
+                                    },
+                                  };
+                                  const statusInfo = statusMap[sr.status] || {
+                                    color: "default",
+                                    text: sr.status,
+                                  };
+                                  const typeInfo = typeMap[sr.type] || {
+                                    color: "default",
+                                    text: sr.type,
+                                  };
+
+                                  // Check if user has already decided
+                                  const alreadyDecided = hasUserDecided(sr.id);
+                                  const userDecision = getUserDecision(sr.id);
+
+                                  // Check if request is in VOTING status
+                                  const isVoting =
+                                    sr.status === "VOTING" ||
+                                    sr.status === "voting" ||
+                                    sr.status?.toUpperCase() === "VOTING";
+
+                                  return (
+                                    <List.Item
+                                      actions={[
+                                        <Tag key="type" color={typeInfo.color}>
+                                          {typeInfo.text}
+                                        </Tag>,
                                         <Tag
                                           key="status"
-                                          color={
-                                            sr.status === "IN_PROGRESS"
-                                              ? "orange"
-                                              : sr.status === "APPROVED"
-                                              ? "green"
-                                              : "default"
+                                          color={statusInfo.color}
+                                        >
+                                          {statusInfo.text}
+                                        </Tag>,
+                                        // Show user's decision if already decided
+                                        alreadyDecided && userDecision ? (
+                                          <Tooltip
+                                            key="my-decision"
+                                            title={
+                                              userDecision.reason
+                                                ? `Reason: ${userDecision.reason}`
+                                                : "No reason provided"
+                                            }
+                                          >
+                                            <Tag
+                                              color={
+                                                userDecision.decision ===
+                                                "CONFIRM"
+                                                  ? "green"
+                                                  : "red"
+                                              }
+                                            >
+                                              You{" "}
+                                              {userDecision.decision ===
+                                              "CONFIRM"
+                                                ? "Confirmed"
+                                                : "Rejected"}
+                                            </Tag>
+                                          </Tooltip>
+                                        ) : null,
+                                        // Show Confirm button only if: 1) in VOTING status, 2) not decided yet
+                                        isVoting && !alreadyDecided ? (
+                                          <Button
+                                            key="confirm"
+                                            type="primary"
+                                            size="small"
+                                            onClick={() =>
+                                              openConfirmModal(sr, true)
+                                            }
+                                          >
+                                            Confirm
+                                          </Button>
+                                        ) : null,
+                                        // Show Reject button only if: 1) in VOTING status, 2) not decided yet
+                                        isVoting && !alreadyDecided ? (
+                                          <Button
+                                            key="reject"
+                                            danger
+                                            size="small"
+                                            onClick={() =>
+                                              openConfirmModal(sr, false)
+                                            }
+                                          >
+                                            Reject
+                                          </Button>
+                                        ) : null,
+                                      ].filter(Boolean)}
+                                    >
+                                      <List.Item.Meta
+                                        title={sr.title || sr.id}
+                                        description={
+                                          <div>
+                                            {sr.description && (
+                                              <div style={{ marginBottom: 4 }}>
+                                                {sr.description}
+                                              </div>
+                                            )}
+                                            {sr.costEstimate ? (
+                                              <span>
+                                                Cost Estimate:{" "}
+                                                {(
+                                                  sr.costEstimate / 1000
+                                                ).toFixed(0)}
+                                                K VNĐ
+                                              </span>
+                                            ) : null}
+                                            {sr.createdAt ? (
+                                              <span
+                                                style={{
+                                                  marginLeft: 8,
+                                                  color: "#888",
+                                                }}
+                                              >
+                                                {new Date(
+                                                  sr.createdAt
+                                                ).toLocaleDateString("en-US")}
+                                              </span>
+                                            ) : null}
+                                          </div>
+                                        }
+                                      />
+                                    </List.Item>
+                                  );
+                                }}
+                              />
+                            </>
+                          ),
+                        },
+                        {
+                          key: "groupExpenses",
+                          label: "Group Expenses",
+                          children: (
+                            <>
+                              <List
+                                loading={expensesLoading}
+                                itemLayout="horizontal"
+                                dataSource={groupExpenses}
+                                locale={{
+                                  emptyText: "No expenses yet",
+                                }}
+                                renderItem={(expense) => {
+                                  const statusMap = {
+                                    CONFIRMED: {
+                                      color: "green",
+                                      text: "Confirmed",
+                                    },
+                                    PENDING: {
+                                      color: "orange",
+                                      text: "Pending",
+                                    },
+                                    REJECTED: {
+                                      color: "red",
+                                      text: "Rejected",
+                                    },
+                                  };
+                                  const statusInfo = statusMap[
+                                    expense.status
+                                  ] || {
+                                    color: "default",
+                                    text: expense.status,
+                                  };
+
+                                  return (
+                                    <List.Item
+                                      actions={[
+                                        <Tag
+                                          key="status"
+                                          color={statusInfo.color}
+                                        >
+                                          {statusInfo.text}
+                                        </Tag>,
+                                        <Text
+                                          key="amount"
+                                          strong
+                                          style={{ color: "#1890ff" }}
+                                        >
+                                          {(
+                                            expense.amount || 0
+                                          ).toLocaleString()}{" "}
+                                          VNĐ
+                                        </Text>,
+                                      ].filter(Boolean)}
+                                    >
+                                      <List.Item.Meta
+                                        avatar={
+                                          <Avatar
+                                            style={{
+                                              backgroundColor: "#87d068",
+                                            }}
+                                          >
+                                            💰
+                                          </Avatar>
+                                        }
+                                        title={
+                                          expense.description || expense.id
+                                        }
+                                        description={
+                                          <div>
+                                            {expense.incurredAt && (
+                                              <span style={{ color: "#888" }}>
+                                                Incurred:{" "}
+                                                {new Date(
+                                                  expense.incurredAt
+                                                ).toLocaleDateString("en-US")}
+                                              </span>
+                                            )}
+                                          </div>
+                                        }
+                                      />
+                                    </List.Item>
+                                  );
+                                }}
+                              />
+                            </>
+                          ),
+                        },
+                        {
+                          key: "myInvoices",
+                          label: "My Invoices",
+                          children: (
+                            <>
+                              <List
+                                loading={invoicesLoading}
+                                itemLayout="horizontal"
+                                dataSource={myInvoices}
+                                locale={{
+                                  emptyText: "No invoices yet",
+                                }}
+                                renderItem={(invoice) => {
+                                  const statusMap = {
+                                    DUE: { color: "orange", text: "Due" },
+                                    PAID: { color: "green", text: "Paid" },
+                                    OVERDUE: { color: "red", text: "Overdue" },
+                                    PENDING: { color: "blue", text: "Pending" },
+                                  };
+                                  const statusInfo = statusMap[
+                                    invoice.status
+                                  ] || {
+                                    color: "default",
+                                    text: invoice.status,
+                                  };
+
+                                  const remaining =
+                                    (invoice.totalAmount || 0) -
+                                    (invoice.amountPaid || 0);
+
+                                  return (
+                                    <List.Item
+                                      actions={[
+                                        <Tag
+                                          key="status"
+                                          color={statusInfo.color}
+                                        >
+                                          {statusInfo.text}
+                                        </Tag>,
+                                        <div
+                                          key="amounts"
+                                          style={{ textAlign: "right" }}
+                                        >
+                                          <div>
+                                            <Text
+                                              strong
+                                              style={{ color: "#1890ff" }}
+                                            >
+                                              {(
+                                                invoice.totalAmount || 0
+                                              ).toLocaleString()}{" "}
+                                              VNĐ
+                                            </Text>
+                                          </div>
+                                          {invoice.amountPaid > 0 && (
+                                            <div
+                                              style={{
+                                                fontSize: "12px",
+                                                color: "#52c41a",
+                                              }}
+                                            >
+                                              Paid:{" "}
+                                              {(
+                                                invoice.amountPaid || 0
+                                              ).toLocaleString()}{" "}
+                                              VNĐ
+                                            </div>
+                                          )}
+                                          {remaining > 0 && (
+                                            <div
+                                              style={{
+                                                fontSize: "12px",
+                                                color: "#ff4d4f",
+                                              }}
+                                            >
+                                              Remaining:{" "}
+                                              {remaining.toLocaleString()} VNĐ
+                                            </div>
+                                          )}
+                                        </div>,
+                                        invoice.status === "DUE" ? (
+                                          <Button
+                                            key="pay"
+                                            type="primary"
+                                            size="small"
+                                            loading={paymentLoading}
+                                            onClick={() =>
+                                              handlePayment(invoice.id)
+                                            }
+                                          >
+                                            Pay
+                                          </Button>
+                                        ) : null,
+                                        <Button
+                                          key="view-detail"
+                                          type="link"
+                                          loading={invoiceDetailLoading}
+                                          onClick={() =>
+                                            loadInvoiceDetail(invoice.id)
                                           }
                                         >
-                                          {sr.status}
-                                        </Tag>
-                                      ) : null,
-                                    ].filter(Boolean)}
-                                  >
-                                    <List.Item.Meta
-                                      title={sr.title || sr.id}
-                                      description={
-                                        <div>
-                                          {sr.costEstimate ? (
-                                            <span>
-                                              Estimate: {sr.costEstimate}{" "}
-                                            </span>
-                                          ) : null}
-                                          {sr.createdAt ? (
-                                            <span>
-                                              - {new Date(sr.createdAt).toLocaleString()}
-                                            </span>
-                                          ) : null}
-                                        </div>
-                                      }
-                                    />
-                                  </List.Item>
-                                )}
+                                          View Details
+                                        </Button>,
+                                      ].filter(Boolean)}
+                                    >
+                                      <List.Item.Meta
+                                        avatar={
+                                          <Avatar
+                                            style={{
+                                              backgroundColor: "#ff7a45",
+                                            }}
+                                          >
+                                            🧾
+                                          </Avatar>
+                                        }
+                                        title={invoice.title || "Invoice"}
+                                        description={
+                                          <div>
+                                            {invoice.createdAt && (
+                                              <span style={{ color: "#888" }}>
+                                                Created:{" "}
+                                                {new Date(
+                                                  invoice.createdAt
+                                                ).toLocaleDateString("en-US")}
+                                              </span>
+                                            )}
+                                          </div>
+                                        }
+                                      />
+                                    </List.Item>
+                                  );
+                                }}
                               />
                             </>
                           ),
@@ -1260,18 +2161,470 @@ const MyGroup = () => {
             open={attachOpen}
             title="Attach vehicle to this group"
             onCancel={() => setAttachOpen(false)}
-            onOk={attachVehicle}
-            okText="Attach"
-            okButtonProps={{
-              loading: attachSubmitting,
-              disabled: attachSubmitting || !attachVehicleId.trim(),
-            }}
+            footer={null}
+            width={800}
           >
-            <Input
-              placeholder="Enter vehicleId (UUID)"
-              value={attachVehicleId}
-              onChange={(e) => setAttachVehicleId(e.target.value)}
+            <Space style={{ marginBottom: 12 }}>
+              <Text>Filter by contract status:</Text>
+              <select
+                value={vehicleContractFilter}
+                onChange={(e) => setVehicleContractFilter(e.target.value)}
+                style={{
+                  padding: 6,
+                  borderRadius: 6,
+                  border: "1px solid #d9d9d9",
+                }}
+              >
+                <option value="all">All Vehicles</option>
+                <option value="with_contract">With Contract</option>
+                <option value="without_contract">Without Contract</option>
+              </select>
+            </Space>
+            <List
+              loading={myVehiclesLoading}
+              itemLayout="horizontal"
+              dataSource={myVehicles.filter((v) => {
+                const hasContract = v.hasContract || v.contractId || false;
+                if (vehicleContractFilter === "with_contract")
+                  return hasContract;
+                if (vehicleContractFilter === "without_contract")
+                  return !hasContract;
+                return true;
+              })}
+              locale={{
+                emptyText: "No vehicles available",
+              }}
+              renderItem={(v) => {
+                const hasContract = v.hasContract || v.contractId || false;
+                const displayName =
+                  v.vehicleName ||
+                  v.name ||
+                  v.modelName ||
+                  v.model ||
+                  v.licensePlate ||
+                  "Vehicle";
+                return (
+                  <List.Item
+                    actions={[
+                      hasContract ? (
+                        <Tag color="green" key="contract">
+                          Has Contract
+                        </Tag>
+                      ) : (
+                        <Tag color="red" key="no-contract">
+                          No Contract
+                        </Tag>
+                      ),
+                      !hasContract ? (
+                        <Button
+                          key="attach"
+                          type="primary"
+                          size="small"
+                          loading={attachSubmitting}
+                          onClick={() => attachVehicle(v.id)}
+                        >
+                          Attach
+                        </Button>
+                      ) : null,
+                    ].filter(Boolean)}
+                  >
+                    <List.Item.Meta
+                      avatar={
+                        <Avatar>
+                          {(displayName || "?")
+                            .toString()
+                            .slice(0, 1)
+                            .toUpperCase()}
+                        </Avatar>
+                      }
+                      title={displayName}
+                      description={
+                        <div>
+                          {v.licensePlate && <div>Plate: {v.licensePlate}</div>}
+                          {v.id && (
+                            <div style={{ fontSize: "12px", color: "#999" }}>
+                              ID: {v.id.substring(0, 8)}...
+                            </div>
+                          )}
+                        </div>
+                      }
+                    />
+                  </List.Item>
+                );
+              }}
             />
+          </Modal>
+
+          <Modal
+            open={createServiceOpen}
+            title="Create Service Request"
+            onCancel={() => {
+              setCreateServiceOpen(false);
+              setServiceForm({
+                vehicleId: "",
+                serviceCenterId: "",
+                type: "MAINTENANCE",
+                title: "",
+                description: "",
+              });
+            }}
+            onOk={createServiceRequest}
+            okText="Create"
+            okButtonProps={{
+              loading: createServiceSubmitting,
+              disabled:
+                createServiceSubmitting ||
+                !serviceForm.vehicleId ||
+                !serviceForm.serviceCenterId ||
+                !serviceForm.title,
+            }}
+            width={600}
+          >
+            <Spin spinning={loadingServiceCenters}>
+              <Space
+                direction="vertical"
+                style={{ width: "100%" }}
+                size="middle"
+              >
+                <div>
+                  <Text strong>Vehicle *</Text>
+                  <select
+                    value={serviceForm.vehicleId}
+                    onChange={(e) =>
+                      setServiceForm({
+                        ...serviceForm,
+                        vehicleId: e.target.value,
+                      })
+                    }
+                    style={{
+                      width: "100%",
+                      padding: 8,
+                      borderRadius: 6,
+                      border: "1px solid #d9d9d9",
+                      marginTop: 4,
+                    }}
+                  >
+                    <option value="">Select a vehicle</option>
+                    {vehicles.map((v) => {
+                      const make = v.make || v.brand || "";
+                      const model = v.model || "";
+                      const plate = v.plateNumber || v.licensePlate || "";
+
+                      let displayText = "";
+                      if (make && model && plate) {
+                        displayText = `${make} ${model} - ${plate}`;
+                      } else if (make && model) {
+                        displayText = `${make} ${model}`;
+                      } else if (plate) {
+                        displayText = plate;
+                      } else {
+                        displayText =
+                          v.vehicleName || v.name || v.id || "Unknown Vehicle";
+                      }
+
+                      return (
+                        <option key={v.id} value={v.id}>
+                          {displayText}
+                        </option>
+                      );
+                    })}
+                  </select>
+                </div>
+
+                <div>
+                  <Text strong>Service Center *</Text>
+                  <select
+                    value={serviceForm.serviceCenterId}
+                    onChange={(e) =>
+                      setServiceForm({
+                        ...serviceForm,
+                        serviceCenterId: e.target.value,
+                      })
+                    }
+                    style={{
+                      width: "100%",
+                      padding: 8,
+                      borderRadius: 6,
+                      border: "1px solid #d9d9d9",
+                      marginTop: 4,
+                    }}
+                  >
+                    <option value="">Select a service center</option>
+                    {serviceCenters.map((center) => (
+                      <option key={center.id} value={center.id}>
+                        {center.name} - {center.address}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <Text strong>Type *</Text>
+                  <select
+                    value={serviceForm.type}
+                    onChange={(e) =>
+                      setServiceForm({ ...serviceForm, type: e.target.value })
+                    }
+                    style={{
+                      width: "100%",
+                      padding: 8,
+                      borderRadius: 6,
+                      border: "1px solid #d9d9d9",
+                      marginTop: 4,
+                    }}
+                  >
+                    <option value="MAINTENANCE">Maintenance</option>
+                    <option value="REPAIR">Repair</option>
+                    <option value="INSPECTION">Inspection</option>
+                    <option value="CLEANING">Cleaning</option>
+                    <option value="UPGRADE">Upgrade</option>
+                  </select>
+                </div>
+
+                <div>
+                  <Text strong>Title *</Text>
+                  <Input
+                    placeholder="Enter service request title"
+                    value={serviceForm.title}
+                    onChange={(e) =>
+                      setServiceForm({ ...serviceForm, title: e.target.value })
+                    }
+                    style={{ marginTop: 4 }}
+                    maxLength={200}
+                  />
+                </div>
+
+                <div>
+                  <Text strong>Description (Optional)</Text>
+                  <Input.TextArea
+                    placeholder="Enter description"
+                    value={serviceForm.description}
+                    onChange={(e) =>
+                      setServiceForm({
+                        ...serviceForm,
+                        description: e.target.value,
+                      })
+                    }
+                    style={{ marginTop: 4 }}
+                    rows={4}
+                    maxLength={1000}
+                  />
+                </div>
+              </Space>
+            </Spin>
+          </Modal>
+
+          <Modal
+            open={confirmModalOpen}
+            title={
+              confirmAction
+                ? "Confirm Service Request"
+                : "Reject Service Request"
+            }
+            onCancel={() => {
+              setConfirmModalOpen(false);
+              setConfirmingRequest(null);
+              setConfirmReason("");
+            }}
+            onOk={submitConfirmation}
+            okText={confirmAction ? "Confirm" : "Reject"}
+            okButtonProps={{
+              loading: confirmSubmitting,
+              disabled:
+                confirmSubmitting || (!confirmAction && !confirmReason.trim()),
+              danger: !confirmAction,
+            }}
+            width={500}
+          >
+            <Space direction="vertical" style={{ width: "100%" }} size="middle">
+              {confirmingRequest && (
+                <div>
+                  <Text strong>Service Request:</Text>
+                  <div style={{ marginTop: 8, marginBottom: 16 }}>
+                    <div>
+                      <Text>
+                        {confirmingRequest.title || confirmingRequest.id}
+                      </Text>
+                    </div>
+                    {confirmingRequest.description && (
+                      <div style={{ fontSize: "12px", color: "#666" }}>
+                        {confirmingRequest.description}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              <div>
+                <Text strong>
+                  Reason{" "}
+                  {!confirmAction && <span style={{ color: "red" }}>*</span>}
+                </Text>
+                <Input.TextArea
+                  placeholder={
+                    confirmAction
+                      ? "Optional: Add a note for your confirmation"
+                      : "Required: Please provide a reason for rejection"
+                  }
+                  value={confirmReason}
+                  onChange={(e) => setConfirmReason(e.target.value)}
+                  style={{ marginTop: 4 }}
+                  rows={4}
+                  maxLength={500}
+                />
+              </div>
+            </Space>
+          </Modal>
+
+          <Modal
+            open={invoiceDetailOpen}
+            title="Invoice Details"
+            onCancel={() => {
+              setInvoiceDetailOpen(false);
+              setSelectedInvoice(null);
+            }}
+            footer={[
+              selectedInvoice?.status === "DUE" ? (
+                <Button
+                  key="pay"
+                  type="primary"
+                  loading={paymentLoading}
+                  onClick={() => {
+                    handlePayment(selectedInvoice.id);
+                  }}
+                >
+                  Pay Now
+                </Button>
+              ) : null,
+              <Button
+                key="close"
+                onClick={() => {
+                  setInvoiceDetailOpen(false);
+                  setSelectedInvoice(null);
+                }}
+              >
+                Close
+              </Button>,
+            ].filter(Boolean)}
+            width={600}
+          >
+            <Spin spinning={invoiceDetailLoading}>
+              {selectedInvoice ? (
+                <Space
+                  direction="vertical"
+                  style={{ width: "100%" }}
+                  size="large"
+                >
+                  {/* Title */}
+                  {selectedInvoice.title && (
+                    <div>
+                      <Text strong>Title:</Text>
+                      <div style={{ marginTop: 4 }}>
+                        <Text>{selectedInvoice.title}</Text>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Amount Information */}
+                  <div>
+                    <Text strong>Amount Information:</Text>
+                    <div style={{ marginTop: 8 }}>
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          marginBottom: 8,
+                        }}
+                      >
+                        <Text>Total Amount:</Text>
+                        <Text
+                          strong
+                          style={{ color: "#1890ff", fontSize: "16px" }}
+                        >
+                          {(selectedInvoice.totalAmount || 0).toLocaleString()}{" "}
+                          VNĐ
+                        </Text>
+                      </div>
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          marginBottom: 8,
+                        }}
+                      >
+                        <Text>Amount Paid:</Text>
+                        <Text strong style={{ color: "#52c41a" }}>
+                          {(selectedInvoice.amountPaid || 0).toLocaleString()}{" "}
+                          VNĐ
+                        </Text>
+                      </div>
+                      <Divider style={{ margin: "8px 0" }} />
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                        }}
+                      >
+                        <Text strong>Remaining:</Text>
+                        <Text
+                          strong
+                          style={{ color: "#ff4d4f", fontSize: "16px" }}
+                        >
+                          {(
+                            (selectedInvoice.totalAmount || 0) -
+                            (selectedInvoice.amountPaid || 0)
+                          ).toLocaleString()}{" "}
+                          VNĐ
+                        </Text>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Status */}
+                  <div>
+                    <Text strong>Status:</Text>
+                    <div style={{ marginTop: 4 }}>
+                      <Tag
+                        color={
+                          selectedInvoice.status === "PAID"
+                            ? "green"
+                            : selectedInvoice.status === "OVERDUE"
+                            ? "red"
+                            : selectedInvoice.status === "DUE"
+                            ? "orange"
+                            : "blue"
+                        }
+                      >
+                        {selectedInvoice.status}
+                      </Tag>
+                    </div>
+                  </div>
+
+                  {/* Created Date */}
+                  {selectedInvoice.createdAt && (
+                    <div>
+                      <Text strong>Created Date:</Text>
+                      <div style={{ marginTop: 4 }}>
+                        <Text>
+                          {new Date(selectedInvoice.createdAt).toLocaleString(
+                            "en-US",
+                            {
+                              year: "numeric",
+                              month: "long",
+                              day: "numeric",
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            }
+                          )}
+                        </Text>
+                      </div>
+                    </div>
+                  )}
+                </Space>
+              ) : (
+                <Empty description="No invoice data" />
+              )}
+            </Spin>
           </Modal>
         </div>
       </div>

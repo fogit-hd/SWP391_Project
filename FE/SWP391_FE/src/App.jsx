@@ -26,6 +26,7 @@ import SignEContract from "./pages/sign.econtract/index";
 import StaffDashboard from "./pages/staff/dashboard";
 import TechnicianDashboard from "./pages/technician/dashboard";
 import ReviewService from "./pages/technician/review.service";
+import ServiceJobsPage from "./pages/technician/service.jobs";
 import CreateServiceRequest from "./pages/create.service";
 import BookingCalendar from "./pages/booking";
 
@@ -114,8 +115,17 @@ function App() {
     {
       path: "/technician/review-services",
       element: (
-        <ProtectedRoute roleId={4}>
+        <ProtectedRoute roleId={[1, 2, 4]}>
           <ReviewService />
+        </ProtectedRoute>
+      ),
+    },
+
+    {
+      path: "/technician/service-jobs",
+      element: (
+        <ProtectedRoute roleId={[1, 2, 4]}>
+          <ServiceJobsPage />
         </ProtectedRoute>
       ),
     },

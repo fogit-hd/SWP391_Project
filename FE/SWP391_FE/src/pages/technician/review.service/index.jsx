@@ -17,6 +17,9 @@ import {
   Select,
   DatePicker,
   InputNumber,
+  Tabs,
+  Upload,
+  Popconfirm,
 } from "antd";
 import { useAuth } from "../../../components/hooks/useAuth";
 import {
@@ -30,18 +33,29 @@ import {
   CalendarOutlined,
   DollarOutlined,
   EditOutlined,
+  UploadOutlined,
+  ToolOutlined,
+  FileSearchOutlined,
 } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import api from "../../../config/axios";
 import { toast } from "react-toastify";
 import TechnicianSidebar from "../../../components/technician/TechnicianSidebar";
 import dayjs from "dayjs";
+import {
+  getMyServiceJobs,
+  getAllServiceJobs,
+  uploadServiceJobReport,
+  updateServiceJobStatus,
+  completeServiceJob,
+  cancelServiceJob,
+} from "../service.job";
 
 const { Header, Content, Sider } = Layout;
 const { Title, Paragraph } = Typography;
 const { TextArea } = Input;
 
-const ReviewService = () => {
+const ReviewService = ({ defaultTab = "service-requests", sidebarKey = "review-services" }) => {
   const navigate = useNavigate();
   const { isAuthenticated, isAdmin, isStaff, isTechnician, roleId } = useAuth();
 
@@ -61,6 +75,18 @@ const ReviewService = () => {
   const [selectedStatus, setSelectedStatus] = useState("ALL"); // Filter status - Both Admin and Technician can filter
   const [selectedType, setSelectedType] = useState("ALL"); // Filter by service type
   const [sortOrder, setSortOrder] = useState("DESC"); // Sort by date: DESC (newest first) or ASC (oldest first)
+  
+  // Service Jobs States
+  const [activeTab, setActiveTab] = useState(defaultTab); // Tab selection - use defaultTab prop
+  const [serviceJobs, setServiceJobs] = useState([]); // Service jobs data
+  const [allServiceJobsData, setAllServiceJobsData] = useState([]); // All service jobs
+  const [serviceJobsLoading, setServiceJobsLoading] = useState(false);
+  const [uploadModalVisible, setUploadModalVisible] = useState(false);
+  const [uploadLoading, setUploadLoading] = useState(false);
+  const [selectedJobId, setSelectedJobId] = useState(null);
+  const [selectedJob, setSelectedJob] = useState(null);
+  const [uploadFile, setUploadFile] = useState(null);
+  const [jobStatusFilter, setJobStatusFilter] = useState("ALL"); // SCHEDULED, DONE, CANCELLED, ALL
   
   /**
    * Service Request Status Flow:
@@ -90,6 +116,7 @@ const ReviewService = () => {
     }
 
     loadContracts();
+    loadServiceJobs();
   }, [isAuthenticated, isAdmin, isTechnician, roleId, navigate]);
 
   // Filter and sort contracts
@@ -189,6 +216,131 @@ const ReviewService = () => {
       message.error("Failed to load service requests.");
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Load Service Jobs
+  const loadServiceJobs = async () => {
+    try {
+      setServiceJobsLoading(true);
+      console.log("🔧 Loading service jobs...");
+      console.log("👤 Role:", { isAdmin, isTechnician, roleId });
+
+      let response;
+      // Admin gets all jobs, Technician gets only their jobs
+      if (isAdmin || roleId === 1) {
+        console.log("📞 Calling API: GET /service-jobs (Admin - All jobs)");
+        response = await getAllServiceJobs();
+      } else if (isTechnician || roleId === 4) {
+        console.log("📞 Calling API: GET /service-jobs/my (Technician - My jobs)");
+        response = await getMyServiceJobs();
+      }
+
+      let jobsData = [];
+      if (response && Array.isArray(response.data)) {
+        jobsData = response.data;
+        console.log("✅ Using response.data");
+      } else if (Array.isArray(response)) {
+        jobsData = response;
+        console.log("✅ Using response directly");
+      }
+
+      console.log("🔧 Total service jobs:", jobsData.length);
+      console.log("🔍 Service jobs data:", jobsData);
+
+      // Store all jobs
+      setAllServiceJobsData(jobsData);
+
+      // Apply filter
+      filterServiceJobs(jobsData, jobStatusFilter);
+
+      message.success(`Loaded ${jobsData.length} service jobs`);
+    } catch (error) {
+      console.error("❌ Error loading service jobs:", error);
+      message.error("Failed to load service jobs");
+    } finally {
+      setServiceJobsLoading(false);
+    }
+  };
+
+  // Filter service jobs by status
+  const filterServiceJobs = (jobs, status) => {
+    let filtered = jobs;
+
+    if (status !== "ALL") {
+      filtered = filtered.filter((job) => job.status === status);
+    }
+
+    setServiceJobs(filtered);
+    console.log(`🔧 Filtered jobs: status=${status}, results=${filtered.length}`);
+  };
+
+  // Handle job status filter change
+  const handleJobStatusChange = (status) => {
+    setJobStatusFilter(status);
+    filterServiceJobs(allServiceJobsData, status);
+  };
+
+  // Open upload modal
+  const handleOpenUploadModal = (job) => {
+    setSelectedJobId(job.id);
+    setSelectedJob(job);
+    setUploadFile(null);
+    setUploadModalVisible(true);
+  };
+
+  // Handle upload report
+  const handleUploadReport = async () => {
+    if (!uploadFile) {
+      message.error("Please select a file to upload");
+      return;
+    }
+
+    try {
+      setUploadLoading(true);
+      console.log("📤 Uploading report for job:", selectedJobId);
+      console.log("📁 File:", uploadFile);
+
+      const response = await uploadServiceJobReport(selectedJobId, uploadFile);
+      console.log("✅ Upload successful:", response);
+
+      const reportUrl = response.data?.reportUrl || response.reportUrl;
+      toast.success(`Report uploaded successfully! URL: ${reportUrl}`);
+      
+      setUploadModalVisible(false);
+      setUploadFile(null);
+      loadServiceJobs(); // Reload jobs
+    } catch (error) {
+      console.error("❌ Error uploading report:", error);
+      message.error(error.response?.data?.message || "Failed to upload report");
+    } finally {
+      setUploadLoading(false);
+    }
+  };
+
+  // Handle complete job
+  const handleCompleteJob = async (jobId) => {
+    try {
+      console.log("✅ Completing job:", jobId);
+      await completeServiceJob(jobId);
+      toast.success("Service job marked as DONE!");
+      loadServiceJobs(); // Reload jobs
+    } catch (error) {
+      console.error("❌ Error completing job:", error);
+      message.error(error.response?.data?.message || "Failed to complete job");
+    }
+  };
+
+  // Handle cancel job
+  const handleCancelJob = async (jobId) => {
+    try {
+      console.log("❌ Cancelling job:", jobId);
+      await cancelServiceJob(jobId);
+      toast.success("Service job marked as CANCELLED!");
+      loadServiceJobs(); // Reload jobs
+    } catch (error) {
+      console.error("❌ Error cancelling job:", error);
+      message.error(error.response?.data?.message || "Failed to cancel job");
     }
   };
 
@@ -302,6 +454,200 @@ const ReviewService = () => {
       setEstimateLoading(false);
     }
   };
+
+  // Service Jobs Columns
+  const serviceJobColumns = [
+    {
+      title: "ID",
+      dataIndex: "id",
+      key: "id",
+      width: 80,
+      render: (id) => (
+        <span style={{ fontSize: "12px", fontFamily: "monospace" }}>
+          {id?.substring(0, 8)}...
+        </span>
+      ),
+    },
+    {
+      title: "Title",
+      dataIndex: "title",
+      key: "title",
+      width: 200,
+      ellipsis: true,
+      render: (text) => <span style={{ fontSize: "13px", fontWeight: "500" }}>{text}</span>,
+    },
+    {
+      title: "Technician",
+      dataIndex: "technicianName",
+      key: "technicianName",
+      width: 150,
+      render: (name) => (
+        <span style={{ fontSize: "12px" }}>{name || "N/A"}</span>
+      ),
+    },
+    {
+      title: "Scheduled At",
+      dataIndex: "scheduledAt",
+      key: "scheduledAt",
+      width: 140,
+      render: (date) => {
+        if (!date) return <Tag color="default" style={{ fontSize: "11px" }}>Not Set</Tag>;
+        try {
+          const dateObj = new Date(date);
+          return (
+            <div style={{ fontSize: "11px", lineHeight: "1.3" }}>
+              <div style={{ fontWeight: "600" }}>
+                {dateObj.toLocaleDateString("en-US", {
+                  day: "2-digit",
+                  month: "2-digit",
+                  year: "2-digit",
+                })}
+              </div>
+              <div style={{ color: "#666" }}>
+                {dateObj.toLocaleTimeString("en-US", {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
+              </div>
+            </div>
+          );
+        } catch (error) {
+          return <Tag color="default" style={{ fontSize: "11px" }}>Invalid</Tag>;
+        }
+      },
+    },
+    {
+      title: "Created At",
+      dataIndex: "createdAt",
+      key: "createdAt",
+      width: 100,
+      render: (date) => {
+        if (!date) return <span style={{ fontSize: "12px" }}>N/A</span>;
+        try {
+          return (
+            <span style={{ fontSize: "12px" }}>
+              {new Date(date).toLocaleDateString("en-US", {
+                day: "2-digit",
+                month: "2-digit",
+                year: "2-digit",
+              })}
+            </span>
+          );
+        } catch (error) {
+          return <span style={{ fontSize: "12px" }}>Invalid</span>;
+        }
+      },
+    },
+    {
+      title: "Report",
+      dataIndex: "reportUrl",
+      key: "reportUrl",
+      width: 100,
+      render: (url) => {
+        if (!url) {
+          return (
+            <Tag color="default" style={{ fontSize: "11px" }}>
+              No Report
+            </Tag>
+          );
+        }
+        return (
+          <a href={url} target="_blank" rel="noopener noreferrer">
+            <Button
+              type="link"
+              size="small"
+              icon={<FileSearchOutlined />}
+              style={{ fontSize: "11px", padding: 0 }}
+            >
+              View
+            </Button>
+          </a>
+        );
+      },
+    },
+    {
+      title: "Status",
+      dataIndex: "status",
+      key: "status",
+      width: 110,
+      render: (status) => {
+        const statusMap = {
+          SCHEDULED: { color: "blue", text: "Scheduled" },
+          DONE: { color: "success", text: "Done" },
+          CANCELLED: { color: "error", text: "Cancelled" },
+        };
+        const statusInfo = statusMap[status] || { color: "default", text: status };
+        return (
+          <Tag color={statusInfo.color} style={{ fontSize: "11px", fontWeight: "600" }}>
+            {statusInfo.text}
+          </Tag>
+        );
+      },
+    },
+    {
+      title: "Actions",
+      key: "actions",
+      width: 240,
+      fixed: "right",
+      render: (_, record) => {
+        const canUpdate = record.status === "SCHEDULED";
+        
+        return (
+          <Space size="small">
+            <Button
+              type="default"
+              icon={<UploadOutlined />}
+              size="small"
+              onClick={() => handleOpenUploadModal(record)}
+              disabled={!canUpdate}
+              style={{ fontSize: "11px", padding: "0 8px" }}
+              title={canUpdate ? "Upload report" : "Cannot upload (job not scheduled)"}
+            >
+              Upload
+            </Button>
+            <Popconfirm
+              title="Mark as Done?"
+              description="Are you sure you want to mark this job as DONE?"
+              onConfirm={() => handleCompleteJob(record.id)}
+              okText="Yes"
+              cancelText="No"
+              disabled={!canUpdate}
+            >
+              <Button
+                type="primary"
+                icon={<CheckOutlined />}
+                size="small"
+                disabled={!canUpdate}
+                style={{ fontSize: "11px", padding: "0 8px" }}
+                title={canUpdate ? "Mark as done" : "Cannot complete (job not scheduled)"}
+              >
+                Done
+              </Button>
+            </Popconfirm>
+            <Popconfirm
+              title="Cancel Job?"
+              description="Are you sure you want to CANCEL this job?"
+              onConfirm={() => handleCancelJob(record.id)}
+              okText="Yes"
+              cancelText="No"
+              disabled={!canUpdate}
+            >
+              <Button
+                danger
+                icon={<CloseOutlined />}
+                size="small"
+                disabled={!canUpdate}
+                style={{ fontSize: "11px", padding: "0 8px" }}
+                title={canUpdate ? "Cancel job" : "Cannot cancel (job not scheduled)"}
+              >
+                Cancel
+              </Button>
+            </Popconfirm>
+          </Space>
+        );
+      },
+    },
+  ];
 
   const columns = [
     {
@@ -562,7 +908,7 @@ const ReviewService = () => {
       <TechnicianSidebar
         collapsed={collapsed}
         onCollapse={setCollapsed}
-        selectedKey="review-contracts"
+        selectedKey={sidebarKey}
       />
 
       <Layout style={{ marginLeft: collapsed ? 80 : 280 }}>
@@ -580,103 +926,189 @@ const ReviewService = () => {
 
         <Content style={{ margin: "24px 16px" }}>
           <Card>
-            <div style={{ marginBottom: "16px" }}>
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                  marginBottom: "12px",
-              }}
-            >
-                <Title level={5} style={{ margin: 0 }}>
-                  Service Requests
-                </Title>
-                <Button
-                  icon={<CheckCircleOutlined />}
-                  onClick={() => loadContracts()}
-                >
-                  Refresh
-                </Button>
-              </div>
-
-              {(isAdmin || isTechnician) && (
-                <Space wrap>
-                  <Space>
-                    <span style={{ fontSize: "13px", fontWeight: "500" }}>
-                      Status:
+            <Tabs
+              activeKey={activeTab}
+              onChange={setActiveTab}
+              items={[
+                {
+                  key: "service-requests",
+                  label: (
+                    <span>
+                      <FileTextOutlined /> Service Requests
                     </span>
-                    <Select
-                      value={selectedStatus}
-                      onChange={handleStatusChange}
-                      style={{ width: 150 }}
-                      size="small"
-                      options={[
-                        { value: "ALL", label: "All" },
-                        { value: "draft", label: "Draft" },
-                        { value: "pending_quote", label: "Pending Quote" },
-                        { value: "voting", label: "Voting" },
-                        { value: "approved", label: "Approved" },
-                        { value: "rejected", label: "Rejected" },
-                        { value: "in_progress", label: "In Progress" },
-                        { value: "completed", label: "Completed" },
-                      ]}
-                    />
-                  </Space>
+                  ),
+                  children: (
+                    <>
+                      <div style={{ marginBottom: "16px" }}>
+                        <div
+                          style={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                            marginBottom: "12px",
+                          }}
+                        >
+                          <Title level={5} style={{ margin: 0 }}>
+                            Service Requests
+                          </Title>
+                          <Button
+                            icon={<CheckCircleOutlined />}
+                            onClick={() => loadContracts()}
+                          >
+                            Refresh
+                          </Button>
+                        </div>
 
-                  <Space>
-                    <span style={{ fontSize: "13px", fontWeight: "500" }}>
-                      Service Type:
-                    </span>
-                    <Select
-                      value={selectedType}
-                      onChange={handleTypeChange}
-                      style={{ width: 150 }}
-                      size="small"
-                      options={[
-                        { value: "ALL", label: "All" },
-                        { value: "MAINTENANCE", label: "Maintenance" },
-                        { value: "REPAIR", label: "Repair" },
-                        { value: "INSPECTION", label: "Inspection" },
-                        { value: "CLEANING", label: "Cleaning" },
-                        { value: "UPGRADE", label: "Upgrade" },
-                      ]}
-                    />
-                  </Space>
+                        {(isAdmin || isTechnician) && (
+                          <Space wrap>
+                            <Space>
+                              <span style={{ fontSize: "13px", fontWeight: "500" }}>
+                                Status:
+                              </span>
+                              <Select
+                                value={selectedStatus}
+                                onChange={handleStatusChange}
+                                style={{ width: 150 }}
+                                size="small"
+                                options={[
+                                  { value: "ALL", label: "All" },
+                                  { value: "draft", label: "Draft" },
+                                  { value: "pending_quote", label: "Pending Quote" },
+                                  { value: "voting", label: "Voting" },
+                                  { value: "approved", label: "Approved" },
+                                  { value: "rejected", label: "Rejected" },
+                                  { value: "in_progress", label: "In Progress" },
+                                  { value: "completed", label: "Completed" },
+                                ]}
+                              />
+                            </Space>
 
-                  <Space>
-                    <span style={{ fontSize: "13px", fontWeight: "500" }}>
-                      Sort:
+                            <Space>
+                              <span style={{ fontSize: "13px", fontWeight: "500" }}>
+                                Service Type:
+                              </span>
+                              <Select
+                                value={selectedType}
+                                onChange={handleTypeChange}
+                                style={{ width: 150 }}
+                                size="small"
+                                options={[
+                                  { value: "ALL", label: "All" },
+                                  { value: "MAINTENANCE", label: "Maintenance" },
+                                  { value: "REPAIR", label: "Repair" },
+                                  { value: "INSPECTION", label: "Inspection" },
+                                  { value: "CLEANING", label: "Cleaning" },
+                                  { value: "UPGRADE", label: "Upgrade" },
+                                ]}
+                              />
+                            </Space>
+
+                            <Space>
+                              <span style={{ fontSize: "13px", fontWeight: "500" }}>
+                                Sort:
+                              </span>
+                              <Select
+                                value={sortOrder}
+                                onChange={handleSortOrderChange}
+                                style={{ width: 150 }}
+                                size="small"
+                                options={[
+                                  { value: "DESC", label: "Newest" },
+                                  { value: "ASC", label: "Oldest" },
+                                ]}
+                              />
+                            </Space>
+                          </Space>
+                        )}
+                      </div>
+                      <Spin spinning={loading}>
+                        <Table
+                          columns={columns}
+                          dataSource={contracts}
+                          rowKey="id"
+                          pagination={{
+                            pageSize: 10,
+                            showTotal: (total) => `Total: ${total} requests`,
+                          }}
+                          locale={{
+                            emptyText: "No service requests",
+                          }}
+                          size="small"
+                        />
+                      </Spin>
+                    </>
+                  ),
+                },
+                {
+                  key: "service-jobs",
+                  label: (
+                    <span>
+                      <ToolOutlined /> Service Jobs
                     </span>
-                    <Select
-                      value={sortOrder}
-                      onChange={handleSortOrderChange}
-                      style={{ width: 150 }}
-                      size="small"
-                      options={[
-                        { value: "DESC", label: "Newest" },
-                        { value: "ASC", label: "Oldest" },
-                      ]}
-                    />
-                  </Space>
-                </Space>
-              )}
-            </div>
-            <Spin spinning={loading}>
-              <Table
-                columns={columns}
-                dataSource={contracts}
-                rowKey="id"
-                pagination={{
-                  pageSize: 10,
-                  showTotal: (total) => `Total: ${total} requests`,
-                }}
-                locale={{
-                  emptyText: "No service requests",
-                }}
-                size="small"
-              />
-            </Spin>
+                  ),
+                  children: (
+                    <>
+                      <div style={{ marginBottom: "16px" }}>
+                        <div
+                          style={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                            marginBottom: "12px",
+                          }}
+                        >
+                          <Title level={5} style={{ margin: 0 }}>
+                            Service Jobs {isTechnician && "(My Jobs)"}
+                          </Title>
+                          <Button
+                            icon={<CheckCircleOutlined />}
+                            onClick={() => loadServiceJobs()}
+                          >
+                            Refresh
+                          </Button>
+                        </div>
+
+                        <Space wrap>
+                          <Space>
+                            <span style={{ fontSize: "13px", fontWeight: "500" }}>
+                              Status:
+                            </span>
+                            <Select
+                              value={jobStatusFilter}
+                              onChange={handleJobStatusChange}
+                              style={{ width: 150 }}
+                              size="small"
+                              options={[
+                                { value: "ALL", label: "All" },
+                                { value: "SCHEDULED", label: "Scheduled" },
+                                { value: "DONE", label: "Done" },
+                                { value: "CANCELLED", label: "Cancelled" },
+                              ]}
+                            />
+                          </Space>
+                        </Space>
+                      </div>
+                      <Spin spinning={serviceJobsLoading}>
+                        <Table
+                          columns={serviceJobColumns}
+                          dataSource={serviceJobs}
+                          rowKey="id"
+                          pagination={{
+                            pageSize: 10,
+                            showTotal: (total) => `Total: ${total} jobs`,
+                          }}
+                          locale={{
+                            emptyText: "No service jobs",
+                          }}
+                          size="small"
+                          scroll={{ x: 1200 }}
+                        />
+                      </Spin>
+                    </>
+                  ),
+                },
+              ]}
+            />
           </Card>
         </Content>
       </Layout>
@@ -828,6 +1260,72 @@ const ReviewService = () => {
             </Space>
           </Form.Item>
         </Form>
+      </Modal>
+
+      {/* Upload Report Modal */}
+      <Modal
+        title={
+          <Space>
+            <UploadOutlined />
+            <span>Upload Service Report</span>
+          </Space>
+        }
+        open={uploadModalVisible}
+        onCancel={() => {
+          setUploadModalVisible(false);
+          setUploadFile(null);
+        }}
+        onOk={handleUploadReport}
+        okText="Upload"
+        cancelText="Cancel"
+        confirmLoading={uploadLoading}
+        width={600}
+      >
+        <div style={{ marginBottom: 16 }}>
+          <Typography.Text strong>Job ID: </Typography.Text>
+          <Typography.Text code>{selectedJobId?.substring(0, 8)}...</Typography.Text>
+        </div>
+        
+        {selectedJob && (
+          <div style={{ marginBottom: 16 }}>
+            <Typography.Text strong>Title: </Typography.Text>
+            <Typography.Text>{selectedJob.title}</Typography.Text>
+          </div>
+        )}
+
+        <Upload
+          beforeUpload={(file) => {
+            setUploadFile(file);
+            return false; // Prevent auto upload
+          }}
+          onRemove={() => {
+            setUploadFile(null);
+          }}
+          maxCount={1}
+          accept="image/*,video/*,.pdf,.doc,.docx,.txt"
+        >
+          <Button icon={<UploadOutlined />} block>
+            Select Report File (Image, Video, PDF, DOC, TXT, etc.)
+          </Button>
+        </Upload>
+
+        {uploadFile && (
+          <div style={{ marginTop: 16, padding: 12, background: "#f0f0f0", borderRadius: 4 }}>
+            <Typography.Text strong>Selected File: </Typography.Text>
+            <Typography.Text>{uploadFile.name}</Typography.Text>
+            <br />
+            <Typography.Text type="secondary">
+              Size: {(uploadFile.size / 1024 / 1024).toFixed(2)} MB
+            </Typography.Text>
+          </div>
+        )}
+
+        <div style={{ marginTop: 16 }}>
+          <Typography.Text type="secondary" style={{ fontSize: "12px" }}>
+            ℹ️ Supported file types: Images (JPG, PNG, GIF), Videos (MP4, AVI), 
+            Documents (PDF, DOC, DOCX), Text files (TXT), and more.
+          </Typography.Text>
+        </div>
       </Modal>
     </Layout>
   );

@@ -31,30 +31,42 @@ function ProtectedRoute({ roleId, children }) {
   const currentRoleId = account?.roleId || userInfo?.roleId;
   console.log("ProtectedRoute - current roleId:", currentRoleId);
 
-  // Check role access
-  // Admin (1) can access everything
-  if (currentRoleId === 1) {
-    return children;
-  }
+  // Handle array of roleIds (multiple roles allowed)
+  if (Array.isArray(roleId)) {
+    if (roleId.includes(currentRoleId)) {
+      return children;
+    }
+    // Admin can access everything
+    if (currentRoleId === 1) {
+      return children;
+    }
+  } else {
+    // Single roleId (original logic)
+    // Check role access
+    // Admin (1) can access everything
+    if (currentRoleId === 1) {
+      return children;
+    }
 
-  // Staff (2) can access Staff and CoOwner pages
-  if (currentRoleId === 2 && roleId >= 2) {
-    return children;
-  }
+    // Staff (2) can access Staff and CoOwner pages
+    if (currentRoleId === 2 && roleId >= 2) {
+      return children;
+    }
 
-  // Technician (3) can only access CoOwner pages
-  if (currentRoleId === 3 && roleId >= 3) {
-    return children;
-  }
+    // Technician (3) can only access CoOwner pages
+    if (currentRoleId === 3 && roleId >= 3) {
+      return children;
+    }
 
-  // Co-Owner (4) has the most limited access
-  if (currentRoleId === 4 && roleId >= 4) {
-    return children;
-  }
+    // Co-Owner (4) has the most limited access
+    if (currentRoleId === 4 && roleId >= 4) {
+      return children;
+    }
 
-  // Exact match
-  if (currentRoleId === roleId) {
-    return children;
+    // Exact match
+    if (currentRoleId === roleId) {
+      return children;
+    }
   }
 
   // No access
