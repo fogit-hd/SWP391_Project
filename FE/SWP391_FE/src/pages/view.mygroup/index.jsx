@@ -470,9 +470,10 @@ const MyGroup = () => {
 
     setPaymentLoading(true);
     try {
-      const returnUrl = `${window.location.origin}/view-mygroup?payment=success&invoiceId=${invoiceId}`;
-      const cancelUrl = `${window.location.origin}/view-mygroup?payment=cancelled&invoiceId=${invoiceId}`;
-      
+      const baseUrl = "https://swp391-project-evcs.onrender.com";
+      const returnUrl = `${baseUrl}/view-mygroup?payment=success&invoiceId=${invoiceId}`;
+      const cancelUrl = `${baseUrl}/view-mygroup?payment=cancelled&invoiceId=${invoiceId}`;
+
       console.log("[PAYMENT] ========== PAYMENT INITIATED ==========");
       console.log("[PAYMENT] Invoice ID:", invoiceId);
       console.log("[PAYMENT] API:", `/invoice-payments/${invoiceId}`);
@@ -738,8 +739,11 @@ const MyGroup = () => {
           console.log("[PAYMENT-RETURN] Loading invoices...");
           // Load all invoices first to refresh the list
           await loadMyInvoices();
-          
-          console.log("[PAYMENT-RETURN] Opening invoice detail modal for:", invoiceId);
+
+          console.log(
+            "[PAYMENT-RETURN] Opening invoice detail modal for:",
+            invoiceId
+          );
           // Load invoice detail and open modal (standalone)
           await loadInvoiceDetail(invoiceId);
         } catch (err) {
@@ -752,7 +756,7 @@ const MyGroup = () => {
       // Clean up URL
       navigate("/view-mygroup", { replace: true });
     }
-  }, [location.search, groups]);  
+  }, [location.search, groups]);
 
   const getCurrentUserId = () => {
     // Try localStorage userData first
