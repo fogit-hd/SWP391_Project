@@ -27,7 +27,6 @@ import {
 import { useNavigate, Link } from "react-router-dom";
 import api from "../../config/axios";
 import { useAuth } from "../../components/hooks/useAuth";
-import AppFooter from "../../components/reuse/AppFooter";
 import "./myGroup.css";
 
 const { Title, Text } = Typography;
@@ -69,7 +68,8 @@ const MyGroup = () => {
       const res = await api.get("/CoOwnership/my-groups");
       let list = [];
       if (Array.isArray(res.data)) list = res.data;
-      else if (res.data?.data && Array.isArray(res.data.data)) list = res.data.data;
+      else if (res.data?.data && Array.isArray(res.data.data))
+        list = res.data.data;
       else list = [];
 
       // filter out locally hidden groups per-user
@@ -138,12 +138,21 @@ const MyGroup = () => {
       };
       const fetchSingleOwnerOnly = async (groupId) => {
         try {
-          const r = await api.get(`/GroupMember/get-all-members-in-group/${groupId}`);
+          const r = await api.get(
+            `/GroupMember/get-all-members-in-group/${groupId}`
+          );
           const payload = r.data?.data ?? r.data;
-          const arr = Array.isArray(payload) ? payload : Array.isArray(payload?.items) ? payload.items : [];
-          const owner = arr.find((m) => m.roleInGroup === "OWNER" || m.role === "OWNER");
+          const arr = Array.isArray(payload)
+            ? payload
+            : Array.isArray(payload?.items)
+            ? payload.items
+            : [];
+          const owner = arr.find(
+            (m) => m.roleInGroup === "OWNER" || m.role === "OWNER"
+          );
           const singleOwnerOnly = arr.length === 1 && !!owner;
-          const ownerUserId = owner?.userId || owner?.id || owner?.userID || null;
+          const ownerUserId =
+            owner?.userId || owner?.id || owner?.userID || null;
           return { singleOwnerOnly, ownerUserId };
         } catch {
           return { singleOwnerOnly: null, ownerUserId: null };
@@ -152,12 +161,14 @@ const MyGroup = () => {
       const mapWithConcurrency = async (items, limit, mapper) => {
         const results = new Array(items.length);
         let i = 0;
-        const workers = new Array(Math.min(limit, items.length)).fill(0).map(async () => {
-          while (i < items.length) {
-            const idx = i++;
-            results[idx] = await mapper(items[idx], idx);
-          }
-        });
+        const workers = new Array(Math.min(limit, items.length))
+          .fill(0)
+          .map(async () => {
+            while (i < items.length) {
+              const idx = i++;
+              results[idx] = await mapper(items[idx], idx);
+            }
+          });
         await Promise.all(workers);
         return results;
       };
@@ -344,13 +355,12 @@ const MyGroup = () => {
     message.success("Group hidden on this device");
   };
 
-  const hasAnyContract = (g) => {
-    if (!g) return false;
-    if (typeof g.hasContract === "boolean") return g.hasContract;
-    if (Array.isArray(g.contracts)) return g.contracts.length > 0;
-    if (typeof g.contractCount === "number") return g.contractCount > 0;
-    if (g.latestContract || g.contract) return true;
-    return !!g.isActive;
+  const hasAnyContract = (item) => {
+    if (typeof item.hasContract === "boolean") return item.hasContract;
+    if (Array.isArray(item.contracts)) return item.contracts.length > 0;
+    if (typeof item.contractCount === "number") return item.contractCount > 0;
+    if (item.latestContract || item.contract) return true;
+    return false;
   };
 
   const isActiveByContract = (item) =>
@@ -363,8 +373,10 @@ const MyGroup = () => {
     const list = groups.filter((g) =>
       q ? (g.name || "").toLowerCase().includes(q) : true
     );
-    if (statusFilter === "active") return list.filter((g) => isActiveByContract(g));
-    if (statusFilter === "inactive") return list.filter((g) => !isActiveByContract(g));
+    if (statusFilter === "active")
+      return list.filter((g) => isActiveByContract(g));
+    if (statusFilter === "inactive")
+      return list.filter((g) => !isActiveByContract(g));
     return list;
   }, [groups, searchText, statusFilter]);
 
@@ -660,7 +672,9 @@ const MyGroup = () => {
           for (let i = 0; i < times; i++) {
             try {
               // eslint-disable-next-line no-await-in-loop
-              await new Promise((r) => setTimeout(r, i === 0 ? delay : delay * 2));
+              await new Promise((r) =>
+                setTimeout(r, i === 0 ? delay : delay * 2)
+              );
               // eslint-disable-next-line no-await-in-loop
               await loadVehicles(gid);
               // After reload, verify current vehicle state matches target
@@ -750,13 +764,24 @@ const MyGroup = () => {
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                style={{ padding: 6, borderRadius: 6, border: "1px solid #d9d9d9" }}
+                style={{
+                  padding: 6,
+                  borderRadius: 6,
+                  border: "1px solid #d9d9d9",
+                }}
               >
                 <option value="all">All</option>
                 <option value="active">Active</option>
                 <option value="inactive">Inactive</option>
               </select>
-              <Button onClick={() => { setSearchText(""); setStatusFilter("all"); }}>Clear</Button>
+              <Button
+                onClick={() => {
+                  setSearchText("");
+                  setStatusFilter("all");
+                }}
+              >
+                Clear
+              </Button>
               <Button onClick={() => setJoinOpen(true)}>Join by code</Button>
               <Button
                 type="primary"
@@ -787,53 +812,55 @@ const MyGroup = () => {
                   const currentUserId = getCurrentUserId();
                   const ownerIdFromGroup = getOwnerIdFromGroup(item);
                   const ownerIdFromMembers = item._ownerUserId;
-                  const iAmOwnerRow = !!currentUserId && (
-                    (ownerIdFromGroup && currentUserId === ownerIdFromGroup) ||
-                    (ownerIdFromMembers && currentUserId === ownerIdFromMembers)
-                  );
+                  const iAmOwnerRow =
+                    !!currentUserId &&
+                    ((ownerIdFromGroup && currentUserId === ownerIdFromGroup) ||
+                      (ownerIdFromMembers &&
+                        currentUserId === ownerIdFromMembers));
                   const singleOwnerOnly =
-                    item._singleOwnerOnly !== null && item._singleOwnerOnly !== undefined
+                    item._singleOwnerOnly !== null &&
+                    item._singleOwnerOnly !== undefined
                       ? item._singleOwnerOnly
                       : false;
                   return (
                     <List.Item
                       actions={[
                         activeByContract ? (
-                        <Tag
-                          color="green"
-                          icon={<CheckCircleTwoTone twoToneColor="#52c41a" />}
-                        >
-                          Active
-                        </Tag>
+                          <Tag
+                            color="green"
+                            icon={<CheckCircleTwoTone twoToneColor="#52c41a" />}
+                          >
+                            Active
+                          </Tag>
                         ) : (
-                        <Tag
-                          color="red"
-                          icon={<CloseCircleTwoTone twoToneColor="#ff4d4f" />}
-                        >
-                          Inactive
-                        </Tag>
+                          <Tag
+                            color="red"
+                            icon={<CloseCircleTwoTone twoToneColor="#ff4d4f" />}
+                          >
+                            Inactive
+                          </Tag>
                         ),
-                      <Button
-                        key="members"
-                        type="link"
-                        onClick={() => openMembers(item)}
-                      >
-                        Details
-                      </Button>,
-                      // No delete on the row; only inside Details for owners
-                    ].filter(Boolean)}
+                        <Button
+                          key="members"
+                          type="link"
+                          onClick={() => openMembers(item)}
+                        >
+                          Details
+                        </Button>,
+                        // No delete on the row; only inside Details for owners
+                      ].filter(Boolean)}
                     >
-                    <List.Item.Meta
-                      title={item.name}
-                      description={
-                        <>
-                          <Text type="secondary">
-                            Created by: {item.createdByName || "Unknown"}
-                          </Text>
-                        </>
-                      }
-                    />
-                  </List.Item>
+                      <List.Item.Meta
+                        title={item.name}
+                        description={
+                          <>
+                            <Text type="secondary">
+                              Created by: {item.createdByName || "Unknown"}
+                            </Text>
+                          </>
+                        }
+                      />
+                    </List.Item>
                   );
                 }}
               />
@@ -889,7 +916,11 @@ const MyGroup = () => {
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                   <span>Group: {selectedGroup.name}</span>
                   {isCurrentUserOwner(selectedGroup, members) && (
-                    <Button type="link" size="small" onClick={() => openRename(selectedGroup)}>
+                    <Button
+                      type="link"
+                      size="small"
+                      onClick={() => openRename(selectedGroup)}
+                    >
                       Rename
                     </Button>
                   )}
@@ -901,7 +932,13 @@ const MyGroup = () => {
             open={membersVisible}
             onCancel={() => setMembersVisible(false)}
             footer={
-              <div style={{ display: "flex", justifyContent: "space-between", width: "100%" }}>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  width: "100%",
+                }}
+              >
                 <div>
                   {isCurrentUserOwner(selectedGroup, members) ? (
                     <Popconfirm
@@ -916,7 +953,9 @@ const MyGroup = () => {
                   ) : null}
                 </div>
                 <div>
-                  <Button onClick={() => setMembersVisible(false)}>Close</Button>
+                  <Button onClick={() => setMembersVisible(false)}>
+                    Close
+                  </Button>
                 </div>
               </div>
             }
@@ -1235,7 +1274,6 @@ const MyGroup = () => {
             />
           </Modal>
         </div>
-        <AppFooter />
       </div>
     </>
   );

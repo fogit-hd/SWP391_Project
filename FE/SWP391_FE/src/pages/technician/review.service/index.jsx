@@ -15,6 +15,8 @@ import {
   Row,
   Col,
   Select,
+  DatePicker,
+  InputNumber,
 } from "antd";
 import { useAuth } from "../../../components/hooks/useAuth";
 import {
@@ -25,11 +27,15 @@ import {
   ClockCircleOutlined,
   CheckCircleOutlined,
   CloseCircleOutlined,
+  CalendarOutlined,
+  DollarOutlined,
+  EditOutlined,
 } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import api from "../../../config/axios";
 import { toast } from "react-toastify";
 import TechnicianSidebar from "../../../components/technician/TechnicianSidebar";
+import dayjs from "dayjs";
 
 const { Header, Content, Sider } = Layout;
 const { Title, Paragraph } = Typography;
@@ -37,72 +43,100 @@ const { TextArea } = Input;
 
 const ReviewService = () => {
   const navigate = useNavigate();
-  const { isAuthenticated, isAdmin, isStaff, roleId } = useAuth();
+  const { isAuthenticated, isAdmin, isStaff, isTechnician, roleId } = useAuth();
 
   const [collapsed, setCollapsed] = useState(false);
   const [contracts, setContracts] = useState([]);
-  const [allContracts, setAllContracts] = useState([]); // Store all contracts
+  const [allServicesData, setAllServicesData] = useState([]); // Store all services data
   const [loading, setLoading] = useState(false);
   const [previewModalVisible, setPreviewModalVisible] = useState(false);
   const [previewLoading, setPreviewLoading] = useState(false);
   const [selectedContractContent, setSelectedContractContent] = useState("");
-  const [reviewModalVisible, setReviewModalVisible] = useState(false);
-  const [reviewLoading, setReviewLoading] = useState(false);
-  const [selectedContractId, setSelectedContractId] = useState(null);
-  const [selectedStatus, setSelectedStatus] = useState(
-    roleId === 1 ? "ALL" : "PENDING_REVIEW"
-  ); // Filter status - Admin sees all, Staff sees only PENDING_REVIEW
-  const [form] = Form.useForm();
+  const [scheduleModalVisible, setScheduleModalVisible] = useState(false);
+  const [estimateModalVisible, setEstimateModalVisible] = useState(false);
+  const [scheduleLoading, setScheduleLoading] = useState(false);
+  const [estimateLoading, setEstimateLoading] = useState(false);
+  const [selectedServiceId, setSelectedServiceId] = useState(null);
+  const [selectedService, setSelectedService] = useState(null);
+  const [selectedStatus, setSelectedStatus] = useState("ALL"); // Filter status - Both Admin and Technician can filter
+  const [selectedType, setSelectedType] = useState("ALL"); // Filter by service type
+  const [sortOrder, setSortOrder] = useState("DESC"); // Sort by date: DESC (newest first) or ASC (oldest first)
+  
+  /**
+   * Service Request Status Flow:
+   * 1. draft - Vừa tạo xong
+   * 2. pending_quote - Technician đã đặt lịch kiểm tra
+   * 3. voting - Technician đã báo giá, đang chờ members vote
+   * 4. approved - Tất cả members đã vote đồng ý
+   * 5. rejected - Bị từ chối
+   * 6. in_progress - Sau khi tất cả thanh toán hóa đơn xong
+   * 7. completed - Technician đã hoàn thành công việc
+   */
+  const [scheduleForm] = Form.useForm();
+  const [estimateForm] = Form.useForm();
 
   useEffect(() => {
     if (!isAuthenticated) {
-      toast.error("Vui lòng đăng nhập");
+      toast.error("Please login");
       navigate("/login");
       return;
     }
 
-    loadContracts();
-  }, [isAuthenticated, navigate]);
-
-  // Filter contracts by status
-  const filterContractsByStatus = (contractsList, status) => {
-    // Staff (roleId = 2) can only see PENDING_REVIEW contracts
-    if (roleId === 2 || isStaff) {
-      const pendingStatuses = ["PENDING_REVIEW", "pending_review"];
-
-      const filtered = contractsList.filter((contract) => {
-        const contractStatus =
-          contract.status || contract.state || contract.contractStatus;
-        return pendingStatuses.includes(contractStatus);
-      });
-
-      setContracts(filtered);
-      console.log(
-        "📋 Staff - Showing only PENDING_REVIEW contracts:",
-        filtered.length
-      );
+    // Allow Admin and Technician to access this page
+    if (!isAdmin && !isTechnician && roleId !== 1 && roleId !== 4) {
+      toast.error("You don't have permission to access this page");
+      navigate("/");
       return;
     }
 
-    // Admin (roleId = 1) can see all or filter by status
-    if (status === "ALL") {
-      setContracts(contractsList);
-      console.log("📋 Admin - Showing ALL contracts:", contractsList.length);
-    } else {
-      const filtered = contractsList.filter((contract) => {
-        const contractStatus =
-          contract.status || contract.state || contract.contractStatus;
-        return contractStatus === status;
+    loadContracts();
+  }, [isAuthenticated, isAdmin, isTechnician, roleId, navigate]);
+
+  // Filter and sort contracts
+  const filterAndSortContracts = (contractsList, status, type, order) => {
+    let filtered = contractsList;
+
+    // Filter by status
+    if (status !== "ALL") {
+      filtered = filtered.filter((service) => {
+        const serviceStatus =
+          service.status || service.state || service.contractStatus;
+        return serviceStatus === status;
       });
-      setContracts(filtered);
-      console.log(`📋 Admin - Filtered by ${status}:`, filtered.length);
     }
+
+    // Filter by type
+    if (type !== "ALL") {
+      filtered = filtered.filter((service) => service.type === type);
+    }
+
+    // Sort by date
+    const sorted = [...filtered].sort((a, b) => {
+      const dateA = new Date(a.createdAt);
+      const dateB = new Date(b.createdAt);
+      return order === "DESC" ? dateB - dateA : dateA - dateB;
+    });
+
+    setContracts(sorted);
+    console.log(`📋 Filtered: status=${status}, type=${type}, sort=${order}, results=${sorted.length}`);
   };
 
   // Handle status filter change
   const handleStatusChange = (status) => {
     setSelectedStatus(status);
-    filterContractsByStatus(allContracts, status);
+    filterAndSortContracts(allServicesData, status, selectedType, sortOrder);
+  };
+
+  // Handle type filter change
+  const handleTypeChange = (type) => {
+    setSelectedType(type);
+    filterAndSortContracts(allServicesData, selectedStatus, type, sortOrder);
+  };
+
+  // Handle sort order change
+  const handleSortOrderChange = (order) => {
+    setSortOrder(order);
+    filterAndSortContracts(allServicesData, selectedStatus, selectedType, order);
   };
 
   const loadContracts = async () => {
@@ -113,28 +147,28 @@ const ReviewService = () => {
       console.log("🔍 isStaff:", isStaff);
       console.log("🔍 isAdmin:", isAdmin);
 
-      const response = await api.get("/contracts");
+      const response = await api.get("/service-requests");
       console.log("📦 Full response:", response);
       console.log("📦 Response.data:", response.data);
 
-      let allContractsData = [];
+      let allServicesData = [];
       if (response.data && Array.isArray(response.data.data)) {
-        allContractsData = response.data.data;
+        allServicesData = response.data.data;
         console.log("✅ Using response.data.data");
       } else if (Array.isArray(response.data)) {
-        allContractsData = response.data;
+        allServicesData = response.data;
         console.log("✅ Using response.data");
       } else if (response.data?.contracts) {
-        allContractsData = response.data.contracts;
+        allServicesData = response.data.contracts;
         console.log("✅ Using response.data.contracts");
       }
 
-      console.log("📊 Total contracts from API:", allContractsData.length);
+      console.log("📊 Total services from API:", allServicesData.length);
 
-      // Debug: Log all contract statuses with detailed info
+      // Debug: Log all service statuses with detailed info
       console.log(
-        "🔍 All contract statuses:",
-        allContractsData.map((c) => ({
+        "🔍 All service statuses:",
+        allServicesData.map((c) => ({
           id: c.id,
           status: c.status,
           state: c.state,
@@ -144,80 +178,128 @@ const ReviewService = () => {
         }))
       );
 
-      // Store all contracts
-      setAllContracts(allContractsData);
+      // Store all services
+      setAllServicesData(allServicesData);
 
-      // Apply filter based on role and selected status
-      if (roleId === 2 || isStaff) {
-        // Staff can only see PENDING_REVIEW contracts
-        console.log("👤 Staff role detected - filtering PENDING_REVIEW only");
-
-        // Try different possible status values for contracts that need staff review
-        const pendingStatuses = ["PENDING_REVIEW", "pending_review"];
-
-        const pendingContracts = allContractsData.filter((contract) => {
-          const status =
-            contract.status || contract.state || contract.contractStatus;
-          return pendingStatuses.includes(status);
-        });
-
-        console.log(
-          "🔍 PENDING_REVIEW contracts found:",
-          pendingContracts.length
-        );
-        console.log("🔍 PENDING_REVIEW contracts:", pendingContracts);
-        setContracts(pendingContracts);
-      } else {
-        // Admin can see all or filter by selected status
-        console.log(
-          "👑 Admin role detected - applying selected filter:",
-          selectedStatus
-        );
-        filterContractsByStatus(allContractsData, selectedStatus);
-      }
+      // Apply filter and sort
+      console.log("👤 Applying filters:", { selectedStatus, selectedType, sortOrder });
+      filterAndSortContracts(allServicesData, selectedStatus, selectedType, sortOrder);
     } catch (error) {
       console.error("❌ Error:", error);
-      message.error("Không thể tải danh sách hợp đồng");
+      message.error("Failed to load service requests.");
     } finally {
       setLoading(false);
     }
   };
 
-  const handlePreview = async (contractId) => {
+  // Open Schedule Modal
+  const handleOpenScheduleModal = (service) => {
+    setSelectedServiceId(service.id);
+    setSelectedService(service);
+    
+    // Pre-fill form with existing data if available
+    scheduleForm.setFieldsValue({
+      inspectionScheduledAt: service.inspectionScheduledAt 
+        ? dayjs(service.inspectionScheduledAt) 
+        : null,
+      inspectionNotes: service.inspectionNotes || "",
+    });
+    
+    setScheduleModalVisible(true);
+  };
+
+  // Open Estimate Modal
+  const handleOpenEstimateModal = (service) => {
+    setSelectedServiceId(service.id);
+    setSelectedService(service);
+    
+    // Pre-fill form with existing estimate (NO default value)
+    estimateForm.setFieldsValue({
+      costEstimate: service.costEstimate || undefined,
+      estimateNotes: service.estimateNotes || "",
+    });
+    
+    setEstimateModalVisible(true);
+  };
+
+  // Submit Inspection Schedule
+  const handleScheduleSubmit = async (values) => {
     try {
-      setPreviewLoading(true);
-      const response = await api.get(`/contracts/${contractId}/preview`);
-      setSelectedContractContent(response.data);
-      setPreviewModalVisible(true);
+      setScheduleLoading(true);
+      
+      const payload = {
+        inspectionScheduledAt: values.inspectionScheduledAt 
+          ? values.inspectionScheduledAt.toISOString() 
+          : null,
+        inspectionNotes: values.inspectionNotes || "",
+      };
+
+      console.log("📅 Updating schedule for service:", selectedServiceId);
+      console.log("📦 Payload:", payload);
+      console.log("👤 Current user role:", { roleId, isAdmin, isTechnician });
+
+      const response = await api.put(`/service-requests/${selectedServiceId}/schedule`, payload, {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      
+      console.log("✅ Schedule updated successfully:", response.data);
+      toast.success("Inspection schedule updated! Status changed to 'Pending Quote'");
+      setScheduleModalVisible(false);
+      scheduleForm.resetFields();
+      loadContracts();
     } catch (error) {
-      console.error("Error:", error);
-      message.error("Không thể tải hợp đồng");
+      console.error("❌ Error updating schedule:", error);
+      console.error("❌ Error response:", error.response);
+      console.error("❌ Error status:", error.response?.status);
+      console.error("❌ Error message:", error.response?.data?.message);
+      
+      toast.error(
+        error.response?.data?.message || "Failed to update inspection schedule"
+      );
     } finally {
-      setPreviewLoading(false);
+      setScheduleLoading(false);
     }
   };
 
-  const handleReviewSubmit = async (values) => {
+  // Submit Estimate
+  const handleEstimateSubmit = async (values) => {
     try {
-      setReviewLoading(true);
+      setEstimateLoading(true);
+      
       const payload = {
-        approve: values.approve,
-        note: values.note || "",
+        costEstimate: values.costEstimate,
+        estimateNotes: values.estimateNotes || "",
       };
 
-      await api.post(`/contracts/${selectedContractId}/review`, payload);
-      toast.success(
-        `Hợp đồng đã được ${values.approve ? "duyệt" : "từ chối"}!`
-      );
+      console.log("💰 Updating estimate for service:", selectedServiceId);
+      console.log("📦 Payload:", payload);
+      console.log("👤 Current user role:", { roleId, isAdmin, isTechnician });
+      console.log("🔑 Token:", localStorage.getItem("token")?.substring(0, 50) + "...");
 
-      setReviewModalVisible(false);
-      form.resetFields();
+      const response = await api.put(`/service-requests/${selectedServiceId}/estimate`, payload, {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      
+      console.log("✅ Estimate updated successfully:", response.data);
+      toast.success("Quote submitted successfully! Status changed to 'Voting'");
+      setEstimateModalVisible(false);
+      estimateForm.resetFields();
       loadContracts();
     } catch (error) {
-      console.error("Error:", error);
-      message.error("Không thể gửi đánh giá");
+      console.error("❌ Error updating estimate:", error);
+      console.error("❌ Error response:", error.response);
+      console.error("❌ Error status:", error.response?.status);
+      console.error("❌ Error message:", error.response?.data?.message);
+      
+      toast.error(
+        error.response?.data?.message || "Failed to update cost estimate"
+      );
     } finally {
-      setReviewLoading(false);
+      setEstimateLoading(false);
     }
   };
 
@@ -226,94 +308,252 @@ const ReviewService = () => {
       title: "ID",
       dataIndex: "id",
       key: "id",
-      width: 100,
-      render: (id) => id?.substring(0, 8) + "...",
+      width: 70,
+      render: (id) => (
+        <span style={{ fontSize: "12px" }}>{id?.substring(0, 6)}...</span>
+      ),
     },
     {
-      title: "Tiêu đề",
+      title: "Title",
       dataIndex: "title",
       key: "title",
+      width: 180,
+      ellipsis: true,
+      render: (text) => <span style={{ fontSize: "13px" }}>{text}</span>,
     },
     {
-      title: "Ngày tạo",
+      title: "Type",
+      dataIndex: "type",
+      key: "type",
+      width: 90,
+      render: (type) => {
+        const typeMap = {
+          MAINTENANCE: { color: "blue", text: "Maintenance" },
+          REPAIR: { color: "orange", text: "Repair" },
+          INSPECTION: { color: "green", text: "Inspection" },
+          CLEANING: { color: "cyan", text: "Cleaning" },
+          UPGRADE: { color: "purple", text: "Upgrade" },
+        };
+        const typeInfo = typeMap[type] || { color: "default", text: type };
+        return (
+          <Tag color={typeInfo.color} style={{ fontSize: "11px", margin: 0 }}>
+            {typeInfo.text}
+          </Tag>
+        );
+      },
+    },
+    {
+      title: "Created",
       dataIndex: "createdAt",
       key: "createdAt",
-      width: 150,
+      width: 90,
       render: (date) => {
-        if (!date) return "N/A";
+        if (!date) return <span style={{ fontSize: "12px" }}>N/A</span>;
         try {
-          return new Date(date).toLocaleDateString("vi-VN", {
-            year: "numeric",
-            month: "2-digit",
-            day: "2-digit",
-          });
+          return (
+            <span style={{ fontSize: "12px" }}>
+              {new Date(date).toLocaleDateString("en-US", {
+                day: "2-digit",
+                month: "2-digit",
+                year: "2-digit",
+              })}
+            </span>
+          );
         } catch (error) {
-          return "Invalid Date";
+          return <span style={{ fontSize: "12px" }}>Invalid</span>;
         }
       },
     },
     {
-      title: "Trạng thái",
+      title: "Schedule",
+      dataIndex: "inspectionScheduledAt",
+      key: "inspectionScheduledAt",
+      width: 115,
+      render: (date) => {
+        if (!date || date === null || date === undefined)
+          return (
+            <Tag color="default" style={{ fontSize: "11px", margin: 0 }}>
+              Not Set
+            </Tag>
+          );
+        try {
+          const dateObj = new Date(date);
+          return (
+            <div style={{ fontSize: "11px", lineHeight: "1.3" }}>
+              <div style={{ fontWeight: "600" }}>
+                {dateObj.toLocaleDateString("en-US", {
+                  day: "2-digit",
+                  month: "2-digit",
+                  year: "2-digit",
+                })}
+              </div>
+              <div style={{ color: "#666" }}>
+                {dateObj.toLocaleTimeString("en-US", {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
+              </div>
+            </div>
+          );
+        } catch (error) {
+          return (
+            <Tag color="default" style={{ fontSize: "11px", margin: 0 }}>
+              Not Set
+            </Tag>
+          );
+        }
+      },
+    },
+    {
+      title: "Cost",
+      dataIndex: "costEstimate",
+      key: "costEstimate",
+      width: 100,
+      render: (costEstimate) => {
+        // Check if costEstimate is null, undefined, or 0
+        if (costEstimate === null || costEstimate === undefined || costEstimate === 0) {
+          return (
+            <span
+              style={{
+                fontSize: "12px",
+                fontWeight: "600",
+                color: "#999",
+                fontStyle: "italic",
+              }}
+            >
+              NONE
+            </span>
+          );
+        }
+        return (
+          <span
+            style={{
+              fontSize: "12px",
+              fontWeight: "600",
+              color: "#52c41a",
+            }}
+          >
+            {(costEstimate / 1000).toFixed(0)}K
+          </span>
+        );
+      },
+    },
+    {
+      title: "Status",
       dataIndex: "status",
       key: "status",
-      width: 120,
+      width: 100,
       render: (status) => {
         const statusMap = {
-          PENDING_REVIEW: {
+          draft: {
+            color: "default",
+            text: "Draft",
+          },
+          DRAFT: {
+            color: "default",
+            text: "Draft",
+          },
+          pending_quote: {
             color: "blue",
-            text: "Chờ duyệt",
-            icon: <ClockCircleOutlined />,
+            text: "Pending Quote",
+          },
+          PENDING_QUOTE: {
+            color: "blue",
+            text: "Pending Quote",
+          },
+          voting: {
+            color: "orange",
+            text: "Voting",
+          },
+          VOTING: {
+            color: "orange",
+            text: "Voting",
+          },
+          approved: {
+            color: "green",
+            text: "Approved",
           },
           APPROVED: {
             color: "green",
-            text: "Đã duyệt",
-            icon: <CheckCircleOutlined />,
+            text: "Approved",
+          },
+          rejected: {
+            color: "red",
+            text: "Rejected",
           },
           REJECTED: {
             color: "red",
-            text: "Từ chối",
-            icon: <CloseCircleOutlined />,
+            text: "Rejected",
+          },
+          in_progress: {
+            color: "processing",
+            text: "In Progress",
+          },
+          IN_PROGRESS: {
+            color: "processing",
+            text: "In Progress",
+          },
+          completed: {
+            color: "success",
+            text: "Completed",
+          },
+          COMPLETED: {
+            color: "success",
+            text: "Completed",
           },
         };
         const statusInfo = statusMap[status] || {
           color: "default",
           text: status,
-          icon: null,
         };
         return (
-          <Tag color={statusInfo.color} icon={statusInfo.icon}>
+          <Tag color={statusInfo.color} style={{ fontSize: "11px", margin: 0 }}>
             {statusInfo.text}
           </Tag>
         );
       },
     },
     {
-      title: "Thao tác",
+      title: "Actions",
       key: "actions",
-      width: 200,
-      render: (_, record) => (
-        <Space>
-          <Button
-            type="primary"
-            icon={<EyeOutlined />}
-            size="small"
-            onClick={() => handlePreview(record.id)}
-          >
-            Xem
-          </Button>
-          <Button
-            type="default"
-            icon={<FileTextOutlined />}
-            size="small"
-            onClick={() => {
-              setSelectedContractId(record.id);
-              setReviewModalVisible(true);
-            }}
-          >
-            Review
-          </Button>
-        </Space>
-      ),
+      width: 160,
+      fixed: "right",
+      render: (_, record) => {
+        const status = record.status?.toLowerCase();
+        
+        // Technician can set schedule when status is draft or pending_quote
+        const canSetSchedule = ['draft', 'pending_quote'].includes(status);
+        
+        // Technician can set estimate when status is pending_quote (after setting schedule)
+        const canSetEstimate = status === 'pending_quote';
+        
+        return (
+          <Space size="small">
+            <Button
+              type={canSetSchedule ? "primary" : "default"}
+              icon={<CalendarOutlined />}
+              size="small"
+              onClick={() => handleOpenScheduleModal(record)}
+              disabled={!canSetSchedule && status !== 'draft'}
+              style={{ fontSize: "12px", padding: "0 8px" }}
+              title={canSetSchedule ? "Set inspection schedule" : "Can only set schedule when in Draft status"}
+            >
+              Schedule
+            </Button>
+            <Button
+              type={canSetEstimate ? "primary" : "default"}
+              icon={<DollarOutlined />}
+              size="small"
+              onClick={() => handleOpenEstimateModal(record)}
+              disabled={!canSetEstimate}
+              style={{ fontSize: "12px", padding: "0 8px" }}
+              title={canSetEstimate ? "Set quote" : "Can only quote after setting schedule"}
+            >
+              Quote
+            </Button>
+          </Space>
+        );
+      },
     },
   ];
 
@@ -334,43 +574,92 @@ const ReviewService = () => {
           }}
         >
           <Title level={3} style={{ margin: "16px 24px" }}>
-            Review E-Contracts
+            Review Service Requests
           </Title>
         </Header>
 
         <Content style={{ margin: "24px 16px" }}>
           <Card>
+            <div style={{ marginBottom: "16px" }}>
             <div
               style={{
-                marginBottom: "16px",
                 display: "flex",
                 justifyContent: "space-between",
                 alignItems: "center",
+                  marginBottom: "12px",
               }}
             >
-              <Title level={5} style={{ margin: 0 }}>
-                Danh sách hợp đồng
-              </Title>
-              {isAdmin && (
-                <Space>
-                  <span>Lọc theo trạng thái:</span>
-                  <Select
-                    value={selectedStatus}
-                    onChange={handleStatusChange}
-                    style={{ width: 200 }}
-                    options={[
-                      { value: "ALL", label: "Tất cả" },
-                      { value: "PENDING_REVIEW", label: "Chờ duyệt" },
-                      { value: "APPROVED", label: "Đã duyệt" },
-                      { value: "REJECTED", label: "Từ chối" },
-                    ]}
-                  />
+                <Title level={5} style={{ margin: 0 }}>
+                  Service Requests
+                </Title>
+                <Button
+                  icon={<CheckCircleOutlined />}
+                  onClick={() => loadContracts()}
+                >
+                  Refresh
+                </Button>
+              </div>
+
+              {(isAdmin || isTechnician) && (
+                <Space wrap>
+                  <Space>
+                    <span style={{ fontSize: "13px", fontWeight: "500" }}>
+                      Status:
+                    </span>
+                    <Select
+                      value={selectedStatus}
+                      onChange={handleStatusChange}
+                      style={{ width: 150 }}
+                      size="small"
+                      options={[
+                        { value: "ALL", label: "All" },
+                        { value: "draft", label: "Draft" },
+                        { value: "pending_quote", label: "Pending Quote" },
+                        { value: "voting", label: "Voting" },
+                        { value: "approved", label: "Approved" },
+                        { value: "rejected", label: "Rejected" },
+                        { value: "in_progress", label: "In Progress" },
+                        { value: "completed", label: "Completed" },
+                      ]}
+                    />
+                  </Space>
+
+                  <Space>
+                    <span style={{ fontSize: "13px", fontWeight: "500" }}>
+                      Service Type:
+                    </span>
+                    <Select
+                      value={selectedType}
+                      onChange={handleTypeChange}
+                      style={{ width: 150 }}
+                      size="small"
+                      options={[
+                        { value: "ALL", label: "All" },
+                        { value: "MAINTENANCE", label: "Maintenance" },
+                        { value: "REPAIR", label: "Repair" },
+                        { value: "INSPECTION", label: "Inspection" },
+                        { value: "CLEANING", label: "Cleaning" },
+                        { value: "UPGRADE", label: "Upgrade" },
+                      ]}
+                    />
+                  </Space>
+
+                  <Space>
+                    <span style={{ fontSize: "13px", fontWeight: "500" }}>
+                      Sort:
+                    </span>
+                    <Select
+                      value={sortOrder}
+                      onChange={handleSortOrderChange}
+                      style={{ width: 150 }}
+                      size="small"
+                      options={[
+                        { value: "DESC", label: "Newest" },
+                        { value: "ASC", label: "Oldest" },
+                      ]}
+                    />
+                  </Space>
                 </Space>
-              )}
-              {isStaff && (
-                <Tag color="orange" icon={<ClockCircleOutlined />}>
-                  Danh sách hợp đồng đang duyệt hoặc chờ duyệt
-                </Tag>
               )}
             </div>
             <Spin spinning={loading}>
@@ -380,108 +669,161 @@ const ReviewService = () => {
                 rowKey="id"
                 pagination={{
                   pageSize: 10,
-                  showTotal: (total) => `Tổng: ${total} hợp đồng`,
+                  showTotal: (total) => `Total: ${total} requests`,
                 }}
                 locale={{
-                  emptyText: "Không có hợp đồng nào",
+                  emptyText: "No service requests",
                 }}
+                size="small"
               />
             </Spin>
           </Card>
         </Content>
       </Layout>
 
+      {/* Schedule Modal */}
       <Modal
-        title="Xem trước hợp đồng"
-        open={previewModalVisible}
-        onCancel={() => setPreviewModalVisible(false)}
-        footer={[
-          <Button key="close" onClick={() => setPreviewModalVisible(false)}>
-            Đóng
-          </Button>,
-        ]}
-        width={1000}
-      >
-        <Spin spinning={previewLoading}>
-          {selectedContractContent ? (
-            <div
-              className="ant-typography"
-              style={{
-                border: "1px solid #d9d9d9",
-                padding: "24px",
-                borderRadius: "6px",
-                backgroundColor: "#fafafa",
-                maxHeight: "600px",
-                overflowY: "auto",
-              }}
-              dangerouslySetInnerHTML={{ __html: selectedContractContent }}
-            />
-          ) : (
-            <div style={{ textAlign: "center", padding: "50px" }}>
-              <Paragraph>Không có nội dung</Paragraph>
-            </div>
-          )}
-        </Spin>
-      </Modal>
-
-      <Modal
-        title="Review Contract"
-        open={reviewModalVisible}
+        title={
+          <Space>
+            <CalendarOutlined />
+            <span>Update Inspection Schedule</span>
+          </Space>
+        }
+        open={scheduleModalVisible}
         onCancel={() => {
-          setReviewModalVisible(false);
-          form.resetFields();
+          setScheduleModalVisible(false);
+          scheduleForm.resetFields();
         }}
         footer={null}
         width={600}
       >
-        <Form form={form} layout="vertical" onFinish={handleReviewSubmit}>
+        <Form
+          form={scheduleForm}
+          layout="vertical"
+          onFinish={handleScheduleSubmit}
+        >
           <Form.Item
-            name="approve"
-            label="Quyết định"
-            rules={[{ required: true, message: "Vui lòng chọn quyết định" }]}
+            name="inspectionScheduledAt"
+            label="Inspection Time"
+            rules={[
+              { required: true, message: "Please select inspection time" },
+            ]}
           >
-            <Row gutter={16}>
-              <Col span={12}>
-                <Button
-                  type="primary"
-                  icon={<CheckOutlined />}
-                  block
-                  onClick={() => form.setFieldsValue({ approve: true })}
-                  style={{ height: "40px" }}
-                >
-                  Duyệt
-                </Button>
-              </Col>
-              <Col span={12}>
-                <Button
-                  danger
-                  icon={<CloseOutlined />}
-                  block
-                  onClick={() => form.setFieldsValue({ approve: false })}
-                  style={{ height: "40px" }}
-                >
-                  Từ chối
-                </Button>
-              </Col>
-            </Row>
+            <DatePicker
+              showTime
+              format="MM/DD/YYYY HH:mm"
+              placeholder="Select date and time"
+              style={{ width: "100%" }}
+              disabledDate={(current) => {
+                // Disable dates before today
+                return current && current < dayjs().startOf("day");
+              }}
+            />
           </Form.Item>
 
-          <Form.Item name="note" label="Ghi chú (tùy chọn)">
-            <TextArea rows={4} placeholder="Nhập ghi chú về quyết định..." />
+          <Form.Item name="inspectionNotes" label="Inspection Notes">
+            <TextArea
+              rows={4}
+              placeholder="Enter notes about inspection schedule (optional)..."
+              maxLength={500}
+              showCount
+            />
           </Form.Item>
 
           <Form.Item style={{ marginBottom: 0, textAlign: "right" }}>
             <Space>
               <Button
                 onClick={() => {
-                  setReviewModalVisible(false);
-                  form.resetFields();
+                  setScheduleModalVisible(false);
+                  scheduleForm.resetFields();
                 }}
               >
-                Hủy
+                Cancel
               </Button>
-              <Button type="primary" htmlType="submit" loading={reviewLoading}>
-                Gửi Review
+              <Button
+                type="primary"
+                htmlType="submit"
+                loading={scheduleLoading}
+                icon={<CalendarOutlined />}
+              >
+                Update Schedule
+              </Button>
+            </Space>
+          </Form.Item>
+        </Form>
+      </Modal>
+
+      {/* Estimate Modal */}
+      <Modal
+        title={
+          <Space>
+            <DollarOutlined />
+            <span>Update Cost Estimate</span>
+          </Space>
+        }
+        open={estimateModalVisible}
+        onCancel={() => {
+          setEstimateModalVisible(false);
+          estimateForm.resetFields();
+        }}
+        footer={null}
+        width={600}
+      >
+        <Form
+          form={estimateForm}
+          layout="vertical"
+          onFinish={handleEstimateSubmit}
+        >
+          <Form.Item
+            name="costEstimate"
+            label="Cost Estimate (VNĐ)"
+            rules={[
+              { required: true, message: "Please enter cost estimate" },
+              {
+                type: "number",
+                min: 0,
+                message: "Cost must be greater than or equal to 0",
+              },
+            ]}
+          >
+            <InputNumber
+              style={{ width: "100%" }}
+              placeholder="Enter cost estimate"
+              formatter={(value) =>
+                `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+              }
+              parser={(value) => value.replace(/\$\s?|(,*)/g, "")}
+              min={0}
+              step={10000}
+            />
+          </Form.Item>
+
+          <Form.Item name="estimateNotes" label="Cost Notes">
+            <TextArea
+              rows={4}
+              placeholder="Enter notes about cost estimate (optional)..."
+              maxLength={500}
+              showCount
+            />
+          </Form.Item>
+
+          <Form.Item style={{ marginBottom: 0, textAlign: "right" }}>
+            <Space>
+              <Button
+                onClick={() => {
+                  setEstimateModalVisible(false);
+                  estimateForm.resetFields();
+                }}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="primary"
+                htmlType="submit"
+                loading={estimateLoading}
+                icon={<DollarOutlined />}
+              >
+                Update Cost
               </Button>
             </Space>
           </Form.Item>
