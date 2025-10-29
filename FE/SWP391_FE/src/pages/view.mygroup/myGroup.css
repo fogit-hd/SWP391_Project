@@ -3,7 +3,8 @@
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background: #f0f2f5;
+  /* Use the booking page soft blue radial gradients for a modern background */
+  background: radial-gradient(circle 600px at 0% 200px, #bfdbfe, transparent), radial-gradient(circle 600px at 100% 200px, #bfdbfe, transparent), #f0f2f5;
 }
 
 .my-groups-content {
@@ -11,6 +12,8 @@
   padding-top: 88px;
   /* Occupy remaining space above footer */
   flex: 1;
+  max-width: 1400px;
+  margin: 0 auto;
 }
 
 .my-groups-header-section {
@@ -31,6 +34,41 @@
 .my-groups-list .ant-tag {
   display: inline-flex;
   align-items: center;
+}
+
+/* Improve list item visual: card-like rows */
+.my-groups-list .ant-list-item {
+  background: #ffffff;
+  border-radius: 10px;
+  box-shadow: 0 6px 18px rgba(11, 26, 40, 0.04);
+  border: 1px solid rgba(0,0,0,0.04);
+  margin-bottom: 12px;
+}
+
+/* Header card style similar to booking header */
+.my-groups-header-card {
+  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+  border: 1px solid #f0f0f0;
+  padding: 20px 24px;
+  margin-bottom: 18px;
+}
+
+/* Primary action buttons: gradient, rounded */
+.my-groups-content .ant-btn-primary {
+  background: linear-gradient(90deg, #1890ff 0%, #40a9ff 100%);
+  border: none;
+  border-radius: 8px;
+  box-shadow: 0 6px 18px rgba(24, 144, 255, 0.12);
+}
+.my-groups-content .ant-btn {
+  border-radius: 8px;
+}
+
+/* Responsive tweaks */
+@media (max-width: 992px) {
+  .my-groups-content { max-width: 100%; padding-left: 16px; padding-right: 16px; }
 }
 
 @media (max-width: 768px) {
