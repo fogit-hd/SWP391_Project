@@ -15,18 +15,33 @@ const TripScreen = ({ visible, onCancel, booking, onComplete }) => {
   const handleCheckOut = async (values) => {
     setLoading(true);
     try {
-      const payload = {
-        notes: values.notes || "",
-      };
-
-      await api.post(`/booking/check-out/${booking.id}`, payload);
+      console.log("Booking ID:", booking.id);
+      console.log("API URL:", `/booking/check-out/${booking.id}`);
+      
+      // API checkout chỉ cần id, không cần payload
+      const response = await api.post(`/booking/check-out/${booking.id}`);
+      console.log("Check-out response:", response.data);
+      
       message.success("Checked out successfully!");
       form.resetFields();
       onComplete();
       onCancel();
     } catch (error) {
       console.error("Check-out failed:", error);
-      message.error(error.response?.data?.message || "Failed to check out");
+      console.error("Error response:", error.response?.data);
+      console.error("Error status:", error.response?.status);
+      console.error("Error headers:", error.response?.headers);
+      
+      let errorMsg = "Failed to check out";
+      if (error.response?.data?.message) {
+        errorMsg = error.response.data.message;
+      } else if (error.response?.data?.error) {
+        errorMsg = error.response.data.error;
+      } else if (error.message) {
+        errorMsg = error.message;
+      }
+      
+      message.error(errorMsg);
     } finally {
       setLoading(false);
     }
@@ -64,18 +79,6 @@ const TripScreen = ({ visible, onCancel, booking, onComplete }) => {
         layout="vertical"
         onFinish={handleCheckOut}
       >
-        <Form.Item
-          name="notes"
-          label="Additional Notes (Optional)"
-        >
-          <TextArea
-            rows={4}
-            placeholder="Any additional notes about the trip..."
-            maxLength={500}
-            showCount
-          />
-        </Form.Item>
-
         <Form.Item style={{ marginBottom: 0, marginTop: 24 }}>
           <Space style={{ float: 'right' }}>
             <Button onClick={onCancel}>Cancel</Button>

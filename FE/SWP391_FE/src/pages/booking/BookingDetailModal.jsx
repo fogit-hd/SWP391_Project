@@ -245,7 +245,7 @@ const BookingDetailModal = ({ visible, onCancel, booking, onUpdate, groupId, veh
               </Tag>
             </Descriptions.Item>
             <Descriptions.Item label="User">
-              {booking.userName || 'Unknown'}
+              {booking.userName || ''}
               {isMyBooking() && <Tag color="green" style={{ marginLeft: 8 }}>You</Tag>}
             </Descriptions.Item>
             <Descriptions.Item label="Start Time">

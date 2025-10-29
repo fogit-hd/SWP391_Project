@@ -1,21 +1,18 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { Card, Button, Select, Space, Spin, message, Tag, Badge, Tooltip, Modal } from "antd";
-import { CalendarOutlined, PlusOutlined, ReloadOutlined, CarOutlined, ArrowLeftOutlined, HomeOutlined } from "@ant-design/icons";
+import { CalendarOutlined, PlusOutlined, ReloadOutlined, CarOutlined, ArrowLeftOutlined, HomeOutlined, UnorderedListOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
-import FullCalendar from "@fullcalendar/react";
-import dayGridPlugin from "@fullcalendar/daygrid";
-import timeGridPlugin from "@fullcalendar/timegrid";
-import interactionPlugin from "@fullcalendar/interaction";
 import dayjs from "dayjs";
 import api from "../../config/axios";
 import { useAuth } from "../../components/hooks/useAuth";
 import CreateBookingModal from "./CreateBookingModal";
 import BookingDetailModal from "./BookingDetailModal";
+import BookingListView from "../../components/BookingListView/BookingListView";
 import { BOOKING_STATUS_COLORS, BOOKING_STATUS_LABELS } from "./booking.types";
 import "./booking.css";
 
 
-const BookingCalendar = () => {
+const BookingManagement = () => {
   const { isAuthenticated, isCoOwner } = useAuth();
   const navigate = useNavigate();
   
@@ -25,7 +22,6 @@ const BookingCalendar = () => {
   const [groupVehicles, setGroupVehicles] = useState([]);
   const [selectedVehicleId, setSelectedVehicleId] = useState(null);
   const [bookings, setBookings] = useState([]);
-  const [calendarEvents, setCalendarEvents] = useState([]);
   
   const [createModalVisible, setCreateModalVisible] = useState(false);
   const [detailModalVisible, setDetailModalVisible] = useState(false);
@@ -98,52 +94,18 @@ const BookingCalendar = () => {
       const activeBookings = data.filter(booking => booking.status !== 'CANCELLED');
       
       setBookings(activeBookings);
-      convertToCalendarEvents(activeBookings);
     } catch (error) {
       console.error("Failed to fetch bookings:", error);
       message.error("Failed to load bookings");
       setBookings([]);
-      setCalendarEvents([]);
     } finally {
       setLoading(false);
     }
   };
 
-  const convertToCalendarEvents = (bookingList) => {
-    const currentUserId = getCurrentUserId();
-    const events = bookingList.map(booking => ({
-      id: booking.id,
-      title: `${booking.userName || 'User'} - ${booking.status}`,
-      start: new Date(booking.startTime),
-      end: new Date(booking.endTime),
-      backgroundColor: BOOKING_STATUS_COLORS[booking.status] || '#1890ff',
-      borderColor: BOOKING_STATUS_COLORS[booking.status] || '#1890ff',
-      extendedProps: {
-        booking,
-        isMyBooking: booking.userId === currentUserId,
-      }
-    }));
-    setCalendarEvents(events);
-  };
-
-  const getCurrentUserId = () => {
-    try {
-      const userData = JSON.parse(localStorage.getItem("userData") || "{}");
-      return userData.id || userData.userId || null;
-    } catch {
-      return null;
-    }
-  };
-
-  const handleEventClick = (info) => {
-    const booking = info.event.extendedProps.booking;
+  const handleBookingClick = (booking) => {
     setSelectedBooking(booking);
     setDetailModalVisible(true);
-  };
-
-  const handleDateSelect = (selectInfo) => {
-    // Open create modal with pre-selected dates
-    setCreateModalVisible(true);
   };
 
   const handleCreateSuccess = () => {
@@ -161,9 +123,9 @@ const BookingCalendar = () => {
   const selectedVehicle = groupVehicles.find(v => (v.id || v.vehicleId) === selectedVehicleId);
 
   return (
-    <div className="booking-calendar-page">
-      <div className="booking-calendar-content">
-        <div className="booking-calendar-header">
+    <div className="booking-management-page">
+      <div className="booking-management-content">
+        <div className="booking-management-header">
           <div className="booking-header-left">
             <Button 
               type="text" 
@@ -173,10 +135,10 @@ const BookingCalendar = () => {
             >
               Back to Home
             </Button>
-            <CalendarOutlined className="booking-header-icon" />
+            <UnorderedListOutlined className="booking-header-icon" />
             <div>
-              <h1 className="booking-header-title">Vehicle Booking Calendar</h1>
-              <p className="booking-header-subtitle">Manage your vehicle reservations</p>
+              <h1 className="booking-header-title">Vehicle Booking Management</h1>
+              <p className="booking-header-subtitle">Manage your vehicle reservations with detailed view</p>
             </div>
           </div>
           <Space>
@@ -242,57 +204,12 @@ const BookingCalendar = () => {
           </Space>
         </Card>
 
-        <Card className="booking-calendar-card">
-          <Spin spinning={loading}>
-            <FullCalendar
-              plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
-              initialView="timeGridWeek"
-              headerToolbar={{
-                left: 'prev,next today',
-                center: 'title',
-                right: 'dayGridMonth,timeGridWeek,timeGridDay'
-              }}
-              slotMinTime="06:00:00"
-              slotMaxTime="22:00:00"
-              allDaySlot={false}
-              selectable={true}
-              selectMirror={true}
-              dayMaxEvents={true}
-              weekends={true}
-              events={calendarEvents}
-              eventClick={handleEventClick}
-              select={handleDateSelect}
-              height="auto"
-              eventContent={(eventInfo) => (
-                <div className="booking-event-content">
-                  <div className="booking-event-time">
-                    {dayjs(eventInfo.event.start).format('HH:mm')}
-                  </div>
-                  <div className="booking-event-title">
-                    {eventInfo.event.extendedProps.isMyBooking && (
-                      <Badge color="green" />
-                    )}
-                    {eventInfo.event.title}
-                  </div>
-                </div>
-              )}
-            />
-          </Spin>
-        </Card>
-
-        <div className="booking-legend">
-          <h4>Status Legend:</h4>
-          <Space wrap>
-            {Object.keys(BOOKING_STATUS_LABELS).map(status => (
-              <Tag key={status} color={BOOKING_STATUS_COLORS[status]}>
-                {BOOKING_STATUS_LABELS[status]}
-              </Tag>
-            ))}
-            <Tag color="green">
-              <Badge color="green" /> My Bookings
-            </Tag>
-          </Space>
-        </div>
+        {/* Booking List View */}
+        <BookingListView
+          bookings={bookings}
+          onBookingClick={handleBookingClick}
+          loading={loading}
+        />
       </div>
 
       <CreateBookingModal
@@ -316,4 +233,4 @@ const BookingCalendar = () => {
   );
 };
 
-export default BookingCalendar;
+export default BookingManagement;
