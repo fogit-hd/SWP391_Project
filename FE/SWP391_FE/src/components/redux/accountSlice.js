@@ -7,7 +7,7 @@ export const accountSlice = createSlice({
   initialState,
   reducers: {
     login: (state, action) => {
-      return action.payload;
+      return { ...state, ...action.payload };
     },
     logout: () => {
       // Clear localStorage
@@ -18,7 +18,7 @@ export const accountSlice = createSlice({
       return initialState;
     },
     restoreUser: (state, action) => {
-      return action.payload;
+      return { ...state, ...action.payload };
     },
     updateUser: (state, action) => {
       return { ...state, ...action.payload };
