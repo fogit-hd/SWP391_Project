@@ -131,10 +131,6 @@ const Dashboard = () => {
       <Layout style={{ marginLeft: collapsed ? 80 : 280 }}>
         <Header style={{ padding: 0, background: colorBgContainer }} />
         <Content style={{ margin: "0 16px" }}>
-          <Breadcrumb
-            style={{ margin: "16px 0" }}
-            items={[{ title: "Home" }, { title: "Dashboard" }]}
-          />
           <div
             style={{
               padding: 24,

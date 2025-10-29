@@ -319,18 +319,6 @@ const ManageService = () => {
       <Layout style={{ marginLeft: collapsed ? 80 : 280 }}>
         <Header style={{ padding: 0, background: colorBgContainer }} />
         <Content style={{ margin: "0 16px" }}>
-          <Breadcrumb
-            style={{ margin: "12px 0", fontSize: "10px" }}
-            items={[
-              { title: <span style={{ fontSize: "10px" }}>Home</span> },
-              { title: <span style={{ fontSize: "10px" }}>Dashboard</span> },
-              {
-                title: (
-                  <span style={{ fontSize: "10px" }}>Service Centers</span>
-                ),
-              },
-            ]}
-          />
           <div
             style={{
               padding: 16,
