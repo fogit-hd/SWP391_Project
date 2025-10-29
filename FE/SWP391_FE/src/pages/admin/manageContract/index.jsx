@@ -283,14 +283,6 @@ const ManageContract = () => {
       <Layout style={{ marginLeft: collapsed ? 80 : 280 }}>
         <Header className="manage-contract-header" />
         <Content className="manage-contract-content">
-          <Breadcrumb
-            className="manage-contract-breadcrumb"
-            items={[
-              { title: "Home" },
-              { title: "Admin" },
-              { title: "Manage Templates" },
-            ]}
-          />
           <div className="manage-contract-main-content">
             <div className="manage-contract-header-section">
               <div>
