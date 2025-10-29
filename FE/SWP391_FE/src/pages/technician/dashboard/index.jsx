@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { EyeOutlined } from "@ant-design/icons";
+import { EyeOutlined, ToolOutlined } from "@ant-design/icons";
 import {
   Breadcrumb,
   Layout,
@@ -91,6 +91,10 @@ const TechnicianDashboard = () => {
     navigate("/technician/review-services");
   };
 
+  const handleServiceJobs = () => {
+    navigate("/technician/service-jobs");
+  };
+
   return (
     <Layout style={{ minHeight: "100vh" }}>
       <TechnicianSidebar
@@ -119,7 +123,7 @@ const TechnicianDashboard = () => {
             </div>
 
             {/* Service Review Section */}
-            <Card title="Service Review">
+            <Card title="Service Management">
               <Row gutter={[16, 16]}>
                 <Col xs={24} sm={12} lg={8}>
                   <Button
@@ -130,7 +134,19 @@ const TechnicianDashboard = () => {
                     block
                     style={{ height: 60 }}
                   >
-                    Review Service
+                    Review Services
+                  </Button>
+                </Col>
+                <Col xs={24} sm={12} lg={8}>
+                  <Button
+                    type="default"
+                    size="large"
+                    icon={<ToolOutlined />}
+                    onClick={handleServiceJobs}
+                    block
+                    style={{ height: 60 }}
+                  >
+                    Service Jobs
                   </Button>
                 </Col>
               </Row>
