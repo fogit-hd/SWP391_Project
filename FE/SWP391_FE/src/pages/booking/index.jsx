@@ -196,11 +196,6 @@ const BookingManagement = () => {
                 ))}
               </Select>
             </div>
-            {selectedVehicle && (
-              <Tag color="blue">
-                {selectedVehicle.make} {selectedVehicle.model}
-              </Tag>
-            )}
           </Space>
         </Card>
 

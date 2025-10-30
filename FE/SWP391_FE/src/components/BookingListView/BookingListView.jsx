@@ -111,9 +111,15 @@ const BookingListView = ({ bookings = [], onBookingClick, loading = false }) => 
                 <div className="booking-id">#{booking.id?.slice(-8)}</div>
               </div>
             </Space>
-            <Tag color={BOOKING_STATUS_COLORS[booking.status]}>
-              {getStatusIcon(booking.status)} {BOOKING_STATUS_LABELS[booking.status]}
-            </Tag>
+            <Space>
+              <div className="duration-badge">
+                <ClockCircleOutlined />
+                {duration}
+              </div>
+              <Tag color={BOOKING_STATUS_COLORS[booking.status]}>
+                {getStatusIcon(booking.status)} {BOOKING_STATUS_LABELS[booking.status]}
+              </Tag>
+            </Space>
           </div>
 
           <div className="booking-time-info">
@@ -121,24 +127,20 @@ const BookingListView = ({ bookings = [], onBookingClick, loading = false }) => 
               <CalendarOutlined />
               <div>
                 <div className="time-label">Start</div>
-                <div className="time-value">{startTime.format('MMM DD, YYYY')}</div>
+                <div className="time-value">{startTime.format('dddd, MMM DD, YYYY')}</div>
                 <div className="time-detail">{startTime.format('HH:mm')}</div>
               </div>
             </div>
 
             <div className="duration-indicator">
               <div className="duration-line" />
-              <div className="duration-badge">
-                <ClockCircleOutlined />
-                {duration}
-              </div>
             </div>
 
             <div className="time-block">
               <CalendarOutlined />
               <div>
                 <div className="time-label">End</div>
-                <div className="time-value">{endTime.format('MMM DD, YYYY')}</div>
+                <div className="time-value">{endTime.format('dddd, MMM DD, YYYY')}</div>
                 <div className="time-detail">{endTime.format('HH:mm')}</div>
               </div>
             </div>
