@@ -55,6 +55,8 @@ const Homepage = () => {
   const [isProfileLoading, setIsProfileLoading] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
   const [authKey, setAuthKey] = useState(0); // Force re-render key
+  const [hasContract, setHasContract] = useState(false);
+  const [isCheckingContract, setIsCheckingContract] = useState(false);
   const navigate = useNavigate();
 
   // Debug: Log user state changes
@@ -62,9 +64,11 @@ const Homepage = () => {
     console.log("=== Auth State Debug ===");
     console.log("user:", user);
     console.log("isAuthenticated:", isAuthenticated);
+    console.log("hasContract:", hasContract);
+    console.log("isCheckingContract:", isCheckingContract);
     console.log("authKey:", authKey);
     console.log("=====================");
-  }, [user, isAuthenticated, authKey]);
+  }, [user, isAuthenticated, hasContract, isCheckingContract, authKey]);
 
   // Log profileData changes for debugging (keep for important state changes)
   useEffect(() => {
@@ -132,6 +136,81 @@ const Homepage = () => {
     }
   }, [isInitialized, user, profileData]); // Run when initialization, user or profileData changes
 
+  // Check contracts when user is authenticated
+  useEffect(() => {
+    if (isInitialized && isAuthenticated && user) {
+      console.log("Checking user contracts...");
+      checkUserContracts();
+    }
+  }, [isInitialized, isAuthenticated, user]); // Run when authentication state changes
+
+  // Function to check user contracts
+  const checkUserContracts = async () => {
+    if (!isAuthenticated) {
+      setHasContract(false);
+      return;
+    }
+
+    setIsCheckingContract(true);
+    try {
+      const response = await api.get("/contracts/my");
+      console.log("Contract check response:", response.data);
+      
+      if (response.data && response.data.data && Array.isArray(response.data.data)) {
+        // Check if there's at least one contract with status "APPROVED"
+        const hasApprovedContract = response.data.data.some(contract => contract.status === "APPROVED");
+        setHasContract(hasApprovedContract);
+        console.log("User has approved contracts:", hasApprovedContract);
+        console.log("All contracts:", response.data.data.map(c => ({ id: c.id, status: c.status })));
+      } else {
+        setHasContract(false);
+      }
+    } catch (error) {
+      console.error("Error checking contracts:", error);
+      setHasContract(false);
+      
+      // If 401, try to refresh token
+      if (error.response?.status === 401) {
+        try {
+          await refreshToken();
+          // Retry the contract check
+          const retryResponse = await api.get("/contracts/my");
+          if (retryResponse.data && retryResponse.data.data && Array.isArray(retryResponse.data.data)) {
+            const hasApprovedContract = retryResponse.data.data.some(contract => contract.status === "APPROVED");
+            setHasContract(hasApprovedContract);
+          }
+        } catch (refreshError) {
+          console.error("Failed to refresh token for contract check:", refreshError);
+          setHasContract(false);
+        }
+      }
+    } finally {
+      setIsCheckingContract(false);
+    }
+  };
+
+  // Function to handle booking request navigation
+  const handleBookingRequest = () => {
+    if (!isAuthenticated) {
+      toast.warning("You have not login yet. Please login first!", {
+        position: "top-center",
+        autoClose: 3000,
+      });
+      navigate("/login");
+      return;
+    }
+
+    if (!hasContract) {
+      toast.warning("You need to have an approved contract to make booking requests!", {
+        position: "top-center",
+        autoClose: 3000,
+      });
+      return;
+    }
+
+    navigate("/booking");
+  };
+
   // Function to handle user logout
   const handleLogout = () => {
     console.log("Logging out user...");
@@ -140,6 +219,8 @@ const Homepage = () => {
     setProfileData(null);
     setProfileImage(null);
     setIsProfileModalVisible(false);
+    setHasContract(false);
+    setIsCheckingContract(false);
 
     // Dispatch logout action (this will clear all localStorage items)
     dispatch(logout());
@@ -631,11 +712,14 @@ const Homepage = () => {
           label: "Service Request",
           onClick: () => handleProtectedNavigation("/create-service-request"),
         },
-        {
-          key: "view-myservice",
-          label: "View My Service",
-          // onClick: () => handleProtectedNavigation("/view-myservice"),
-        },
+        // Only show Booking Request if user is authenticated and has contracts
+        ...(isAuthenticated && hasContract ? [
+          {
+            key: "booking-request",
+            label: "Booking Request",
+            onClick: handleBookingRequest,
+          }
+        ] : []),
       ],
     },
     {
@@ -656,7 +740,7 @@ const Homepage = () => {
     <Layout className="page-layout">
       {/* Integrated Navigation Bar */}
       <CardNav
-        key={authKey}
+        key={`${authKey}-${hasContract}`}
         logo="EVCS"
         logoAlt="EVCS Logo"
         items={items}
