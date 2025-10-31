@@ -218,7 +218,7 @@ const PaymentHistory = () => {
             <Statistic
               title="Total Amount"
               value={stats.totalAmount}
-              prefix={"VNĐ"}
+              suffix={"VNĐ"}
               precision={0}
             />
           </Card>
@@ -228,7 +228,7 @@ const PaymentHistory = () => {
             <Statistic
               title="Paid Amount"
               value={stats.paidAmount}
-              prefix={"VNĐ"}
+              suffix={"VNĐ"}
               precision={0}
               valueStyle={{ color: "#3f8600" }}
             />
