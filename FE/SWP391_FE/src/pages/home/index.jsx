@@ -585,6 +585,7 @@ const Homepage = () => {
       key: "history",
       icon: <HistoryOutlined />,
       label: "History",
+      onClick: () => handleProtectedNavigation("/payment-history"),
     },
     {
       type: "divider",

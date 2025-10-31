@@ -29,6 +29,7 @@ import ReviewService from "./pages/technician/review.service";
 import ServiceJobsPage from "./pages/technician/service.jobs";
 import CreateServiceRequest from "./pages/create.service";
 import BookingCalendar from "./pages/booking";
+import PaymentHistory from "./pages/payment.history";
 
 function App() {
   const router = createBrowserRouter([
@@ -171,6 +172,14 @@ function App() {
       element: (
         <ProtectedRoute roleId={3}>
           <ChangePassword />
+        </ProtectedRoute>
+      ),
+    },
+    {
+      path: "/payment-history",
+      element: (
+        <ProtectedRoute roleId={3}>
+          <PaymentHistory />
         </ProtectedRoute>
       ),
     },
