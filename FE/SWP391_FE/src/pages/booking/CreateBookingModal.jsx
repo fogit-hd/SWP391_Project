@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Modal, Form, DatePicker, Input, Button, message, Alert } from "antd";
 import { ClockCircleOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
@@ -13,6 +13,30 @@ const CreateBookingModal = ({ visible, onCancel, onSuccess, groupId, vehicleId, 
   const [loading, setLoading] = useState(false);
   const [estimatedDuration, setEstimatedDuration] = useState(null);
   const [validationError, setValidationError] = useState(null);
+  const [quotaInfo, setQuotaInfo] = useState(null);
+  const [quotaLoading, setQuotaLoading] = useState(false);
+
+  // Fetch quota information when modal opens
+  React.useEffect(() => {
+    if (visible && groupId && vehicleId) {
+      fetchQuotaInfo();
+    }
+  }, [visible, groupId, vehicleId]);
+
+  const fetchQuotaInfo = async () => {
+    if (!groupId || !vehicleId) return;
+    
+    setQuotaLoading(true);
+    try {
+      const response = await api.get(`/quota/check/${groupId}/${vehicleId}`);
+      setQuotaInfo(response.data);
+    } catch (error) {
+      console.error("Failed to fetch quota info:", error);
+      message.error("Failed to load booking quota information");
+    } finally {
+      setQuotaLoading(false);
+    }
+  };
 
   const handleTimeChange = (dates) => {
     // Clear previous validation error when user changes time
@@ -168,6 +192,7 @@ const CreateBookingModal = ({ visible, onCancel, onSuccess, groupId, vehicleId, 
     form.resetFields();
     setEstimatedDuration(null);
     setValidationError(null);
+    setQuotaInfo(null);
     onCancel();
   };
 
@@ -192,8 +217,26 @@ const CreateBookingModal = ({ visible, onCancel, onSuccess, groupId, vehicleId, 
         }
         type="info"
         showIcon
-        style={{ marginBottom: 24 }}
+        style={{ marginBottom: 16 }}
       />
+
+      {/* Quota Information Alert */}
+      {quotaLoading ? (
+        <Alert
+          message="Loading quota information..."
+          type="info"
+          showIcon
+          style={{ marginBottom: 16 }}
+        />
+      ) : quotaInfo && (
+        <Alert
+          message="Booking Hours Available"
+          description={quotaInfo.message}
+          type="success"
+          showIcon
+          style={{ marginBottom: 16 }}
+        />
+      )}
 
       {/* Validation Error Alert */}
       {validationError && (

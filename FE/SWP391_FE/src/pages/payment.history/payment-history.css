@@ -1,0 +1,137 @@
+.payment-history-page {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px;
+  min-height: 100vh;
+  background: #f5f5f5;
+}
+
+.payment-history-header {
+  background: #fff;
+  padding: 24px;
+  border-radius: 12px;
+  margin-bottom: 24px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.back-button {
+  margin-bottom: 16px;
+  color: #1890ff;
+  font-weight: 500;
+}
+
+.back-button:hover {
+  color: #40a9ff;
+  background: #f0f9ff;
+}
+
+.header-content {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.header-icon {
+  font-size: 32px;
+  color: #1890ff;
+}
+
+.page-title {
+  margin: 0 !important;
+  color: #262626;
+}
+
+.stats-section {
+  margin-bottom: 24px;
+}
+
+.stats-section .ant-card {
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.filters-card {
+  margin-bottom: 24px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.filters-card .ant-space {
+  width: 100%;
+  justify-content: flex-start;
+}
+
+.table-card {
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.table-card .ant-table {
+  border-radius: 8px;
+}
+
+.table-card .ant-table-thead > tr > th {
+  background: #fafafa;
+  font-weight: 600;
+  color: #262626;
+}
+
+.table-card .ant-table-tbody > tr:hover > td {
+  background: #f0f9ff;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .payment-history-page {
+    padding: 16px;
+  }
+  
+  .payment-history-header {
+    padding: 16px;
+  }
+  
+  .header-content {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  
+  .header-icon {
+    font-size: 24px;
+  }
+  
+  .filters-card .ant-space {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .filters-card .ant-space > div {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .filters-card .ant-select,
+  .filters-card .ant-picker {
+    margin-left: 0 !important;
+    width: 100%;
+  }
+}
+
+@media (max-width: 576px) {
+  .stats-section .ant-col {
+    margin-bottom: 16px;
+  }
+  
+  .table-card .ant-table {
+    font-size: 12px;
+  }
+  
+  .table-card .ant-table-thead > tr > th {
+    padding: 8px;
+  }
+  
+  .table-card .ant-table-tbody > tr > td {
+    padding: 8px;
+  }
+}
