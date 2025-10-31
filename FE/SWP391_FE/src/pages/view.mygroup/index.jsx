@@ -306,8 +306,11 @@ const MyGroup = () => {
           "[LOAD-SERVICE-REQUESTS] Service requests loaded successfully"
         );
       }
-    } catch (err) {
-      console.error("[LOAD-SERVICE-REQUESTS] Failed to load service requests");
+    } catch (error) {
+      console.error(
+        "[LOAD-SERVICE-REQUESTS] Failed to load service requests: ",
+        error
+      );
       toast.error("Failed to load service requests");
       setServiceRequests([]);
     } finally {
@@ -495,9 +498,9 @@ const MyGroup = () => {
 
     setPaymentLoading(true);
     try {
-      const baseUrl = "https://swp391-project-evcs.onrender.com";
-      const returnUrl = `${baseUrl}/view-mygroup?payment=success&invoiceId=${invoiceId}`;
-      const cancelUrl = `${baseUrl}/view-mygroup?payment=cancelled&invoiceId=${invoiceId}`;
+      const baseUrl = "https://localhost:5173/";
+      const returnUrl = `${baseUrl}/view-mygroup?invoiceId=${invoiceId}`;
+      const cancelUrl = `${baseUrl}/view-mygroup?invoiceId=${invoiceId}`;
 
       console.log("[PAYMENT] ========== PAYMENT INITIATED ==========");
       console.log("[PAYMENT] Invoice ID:", invoiceId);
@@ -519,14 +522,7 @@ const MyGroup = () => {
 
       // Try multiple ways to get payment URL
       const paymentUrl =
-        response.data?.checkoutUrl ||
-        response.data?.data?.checkoutUrl ||
-        response.data?.paymentUrl ||
-        response.data?.data?.paymentUrl ||
-        response.data?.url ||
-        response.data?.data?.url ||
-        response.data?.payment_url ||
-        response.data?.data?.payment_url;
+        response.data?.checkoutUrl || response.data?.data?.checkoutUrl;
 
       console.log("[PAYMENT] Extracted Payment URL:", paymentUrl);
 
@@ -1336,44 +1332,44 @@ const MyGroup = () => {
                 </Title>
               </Space>
               <Space wrap>
-              <Input
-                placeholder="Search by group name"
-                value={searchText}
-                onChange={(e) => setSearchText(e.target.value)}
-                style={{ width: 220 }}
-                allowClear
-              />
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                style={{
-                  padding: 6,
-                  borderRadius: 6,
-                  border: "1px solid #d9d9d9",
-                }}
-              >
-                <option value="all">All</option>
-                <option value="active">Active</option>
-                <option value="inactive">Inactive</option>
-              </select>
-              <Button
-                onClick={() => {
-                  setSearchText("");
-                  setStatusFilter("all");
-                }}
-              >
-                Clear
-              </Button>
-              <Button onClick={() => setJoinOpen(true)}>Join by code</Button>
-              <Button
-                type="primary"
-                icon={<PlusOutlined />}
-                onClick={() => navigate("/create-group")}
-              >
-                Create group
-              </Button>
+                <Input
+                  placeholder="Search by group name"
+                  value={searchText}
+                  onChange={(e) => setSearchText(e.target.value)}
+                  style={{ width: 220 }}
+                  allowClear
+                />
+                <select
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                  style={{
+                    padding: 6,
+                    borderRadius: 6,
+                    border: "1px solid #d9d9d9",
+                  }}
+                >
+                  <option value="all">All</option>
+                  <option value="active">Active</option>
+                  <option value="inactive">Inactive</option>
+                </select>
+                <Button
+                  onClick={() => {
+                    setSearchText("");
+                    setStatusFilter("all");
+                  }}
+                >
+                  Clear
+                </Button>
+                <Button onClick={() => setJoinOpen(true)}>Join by code</Button>
+                <Button
+                  type="primary"
+                  icon={<PlusOutlined />}
+                  onClick={() => navigate("/create-group")}
+                >
+                  Create group
+                </Button>
+              </Space>
             </Space>
-          </Space>
           </div>
 
           {loading ? (
@@ -1499,29 +1495,52 @@ const MyGroup = () => {
             open={inviteModalVisible}
             onCancel={() => setInviteModalVisible(false)}
             footer={
-              <div style={{ display: "flex", justifyContent: "space-between", width: "100%" }}>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  width: "100%",
+                }}
+              >
                 <div>
                   {inviteCode ? (
                     <Button onClick={copyInvite}>Copy code</Button>
                   ) : null}
                 </div>
                 <div>
-                  <Button onClick={() => setInviteModalVisible(false)}>Close</Button>
+                  <Button onClick={() => setInviteModalVisible(false)}>
+                    Close
+                  </Button>
                 </div>
               </div>
             }
           >
             <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-              <div style={{ fontSize: 14, color: "#595959" }}>Share this code with others to let them join the group.</div>
+              <div style={{ fontSize: 14, color: "#595959" }}>
+                Share this code with others to let them join the group.
+              </div>
               <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                <Input readOnly value={inviteCode} style={{ fontSize: 18, fontWeight: 600 }} />
+                <Input
+                  readOnly
+                  value={inviteCode}
+                  style={{ fontSize: 18, fontWeight: 600 }}
+                />
                 <Tag color="purple">{inviteCode}</Tag>
               </div>
               <div style={{ color: "#8c8c8c" }}>
-                Expires in {inviteCountdown === "expired" ? "00:00" : inviteCountdown || "15:00"}
+                Expires in{" "}
+                {inviteCountdown === "expired"
+                  ? "00:00"
+                  : inviteCountdown || "15:00"}
               </div>
               <div>
-                <Button type="link" onClick={() => { navigator.clipboard.writeText(inviteCode); message.success("Copied invite code"); }}>
+                <Button
+                  type="link"
+                  onClick={() => {
+                    navigator.clipboard.writeText(inviteCode);
+                    message.success("Copied invite code");
+                  }}
+                >
                   Copy to clipboard
                 </Button>
               </div>

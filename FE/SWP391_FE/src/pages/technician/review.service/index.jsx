@@ -55,7 +55,10 @@ const { Header, Content, Sider } = Layout;
 const { Title, Paragraph } = Typography;
 const { TextArea } = Input;
 
-const ReviewService = ({ defaultTab = "service-requests", sidebarKey = "review-services" }) => {
+const ReviewService = ({
+  defaultTab = "service-requests",
+  sidebarKey = "review-services",
+}) => {
   const navigate = useNavigate();
   const { isAuthenticated, isAdmin, isStaff, isTechnician, roleId } = useAuth();
 
@@ -63,9 +66,6 @@ const ReviewService = ({ defaultTab = "service-requests", sidebarKey = "review-s
   const [contracts, setContracts] = useState([]);
   const [allServicesData, setAllServicesData] = useState([]); // Store all services data
   const [loading, setLoading] = useState(false);
-  const [previewModalVisible, setPreviewModalVisible] = useState(false);
-  const [previewLoading, setPreviewLoading] = useState(false);
-  const [selectedContractContent, setSelectedContractContent] = useState("");
   const [scheduleModalVisible, setScheduleModalVisible] = useState(false);
   const [estimateModalVisible, setEstimateModalVisible] = useState(false);
   const [scheduleLoading, setScheduleLoading] = useState(false);
@@ -75,7 +75,7 @@ const ReviewService = ({ defaultTab = "service-requests", sidebarKey = "review-s
   const [selectedStatus, setSelectedStatus] = useState("ALL"); // Filter status - Both Admin and Technician can filter
   const [selectedType, setSelectedType] = useState("ALL"); // Filter by service type
   const [sortOrder, setSortOrder] = useState("DESC"); // Sort by date: DESC (newest first) or ASC (oldest first)
-  
+
   // Service Jobs States
   const [activeTab, setActiveTab] = useState(defaultTab); // Tab selection - use defaultTab prop
   const [serviceJobs, setServiceJobs] = useState([]); // Service jobs data
@@ -87,7 +87,7 @@ const ReviewService = ({ defaultTab = "service-requests", sidebarKey = "review-s
   const [selectedJob, setSelectedJob] = useState(null);
   const [uploadFile, setUploadFile] = useState(null);
   const [jobStatusFilter, setJobStatusFilter] = useState("ALL"); // SCHEDULED, DONE, CANCELLED, ALL
-  
+
   /**
    * Service Request Status Flow:
    * 1. draft - Vừa tạo xong
@@ -145,7 +145,9 @@ const ReviewService = ({ defaultTab = "service-requests", sidebarKey = "review-s
     });
 
     setContracts(sorted);
-    console.log(`📋 Filtered: status=${status}, type=${type}, sort=${order}, results=${sorted.length}`);
+    console.log(
+      `📋 Filtered: status=${status}, type=${type}, sort=${order}, results=${sorted.length}`
+    );
   };
 
   // Handle status filter change
@@ -163,7 +165,12 @@ const ReviewService = ({ defaultTab = "service-requests", sidebarKey = "review-s
   // Handle sort order change
   const handleSortOrderChange = (order) => {
     setSortOrder(order);
-    filterAndSortContracts(allServicesData, selectedStatus, selectedType, order);
+    filterAndSortContracts(
+      allServicesData,
+      selectedStatus,
+      selectedType,
+      order
+    );
   };
 
   const loadContracts = async () => {
@@ -209,8 +216,17 @@ const ReviewService = ({ defaultTab = "service-requests", sidebarKey = "review-s
       setAllServicesData(allServicesData);
 
       // Apply filter and sort
-      console.log("👤 Applying filters:", { selectedStatus, selectedType, sortOrder });
-      filterAndSortContracts(allServicesData, selectedStatus, selectedType, sortOrder);
+      console.log("👤 Applying filters:", {
+        selectedStatus,
+        selectedType,
+        sortOrder,
+      });
+      filterAndSortContracts(
+        allServicesData,
+        selectedStatus,
+        selectedType,
+        sortOrder
+      );
     } catch (error) {
       console.error("❌ Error:", error);
       message.error("Failed to load service requests.");
@@ -232,7 +248,9 @@ const ReviewService = ({ defaultTab = "service-requests", sidebarKey = "review-s
         console.log("📞 Calling API: GET /service-jobs (Admin - All jobs)");
         response = await getAllServiceJobs();
       } else if (isTechnician || roleId === 4) {
-        console.log("📞 Calling API: GET /service-jobs/my (Technician - My jobs)");
+        console.log(
+          "📞 Calling API: GET /service-jobs/my (Technician - My jobs)"
+        );
         response = await getMyServiceJobs();
       }
 
@@ -272,7 +290,9 @@ const ReviewService = ({ defaultTab = "service-requests", sidebarKey = "review-s
     }
 
     setServiceJobs(filtered);
-    console.log(`🔧 Filtered jobs: status=${status}, results=${filtered.length}`);
+    console.log(
+      `🔧 Filtered jobs: status=${status}, results=${filtered.length}`
+    );
   };
 
   // Handle job status filter change
@@ -306,7 +326,7 @@ const ReviewService = ({ defaultTab = "service-requests", sidebarKey = "review-s
 
       const reportUrl = response.data?.reportUrl || response.reportUrl;
       toast.success(`Report uploaded successfully! URL: ${reportUrl}`);
-      
+
       setUploadModalVisible(false);
       setUploadFile(null);
       loadServiceJobs(); // Reload jobs
@@ -348,15 +368,15 @@ const ReviewService = ({ defaultTab = "service-requests", sidebarKey = "review-s
   const handleOpenScheduleModal = (service) => {
     setSelectedServiceId(service.id);
     setSelectedService(service);
-    
+
     // Pre-fill form with existing data if available
     scheduleForm.setFieldsValue({
-      inspectionScheduledAt: service.inspectionScheduledAt 
-        ? dayjs(service.inspectionScheduledAt) 
+      inspectionScheduledAt: service.inspectionScheduledAt
+        ? dayjs(service.inspectionScheduledAt)
         : null,
       inspectionNotes: service.inspectionNotes || "",
     });
-    
+
     setScheduleModalVisible(true);
   };
 
@@ -364,13 +384,13 @@ const ReviewService = ({ defaultTab = "service-requests", sidebarKey = "review-s
   const handleOpenEstimateModal = (service) => {
     setSelectedServiceId(service.id);
     setSelectedService(service);
-    
+
     // Pre-fill form with existing estimate (NO default value)
     estimateForm.setFieldsValue({
       costEstimate: service.costEstimate || undefined,
       estimateNotes: service.estimateNotes || "",
     });
-    
+
     setEstimateModalVisible(true);
   };
 
@@ -378,10 +398,10 @@ const ReviewService = ({ defaultTab = "service-requests", sidebarKey = "review-s
   const handleScheduleSubmit = async (values) => {
     try {
       setScheduleLoading(true);
-      
+
       const payload = {
-        inspectionScheduledAt: values.inspectionScheduledAt 
-          ? values.inspectionScheduledAt.toISOString() 
+        inspectionScheduledAt: values.inspectionScheduledAt
+          ? values.inspectionScheduledAt.toISOString()
           : null,
         inspectionNotes: values.inspectionNotes || "",
       };
@@ -390,14 +410,20 @@ const ReviewService = ({ defaultTab = "service-requests", sidebarKey = "review-s
       console.log("📦 Payload:", payload);
       console.log("👤 Current user role:", { roleId, isAdmin, isTechnician });
 
-      const response = await api.put(`/service-requests/${selectedServiceId}/schedule`, payload, {
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-      
+      const response = await api.put(
+        `/service-requests/${selectedServiceId}/schedule`,
+        payload,
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
       console.log("✅ Schedule updated successfully:", response.data);
-      toast.success("Inspection schedule updated! Status changed to 'Pending Quote'");
+      toast.success(
+        "Inspection schedule updated! Status changed to 'Pending Quote'"
+      );
       setScheduleModalVisible(false);
       scheduleForm.resetFields();
       loadContracts();
@@ -406,7 +432,7 @@ const ReviewService = ({ defaultTab = "service-requests", sidebarKey = "review-s
       console.error("❌ Error response:", error.response);
       console.error("❌ Error status:", error.response?.status);
       console.error("❌ Error message:", error.response?.data?.message);
-      
+
       toast.error(
         error.response?.data?.message || "Failed to update inspection schedule"
       );
@@ -419,7 +445,7 @@ const ReviewService = ({ defaultTab = "service-requests", sidebarKey = "review-s
   const handleEstimateSubmit = async (values) => {
     try {
       setEstimateLoading(true);
-      
+
       const payload = {
         costEstimate: values.costEstimate,
         estimateNotes: values.estimateNotes || "",
@@ -428,14 +454,21 @@ const ReviewService = ({ defaultTab = "service-requests", sidebarKey = "review-s
       console.log("💰 Updating estimate for service:", selectedServiceId);
       console.log("📦 Payload:", payload);
       console.log("👤 Current user role:", { roleId, isAdmin, isTechnician });
-      console.log("🔑 Token:", localStorage.getItem("token")?.substring(0, 50) + "...");
+      console.log(
+        "🔑 Token:",
+        localStorage.getItem("token")?.substring(0, 50) + "..."
+      );
 
-      const response = await api.put(`/service-requests/${selectedServiceId}/estimate`, payload, {
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-      
+      const response = await api.put(
+        `/service-requests/${selectedServiceId}/estimate`,
+        payload,
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
       console.log("✅ Estimate updated successfully:", response.data);
       toast.success("Quote submitted successfully! Status changed to 'Voting'");
       setEstimateModalVisible(false);
@@ -446,7 +479,7 @@ const ReviewService = ({ defaultTab = "service-requests", sidebarKey = "review-s
       console.error("❌ Error response:", error.response);
       console.error("❌ Error status:", error.response?.status);
       console.error("❌ Error message:", error.response?.data?.message);
-      
+
       toast.error(
         error.response?.data?.message || "Failed to update cost estimate"
       );
@@ -457,24 +490,26 @@ const ReviewService = ({ defaultTab = "service-requests", sidebarKey = "review-s
 
   // Service Jobs Columns
   const serviceJobColumns = [
-    {
-      title: "ID",
-      dataIndex: "id",
-      key: "id",
-      width: 80,
-      render: (id) => (
-        <span style={{ fontSize: "12px", fontFamily: "monospace" }}>
-          {id?.substring(0, 8)}...
-        </span>
-      ),
-    },
+    // {
+    //   title: "ID",
+    //   dataIndex: "id",
+    //   key: "id",
+    //   width: 80,
+    //   render: (id) => (
+    //     <span style={{ fontSize: "12px", fontFamily: "monospace" }}>
+    //       {id?.substring(0, 8)}...
+    //     </span>
+    //   ),
+    // },
     {
       title: "Title",
       dataIndex: "title",
       key: "title",
       width: 200,
       ellipsis: true,
-      render: (text) => <span style={{ fontSize: "13px", fontWeight: "500" }}>{text}</span>,
+      render: (text) => (
+        <span style={{ fontSize: "13px", fontWeight: "500" }}>{text}</span>
+      ),
     },
     {
       title: "Technician",
@@ -491,7 +526,12 @@ const ReviewService = ({ defaultTab = "service-requests", sidebarKey = "review-s
       key: "scheduledAt",
       width: 140,
       render: (date) => {
-        if (!date) return <Tag color="default" style={{ fontSize: "11px" }}>Not Set</Tag>;
+        if (!date)
+          return (
+            <Tag color="default" style={{ fontSize: "11px" }}>
+              Not Set
+            </Tag>
+          );
         try {
           const dateObj = new Date(date);
           return (
@@ -512,7 +552,11 @@ const ReviewService = ({ defaultTab = "service-requests", sidebarKey = "review-s
             </div>
           );
         } catch (error) {
-          return <Tag color="default" style={{ fontSize: "11px" }}>Invalid</Tag>;
+          return (
+            <Tag color="default" style={{ fontSize: "11px" }}>
+              Invalid
+            </Tag>
+          );
         }
       },
     },
@@ -576,9 +620,15 @@ const ReviewService = ({ defaultTab = "service-requests", sidebarKey = "review-s
           DONE: { color: "success", text: "Done" },
           CANCELLED: { color: "error", text: "Cancelled" },
         };
-        const statusInfo = statusMap[status] || { color: "default", text: status };
+        const statusInfo = statusMap[status] || {
+          color: "default",
+          text: status,
+        };
         return (
-          <Tag color={statusInfo.color} style={{ fontSize: "11px", fontWeight: "600" }}>
+          <Tag
+            color={statusInfo.color}
+            style={{ fontSize: "11px", fontWeight: "600" }}
+          >
             {statusInfo.text}
           </Tag>
         );
@@ -591,7 +641,7 @@ const ReviewService = ({ defaultTab = "service-requests", sidebarKey = "review-s
       fixed: "right",
       render: (_, record) => {
         const canUpdate = record.status === "SCHEDULED";
-        
+
         return (
           <Space size="small">
             <Button
@@ -601,7 +651,11 @@ const ReviewService = ({ defaultTab = "service-requests", sidebarKey = "review-s
               onClick={() => handleOpenUploadModal(record)}
               disabled={!canUpdate}
               style={{ fontSize: "11px", padding: "0 8px" }}
-              title={canUpdate ? "Upload report" : "Cannot upload (job not scheduled)"}
+              title={
+                canUpdate
+                  ? "Upload report"
+                  : "Cannot upload (job not scheduled)"
+              }
             >
               Upload
             </Button>
@@ -619,7 +673,11 @@ const ReviewService = ({ defaultTab = "service-requests", sidebarKey = "review-s
                 size="small"
                 disabled={!canUpdate}
                 style={{ fontSize: "11px", padding: "0 8px" }}
-                title={canUpdate ? "Mark as done" : "Cannot complete (job not scheduled)"}
+                title={
+                  canUpdate
+                    ? "Mark as done"
+                    : "Cannot complete (job not scheduled)"
+                }
               >
                 Done
               </Button>
@@ -638,7 +696,9 @@ const ReviewService = ({ defaultTab = "service-requests", sidebarKey = "review-s
                 size="small"
                 disabled={!canUpdate}
                 style={{ fontSize: "11px", padding: "0 8px" }}
-                title={canUpdate ? "Cancel job" : "Cannot cancel (job not scheduled)"}
+                title={
+                  canUpdate ? "Cancel job" : "Cannot cancel (job not scheduled)"
+                }
               >
                 Cancel
               </Button>
@@ -650,15 +710,15 @@ const ReviewService = ({ defaultTab = "service-requests", sidebarKey = "review-s
   ];
 
   const columns = [
-    {
-      title: "ID",
-      dataIndex: "id",
-      key: "id",
-      width: 70,
-      render: (id) => (
-        <span style={{ fontSize: "12px" }}>{id?.substring(0, 6)}...</span>
-      ),
-    },
+    // {
+    //   title: "ID",
+    //   dataIndex: "id",
+    //   key: "id",
+    //   width: 70,
+    //   render: (id) => (
+    //     <span style={{ fontSize: "12px" }}>{id?.substring(0, 6)}...</span>
+    //   ),
+    // },
     {
       title: "Title",
       dataIndex: "title",
@@ -757,7 +817,11 @@ const ReviewService = ({ defaultTab = "service-requests", sidebarKey = "review-s
       width: 100,
       render: (costEstimate) => {
         // Check if costEstimate is null, undefined, or 0
-        if (costEstimate === null || costEstimate === undefined || costEstimate === 0) {
+        if (
+          costEstimate === null ||
+          costEstimate === undefined ||
+          costEstimate === 0
+        ) {
           return (
             <span
               style={{
@@ -866,13 +930,13 @@ const ReviewService = ({ defaultTab = "service-requests", sidebarKey = "review-s
       fixed: "right",
       render: (_, record) => {
         const status = record.status?.toLowerCase();
-        
+
         // Technician can set schedule when status is draft or pending_quote
-        const canSetSchedule = ['draft', 'pending_quote'].includes(status);
-        
+        const canSetSchedule = ["draft", "pending_quote"].includes(status);
+
         // Technician can set estimate when status is pending_quote (after setting schedule)
-        const canSetEstimate = status === 'pending_quote';
-        
+        const canSetEstimate = status === "pending_quote";
+
         return (
           <Space size="small">
             <Button
@@ -880,9 +944,13 @@ const ReviewService = ({ defaultTab = "service-requests", sidebarKey = "review-s
               icon={<CalendarOutlined />}
               size="small"
               onClick={() => handleOpenScheduleModal(record)}
-              disabled={!canSetSchedule && status !== 'draft'}
+              disabled={!canSetSchedule && status !== "draft"}
               style={{ fontSize: "12px", padding: "0 8px" }}
-              title={canSetSchedule ? "Set inspection schedule" : "Can only set schedule when in Draft status"}
+              title={
+                canSetSchedule
+                  ? "Set inspection schedule"
+                  : "Can only set schedule when in Draft status"
+              }
             >
               Schedule
             </Button>
@@ -893,7 +961,11 @@ const ReviewService = ({ defaultTab = "service-requests", sidebarKey = "review-s
               onClick={() => handleOpenEstimateModal(record)}
               disabled={!canSetEstimate}
               style={{ fontSize: "12px", padding: "0 8px" }}
-              title={canSetEstimate ? "Set quote" : "Can only quote after setting schedule"}
+              title={
+                canSetEstimate
+                  ? "Set quote"
+                  : "Can only quote after setting schedule"
+              }
             >
               Quote
             </Button>
@@ -962,7 +1034,9 @@ const ReviewService = ({ defaultTab = "service-requests", sidebarKey = "review-s
                         {(isAdmin || isTechnician) && (
                           <Space wrap>
                             <Space>
-                              <span style={{ fontSize: "13px", fontWeight: "500" }}>
+                              <span
+                                style={{ fontSize: "13px", fontWeight: "500" }}
+                              >
                                 Status:
                               </span>
                               <Select
@@ -973,18 +1047,26 @@ const ReviewService = ({ defaultTab = "service-requests", sidebarKey = "review-s
                                 options={[
                                   { value: "ALL", label: "All" },
                                   { value: "draft", label: "Draft" },
-                                  { value: "pending_quote", label: "Pending Quote" },
+                                  {
+                                    value: "pending_quote",
+                                    label: "Pending Quote",
+                                  },
                                   { value: "voting", label: "Voting" },
                                   { value: "approved", label: "Approved" },
                                   { value: "rejected", label: "Rejected" },
-                                  { value: "in_progress", label: "In Progress" },
+                                  {
+                                    value: "in_progress",
+                                    label: "In Progress",
+                                  },
                                   { value: "completed", label: "Completed" },
                                 ]}
                               />
                             </Space>
 
                             <Space>
-                              <span style={{ fontSize: "13px", fontWeight: "500" }}>
+                              <span
+                                style={{ fontSize: "13px", fontWeight: "500" }}
+                              >
                                 Service Type:
                               </span>
                               <Select
@@ -994,7 +1076,10 @@ const ReviewService = ({ defaultTab = "service-requests", sidebarKey = "review-s
                                 size="small"
                                 options={[
                                   { value: "ALL", label: "All" },
-                                  { value: "MAINTENANCE", label: "Maintenance" },
+                                  {
+                                    value: "MAINTENANCE",
+                                    label: "Maintenance",
+                                  },
                                   { value: "REPAIR", label: "Repair" },
                                   { value: "INSPECTION", label: "Inspection" },
                                   { value: "CLEANING", label: "Cleaning" },
@@ -1004,7 +1089,9 @@ const ReviewService = ({ defaultTab = "service-requests", sidebarKey = "review-s
                             </Space>
 
                             <Space>
-                              <span style={{ fontSize: "13px", fontWeight: "500" }}>
+                              <span
+                                style={{ fontSize: "13px", fontWeight: "500" }}
+                              >
                                 Sort:
                               </span>
                               <Select
@@ -1070,7 +1157,9 @@ const ReviewService = ({ defaultTab = "service-requests", sidebarKey = "review-s
 
                         <Space wrap>
                           <Space>
-                            <span style={{ fontSize: "13px", fontWeight: "500" }}>
+                            <span
+                              style={{ fontSize: "13px", fontWeight: "500" }}
+                            >
                               Status:
                             </span>
                             <Select
@@ -1283,9 +1372,11 @@ const ReviewService = ({ defaultTab = "service-requests", sidebarKey = "review-s
       >
         <div style={{ marginBottom: 16 }}>
           <Typography.Text strong>Job ID: </Typography.Text>
-          <Typography.Text code>{selectedJobId?.substring(0, 8)}...</Typography.Text>
+          <Typography.Text code>
+            {selectedJobId?.substring(0, 8)}...
+          </Typography.Text>
         </div>
-        
+
         {selectedJob && (
           <div style={{ marginBottom: 16 }}>
             <Typography.Text strong>Title: </Typography.Text>
@@ -1310,7 +1401,14 @@ const ReviewService = ({ defaultTab = "service-requests", sidebarKey = "review-s
         </Upload>
 
         {uploadFile && (
-          <div style={{ marginTop: 16, padding: 12, background: "#f0f0f0", borderRadius: 4 }}>
+          <div
+            style={{
+              marginTop: 16,
+              padding: 12,
+              background: "#f0f0f0",
+              borderRadius: 4,
+            }}
+          >
             <Typography.Text strong>Selected File: </Typography.Text>
             <Typography.Text>{uploadFile.name}</Typography.Text>
             <br />
@@ -1322,7 +1420,7 @@ const ReviewService = ({ defaultTab = "service-requests", sidebarKey = "review-s
 
         <div style={{ marginTop: 16 }}>
           <Typography.Text type="secondary" style={{ fontSize: "12px" }}>
-            ℹ️ Supported file types: Images (JPG, PNG, GIF), Videos (MP4, AVI), 
+            ℹ️ Supported file types: Images (JPG, PNG, GIF), Videos (MP4, AVI),
             Documents (PDF, DOC, DOCX), Text files (TXT), and more.
           </Typography.Text>
         </div>

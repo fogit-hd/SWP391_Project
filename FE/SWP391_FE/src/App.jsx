@@ -88,7 +88,7 @@ function App() {
     {
       path: "/staff/dashboard",
       element: (
-        <ProtectedRoute roleId={2}>
+        <ProtectedRoute roleId={[1, 2]}>
           <StaffDashboard />
         </ProtectedRoute>
       ),
@@ -97,7 +97,7 @@ function App() {
     {
       path: "/staff/review-econtract",
       element: (
-        <ProtectedRoute roleId={2}>
+        <ProtectedRoute roleId={[1, 2]}>
           <ReviewEContract />
         </ProtectedRoute>
       ),
@@ -107,7 +107,7 @@ function App() {
     {
       path: "/technician/dashboard",
       element: (
-        <ProtectedRoute roleId={4}>
+        <ProtectedRoute roleId={[4]}>
           <TechnicianDashboard />
         </ProtectedRoute>
       ),
@@ -125,7 +125,7 @@ function App() {
     {
       path: "/technician/service-jobs",
       element: (
-        <ProtectedRoute roleId={[1, 2, 4]}>
+        <ProtectedRoute roleId={[1, 4]}>
           <ServiceJobsPage />
         </ProtectedRoute>
       ),
@@ -226,7 +226,7 @@ function App() {
     {
       path: "/sign-econtract/:contractId",
       element: (
-        <ProtectedRoute roleId={3}>
+        <ProtectedRoute roleId={[1, 2, 3]}>
           <SignEContract />
         </ProtectedRoute>
       ),
@@ -234,7 +234,7 @@ function App() {
     {
       path: "/booking",
       element: (
-        <ProtectedRoute roleId={3}>
+        <ProtectedRoute roleId={[1, 2, 3]}>
           <BookingCalendar />
         </ProtectedRoute>
       ),
@@ -242,25 +242,8 @@ function App() {
     {
       path: "/my-contracts",
       element: (
-        <ProtectedRoute roleId={3}>
+        <ProtectedRoute roleId={[1, 2, 3]}>
           <SignEContract />
-        </ProtectedRoute>
-      ),
-    },
-    {
-      path: "/review-econtract",
-      element: (
-        <ProtectedRoute roleId={3}>
-          <ReviewEContract />
-        </ProtectedRoute>
-      ),
-    },
-
-    {
-      path: "/review-econtract",
-      element: (
-        <ProtectedRoute roleId={3}>
-          <ReviewEContract />
         </ProtectedRoute>
       ),
     },
@@ -268,7 +251,7 @@ function App() {
     {
       path: "/create-service-request",
       element: (
-        <ProtectedRoute roleId={3}>
+        <ProtectedRoute roleId={[1, 2, 3]}>
           <CreateServiceRequest />
         </ProtectedRoute>
       ),
@@ -277,7 +260,7 @@ function App() {
     {
       path: "/staff/dashboard",
       element: (
-        <ProtectedRoute roleId={2}>
+        <ProtectedRoute roleId={[1, 2]}>
           <StaffDashboard />
         </ProtectedRoute>
       ),
