@@ -159,45 +159,18 @@ const BookingListView = ({ bookings = [], onBookingClick, loading = false }) => 
   return (
     <div className="booking-list-view">
       <div className="list-filters">
-        <Space wrap>
-          <Input
-            placeholder="Search by user or notes..."
-            prefix={<SearchOutlined />}
-            value={searchText}
-            onChange={(e) => setSearchText(e.target.value)}
-            style={{ width: 200 }}
-          />
-          
-          <Select
-            value={statusFilter}
-            onChange={setStatusFilter}
-            style={{ width: 120 }}
-          >
-            <Select.Option value="all">All Status</Select.Option>
-            {Object.keys(BOOKING_STATUS_LABELS).map(status => (
-              <Select.Option key={status} value={status}>
-                {BOOKING_STATUS_LABELS[status]}
-              </Select.Option>
-            ))}
-          </Select>
-
-          <RangePicker
-            value={dateRange}
-            onChange={setDateRange}
-            placeholder={['Start Date', 'End Date']}
-          />
-
-          <Select
-            value={sortBy}
-            onChange={setSortBy}
-            style={{ width: 120 }}
-          >
-            <Select.Option value="startTime">Start Time</Select.Option>
-            <Select.Option value="duration">Duration</Select.Option>
-            <Select.Option value="status">Status</Select.Option>
-            <Select.Option value="user">User</Select.Option>
-          </Select>
-        </Space>
+        <Select
+          value={statusFilter}
+          onChange={setStatusFilter}
+          style={{ width: 150 }}
+        >
+          <Select.Option value="all">All Status</Select.Option>
+          {Object.keys(BOOKING_STATUS_LABELS).map(status => (
+            <Select.Option key={status} value={status}>
+              {BOOKING_STATUS_LABELS[status]}
+            </Select.Option>
+          ))}
+        </Select>
       </div>
 
       <div className="list-summary">

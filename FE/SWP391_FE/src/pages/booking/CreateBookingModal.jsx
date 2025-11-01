@@ -110,6 +110,72 @@ const CreateBookingModal = ({ visible, onCancel, onSuccess, groupId, vehicleId, 
       };
     }
 
+    // Check quota limits if quota info is available
+    if (quotaInfo && quotaInfo.data) {
+      const quota = quotaInfo.data;
+      const weekStartDate = dayjs(quota.weekStartDate);
+      const nextWeekStartDate = weekStartDate.add(7, 'day');
+      const nextWeekEndDate = nextWeekStartDate.add(7, 'day');
+
+      // Check if booking is in current week, next week, or spans both weeks
+      const isCurrentWeek = start.isBefore(nextWeekStartDate);
+      const isNextWeek = end.isAfter(nextWeekStartDate) || start.isSameOrAfter(nextWeekStartDate);
+      const spansWeeks = start.isBefore(nextWeekStartDate) && end.isAfter(nextWeekStartDate);
+
+      // Calculate hours for current week and next week
+      let hoursCurrentWeek = 0;
+      let hoursNextWeek = 0;
+
+      if (spansWeeks) {
+        // Booking spans both weeks
+        hoursCurrentWeek = nextWeekStartDate.diff(start, 'hour', true);
+        hoursNextWeek = end.diff(nextWeekStartDate, 'hour', true);
+      } else if (isCurrentWeek && !isNextWeek) {
+        // Booking is only in current week
+        hoursCurrentWeek = duration;
+      } else if (isNextWeek) {
+        // Booking is only in next week
+        hoursNextWeek = duration;
+      }
+
+      // Validate current week quota
+      if (hoursCurrentWeek > 0) {
+        const totalUsedCurrentWeek = quota.hoursUsed + quota.hoursDebt + hoursCurrentWeek;
+        if (totalUsedCurrentWeek > quota.hoursLimit) {
+          return {
+            valid: false,
+            error: `Cannot book for current week. You need ${hoursCurrentWeek.toFixed(1)} hours but only ${quota.remainingHours.toFixed(1)} hours remaining (Used: ${quota.hoursUsed.toFixed(1)}h, Debt: ${quota.hoursDebt.toFixed(1)}h, Limit: ${quota.hoursLimit}h)`
+          };
+        }
+      }
+
+      // Validate next week quota
+      if (hoursNextWeek > 0) {
+        const excessDebt = Math.max(0, (quota.hoursUsed + quota.hoursDebt) - quota.hoursLimit);
+        const totalUsedNextWeek = excessDebt + quota.hoursAdvance + hoursNextWeek;
+        if (totalUsedNextWeek > quota.hoursLimit) {
+          return {
+            valid: false,
+            error: `Cannot book for next week. You need ${hoursNextWeek.toFixed(1)} hours but only ${quota.remainingHoursNextWeek.toFixed(1)} hours remaining (Excess debt: ${excessDebt.toFixed(1)}h, Advance: ${quota.hoursAdvance.toFixed(1)}h, Limit: ${quota.hoursLimit}h)`
+          };
+        }
+      }
+
+      // Validate if booking spans both weeks
+      if (spansWeeks) {
+        const currentWeekCheck = (quota.hoursUsed + quota.hoursDebt + hoursCurrentWeek) <= quota.hoursLimit;
+        const excessDebt = Math.max(0, (quota.hoursUsed + quota.hoursDebt) - quota.hoursLimit);
+        const nextWeekCheck = (excessDebt + quota.hoursAdvance + hoursNextWeek) <= quota.hoursLimit;
+        
+        if (!currentWeekCheck || !nextWeekCheck) {
+          return {
+            valid: false,
+            error: `Cannot book across weeks. Current week needs ${hoursCurrentWeek.toFixed(1)}h (${quota.remainingHours.toFixed(1)}h available), next week needs ${hoursNextWeek.toFixed(1)}h (${quota.remainingHoursNextWeek.toFixed(1)}h available)`
+          };
+        }
+      }
+    }
+
     return { valid: true };
   };
 
@@ -228,11 +294,28 @@ const CreateBookingModal = ({ visible, onCancel, onSuccess, groupId, vehicleId, 
           showIcon
           style={{ marginBottom: 16 }}
         />
-      ) : quotaInfo && (
+      ) : quotaInfo && quotaInfo.data && (
         <Alert
-          message="Booking Hours Available"
-          description={quotaInfo.message}
-          type="success"
+          message="Booking Hours Quota"
+          description={
+            <div>
+              <div style={{ marginBottom: 8 }}>
+                You have {quotaInfo.data.remainingHours.toFixed(0)} hours {((quotaInfo.data.remainingHours % 1) * 60).toFixed(0)} minutes left to book this week, and {quotaInfo.data.remainingHoursNextWeek.toFixed(0)} hours to book in advance for next week.
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px', marginTop: 12 }}>
+                <div>
+                  <strong>Hours Used:</strong> <span style={{ color: '#1890ff', fontWeight: 600 }}>{quotaInfo.data.hoursUsed.toFixed(2)}h</span>
+                </div>
+                <div>
+                  <strong>Penalty Hours:</strong> <span style={{ color: '#ff4d4f', fontWeight: 600 }}>{quotaInfo.data.hoursDebt.toFixed(2)}h</span>
+                </div>
+              </div>
+              <div style={{ marginTop: 8, fontSize: '12px', color: '#8c8c8c' }}>
+                Week starting: {dayjs(quotaInfo.data.weekStartDate).format('MM/DD/YYYY')}
+              </div>
+            </div>
+          }
+          type="info"
           showIcon
           style={{ marginBottom: 16 }}
         />
