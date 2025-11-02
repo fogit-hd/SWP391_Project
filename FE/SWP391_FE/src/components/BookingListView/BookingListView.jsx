@@ -83,6 +83,7 @@ const BookingListView = ({ bookings = [], onBookingClick, loading = false }) => 
       BOOKED: '📅',
       INUSE: '🚗',
       COMPLETED: '✅',
+      COMPLETE: '✅', // API trả về COMPLETE
       CANCELLED: '❌',
       OVERTIME: '⏰'
     };

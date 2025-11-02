@@ -5,9 +5,9 @@
 export const BOOKING_STATUS = {
   BOOKED: 'BOOKED',
   CANCELLED: 'CANCELLED',
-  INUSE: 'INUSE',
+  INUSE: 'IN USE',
   OVERTIME: 'OVERTIME',
-  COMPLETED: 'COMPLETED',
+  COMPLETE: 'COMPLETE', 
 };
 
 export const BOOKING_STATUS_COLORS = {
@@ -15,7 +15,7 @@ export const BOOKING_STATUS_COLORS = {
   CANCELLED: '#ff4d4f',
   INUSE: '#52c41a',
   OVERTIME: '#faad14',
-  COMPLETED: '#8c8c8c',
+  COMPLETE: '#52c41a', 
 };
 
 export const BOOKING_STATUS_LABELS = {
@@ -23,7 +23,7 @@ export const BOOKING_STATUS_LABELS = {
   CANCELLED: 'Cancelled',
   INUSE: 'In Use',
   OVERTIME: 'Overtime',
-  COMPLETED: 'Completed',
+  COMPLETE: 'Completed', 
 };
 
 export const GRACE_WINDOWS = {
