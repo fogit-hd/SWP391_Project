@@ -498,7 +498,7 @@ const MyGroup = () => {
 
     setPaymentLoading(true);
     try {
-      const baseUrl = "https://localhost:5173/";
+      const baseUrl = "http://localhost:5173";
       const returnUrl = `${baseUrl}/view-mygroup?invoiceId=${invoiceId}`;
       const cancelUrl = `${baseUrl}/view-mygroup?invoiceId=${invoiceId}`;
 
@@ -1068,7 +1068,7 @@ const MyGroup = () => {
           res?.data?.expiresAt || res?.data?.data?.expiresAt || null;
         const expiresAtVal = expiresAt
           ? new Date(expiresAt).getTime()
-          : Date.now() + 15 * 60 * 1000;
+          : Date.now() + 30 * 1000;
         setInviteExpiresAt(expiresAtVal);
         // Persist to storage so re-opening details retains countdown
         saveInviteToStorage(gid, code, expiresAtVal);
