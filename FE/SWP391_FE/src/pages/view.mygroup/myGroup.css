@@ -66,6 +66,55 @@
   border-radius: 8px;
 }
 
+/* Booking CTA button styling to match page theme */
+.booking-btn {
+  background: linear-gradient(90deg, #00aaff 0%, #0066ff 100%);
+  color: #fff;
+  border: none !important;
+  padding: 6px 14px;
+  border-radius: 10px;
+  box-shadow: 0 8px 22px rgba(0, 106, 255, 0.12);
+}
+
+/* Vehicle info grid used in Vehicles tab */
+.vehicle-info-grid {
+  display: grid;
+  /* three compact columns but allow content room so actions on right don't overlap */
+  grid-template-columns: repeat(3, minmax(140px, 1fr));
+  gap: 8px 22px;
+  font-size: 13px;
+  color: #444;
+}
+.vehicle-info-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.vehicle-info-label {
+  min-width: 110px;
+  color: #8c8c8c;
+}
+.vehicle-info-val {
+  color: #111;
+  font-weight: 500;
+}
+
+/* actions are rendered below the grid now; no extra right padding needed */
+.vehicle-meta .vehicle-info-grid {
+  padding-right: 0;
+}
+
+/* Actions block under each vehicle */
+.vehicle-actions {
+  margin-top: 12px;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+.vehicle-actions .ant-tag {
+  margin-right: 8px;
+}
+
 /* Responsive tweaks */
 @media (max-width: 992px) {
   .my-groups-content { max-width: 100%; padding-left: 16px; padding-right: 16px; }
