@@ -113,6 +113,15 @@ const BookingDetailModal = ({ visible, onCancel, booking, onUpdate, groupId, veh
     }
   };
 
+  const isCoOwner = () => {
+    try {
+      const userData = JSON.parse(localStorage.getItem("userData") || "{}");
+      return userData.roleId === 3; // Role 3 = CoOwner
+    } catch {
+      return false;
+    }
+  };
+
   const getCheckInProgress = () => {
     const now = dayjs();
     const startTime = dayjs(booking.startTime);
@@ -164,7 +173,7 @@ const BookingDetailModal = ({ visible, onCancel, booking, onUpdate, groupId, veh
                   </Button>
                 </Popconfirm>
               )}
-              {canCheckIn && (
+              {canCheckIn && !isCoOwner() && (
                 <Button 
                   type="primary" 
                   icon={<CheckCircleOutlined />}
@@ -174,7 +183,7 @@ const BookingDetailModal = ({ visible, onCancel, booking, onUpdate, groupId, veh
                   Check In
                 </Button>
               )}
-              {canCheckOut && (
+              {canCheckOut && !isCoOwner() && (
                 <Button 
                   type="primary" 
                   icon={<CheckCircleOutlined />}
