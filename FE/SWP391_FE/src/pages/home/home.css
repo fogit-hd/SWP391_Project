@@ -1174,3 +1174,52 @@
 .profile-descriptions .ant-descriptions-item-content {
   color: #262626 !important;
 }
+
+/* Notification Drawer Styles */
+.notifications-drawer .ant-drawer-header {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  padding: 16px 24px;
+}
+
+.notifications-drawer .ant-drawer-body {
+  padding: 16px;
+  background: #fafafa;
+}
+
+/* Notification Item Animations */
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.notification-item {
+  background: #fff !important;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.notification-item:hover {
+  transform: translateX(-4px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-color: rgba(24, 144, 255, 0.3);
+}
+
+.notification-item.is-unread {
+  background: linear-gradient(90deg, rgba(24, 144, 255, 0.08) 0%, #fff 100%) !important;
+  border-left: 3px solid #1890ff;
+  font-weight: 600;
+}
+
+.notification-item.is-read {
+  opacity: 0.85;
+}
+
+.notification-item.is-read:hover {
+  opacity: 1;
+}

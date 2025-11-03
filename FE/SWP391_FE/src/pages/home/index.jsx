@@ -14,6 +14,10 @@ import {
   Modal,
   Spin,
   Tag,
+  Badge,
+  Drawer,
+  List,
+  Empty,
 } from "antd";
 import {
   ThunderboltOutlined,
@@ -27,6 +31,7 @@ import {
   CheckOutlined,
   CarOutlined,
   LoginOutlined,
+  BellOutlined,
 } from "@ant-design/icons";
 import { Link, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
@@ -41,6 +46,7 @@ import FadeInSection from "../../components/animated/FadeInSection";
 import CardSwap, { Card as SwapCard } from "../../components/animated/CardSwap";
 import StarBorder from "../../components/animated/StarBorder";
 import Orb from "../../components/animated/Orb";
+import NotificationDetailPanel from "../../components/animated/NotificationDetailPanel";
 
 const { Header, Content, Footer } = Layout;
 const { Title, Paragraph, Text } = Typography;
@@ -58,6 +64,15 @@ const Homepage = () => {
   const [hasContract, setHasContract] = useState(false);
   const [isCheckingContract, setIsCheckingContract] = useState(false);
   const navigate = useNavigate();
+
+  // Notifications state
+  const [notifications, setNotifications] = useState([]);
+  const [isNotifLoading, setIsNotifLoading] = useState(false);
+  const [isNotifDrawerOpen, setIsNotifDrawerOpen] = useState(false);
+  const [selectedNotification, setSelectedNotification] = useState(null);
+  const [isDetailOpen, setIsDetailOpen] = useState(false);
+
+  const unreadCount = notifications.filter((n) => !n.isRead).length;
 
   // Debug: Log user state changes
   useEffect(() => {
@@ -155,32 +170,50 @@ const Homepage = () => {
     try {
       const response = await api.get("/contracts/my");
       console.log("Contract check response:", response.data);
-      
-      if (response.data && response.data.data && Array.isArray(response.data.data)) {
+
+      if (
+        response.data &&
+        response.data.data &&
+        Array.isArray(response.data.data)
+      ) {
         // Check if there's at least one contract with status "APPROVED"
-        const hasApprovedContract = response.data.data.some(contract => contract.status === "APPROVED");
+        const hasApprovedContract = response.data.data.some(
+          (contract) => contract.status === "APPROVED"
+        );
         setHasContract(hasApprovedContract);
         console.log("User has approved contracts:", hasApprovedContract);
-        console.log("All contracts:", response.data.data.map(c => ({ id: c.id, status: c.status })));
+        console.log(
+          "All contracts:",
+          response.data.data.map((c) => ({ id: c.id, status: c.status }))
+        );
       } else {
         setHasContract(false);
       }
     } catch (error) {
       console.error("Error checking contracts:", error);
       setHasContract(false);
-      
+
       // If 401, try to refresh token
       if (error.response?.status === 401) {
         try {
           await refreshToken();
           // Retry the contract check
           const retryResponse = await api.get("/contracts/my");
-          if (retryResponse.data && retryResponse.data.data && Array.isArray(retryResponse.data.data)) {
-            const hasApprovedContract = retryResponse.data.data.some(contract => contract.status === "APPROVED");
+          if (
+            retryResponse.data &&
+            retryResponse.data.data &&
+            Array.isArray(retryResponse.data.data)
+          ) {
+            const hasApprovedContract = retryResponse.data.data.some(
+              (contract) => contract.status === "APPROVED"
+            );
             setHasContract(hasApprovedContract);
           }
         } catch (refreshError) {
-          console.error("Failed to refresh token for contract check:", refreshError);
+          console.error(
+            "Failed to refresh token for contract check:",
+            refreshError
+          );
           setHasContract(false);
         }
       }
@@ -189,10 +222,59 @@ const Homepage = () => {
     }
   };
 
+  // Notification helpers
+  const formatRelativeTime = (iso) => {
+    if (!iso) return "";
+    const created = new Date(iso);
+    const now = new Date();
+    const diffMs = Math.max(0, now.getTime() - created.getTime());
+    const minutes = Math.floor(diffMs / 60000);
+    if (minutes < 1) return "vừa xong";
+    if (minutes < 60) return `${minutes}p trước`;
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `${hours}h trước`;
+    const days = Math.floor(hours / 24);
+    return `${days} ngày trước`;
+  };
+
+  const fetchNotifications = async () => {
+    if (!isAuthenticated) return;
+    setIsNotifLoading(true);
+    try {
+      const res = await api.get("/notifications");
+      const list = res?.data?.data || [];
+      setNotifications(list);
+    } catch (error) {
+      console.error("Failed to load notifications", error);
+    } finally {
+      setIsNotifLoading(false);
+    }
+  };
+
+  const markNotificationRead = async (id) => {
+    try {
+      await api.put(`/notifications/${id}/read`);
+      setNotifications((prev) =>
+        prev.map((n) => (n.id === id ? { ...n, isRead: true } : n))
+      );
+    } catch (error) {
+      console.error("Failed to mark notification read", error);
+    }
+  };
+
+  const markAllNotificationsRead = async () => {
+    try {
+      await api.put("/notifications/read-all");
+      setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
+    } catch (error) {
+      console.error("Failed to mark all notifications read", error);
+    }
+  };
+
   // Function to handle booking request navigation
   const handleBookingRequest = () => {
     if (!isAuthenticated) {
-      toast.warning("You have not login yet. Please login first!", {
+      toast.warning("Bạn chưa đăng nhập. Vui lòng đăng nhập trước!", {
         position: "top-center",
         autoClose: 3000,
       });
@@ -201,10 +283,10 @@ const Homepage = () => {
     }
 
     if (!hasContract) {
-      toast.warning("You need to have an approved contract to make booking requests!", {
-        position: "top-center",
-        autoClose: 3000,
-      });
+      toast.warning(
+        "Bạn cần có hợp đồng đã được duyệt để tạo yêu cầu đặt lịch!",
+        { position: "top-center", autoClose: 3000 }
+      );
       return;
     }
 
@@ -213,7 +295,7 @@ const Homepage = () => {
 
   // Function to handle user logout
   const handleLogout = () => {
-    console.log("Logging out user...");
+    console.log("Đang đăng xuất người dùng...");
     navigate("/login");
     // Clear all auth-related state
     setProfileData(null);
@@ -228,10 +310,10 @@ const Homepage = () => {
     setAuthKey((prev) => prev + 1);
 
     // Show success message
-    toast.success("Logged out successfully!");
+    toast.success("Đăng xuất thành công!");
 
     // Stay on homepage - no navigation
-    console.log("User logged out, staying on homepage");
+    console.log("Đã đăng xuất, ở lại trang chủ");
   };
 
   // Function to handle profile menu click
@@ -426,7 +508,7 @@ const Homepage = () => {
   // Helper function to check authentication before navigation
   const handleProtectedNavigation = (path) => {
     if (!isAuthenticated) {
-      toast.warning("You have not login yet. Please login first!", {
+      toast.warning("Bạn chưa đăng nhập. Vui lòng đăng nhập trước!", {
         position: "top-center",
         autoClose: 3000,
       });
@@ -439,7 +521,7 @@ const Homepage = () => {
 
   const handleUpdateProfile = () => {
     if (!isAuthenticated) {
-      toast.warning("You have not login yet. Please login first!", {
+      toast.warning("Bạn chưa đăng nhập. Vui lòng đăng nhập trước!", {
         position: "top-center",
         autoClose: 3000,
       });
@@ -636,19 +718,19 @@ const Homepage = () => {
     {
       key: "profile",
       icon: <UserOutlined />,
-      label: "My Profile",
+      label: "Hồ sơ của tôi",
       onClick: handleProfileClick,
     },
     {
       key: "update-profile",
       icon: <SettingOutlined />,
-      label: "Update Profile",
+      label: "Cập nhật hồ sơ",
       onClick: handleUpdateProfile,
     },
     {
       key: "change-password",
       icon: <CheckOutlined />,
-      label: "Change Password",
+      label: "Đổi mật khẩu",
       onClick: () => handleProtectedNavigation("/change-password"),
     },
     // Only show My Vehicle for Co-owner
@@ -657,7 +739,7 @@ const Homepage = () => {
           {
             key: "my-vehicle",
             icon: <CarOutlined />,
-            label: "My Vehicle",
+            label: "Xe của tôi",
             onClick: () => handleProtectedNavigation("/my-vehicle"),
           },
         ]
@@ -665,7 +747,7 @@ const Homepage = () => {
     {
       key: "history",
       icon: <HistoryOutlined />,
-      label: "History",
+      label: "Lịch sử",
       onClick: () => handleProtectedNavigation("/payment-history"),
     },
     {
@@ -674,56 +756,58 @@ const Homepage = () => {
     {
       key: "logout",
       icon: <LogoutOutlined />,
-      label: "Logout",
+      label: "Đăng xuất",
       onClick: handleLogout,
     },
   ];
 
   const items = [
     {
-      label: "About",
+      label: "Thông tin",
       bgColor: "#0D0716",
       textColor: "#fff",
       links: [
         {
           key: "group",
-          label: "Group",
+          label: "Nhóm",
           onClick: () => handleProtectedNavigation("/view-mygroup"),
         },
         {
           key: "contract",
-          label: "Contract",
+          label: "Hợp đồng",
           onClick: () => handleProtectedNavigation("/view-mycontract"),
         },
         {
           key: "vehicle",
-          label: "Vehicle",
+          label: "Xe",
           onClick: () => handleProtectedNavigation("/view-myvehicle"),
         },
       ],
     },
     {
-      label: "Service",
+      label: "Dịch vụ",
       bgColor: "#0D0716",
       textColor: "#fff",
       links: [
         {
           key: "service-request",
-          label: "Service Request",
+          label: "Yêu cầu dịch vụ",
           onClick: () => handleProtectedNavigation("/create-service-request"),
         },
         // Only show Booking Request if user is authenticated and has contracts
-        ...(isAuthenticated && hasContract ? [
-          {
-            key: "booking-request",
-            label: "Booking Request",
-            onClick: handleBookingRequest,
-          }
-        ] : []),
+        ...(isAuthenticated && hasContract
+          ? [
+              {
+                key: "booking-request",
+                label: "Đặt lịch sử dụng",
+                onClick: handleBookingRequest,
+              },
+            ]
+          : []),
       ],
     },
     {
-      label: "Contact",
+      label: "Liên hệ",
       bgColor: "#0D0716",
       textColor: "#fff",
       links: [
@@ -754,6 +838,130 @@ const Homepage = () => {
         userMenuItems={userMenuItems}
         onProfileClick={handleProfileClick}
         isAuthenticated={isAuthenticated}
+        rightExtras={
+          isAuthenticated ? (
+            <Badge count={unreadCount} size="small">
+              <BellOutlined
+                style={{ fontSize: 22, color: "#fff", cursor: "pointer" }}
+                onClick={() => {
+                  setIsNotifDrawerOpen(true);
+                  fetchNotifications();
+                }}
+              />
+            </Badge>
+          ) : null
+        }
+      />
+
+      {/* Notifications Drawer */}
+      <Drawer
+        title={
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+            }}
+          >
+            <span style={{ fontWeight: 600, fontSize: 18 }}>Thông báo</span>
+            <Button
+              size="small"
+              onClick={markAllNotificationsRead}
+              disabled={!notifications.length || unreadCount === 0}
+              style={{ borderRadius: 6 }}
+            >
+              Đánh dấu tất cả đã đọc
+            </Button>
+          </div>
+        }
+        placement="right"
+        onClose={() => {
+          setIsNotifDrawerOpen(false);
+          setIsDetailOpen(false);
+        }}
+        open={isNotifDrawerOpen}
+        width={420}
+        className="notifications-drawer"
+      >
+        <List
+          loading={isNotifLoading}
+          locale={{ emptyText: <Empty description="Không có thông báo" /> }}
+          dataSource={notifications}
+          renderItem={(item, index) => (
+            <List.Item
+              className={`notification-item ${
+                item.isRead ? "is-read" : "is-unread"
+              }`}
+              style={{
+                cursor: "pointer",
+                borderRadius: 10,
+                marginBottom: 12,
+                padding: "14px 16px",
+                transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+                animation: `slideInRight 0.4s cubic-bezier(0.4, 0, 0.2, 1) ${
+                  index * 0.05
+                }s both`,
+              }}
+              onClick={() => {
+                setSelectedNotification(item);
+                setIsDetailOpen(true);
+                if (!item.isRead) {
+                  markNotificationRead(item.id);
+                }
+              }}
+            >
+              <List.Item.Meta
+                title={
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      gap: 8,
+                      alignItems: "flex-start",
+                    }}
+                  >
+                    <span
+                      style={{
+                        fontWeight: item.isRead ? 500 : 600,
+                        fontSize: 14,
+                        flex: 1,
+                        lineHeight: 1.4,
+                      }}
+                    >
+                      {item.title}
+                    </span>
+                    <span
+                      style={{
+                        color: "#8c8c8c",
+                        fontSize: 11,
+                        whiteSpace: "nowrap",
+                        marginTop: 2,
+                      }}
+                    >
+                      {formatRelativeTime(item.createdAt)}
+                    </span>
+                  </div>
+                }
+                // description={
+                //   !item.isRead ? (
+                //     <Tag color="red" style={{ marginTop: 6, fontSize: 11, borderRadius: 4 }}>
+                //       Chưa đọc
+                //     </Tag>
+                //   ) : null
+                // }
+              />
+            </List.Item>
+          )}
+        />
+      </Drawer>
+
+      {/* Animated Notification Detail Panel */}
+      <NotificationDetailPanel
+        notification={selectedNotification}
+        isOpen={isNotifDrawerOpen && isDetailOpen}
+        onClose={() => setIsDetailOpen(false)}
+        onMarkRead={markNotificationRead}
+        formatRelativeTime={formatRelativeTime}
       />
 
       <Content className="page-content">
@@ -769,12 +977,12 @@ const Homepage = () => {
             <div className="hero-split-layout">
               <div className="hero-content-left">
                 <Title level={1} className="hero-title">
-                  Share the Future.
+                  Share The Future.
                 </Title>
                 <Paragraph className="hero-paragraph">
-                  Experience premium electric vehicles without the full cost.
-                  Join our co-ownership community and share the benefits of
-                  sustainable transportation.
+                  Trải nghiệm xe điện cao cấp mà không tốn toàn bộ chi phí. Tham
+                  gia cộng đồng đồng sở hữu và chia sẻ lợi ích của giao thông
+                  bền vững.
                 </Paragraph>
                 <StarBorder
                   type="primary"
@@ -783,7 +991,7 @@ const Homepage = () => {
                   onClick={() => handleProtectedNavigation("/view-mygroup")}
                   style={{ cursor: "pointer" }}
                 >
-                  Join Co-Ownership Now
+                  Tham gia đồng sở hữu ngay
                 </StarBorder>
               </div>
 
@@ -799,44 +1007,43 @@ const Homepage = () => {
                   easing="elastic"
                 >
                   <SwapCard>
-                    <div className="card-badge-hero">Reliable</div>
+                    <div className="card-badge-hero">Đáng tin cậy</div>
                     <div className="feature-icon-hero">
                       <RocketOutlined />
                     </div>
                     <Title level={2} className="feature-title-hero">
-                      Cost Savings
+                      Tiết kiệm chi phí
                     </Title>
                     <Paragraph className="feature-text-hero">
-                      Save up to 70% on electric vehicle costs. Split purchase
-                      costs, insurance, maintenance, and charging expenses.
+                      Chia sẻ chi phí mua, bảo hiểm, bảo dưỡng và sạc.
                     </Paragraph>
                   </SwapCard>
 
                   <SwapCard>
-                    <div className="card-badge-hero">Smooth</div>
+                    <div className="card-badge-hero">Mượt mà</div>
                     <div className="feature-icon-hero">
                       <FireOutlined />
                     </div>
                     <Title level={2} className="feature-title-hero">
-                      Premium Access
+                      Trải nghiệm cao cấp
                     </Title>
                     <Paragraph className="feature-text-hero">
-                      Access top-tier electric vehicles and bikes. Drive Tesla,
-                      BMW, and other premium EVs.
+                      Tiếp cận các mẫu xe điện hàng đầu như Tesla, BMW và nhiều
+                      hơn nữa.
                     </Paragraph>
                   </SwapCard>
 
                   <SwapCard>
-                    <div className="card-badge-hero">Customizable</div>
+                    <div className="card-badge-hero">Tùy biến</div>
                     <div className="feature-icon-hero">
                       <ThunderboltOutlined />
                     </div>
                     <Title level={2} className="feature-title-hero">
-                      Flexible Usage
+                      Linh hoạt sử dụng
                     </Title>
                     <Paragraph className="feature-text-hero">
-                      Use vehicles when you need them, share costs when you
-                      don't. Book through our app easily.
+                      Dùng khi cần, chia sẻ chi phí khi không dùng. Đặt lịch dễ
+                      dàng qua ứng dụng.
                     </Paragraph>
                   </SwapCard>
                 </CardSwap>
@@ -851,7 +1058,7 @@ const Homepage = () => {
             <Row justify="center" className="section-header">
               <Col>
                 <Title level={1} className="section-title">
-                  Trusted by Co-Owners
+                  Được tin dùng bởi cộng đồng
                 </Title>
               </Col>
             </Row>
@@ -885,11 +1092,11 @@ const Homepage = () => {
             <div className="cta-overlay" />
             <div className="cta-content">
               <Title level={1} className="cta-title">
-                Ready to Start Sharing?
+                Sẵn sàng bắt đầu chia sẻ?
               </Title>
               <Paragraph className="cta-paragraph">
-                Join our co-ownership community today and start saving on
-                premium electric vehicles.
+                Tham gia cộng đồng đồng sở hữu ngay hôm nay để bắt đầu tiết
+                kiệm.
               </Paragraph>
 
               <StarBorder
@@ -899,32 +1106,31 @@ const Homepage = () => {
                 onClick={() => handleProtectedNavigation("/view-mygroup")}
                 style={{ cursor: "pointer" }}
               >
-                Start Co-Owning
+                Bắt đầu đồng sở hữu
               </StarBorder>
             </div>
           </div>
         </FadeInSection>
       </Content>
 
-      {/* Footer */}
+      {/* Chân trang */}
       <Footer className="site-footer">
         <Row gutter={[32, 32]} className="footer-content">
           <Col xs={24} md={12}>
             <Title level={5} className="footer-brand-title">
-              EV CoShare - Electric Vehicle Co-Ownership
+              EV CoShare - Đồng sở hữu xe điện
             </Title>
             <Paragraph className="footer-description">
-              Share the future of sustainable transportation. Join our
-              co-ownership community and access premium electric vehicles at a
-              fraction of the cost.
+              Chia sẻ tương lai giao thông bền vững. Tham gia cộng đồng để trải
+              nghiệm xe điện cao cấp với chi phí hợp lý.
             </Paragraph>
           </Col>
           <Col xs={24} md={7}>
             <Title level={6} className="footer-section-title">
-              Company
+              Công ty
             </Title>
             <Space direction="vertical" size="small" className="footer-links">
-              {["How It Works"].map((item) => (
+              {["Cách hoạt động"].map((item) => (
                 <a key={item} href="/" className="footer-link">
                   {item}
                 </a>
@@ -933,7 +1139,7 @@ const Homepage = () => {
           </Col>
           <Col xs={24} md={5}>
             <Title level={4} className="footer-section-title">
-              Follow Us
+              Theo dõi chúng tôi
             </Title>
             <Space direction="vertical" size="small" className="footer-links">
               {["Facebook"].map((item) => (
@@ -951,7 +1157,7 @@ const Homepage = () => {
         <Divider className="footer-divider" />
         <div className="footer-copyright">
           <Text className="copyright-text">
-            &copy; {new Date().getFullYear()} EV CoShare. All Rights Reserved.
+            &copy; {new Date().getFullYear()} EV CoShare. Bản quyền đã đăng ký.
           </Text>
         </div>
       </Footer>
@@ -993,14 +1199,14 @@ const Homepage = () => {
                 <div className="avatar-overlay">
                   <div className="avatar-upload-content">
                     <CameraOutlined className="camera-icon" />
-                    <div className="upload-text">Change Avatar</div>
+                    <div className="upload-text">Đổi ảnh đại diện</div>
                   </div>
                 </div>
               </label>
             </div>
             <div className="profile-modal-title-content">
               <Title level={2} className="profile-modal-name">
-                {profileData?.fullName || "User Profile"}
+                {profileData?.fullName || "Hồ sơ người dùng"}
               </Title>
               <Text type="secondary" className="profile-modal-email">
                 {profileData?.email || ""}
@@ -1012,7 +1218,7 @@ const Homepage = () => {
         onCancel={handleProfileModalClose}
         footer={[
           <Button key="close" type="primary" onClick={handleProfileModalClose}>
-            Close
+            Đóng
           </Button>,
         ]}
         width={700}
@@ -1021,20 +1227,22 @@ const Homepage = () => {
         {isProfileLoading ? (
           <div className="profile-loading-container">
             <Spin size="large" />
-            <div className="profile-loading-text">Loading profile data...</div>
+            <div className="profile-loading-text">
+              Đang tải dữ liệu hồ sơ...
+            </div>
           </div>
         ) : (
           <div className="profile-content">
             {/* Personal Information Section */}
             <Card
-              title="Personal Information"
+              title="Thông tin cá nhân"
               className="profile-section-card profile-section-spacing"
               size="small"
             >
               <Row gutter={[16, 16]}>
                 <Col span={12}>
                   <div className="profile-field">
-                    <Text strong>Phone:</Text>
+                    <Text strong>Số điện thoại:</Text>
                     <div className="profile-value">
                       {profileData?.phone || "N/A"}
                     </div>
@@ -1042,11 +1250,11 @@ const Homepage = () => {
                 </Col>
                 <Col span={12}>
                   <div className="profile-field">
-                    <Text strong>Gender:</Text>
+                    <Text strong>Giới tính:</Text>
                     <div className="profile-value">
                       {profileData?.gender !== undefined ? (
                         <Tag color={profileData.gender ? "blue" : "pink"}>
-                          {profileData.gender ? "Male" : "Female"}
+                          {profileData.gender ? "Nam" : "Nữ"}
                         </Tag>
                       ) : (
                         "N/A"
@@ -1056,7 +1264,7 @@ const Homepage = () => {
                 </Col>
                 <Col span={24}>
                   <div className="profile-field">
-                    <Text strong>Date of Birth:</Text>
+                    <Text strong>Ngày sinh:</Text>
                     <div className="profile-value">
                       {profileData?.dateOfBirth
                         ? new Date(profileData.dateOfBirth).toLocaleDateString(
@@ -1076,14 +1284,14 @@ const Homepage = () => {
 
             {/* Identity Information Section */}
             <Card
-              title="Identity Information"
+              title="Thông tin định danh"
               className="profile-section-card profile-section-spacing"
               size="small"
             >
               <Row gutter={[16, 16]}>
                 <Col span={12}>
                   <div className="profile-field">
-                    <Text strong>ID Number:</Text>
+                    <Text strong>Số CMND/CCCD:</Text>
                     <div className="profile-value">
                       {profileData?.idNumber || "N/A"}
                     </div>
@@ -1091,7 +1299,7 @@ const Homepage = () => {
                 </Col>
                 <Col span={12}>
                   <div className="profile-field">
-                    <Text strong>Place of Birth:</Text>
+                    <Text strong>Nơi sinh:</Text>
                     <div className="profile-value">
                       {profileData?.placeOfBirth || "N/A"}
                     </div>
@@ -1099,7 +1307,7 @@ const Homepage = () => {
                 </Col>
                 <Col span={24}>
                   <div className="profile-field">
-                    <Text strong>Address:</Text>
+                    <Text strong>Địa chỉ:</Text>
                     <div className="profile-value">
                       {profileData?.address || "N/A"}
                     </div>
@@ -1110,14 +1318,14 @@ const Homepage = () => {
 
             {/* Document Information Section */}
             <Card
-              title="Document Information"
+              title="Thông tin giấy tờ"
               className="profile-section-card"
               size="small"
             >
               <Row gutter={[16, 16]}>
                 <Col span={12}>
                   <div className="profile-field">
-                    <Text strong>Issue Date:</Text>
+                    <Text strong>Ngày cấp:</Text>
                     <div className="profile-value">
                       {profileData?.issueDate
                         ? new Date(profileData.issueDate).toLocaleDateString(
@@ -1134,7 +1342,7 @@ const Homepage = () => {
                 </Col>
                 <Col span={12}>
                   <div className="profile-field">
-                    <Text strong>Expiry Date:</Text>
+                    <Text strong>Ngày hết hạn:</Text>
                     <div className="profile-value">
                       {profileData?.expiryDate
                         ? new Date(profileData.expiryDate).toLocaleDateString(
@@ -1151,7 +1359,7 @@ const Homepage = () => {
                 </Col>
                 <Col span={24}>
                   <div className="profile-field">
-                    <Text strong>Place of Issue:</Text>
+                    <Text strong>Nơi cấp:</Text>
                     <div className="profile-value">
                       {profileData?.placeOfIssue || "N/A"}
                     </div>

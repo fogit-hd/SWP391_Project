@@ -76,6 +76,22 @@
   transform: translate(-50%, -50%);
 }
 
+/* Right side container (bell + avatar/login) */
+.nav-right-container {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.nav-right-extras {
+  display: inline-flex;
+  align-items: center;
+}
+
 .logo {
   height: 28px;
   font-size: 24px;
