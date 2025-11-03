@@ -1642,12 +1642,14 @@ const MyGroup = () => {
                                         ? "Regenerate invite code"
                                         : "Create invite code"}
                                     </Button>
-                                    <Link
-                                      to="/create-econtract"
-                                      state={{ groupId: selectedGroup?.id }}
-                                    >
-                                      <Button>Create contract</Button>
-                                    </Link>
+                                    {!selectedGroup?._hasContract ? (
+                                      <Link
+                                        to="/create-econtract"
+                                        state={{ groupId: selectedGroup?.id }}
+                                      >
+                                        <Button>Create contract</Button>
+                                      </Link>
+                                    ) : null}
                                     {inviteCode ? (
                                       <Space>
                                         <Tag color="purple">
@@ -1674,6 +1676,22 @@ const MyGroup = () => {
                                   </Space>
                                 </div>
                               )}
+
+                              {/* If the group already has a contract, show a Booking CTA */}
+                              {selectedGroup?._hasContract ? (
+                                <div style={{ marginBottom: 12 }}>
+                                  <Space>
+                                    <Link
+                                      to="/booking"
+                                      state={{ groupId: selectedGroup?.id }}
+                                    >
+                                      <Button className="booking-btn" type="primary">
+                                        Go to Booking
+                                      </Button>
+                                    </Link>
+                                  </Space>
+                                </div>
+                              ) : null}
                               <Divider style={{ margin: "12px 0" }} />
                               <List
                                 loading={membersLoading}
@@ -1745,7 +1763,7 @@ const MyGroup = () => {
                           label: "Vehicles",
                           children: (
                             <>
-                              {iAmOwner && (
+                              {iAmOwner && vehicles && vehicles.length === 0 && (
                                 <div style={{ marginBottom: 12 }}>
                                   <Space>
                                     <Button onClick={openAttachModal}>
@@ -1760,50 +1778,7 @@ const MyGroup = () => {
                                 rowKey={(item) => item.id}
                                 dataSource={vehicles}
                                 renderItem={(v) => (
-                                  <List.Item
-                                    actions={(() => {
-                                      const disabled = togglingVehicleIds.has(
-                                        v.id
-                                      );
-                                      return [
-                                        <Tag
-                                          color={v.isActive ? "green" : "red"}
-                                        >
-                                          {v.isActive ? "Active" : "Inactive"}
-                                        </Tag>,
-                                        iAmOwner ? (
-                                          <Button
-                                            type="link"
-                                            disabled={disabled}
-                                            onClick={() =>
-                                              toggleVehicleStatus(v)
-                                            }
-                                          >
-                                            {v.isActive
-                                              ? "Deactivate"
-                                              : "Activate"}
-                                          </Button>
-                                        ) : null,
-                                        iAmOwner && !v.isActive ? (
-                                          <Popconfirm
-                                            key="detach"
-                                            title="Detach this vehicle from group?"
-                                            onConfirm={() =>
-                                              detachVehicle(v.id)
-                                            }
-                                          >
-                                            <Button
-                                              danger
-                                              type="link"
-                                              disabled={disabled}
-                                            >
-                                              Detach
-                                            </Button>
-                                          </Popconfirm>
-                                        ) : null,
-                                      ].filter(Boolean);
-                                    })()}
-                                  >
+                                  <List.Item>
                                     {(() => {
                                       const displayName =
                                         v.vehicleName ||
@@ -1816,18 +1791,73 @@ const MyGroup = () => {
                                         .toString()
                                         .slice(0, 1)
                                         .toUpperCase();
+                                      const disabled = togglingVehicleIds.has(v.id);
                                       return (
-                                        <List.Item.Meta
-                                          avatar={<Avatar>{avatarText}</Avatar>}
-                                          title={displayName}
-                                          description={
-                                            v.licensePlate ? (
-                                              <span>
-                                                Plate: {v.licensePlate}
-                                              </span>
-                                            ) : null
-                                          }
-                                        />
+                                        <>
+                                          <List.Item.Meta
+                                            className="vehicle-meta"
+                                            avatar={<Avatar>{avatarText}</Avatar>}
+                                            title={displayName}
+                                            description={
+                                              <>
+                                                <div className="vehicle-info-grid">
+                                                  <div className="vehicle-info-row">
+                                                    <div className="vehicle-info-label">Plate</div>
+                                                    <div className="vehicle-info-val">{v.plateNumber || v.licensePlate || "-"}</div>
+                                                  </div>
+                                                  <div className="vehicle-info-row">
+                                                    <div className="vehicle-info-label">Make</div>
+                                                    <div className="vehicle-info-val">{v.make || v.brand || v.manufacturer || "-"}</div>
+                                                  </div>
+                                                  <div className="vehicle-info-row">
+                                                    <div className="vehicle-info-label">Year</div>
+                                                    <div className="vehicle-info-val">{v.modelYear || v.year || "-"}</div>
+                                                  </div>
+                                                  <div className="vehicle-info-row">
+                                                    <div className="vehicle-info-label">Color</div>
+                                                    <div className="vehicle-info-val">{v.color || v.colour || "-"}</div>
+                                                  </div>
+                                                  <div className="vehicle-info-row">
+                                                    <div className="vehicle-info-label">Battery (kWh)</div>
+                                                    <div className="vehicle-info-val">{v.batteryCapacityKwh || v.batteryKwh || v.battery_capacity || "-"}</div>
+                                                  </div>
+                                                  <div className="vehicle-info-row">
+                                                    <div className="vehicle-info-label">Range (km)</div>
+                                                    <div className="vehicle-info-val">{v.rangeKm || v.range || v.range_km || "-"}</div>
+                                                  </div>
+                                                </div>
+
+                                                <div className="vehicle-actions">
+                                                  <Tag color={v.isActive ? "green" : "red"}>
+                                                    {v.isActive ? "Active" : "Inactive"}
+                                                  </Tag>
+                                                  {iAmOwner ? (
+                                                    <>
+                                                      <Button
+                                                        type="link"
+                                                        disabled={disabled}
+                                                        onClick={() => toggleVehicleStatus(v)}
+                                                      >
+                                                        {v.isActive ? "Deactivate" : "Activate"}
+                                                      </Button>
+                                                      {!v.isActive ? (
+                                                        <Popconfirm
+                                                          key="detach"
+                                                          title="Detach this vehicle from group?"
+                                                          onConfirm={() => detachVehicle(v.id)}
+                                                        >
+                                                          <Button danger type="link" disabled={disabled}>
+                                                            Detach
+                                                          </Button>
+                                                        </Popconfirm>
+                                                      ) : null}
+                                                    </>
+                                                  ) : null}
+                                                </div>
+                                              </>
+                                            }
+                                          />
+                                        </>
                                       );
                                     })()}
                                   </List.Item>
