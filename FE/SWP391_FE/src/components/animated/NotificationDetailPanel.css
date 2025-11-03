@@ -1,0 +1,110 @@
+.notification-detail-panel {
+  position: fixed;
+  top: 80px;
+  right: 444px; /* 420px drawer width + 24px gap */
+  width: 380px;
+  max-height: 70vh;
+  z-index: 1001;
+  opacity: 0;
+  transform: translateX(20px);
+  transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+              transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: opacity, transform;
+  pointer-events: none;
+}
+
+.notification-detail-panel.is-visible {
+  opacity: 1;
+  transform: translateX(0);
+  pointer-events: auto;
+}
+
+.notification-detail-card {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  border-radius: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  overflow: hidden;
+  background: #fff;
+  animation: cardPulse 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes cardPulse {
+  0% {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.notification-detail-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0;
+  gap: 12px;
+}
+
+.notification-detail-title {
+  font-weight: 600;
+  font-size: 16px;
+  color: #1a1a1a;
+  flex: 1;
+  line-height: 1.4;
+}
+
+.notification-close-btn {
+  color: #8c8c8c;
+  transition: all 0.2s ease;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.notification-close-btn:hover {
+  color: #ff4d4f;
+  background-color: rgba(255, 77, 79, 0.1);
+  transform: rotate(90deg);
+}
+
+.notification-detail-time {
+  color: #8c8c8c;
+  font-size: 13px;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.notification-detail-message {
+  color: #434343;
+  font-size: 14px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1200px) {
+  .notification-detail-panel {
+    right: 380px;
+    width: 320px;
+  }
+}
+
+@media (max-width: 768px) {
+  .notification-detail-panel {
+    position: fixed;
+    top: auto;
+    bottom: 20px;
+    right: 20px;
+    left: 20px;
+    width: auto;
+    max-height: 50vh;
+  }
+}

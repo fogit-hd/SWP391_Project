@@ -20,6 +20,7 @@ const CardNav = ({
   userMenuItems = [],
   onProfileClick,
   isAuthenticated = false, // Add isAuthenticated prop
+  rightExtras = null,
 }) => {
   const [isHamburgerOpen, setIsHamburgerOpen] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
@@ -181,40 +182,48 @@ const CardNav = ({
             }
           </div>
 
-          {isAuthenticated && user ? (
-            <Dropdown
-              menu={{ items: userMenuItems }}
-              placement="bottomRight"
-              trigger={["hover"]}
-            >
-              <div
-                className="nav-user-profile"
-                onClick={onProfileClick}
-                style={{ cursor: "pointer" }}
-              >
-                <Avatar
-                  size={40}
-                  src={profileData?.imageUrl || user.imageUrl}
-                  className="nav-user-avatar"
-                  style={{
-                    border: "2px solid rgba(24, 144, 255, 0.5)",
-                    backgroundColor: "#1890ff",
-                  }}
+          {/* Right side container: extras + avatar/login */}
+          <div className="nav-right-container">
+            {isAuthenticated && user ? (
+              <>
+                {rightExtras ? (
+                  <div className="nav-right-extras">{rightExtras}</div>
+                ) : null}
+                <Dropdown
+                  menu={{ items: userMenuItems }}
+                  placement="bottomRight"
+                  trigger={["hover"]}
                 >
-                  {profileData?.imageUrl || user.imageUrl
-                    ? null
-                    : (profileData?.fullName || user.fullName)?.charAt(0) ||
-                      "U"}
-                </Avatar>
-              </div>
-            </Dropdown>
-          ) : (
-            <Link to="/login">
-              <StarBorderButton color="#40a9ff" speed="4s" thickness={2}>
-                Get Started
-              </StarBorderButton>
-            </Link>
-          )}
+                  <div
+                    className="nav-user-profile"
+                    onClick={onProfileClick}
+                    style={{ cursor: "pointer" }}
+                  >
+                    <Avatar
+                      size={40}
+                      src={profileData?.imageUrl || user.imageUrl}
+                      className="nav-user-avatar"
+                      style={{
+                        border: "2px solid rgba(24, 144, 255, 0.5)",
+                        backgroundColor: "#1890ff",
+                      }}
+                    >
+                      {profileData?.imageUrl || user.imageUrl
+                        ? null
+                        : (profileData?.fullName || user.fullName)?.charAt(0) ||
+                          "U"}
+                    </Avatar>
+                  </div>
+                </Dropdown>
+              </>
+            ) : (
+              <Link to="/login">
+                <StarBorderButton color="#40a9ff" speed="4s" thickness={2}>
+                  Get Started
+                </StarBorderButton>
+              </Link>
+            )}
+          </div>
         </div>
 
         <div className="card-nav-content" aria-hidden={!isExpanded}>

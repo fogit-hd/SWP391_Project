@@ -498,9 +498,9 @@ const MyGroup = () => {
 
     setPaymentLoading(true);
     try {
-      const baseUrl = "https://swp391-project-evcs.onrender.com";
-      const returnUrl = `${baseUrl}/view-mygroup`;
-      const cancelUrl = `${baseUrl}/view-mygroup`;
+      const baseUrl = " http://localhost:5173";
+      const returnUrl = `${baseUrl}/view-mygroup?invoiceId=${invoiceId}`;
+      const cancelUrl = `${baseUrl}/view-mygroup?invoiceId=${invoiceId}`;
 
       console.log("[PAYMENT] ========== PAYMENT INITIATED ==========");
       console.log("[PAYMENT] Invoice ID:", invoiceId);
