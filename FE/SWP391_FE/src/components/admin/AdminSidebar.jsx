@@ -104,6 +104,11 @@ const getMenuItems = (navigate) => [
         icon: <CarOutlined />,
         label: <Link to="/admin/manage-vehicle">Manage Vehicles</Link>,
       },
+      {
+        key: "manage-vehicle-requests",
+        icon: <FileTextOutlined />,
+        label: <Link to="/admin/manage-vehicle-requests">Manage Vehicle Requests</Link>,
+      },
     ],
   },
   {
