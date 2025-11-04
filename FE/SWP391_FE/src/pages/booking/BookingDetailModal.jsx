@@ -68,12 +68,12 @@ const BookingDetailModal = ({ visible, onCancel, booking, onUpdate, groupId, veh
     setLoading(true);
     try {
       await api.put(`/booking/check-in/${booking.id}`);
-      message.success("Checked in successfully!");
+      message.success("Nhận xe thành công!");
       onUpdate();
       onCancel();
     } catch (error) {
       console.error("Check-in failed:", error);
-      message.error(error.response?.data?.message || "Failed to check in");
+      message.error(error.response?.data?.message || "Không thể nhận xe");
     } finally {
       setLoading(false);
     }
@@ -92,11 +92,11 @@ const BookingDetailModal = ({ visible, onCancel, booking, onUpdate, groupId, veh
     setLoading(true);
     try {
       await api.put(`/booking/cancel/${booking.id}`);
-      message.success("Booking cancelled successfully");
+      message.success("Hủy đặt chỗ thành công");
       onUpdate();
     } catch (error) {
       console.error("Cancel failed:", error);
-      message.error(error.response?.data?.message || "Failed to cancel booking");
+      message.error(error.response?.data?.message || "Không thể hủy đặt chỗ");
     } finally {
       setLoading(false);
     }
@@ -129,17 +129,17 @@ const BookingDetailModal = ({ visible, onCancel, booking, onUpdate, groupId, veh
     const windowEnd = startTime.add(GRACE_WINDOWS.CHECK_IN_AFTER, 'millisecond');
     
     if (now.isBefore(windowStart)) {
-      return { percent: 0, status: 'normal', text: 'Too early to check-in' };
+      return { percent: 0, status: 'normal', text: 'Quá sớm để nhận xe' };
     }
     if (now.isAfter(windowEnd)) {
-      return { percent: 100, status: 'exception', text: 'Check-in window closed' };
+      return { percent: 100, status: 'exception', text: 'Đã hết thời gian nhận xe' };
     }
     
     const totalWindow = windowEnd.diff(windowStart);
     const elapsed = now.diff(windowStart);
     const percent = (elapsed / totalWindow) * 100;
     
-    return { percent, status: 'active', text: 'Check-in available!' };
+    return { percent, status: 'active', text: 'Có thể nhận xe!' };
   };
 
   const checkInProgress = booking.status === 'BOOKED' ? getCheckInProgress() : null;
@@ -150,7 +150,7 @@ const BookingDetailModal = ({ visible, onCancel, booking, onUpdate, groupId, veh
         title={
           <Space>
             <CarOutlined />
-            Booking Details
+            Chi tiết đặt chỗ
           </Space>
         }
         open={visible && !tripScreenVisible}
@@ -159,17 +159,17 @@ const BookingDetailModal = ({ visible, onCancel, booking, onUpdate, groupId, veh
         footer={
           isMyBooking() ? (
             <Space>
-              <Button onClick={onCancel}>Close</Button>
+              <Button onClick={onCancel}>Đóng</Button>
               {canCancel && (
                 <Popconfirm
-                  title="Cancel Booking"
-                  description="Are you sure you want to cancel this booking?"
+                  title="Hủy đặt chỗ"
+                  description="Bạn có chắc chắn muốn hủy đặt chỗ này không?"
                   onConfirm={handleCancel}
-                  okText="Yes"
-                  cancelText="No"
+                  okText="Có"
+                  cancelText="Không"
                 >
                   <Button danger icon={<DeleteOutlined />} loading={loading}>
-                    Cancel Booking
+                    Hủy đặt chỗ
                   </Button>
                 </Popconfirm>
               )}
@@ -180,7 +180,7 @@ const BookingDetailModal = ({ visible, onCancel, booking, onUpdate, groupId, veh
                   onClick={handleCheckIn}
                   loading={loading}
                 >
-                  Check In
+                  Nhận xe
                 </Button>
               )}
               {canCheckOut && !isCoOwner() && (
@@ -190,12 +190,12 @@ const BookingDetailModal = ({ visible, onCancel, booking, onUpdate, groupId, veh
                   onClick={handleCheckOut}
                   loading={loading}
                 >
-                  Check Out
+                  Trả xe
                 </Button>
               )}
             </Space>
           ) : (
-            <Button onClick={onCancel}>Close</Button>
+            <Button onClick={onCancel}>Đóng</Button>
           )
         }
       >
@@ -206,7 +206,7 @@ const BookingDetailModal = ({ visible, onCancel, booking, onUpdate, groupId, veh
               message={
                 <Space>
                   <ClockCircleOutlined />
-                  Time until start: {countdown}
+                  Thời gian đến lúc bắt đầu: {countdown}
                 </Space>
               }
               type={canCheckIn ? "success" : "info"}
@@ -216,8 +216,8 @@ const BookingDetailModal = ({ visible, onCancel, booking, onUpdate, groupId, veh
 
           {booking.status === 'INUSE' && isMyBooking() && (
             <Alert
-              message="Trip in progress"
-              description={canCheckOut ? "You can check out now" : "Please check out after the scheduled end time"}
+              message="Chuyến đi đang diễn ra"
+              description={canCheckOut ? "Bạn có thể trả xe ngay bây giờ" : "Vui lòng trả xe sau thời gian kết thúc đã định"}
               type={canCheckOut ? "success" : "warning"}
               showIcon
             />
@@ -225,8 +225,8 @@ const BookingDetailModal = ({ visible, onCancel, booking, onUpdate, groupId, veh
 
           {booking.status === 'OVERTIME' && isMyBooking() && (
             <Alert
-              message="Overtime - Please check out immediately!"
-              description="You have exceeded your booking time. Additional charges may apply."
+              message="Quá giờ - Vui lòng trả xe ngay lập tức!"
+              description="Bạn đã vượt quá thời gian đặt xe. Phí bổ sung có thể được áp dụng."
               type="error"
               showIcon
             />
@@ -236,7 +236,7 @@ const BookingDetailModal = ({ visible, onCancel, booking, onUpdate, groupId, veh
           {checkInProgress && isMyBooking() && booking.status === 'BOOKED' && (
             <div>
               <div style={{ marginBottom: 8 }}>
-                <strong>Check-in Window:</strong>
+                <strong>Thời gian nhận xe:</strong>
               </div>
               <Progress
                 percent={Math.round(checkInProgress.percent)}
@@ -248,41 +248,41 @@ const BookingDetailModal = ({ visible, onCancel, booking, onUpdate, groupId, veh
 
           {/* Booking Information */}
           <Descriptions bordered column={1}>
-            <Descriptions.Item label="Status">
+            <Descriptions.Item label="Trạng thái">
               <Tag color={BOOKING_STATUS_COLORS[booking.status]}>
                 {BOOKING_STATUS_LABELS[booking.status]}
               </Tag>
             </Descriptions.Item>
-            <Descriptions.Item label="User">
+            <Descriptions.Item label="Người dùng">
               {booking.userName || ''}
-              {isMyBooking() && <Tag color="green" style={{ marginLeft: 8 }}>You</Tag>}
+              {isMyBooking() && <Tag color="green" style={{ marginLeft: 8 }}>Bạn</Tag>}
             </Descriptions.Item>
-            <Descriptions.Item label="Start Time">
+            <Descriptions.Item label="Thời gian bắt đầu">
               {dayjs(booking.startTime).format('YYYY-MM-DD HH:mm')}
             </Descriptions.Item>
-            <Descriptions.Item label="End Time">
+            <Descriptions.Item label="Thời gian kết thúc">
               {dayjs(booking.endTime).format('YYYY-MM-DD HH:mm')}
             </Descriptions.Item>
-            <Descriptions.Item label="Duration">
-              {dayjs(booking.endTime).diff(dayjs(booking.startTime), 'hour', true).toFixed(1)} hours
+            <Descriptions.Item label="Thời lượng">
+              {dayjs(booking.endTime).diff(dayjs(booking.startTime), 'hour', true).toFixed(1)} giờ
             </Descriptions.Item>
             {booking.notes && (
-              <Descriptions.Item label="Notes">
+              <Descriptions.Item label="Ghi chú">
                 {booking.notes}
               </Descriptions.Item>
             )}
             {booking.checkInTime && (
-              <Descriptions.Item label="Check-in Time">
+              <Descriptions.Item label="Thời gian nhận xe">
                 {dayjs(booking.checkInTime).format('YYYY-MM-DD HH:mm')}
               </Descriptions.Item>
             )}
             {booking.checkOutTime && (
-              <Descriptions.Item label="Check-out Time">
+              <Descriptions.Item label="Thời gian trả xe">
                 {dayjs(booking.checkOutTime).format('YYYY-MM-DD HH:mm')}
               </Descriptions.Item>
             )}
             {booking.damageReport && (
-              <Descriptions.Item label="Damage Report">
+              <Descriptions.Item label="Báo cáo hư hỏng">
                 <Alert message={booking.damageReport} type="warning" />
               </Descriptions.Item>
             )}
