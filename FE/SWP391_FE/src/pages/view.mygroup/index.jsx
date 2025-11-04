@@ -383,7 +383,10 @@ const MyGroup = () => {
     }
 
     // If not forcing and already loaded or loading, return
-    if (!force && (votingStatuses[requestId] || loadingVotingStatuses[requestId])) {
+    if (
+      !force &&
+      (votingStatuses[requestId] || loadingVotingStatuses[requestId])
+    ) {
       return; // Already loaded or loading
     }
 
@@ -412,9 +415,18 @@ const MyGroup = () => {
       console.log("[FETCH-VOTING-STATUS] Request ID:", requestId);
       console.log("[FETCH-VOTING-STATUS] Voting data:", votingData);
       console.log("[FETCH-VOTING-STATUS] Total members:", totalMembers);
-      console.log("[FETCH-VOTING-STATUS] Voted count:", votingData.filter((v) => v.decision !== "PENDING").length);
-      console.log("[FETCH-VOTING-STATUS] Confirmed users:", votingData.filter((v) => v.decision === "CONFIRM"));
-      console.log("[FETCH-VOTING-STATUS] Pending users:", votingData.filter((v) => v.decision === "PENDING"));
+      console.log(
+        "[FETCH-VOTING-STATUS] Voted count:",
+        votingData.filter((v) => v.decision !== "PENDING").length
+      );
+      console.log(
+        "[FETCH-VOTING-STATUS] Confirmed users:",
+        votingData.filter((v) => v.decision === "CONFIRM")
+      );
+      console.log(
+        "[FETCH-VOTING-STATUS] Pending users:",
+        votingData.filter((v) => v.decision === "PENDING")
+      );
 
       setVotingStatuses((prev) => ({
         ...prev,
@@ -815,11 +827,11 @@ const MyGroup = () => {
       ]);
       if (selectedGroup?.id) {
         await loadServiceRequests(selectedGroup.id);
-        
+
         // Force reload voting status with retry mechanism to ensure API has updated
         const requestId = confirmingRequest.id;
         console.log("[VOTE] Starting retry mechanism for request:", requestId);
-        
+
         // Retry 3 times with increasing delays
         for (let i = 0; i < 3; i++) {
           await new Promise((resolve) => setTimeout(resolve, (i + 1) * 1000));
@@ -2588,9 +2600,7 @@ const MyGroup = () => {
                                                 padding: 0,
                                                 height: "auto",
                                               }}
-                                            >
-                                              Nhìn tao nè
-                                            </Button>
+                                            ></Button>
                                           </div>
                                         }
                                         description={
@@ -3251,6 +3261,21 @@ const MyGroup = () => {
                         >
                           {(selectedInvoice.totalAmount || 0).toLocaleString()}{" "}
                           VNĐ
+                        </Text>
+                      </div>
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          marginBottom: 8,
+                        }}
+                      >
+                        <Text>Ownership Share:</Text>
+                        <Text strong style={{ color: "#722ed1" }}>
+                          {(selectedInvoice.ownershipSharePercent || 0).toFixed(
+                            2
+                          )}
+                          %
                         </Text>
                       </div>
                       <div
