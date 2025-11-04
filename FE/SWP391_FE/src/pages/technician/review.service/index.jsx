@@ -736,6 +736,52 @@ const ReviewService = ({
       },
     },
     {
+      title: "Completed At",
+      dataIndex: "completedAt",
+      key: "completedAt",
+      width: 140,
+      render: (completedAt, record) => {
+        const { status } = record;
+        
+        // Only show completedAt if status is DONE and completedAt exists
+        if (status === "DONE" && completedAt) {
+          try {
+            const dateObj = new Date(completedAt);
+            return (
+              <div style={{ fontSize: "11px", lineHeight: "1.3" }}>
+                <div style={{ fontWeight: "600" }}>
+                  {dateObj.toLocaleDateString("en-US", {
+                    day: "2-digit",
+                    month: "2-digit",
+                    year: "2-digit",
+                  })}
+                </div>
+                <div style={{ color: "#666" }}>
+                  {dateObj.toLocaleTimeString("en-US", {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </div>
+              </div>
+            );
+          } catch (error) {
+            return (
+              <Tag color="default" style={{ fontSize: "11px" }}>
+                Invalid
+              </Tag>
+            );
+          }
+        }
+        
+        // For all other statuses (SCHEDULED, CANCELLED, or no scheduledAt), show NOT YET
+        return (
+          <Tag color="default" style={{ fontSize: "11px" }}>
+            NOT YET
+          </Tag>
+        );
+      },
+    },
+    {
       title: "Actions",
       key: "actions",
       width: 240,
