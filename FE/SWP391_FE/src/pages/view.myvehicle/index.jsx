@@ -100,7 +100,8 @@ const MyVehicle = () => {
       key: "plateNumber",
       width: 120,
       fixed: "left",
-      sorter: (a, b) => (a.plateNumber || "").localeCompare(b.plateNumber || ""),
+      sorter: (a, b) =>
+        (a.plateNumber || "").localeCompare(b.plateNumber || ""),
     },
     {
       title: "Make",
@@ -150,8 +151,10 @@ const MyVehicle = () => {
         const handleMenuClick = ({ key }) => {
           console.log("Menu item clicked:", key, "for vehicle ID:", record.id);
           if (key === "edit") {
-            console.log("Edit action triggered");
-            handleEdit(record);
+            console.log(
+              "Edit action triggered - navigate to vehicle requests page"
+            );
+            navigate(`/my-vehicle-requests?edit=${record.id}`);
           } else if (key === "copy") {
             console.log("Copy ID action triggered");
             handleCopyId(record.id);
@@ -478,7 +481,7 @@ const MyVehicle = () => {
   const handleSearch = (e) => {
     const value = e.target.value;
     setSearchText(value);
-    
+
     // If search is cleared, reset to full data
     if (!value || value.trim() === "") {
       setFilteredData(data);
@@ -533,12 +536,20 @@ const MyVehicle = () => {
               />
             )}
 
-            <div style={{ marginBottom: 16, display: "flex", gap: "8px", justifyContent: "space-between", flexWrap: "wrap" }}>
+            <div
+              style={{
+                marginBottom: 16,
+                display: "flex",
+                gap: "8px",
+                justifyContent: "space-between",
+                flexWrap: "wrap",
+              }}
+            >
               <Space>
                 <Button
                   type="primary"
                   icon={<PlusOutlined />}
-                  onClick={() => setIsAddModalVisible(true)}
+                  onClick={() => navigate("/my-vehicle-requests?create=true")}
                 >
                   Add Vehicle
                 </Button>
@@ -551,7 +562,7 @@ const MyVehicle = () => {
                   Refresh
                 </Button>
               </Space>
-              
+
               <Input
                 placeholder="Search by Plate Number, Make or Model"
                 prefix={<SearchOutlined />}

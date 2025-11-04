@@ -28,7 +28,7 @@ import {
   HomeOutlined,
   UploadOutlined,
 } from "@ant-design/icons";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { toast } from "react-toastify";
 import api from "../../config/axios";
 import "./my-vehicle.css";
@@ -70,7 +70,9 @@ const MyVehicleRequests = () => {
 
   // File upload states
   const [vehicleImageFileList, setVehicleImageFileList] = useState([]);
-  const [registrationPaperFileList, setRegistrationPaperFileList] = useState([]);
+  const [registrationPaperFileList, setRegistrationPaperFileList] = useState(
+    []
+  );
 
   // Filter data when searchText changes
   useEffect(() => {
@@ -133,7 +135,9 @@ const MyVehicleRequests = () => {
       width: 120,
       render: (type) => {
         let color = type === "CREATE" ? "blue" : "orange";
-        return <Tag color={color}>{type === "CREATE" ? "TẠO MỚI" : "CẬP NHẬT"}</Tag>;
+        return (
+          <Tag color={color}>{type === "CREATE" ? "TẠO MỚI" : "CẬP NHẬT"}</Tag>
+        );
       },
     },
     {
@@ -229,15 +233,15 @@ const MyVehicleRequests = () => {
   const fetchMyVehicles = async () => {
     try {
       const response = await api.get("/Vehicle/my-vehicles");
-      
+
       // API có thể trả về data trong response.data.data hoặc response.data
       const vehicles = response.data.data || response.data || [];
       setMyVehicles(vehicles);
     } catch (err) {
       console.error("Failed to fetch my vehicles:", err);
-      const errorMessage = 
-        err.response?.data?.message || 
-        err.message || 
+      const errorMessage =
+        err.response?.data?.message ||
+        err.message ||
         "Không thể tải danh sách xe của bạn";
       message.error(errorMessage);
     }
@@ -248,15 +252,15 @@ const MyVehicleRequests = () => {
       setLoading(true);
       const response = await api.get(`/vehicle-requests/${id}`);
       setLoading(false);
-      
+
       // API có thể trả về data trực tiếp hoặc wrapped trong response
       const detail = response.data?.data || response.data;
       return detail;
     } catch (err) {
       setLoading(false);
-      const errorMessage = 
-        err.response?.data?.message || 
-        err.message || 
+      const errorMessage =
+        err.response?.data?.message ||
+        err.message ||
         "Không thể tải chi tiết yêu cầu";
       message.error(errorMessage);
       return null;
@@ -274,7 +278,7 @@ const MyVehicleRequests = () => {
 
   const handleDeleteClick = (record) => {
     console.log("Delete clicked for record:", record);
-    
+
     // Chỉ cho phép xóa request có status PENDING
     if (record.status !== "PENDING") {
       console.log("Status is not PENDING, showing warning");
@@ -301,9 +305,7 @@ const MyVehicleRequests = () => {
     } catch (err) {
       console.error("Delete request error:", err.response?.data);
       const errorMessage =
-        err.response?.data?.message ||
-        err.message ||
-        "Không thể xóa yêu cầu";
+        err.response?.data?.message || err.message || "Không thể xóa yêu cầu";
       toast.error(errorMessage);
     } finally {
       setLoading(false);
@@ -350,7 +352,10 @@ const MyVehicleRequests = () => {
       formData.append("rangeKm", values.rangeKm);
       formData.append("plateNumber", values.plateNumber);
       formData.append("vehicleImage", vehicleImageFileList[0].originFileObj);
-      formData.append("registrationPaperUrl", registrationPaperFileList[0].originFileObj);
+      formData.append(
+        "registrationPaperUrl",
+        registrationPaperFileList[0].originFileObj
+      );
 
       console.log("Create FormData entries:");
       for (let pair of formData.entries()) {
@@ -373,7 +378,7 @@ const MyVehicleRequests = () => {
       console.error("Create request error:", err.response?.data);
       const errorData = err.response?.data;
       let errorMessage = "Không thể tạo yêu cầu";
-      
+
       if (errorData?.errors) {
         const errors = Object.entries(errorData.errors)
           .map(([field, messages]) => `${field}: ${messages.join(", ")}`)
@@ -384,7 +389,7 @@ const MyVehicleRequests = () => {
       } else if (err.message) {
         errorMessage = err.message;
       }
-      
+
       toast.error(errorMessage, { duration: 5000 });
     } finally {
       setLoading(false);
@@ -417,7 +422,10 @@ const MyVehicleRequests = () => {
       formData.append("rangeKm", values.rangeKm);
       formData.append("plateNumber", values.plateNumber);
       formData.append("vehicleImage", vehicleImageFileList[0].originFileObj);
-      formData.append("registrationPaperUrl", registrationPaperFileList[0].originFileObj);
+      formData.append(
+        "registrationPaperUrl",
+        registrationPaperFileList[0].originFileObj
+      );
 
       console.log("Update FormData entries:");
       for (let pair of formData.entries()) {
@@ -430,7 +438,9 @@ const MyVehicleRequests = () => {
         },
       });
 
-      toast.success("Tạo yêu cầu cập nhật xe thành công! Vui lòng chờ admin duyệt.");
+      toast.success(
+        "Tạo yêu cầu cập nhật xe thành công! Vui lòng chờ admin duyệt."
+      );
       setUpdateModalVisible(false);
       updateForm.resetFields();
       setVehicleImageFileList([]);
@@ -441,7 +451,7 @@ const MyVehicleRequests = () => {
       console.error("Update request error:", err.response?.data);
       const errorData = err.response?.data;
       let errorMessage = "Không thể tạo yêu cầu cập nhật";
-      
+
       if (errorData?.errors) {
         // Handle validation errors
         const errors = Object.entries(errorData.errors)
@@ -453,7 +463,7 @@ const MyVehicleRequests = () => {
       } else if (err.message) {
         errorMessage = err.message;
       }
-      
+
       toast.error(errorMessage, { duration: 5000 });
     } finally {
       setLoading(false);
@@ -475,6 +485,29 @@ const MyVehicleRequests = () => {
       });
     }
   };
+
+  // Open modals automatically when navigated to with query params
+  const location = useLocation();
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const create = params.get("create");
+    const editId = params.get("edit");
+
+    if (create) {
+      // open create modal
+      fetchMyVehicles();
+      setCreateModalVisible(true);
+    }
+
+    if (editId) {
+      // open update modal and preselect vehicle
+      (async () => {
+        await fetchMyVehicles();
+        handleVehicleSelect(editId);
+        setUpdateModalVisible(true);
+      })();
+    }
+  }, [location.search]);
 
   const handleTableChange = (paginationConfig, filters, sorter) => {
     setPagination((prev) => ({
@@ -560,10 +593,7 @@ const MyVehicleRequests = () => {
                   >
                     Tạo yêu cầu xe mới
                   </Button>
-                  <Button
-                    icon={<PlusOutlined />}
-                    onClick={handleUpdateClick}
-                  >
+                  <Button icon={<PlusOutlined />} onClick={handleUpdateClick}>
                     Yêu cầu cập nhật xe
                   </Button>
                 </Space>
@@ -618,11 +648,7 @@ const MyVehicleRequests = () => {
         footer={null}
         width={700}
       >
-        <Form
-          form={createForm}
-          layout="vertical"
-          onFinish={handleCreateSubmit}
-        >
+        <Form form={createForm} layout="vertical" onFinish={handleCreateSubmit}>
           <Form.Item
             name="make"
             label="Hãng xe"
@@ -658,7 +684,9 @@ const MyVehicleRequests = () => {
           <Form.Item
             name="batteryCapacityKwh"
             label="Dung lượng pin (kWh)"
-            rules={[{ required: true, message: "Vui lòng nhập dung lượng pin" }]}
+            rules={[
+              { required: true, message: "Vui lòng nhập dung lượng pin" },
+            ]}
           >
             <InputNumber min={0} style={{ width: "100%" }} />
           </Form.Item>
@@ -682,7 +710,9 @@ const MyVehicleRequests = () => {
           <Form.Item
             name="vehicleImage"
             label="Hình ảnh xe"
-            rules={[{ required: true, message: "Vui lòng tải lên hình ảnh xe" }]}
+            rules={[
+              { required: true, message: "Vui lòng tải lên hình ảnh xe" },
+            ]}
           >
             <Upload
               {...uploadProps}
@@ -697,12 +727,16 @@ const MyVehicleRequests = () => {
           <Form.Item
             name="registrationPaper"
             label="Giấy đăng ký xe"
-            rules={[{ required: true, message: "Vui lòng tải lên giấy đăng ký xe" }]}
+            rules={[
+              { required: true, message: "Vui lòng tải lên giấy đăng ký xe" },
+            ]}
           >
             <Upload
               {...uploadProps}
               fileList={registrationPaperFileList}
-              onChange={({ fileList }) => setRegistrationPaperFileList(fileList)}
+              onChange={({ fileList }) =>
+                setRegistrationPaperFileList(fileList)
+              }
               listType="picture"
             >
               <Button icon={<UploadOutlined />}>Chọn giấy đăng ký</Button>
@@ -792,7 +826,9 @@ const MyVehicleRequests = () => {
             <Form.Item
               name="modelYear"
               label="Năm sản xuất"
-              rules={[{ required: true, message: "Vui lòng nhập năm sản xuất" }]}
+              rules={[
+                { required: true, message: "Vui lòng nhập năm sản xuất" },
+              ]}
             >
               <InputNumber min={1900} max={2100} style={{ width: "100%" }} />
             </Form.Item>
@@ -808,7 +844,9 @@ const MyVehicleRequests = () => {
             <Form.Item
               name="batteryCapacityKwh"
               label="Dung lượng pin (kWh)"
-              rules={[{ required: true, message: "Vui lòng nhập dung lượng pin" }]}
+              rules={[
+                { required: true, message: "Vui lòng nhập dung lượng pin" },
+              ]}
             >
               <InputNumber min={0} style={{ width: "100%" }} />
             </Form.Item>
@@ -832,7 +870,9 @@ const MyVehicleRequests = () => {
             <Form.Item
               name="vehicleImage"
               label="Hình ảnh xe"
-              rules={[{ required: true, message: "Vui lòng tải lên hình ảnh xe" }]}
+              rules={[
+                { required: true, message: "Vui lòng tải lên hình ảnh xe" },
+              ]}
             >
               <Upload
                 {...uploadProps}
@@ -847,12 +887,16 @@ const MyVehicleRequests = () => {
             <Form.Item
               name="registrationPaper"
               label="Giấy đăng ký xe"
-              rules={[{ required: true, message: "Vui lòng tải lên giấy đăng ký xe" }]}
+              rules={[
+                { required: true, message: "Vui lòng tải lên giấy đăng ký xe" },
+              ]}
             >
               <Upload
                 {...uploadProps}
                 fileList={registrationPaperFileList}
-                onChange={({ fileList }) => setRegistrationPaperFileList(fileList)}
+                onChange={({ fileList }) =>
+                  setRegistrationPaperFileList(fileList)
+                }
                 listType="picture"
               >
                 <Button icon={<UploadOutlined />}>Chọn giấy đăng ký mới</Button>
@@ -914,7 +958,9 @@ const MyVehicleRequests = () => {
                 </Descriptions.Item>
               )}
               <Descriptions.Item label="Loại yêu cầu">
-                <Tag color={selectedRequest.type === "CREATE" ? "blue" : "orange"}>
+                <Tag
+                  color={selectedRequest.type === "CREATE" ? "blue" : "orange"}
+                >
                   {selectedRequest.type === "CREATE" ? "TẠO MỚI" : "CẬP NHẬT"}
                 </Tag>
               </Descriptions.Item>
@@ -977,7 +1023,11 @@ const MyVehicleRequests = () => {
             </Descriptions>
 
             <div style={{ marginTop: 16 }}>
-              <Space direction="vertical" size="middle" style={{ width: "100%" }}>
+              <Space
+                direction="vertical"
+                size="middle"
+                style={{ width: "100%" }}
+              >
                 {selectedRequest.vehicleImageUrl && (
                   <div>
                     <div style={{ fontWeight: "bold", marginBottom: 8 }}>
