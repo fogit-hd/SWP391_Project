@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   Button,
   Layout,
@@ -159,6 +159,26 @@ const Homepage = () => {
     }
   }, [isInitialized, isAuthenticated, user]); // Run when authentication state changes
 
+  // Fetch notifications when user is authenticated
+  useEffect(() => {
+    if (isInitialized && isAuthenticated && user) {
+      console.log("Fetching notifications on mount/refresh...");
+      const fetchNotifs = async () => {
+        setIsNotifLoading(true);
+        try {
+          const res = await api.get("/notifications");
+          const list = res?.data?.data || [];
+          setNotifications(list);
+        } catch (error) {
+          console.error("Failed to load notifications", error);
+        } finally {
+          setIsNotifLoading(false);
+        }
+      };
+      fetchNotifs();
+    }
+  }, [isInitialized, isAuthenticated, user]); // Run when authentication state changes
+
   // Function to check user contracts
   const checkUserContracts = async () => {
     if (!isAuthenticated) {
@@ -237,7 +257,7 @@ const Homepage = () => {
     return `${days} ngày trước`;
   };
 
-  const fetchNotifications = async () => {
+  const fetchNotifications = useCallback(async () => {
     if (!isAuthenticated) return;
     setIsNotifLoading(true);
     try {
@@ -249,7 +269,7 @@ const Homepage = () => {
     } finally {
       setIsNotifLoading(false);
     }
-  };
+  }, [isAuthenticated]);
 
   const markNotificationRead = async (id) => {
     try {
@@ -740,7 +760,7 @@ const Homepage = () => {
             key: "my-vehicle",
             icon: <CarOutlined />,
             label: "Xe của tôi",
-            onClick: () => handleProtectedNavigation("/my-vehicle"),
+            onClick: () => handleProtectedNavigation("/view-myvehicle"),
           },
         ]
       : []),

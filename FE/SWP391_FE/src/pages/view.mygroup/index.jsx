@@ -16,6 +16,10 @@ import {
   Divider,
   Tooltip,
   Tabs,
+  Popover,
+  Row,
+  Col,
+  Descriptions,
 } from "antd";
 import {
   CheckCircleTwoTone,
@@ -23,6 +27,7 @@ import {
   PlusOutlined,
   TeamOutlined,
   ArrowLeftOutlined,
+  EyeOutlined,
 } from "@ant-design/icons";
 import { useNavigate, Link, useLocation } from "react-router-dom";
 import api from "../../config/axios";
@@ -111,6 +116,13 @@ const MyGroup = () => {
   const [expensesLoading, setExpensesLoading] = useState(false);
   const [myInvoices, setMyInvoices] = useState([]);
   const [invoicesLoading, setInvoicesLoading] = useState(false);
+  const [votingStatuses, setVotingStatuses] = useState({}); // { requestId: { data, totalMembers } }
+  const [loadingVotingStatuses, setLoadingVotingStatuses] = useState({}); // { requestId: boolean }
+  const [serviceRequestDetailOpen, setServiceRequestDetailOpen] =
+    useState(false);
+  const [serviceRequestDetail, setServiceRequestDetail] = useState(null);
+  const [serviceRequestDetailLoading, setServiceRequestDetailLoading] =
+    useState(false);
   const [invoiceDetailOpen, setInvoiceDetailOpen] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState(null);
   const [invoiceDetailLoading, setInvoiceDetailLoading] = useState(false);
@@ -361,6 +373,119 @@ const MyGroup = () => {
       setMyConfirmations([]);
     } finally {
       setConfirmationsLoading(false);
+    }
+  };
+
+  // Fetch voting status for a service request
+  const fetchVotingStatus = async (requestId, force = false) => {
+    if (!requestId) {
+      return;
+    }
+
+    // If not forcing and already loaded or loading, return
+    if (!force && (votingStatuses[requestId] || loadingVotingStatuses[requestId])) {
+      return; // Already loaded or loading
+    }
+
+    // If forcing, clear cache first
+    if (force) {
+      setVotingStatuses((prev) => {
+        const updated = { ...prev };
+        delete updated[requestId];
+        return updated;
+      });
+      setLoadingVotingStatuses((prev) => {
+        const updated = { ...prev };
+        delete updated[requestId];
+        return updated;
+      });
+    }
+
+    setLoadingVotingStatuses((prev) => ({ ...prev, [requestId]: true }));
+    try {
+      const response = await api.get(
+        `/service-request-confirmations/${requestId}/status`
+      );
+      const votingData = response.data?.data || [];
+      const totalMembers = members.length; // Tổng số thành viên trong group
+
+      console.log("[FETCH-VOTING-STATUS] Request ID:", requestId);
+      console.log("[FETCH-VOTING-STATUS] Voting data:", votingData);
+      console.log("[FETCH-VOTING-STATUS] Total members:", totalMembers);
+      console.log("[FETCH-VOTING-STATUS] Voted count:", votingData.filter((v) => v.decision !== "PENDING").length);
+      console.log("[FETCH-VOTING-STATUS] Confirmed users:", votingData.filter((v) => v.decision === "CONFIRM"));
+      console.log("[FETCH-VOTING-STATUS] Pending users:", votingData.filter((v) => v.decision === "PENDING"));
+
+      setVotingStatuses((prev) => ({
+        ...prev,
+        [requestId]: {
+          data: votingData,
+          totalMembers,
+        },
+      }));
+    } catch (error) {
+      console.error("Failed to load voting status:", error);
+      setVotingStatuses((prev) => ({
+        ...prev,
+        [requestId]: {
+          data: [],
+          totalMembers: members.length,
+        },
+      }));
+    } finally {
+      setLoadingVotingStatuses((prev) => {
+        const updated = { ...prev };
+        delete updated[requestId];
+        return updated;
+      });
+    }
+  };
+
+  // Fetch service request details
+  const fetchServiceRequestDetails = async (requestId) => {
+    if (!requestId) return;
+
+    setServiceRequestDetailLoading(true);
+    setServiceRequestDetailOpen(true);
+    try {
+      const response = await api.get(`/service-requests/${requestId}`);
+      setServiceRequestDetail(response.data?.data || null);
+    } catch (error) {
+      console.error("Failed to load service request details:", error);
+      toast.error("Không thể tải chi tiết yêu cầu dịch vụ");
+      setServiceRequestDetail(null);
+    } finally {
+      setServiceRequestDetailLoading(false);
+    }
+  };
+
+  // Format date to dd/mm/yyyy
+  const formatDate = (dateString) => {
+    if (!dateString) return "-";
+    try {
+      const date = new Date(dateString);
+      const day = String(date.getDate()).padStart(2, "0");
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const year = date.getFullYear();
+      return `${day}/${month}/${year}`;
+    } catch (error) {
+      return "-";
+    }
+  };
+
+  // Format datetime to dd/mm/yyyy HH:mm
+  const formatDateTime = (dateString) => {
+    if (!dateString) return "-";
+    try {
+      const date = new Date(dateString);
+      const day = String(date.getDate()).padStart(2, "0");
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const year = date.getFullYear();
+      const hours = String(date.getHours()).padStart(2, "0");
+      const minutes = String(date.getMinutes()).padStart(2, "0");
+      return `${day}/${month}/${year} ${hours}:${minutes}`;
+    } catch (error) {
+      return "-";
     }
   };
 
@@ -683,10 +808,24 @@ const MyGroup = () => {
       setConfirmingRequest(null);
       setConfirmReason("");
 
-      // Reload confirmations and service requests to update the list
-      await loadMyConfirmations();
+      // Reload confirmations, members, and service requests to update the list
+      await Promise.all([
+        loadMyConfirmations(),
+        loadMembers(selectedGroup?.id),
+      ]);
       if (selectedGroup?.id) {
         await loadServiceRequests(selectedGroup.id);
+        
+        // Force reload voting status with retry mechanism to ensure API has updated
+        const requestId = confirmingRequest.id;
+        console.log("[VOTE] Starting retry mechanism for request:", requestId);
+        
+        // Retry 3 times with increasing delays
+        for (let i = 0; i < 3; i++) {
+          await new Promise((resolve) => setTimeout(resolve, (i + 1) * 1000));
+          console.log(`[VOTE] Reloading voting status (attempt ${i + 1}/3)`);
+          await fetchVotingStatus(requestId, true);
+        }
       }
     } catch (err) {
       console.error("[CONFIRM-SERVICE-REQUEST] Error:", err);
@@ -1685,7 +1824,10 @@ const MyGroup = () => {
                                       to="/booking"
                                       state={{ groupId: selectedGroup?.id }}
                                     >
-                                      <Button className="booking-btn" type="primary">
+                                      <Button
+                                        className="booking-btn"
+                                        type="primary"
+                                      >
                                         Go to Booking
                                       </Button>
                                     </Link>
@@ -1763,15 +1905,17 @@ const MyGroup = () => {
                           label: "Vehicles",
                           children: (
                             <>
-                              {iAmOwner && vehicles && vehicles.length === 0 && (
-                                <div style={{ marginBottom: 12 }}>
-                                  <Space>
-                                    <Button onClick={openAttachModal}>
-                                      Attach vehicle
-                                    </Button>
-                                  </Space>
-                                </div>
-                              )}
+                              {iAmOwner &&
+                                vehicles &&
+                                vehicles.length === 0 && (
+                                  <div style={{ marginBottom: 12 }}>
+                                    <Space>
+                                      <Button onClick={openAttachModal}>
+                                        Attach vehicle
+                                      </Button>
+                                    </Space>
+                                  </div>
+                                )}
                               <List
                                 loading={vehiclesLoading}
                                 itemLayout="horizontal"
@@ -1791,62 +1935,123 @@ const MyGroup = () => {
                                         .toString()
                                         .slice(0, 1)
                                         .toUpperCase();
-                                      const disabled = togglingVehicleIds.has(v.id);
+                                      const disabled = togglingVehicleIds.has(
+                                        v.id
+                                      );
                                       return (
                                         <>
                                           <List.Item.Meta
                                             className="vehicle-meta"
-                                            avatar={<Avatar>{avatarText}</Avatar>}
+                                            avatar={
+                                              <Avatar>{avatarText}</Avatar>
+                                            }
                                             title={displayName}
                                             description={
                                               <>
                                                 <div className="vehicle-info-grid">
                                                   <div className="vehicle-info-row">
-                                                    <div className="vehicle-info-label">Plate</div>
-                                                    <div className="vehicle-info-val">{v.plateNumber || v.licensePlate || "-"}</div>
+                                                    <div className="vehicle-info-label">
+                                                      Plate
+                                                    </div>
+                                                    <div className="vehicle-info-val">
+                                                      {v.plateNumber ||
+                                                        v.licensePlate ||
+                                                        "-"}
+                                                    </div>
                                                   </div>
                                                   <div className="vehicle-info-row">
-                                                    <div className="vehicle-info-label">Make</div>
-                                                    <div className="vehicle-info-val">{v.make || v.brand || v.manufacturer || "-"}</div>
+                                                    <div className="vehicle-info-label">
+                                                      Make
+                                                    </div>
+                                                    <div className="vehicle-info-val">
+                                                      {v.make ||
+                                                        v.brand ||
+                                                        v.manufacturer ||
+                                                        "-"}
+                                                    </div>
                                                   </div>
                                                   <div className="vehicle-info-row">
-                                                    <div className="vehicle-info-label">Year</div>
-                                                    <div className="vehicle-info-val">{v.modelYear || v.year || "-"}</div>
+                                                    <div className="vehicle-info-label">
+                                                      Year
+                                                    </div>
+                                                    <div className="vehicle-info-val">
+                                                      {v.modelYear ||
+                                                        v.year ||
+                                                        "-"}
+                                                    </div>
                                                   </div>
                                                   <div className="vehicle-info-row">
-                                                    <div className="vehicle-info-label">Color</div>
-                                                    <div className="vehicle-info-val">{v.color || v.colour || "-"}</div>
+                                                    <div className="vehicle-info-label">
+                                                      Color
+                                                    </div>
+                                                    <div className="vehicle-info-val">
+                                                      {v.color ||
+                                                        v.colour ||
+                                                        "-"}
+                                                    </div>
                                                   </div>
                                                   <div className="vehicle-info-row">
-                                                    <div className="vehicle-info-label">Battery (kWh)</div>
-                                                    <div className="vehicle-info-val">{v.batteryCapacityKwh || v.batteryKwh || v.battery_capacity || "-"}</div>
+                                                    <div className="vehicle-info-label">
+                                                      Battery (kWh)
+                                                    </div>
+                                                    <div className="vehicle-info-val">
+                                                      {v.batteryCapacityKwh ||
+                                                        v.batteryKwh ||
+                                                        v.battery_capacity ||
+                                                        "-"}
+                                                    </div>
                                                   </div>
                                                   <div className="vehicle-info-row">
-                                                    <div className="vehicle-info-label">Range (km)</div>
-                                                    <div className="vehicle-info-val">{v.rangeKm || v.range || v.range_km || "-"}</div>
+                                                    <div className="vehicle-info-label">
+                                                      Range (km)
+                                                    </div>
+                                                    <div className="vehicle-info-val">
+                                                      {v.rangeKm ||
+                                                        v.range ||
+                                                        v.range_km ||
+                                                        "-"}
+                                                    </div>
                                                   </div>
                                                 </div>
 
                                                 <div className="vehicle-actions">
-                                                  <Tag color={v.isActive ? "green" : "red"}>
-                                                    {v.isActive ? "Active" : "Inactive"}
+                                                  <Tag
+                                                    color={
+                                                      v.isActive
+                                                        ? "green"
+                                                        : "red"
+                                                    }
+                                                  >
+                                                    {v.isActive
+                                                      ? "Active"
+                                                      : "Inactive"}
                                                   </Tag>
                                                   {iAmOwner ? (
                                                     <>
                                                       <Button
                                                         type="link"
                                                         disabled={disabled}
-                                                        onClick={() => toggleVehicleStatus(v)}
+                                                        onClick={() =>
+                                                          toggleVehicleStatus(v)
+                                                        }
                                                       >
-                                                        {v.isActive ? "Deactivate" : "Activate"}
+                                                        {v.isActive
+                                                          ? "Deactivate"
+                                                          : "Activate"}
                                                       </Button>
                                                       {!v.isActive ? (
                                                         <Popconfirm
                                                           key="detach"
                                                           title="Detach this vehicle from group?"
-                                                          onConfirm={() => detachVehicle(v.id)}
+                                                          onConfirm={() =>
+                                                            detachVehicle(v.id)
+                                                          }
                                                         >
-                                                          <Button danger type="link" disabled={disabled}>
+                                                          <Button
+                                                            danger
+                                                            type="link"
+                                                            disabled={disabled}
+                                                          >
                                                             Detach
                                                           </Button>
                                                         </Popconfirm>
@@ -1921,11 +2126,11 @@ const MyGroup = () => {
                                       text: "Rejected",
                                     },
                                     in_progress: {
-                                      color: "processing",
+                                      color: "blue",
                                       text: "In Progress",
                                     },
                                     IN_PROGRESS: {
-                                      color: "processing",
+                                      color: "blue",
                                       text: "In Progress",
                                     },
                                     completed: {
@@ -1975,18 +2180,337 @@ const MyGroup = () => {
                                     sr.status === "voting" ||
                                     sr.status?.toUpperCase() === "VOTING";
 
+                                  // Check if request is in REJECT status
+                                  const isRejected =
+                                    sr.status === "REJECTED" ||
+                                    sr.status === "rejected" ||
+                                    sr.status?.toUpperCase() === "REJECTED";
+
+                                  // Render voting status tag with popover
+                                  const renderVotingTag = () => {
+                                    // Show popover only for VOTING or REJECTED status
+                                    if (!isVoting && !isRejected) {
+                                      return (
+                                        <Tag
+                                          key="status"
+                                          color={statusInfo.color}
+                                        >
+                                          {statusInfo.text}
+                                        </Tag>
+                                      );
+                                    }
+
+                                    const votingStatus = votingStatuses[sr.id];
+                                    const isLoading =
+                                      loadingVotingStatuses[sr.id];
+                                    const hasVotingData = !!votingStatus;
+                                    const votingData = votingStatus?.data || [];
+                                    const totalMembers =
+                                      votingStatus?.totalMembers ||
+                                      members.length;
+                                    const votedCount = votingData.filter(
+                                      (v) => v.decision !== "PENDING"
+                                    ).length;
+                                    const pendingUsers = votingData.filter(
+                                      (v) => v.decision === "PENDING"
+                                    );
+                                    const confirmedUsers = votingData.filter(
+                                      (v) => v.decision === "CONFIRM"
+                                    );
+                                    const rejectUsers = votingData.filter(
+                                      (v) => v.decision === "REJECT"
+                                    );
+
+                                    const renderVotingContent = () => {
+                                      if (isLoading) {
+                                        return <Spin size="small" />;
+                                      }
+
+                                      // Nếu status là REJECT, chỉ hiển thị danh sách người đã reject
+                                      if (isRejected) {
+                                        return (
+                                          <div style={{ maxWidth: 300 }}>
+                                            {rejectUsers.length > 0 ? (
+                                              <>
+                                                <div
+                                                  style={{
+                                                    marginBottom: 8,
+                                                    fontWeight: 600,
+                                                    color: "#f5222d",
+                                                  }}
+                                                >
+                                                  Đã bị từ chối bởi:
+                                                </div>
+                                                <div style={{ marginLeft: 8 }}>
+                                                  {rejectUsers.map(
+                                                    (user, idx) => (
+                                                      <div
+                                                        key={idx}
+                                                        style={{
+                                                          marginBottom: 8,
+                                                        }}
+                                                      >
+                                                        <div>
+                                                          <Text strong>
+                                                            •{" "}
+                                                            {user.fullName ||
+                                                              user.userId}
+                                                          </Text>
+                                                        </div>
+                                                        {user.reason && (
+                                                          <div
+                                                            style={{
+                                                              marginLeft: 12,
+                                                              color: "#999",
+                                                              fontSize: 12,
+                                                              marginTop: 4,
+                                                            }}
+                                                          >
+                                                            Lý do: {user.reason}
+                                                          </div>
+                                                        )}
+                                                        {user.decidedAt && (
+                                                          <div
+                                                            style={{
+                                                              marginLeft: 12,
+                                                              color: "#999",
+                                                              fontSize: 11,
+                                                              marginTop: 2,
+                                                            }}
+                                                          >
+                                                            {new Date(
+                                                              user.decidedAt
+                                                            ).toLocaleString(
+                                                              "vi-VN"
+                                                            )}
+                                                          </div>
+                                                        )}
+                                                      </div>
+                                                    )
+                                                  )}
+                                                </div>
+                                              </>
+                                            ) : (
+                                              <Text type="secondary">
+                                                Chưa có dữ liệu về người từ chối
+                                              </Text>
+                                            )}
+                                          </div>
+                                        );
+                                      }
+
+                                      // Nếu status là VOTING, hiển thị thông tin vote đầy đủ
+                                      return (
+                                        <div style={{ maxWidth: 300 }}>
+                                          <div
+                                            style={{
+                                              marginBottom: 8,
+                                              fontWeight: 600,
+                                            }}
+                                          >
+                                            {votedCount} / {totalMembers} đã
+                                            vote
+                                          </div>
+
+                                          {confirmedUsers.length > 0 && (
+                                            <div style={{ marginBottom: 8 }}>
+                                              <Text
+                                                strong
+                                                style={{ color: "#52c41a" }}
+                                              >
+                                                Đã vote:
+                                              </Text>
+                                              <div
+                                                style={{
+                                                  marginLeft: 8,
+                                                  marginTop: 4,
+                                                }}
+                                              >
+                                                {confirmedUsers.map(
+                                                  (user, idx) => (
+                                                    <div
+                                                      key={idx}
+                                                      style={{
+                                                        marginBottom: 4,
+                                                      }}
+                                                    >
+                                                      <div>
+                                                        •{" "}
+                                                        <Text strong>
+                                                          {user.fullName ||
+                                                            user.userId}
+                                                        </Text>
+                                                      </div>
+                                                      {user.decidedAt && (
+                                                        <div
+                                                          style={{
+                                                            marginLeft: 12,
+                                                            color: "#999",
+                                                            fontSize: 11,
+                                                            marginTop: 2,
+                                                          }}
+                                                        >
+                                                          {new Date(
+                                                            user.decidedAt
+                                                          ).toLocaleString(
+                                                            "vi-VN"
+                                                          )}
+                                                        </div>
+                                                      )}
+                                                    </div>
+                                                  )
+                                                )}
+                                              </div>
+                                            </div>
+                                          )}
+
+                                          {pendingUsers.length > 0 && (
+                                            <div style={{ marginBottom: 8 }}>
+                                              <Text
+                                                strong
+                                                style={{ color: "#ff9800" }}
+                                              >
+                                                Chưa vote:
+                                              </Text>
+                                              <div
+                                                style={{
+                                                  marginLeft: 8,
+                                                  marginTop: 4,
+                                                }}
+                                              >
+                                                {pendingUsers.map(
+                                                  (user, idx) => (
+                                                    <div key={idx}>
+                                                      •{" "}
+                                                      {user.fullName ||
+                                                        user.userId}
+                                                    </div>
+                                                  )
+                                                )}
+                                              </div>
+                                            </div>
+                                          )}
+
+                                          {rejectUsers.length > 0 && (
+                                            <div>
+                                              <Text
+                                                strong
+                                                style={{ color: "#f5222d" }}
+                                              >
+                                                Đã từ chối:
+                                              </Text>
+                                              <div
+                                                style={{
+                                                  marginLeft: 8,
+                                                  marginTop: 4,
+                                                }}
+                                              >
+                                                {rejectUsers.map(
+                                                  (user, idx) => (
+                                                    <div
+                                                      key={idx}
+                                                      style={{
+                                                        marginBottom: 4,
+                                                      }}
+                                                    >
+                                                      <div>
+                                                        •{" "}
+                                                        <Text strong>
+                                                          {user.fullName ||
+                                                            user.userId}
+                                                        </Text>
+                                                      </div>
+                                                      {user.reason && (
+                                                        <div
+                                                          style={{
+                                                            marginLeft: 12,
+                                                            color: "#999",
+                                                            fontSize: 12,
+                                                          }}
+                                                        >
+                                                          Lý do: {user.reason}
+                                                        </div>
+                                                      )}
+                                                      {user.decidedAt && (
+                                                        <div
+                                                          style={{
+                                                            marginLeft: 12,
+                                                            color: "#999",
+                                                            fontSize: 11,
+                                                            marginTop: 2,
+                                                          }}
+                                                        >
+                                                          {new Date(
+                                                            user.decidedAt
+                                                          ).toLocaleString(
+                                                            "vi-VN"
+                                                          )}
+                                                        </div>
+                                                      )}
+                                                    </div>
+                                                  )
+                                                )}
+                                              </div>
+                                            </div>
+                                          )}
+
+                                          {pendingUsers.length === 0 &&
+                                            rejectUsers.length === 0 &&
+                                            confirmedUsers.length > 0 && (
+                                              <Text
+                                                type="secondary"
+                                                style={{ color: "#52c41a" }}
+                                              >
+                                                ✓ Tất cả đã vote và không có ai
+                                                từ chối
+                                              </Text>
+                                            )}
+                                          {votingData.length === 0 && (
+                                            <Text type="secondary">
+                                              Chưa có dữ liệu vote
+                                            </Text>
+                                          )}
+                                        </div>
+                                      );
+                                    };
+
+                                    return (
+                                      <Popover
+                                        key="status"
+                                        content={renderVotingContent()}
+                                        trigger="hover"
+                                        placement="topLeft"
+                                        onVisibleChange={(visible) => {
+                                          if (
+                                            visible &&
+                                            !votingStatus &&
+                                            !isLoading
+                                          ) {
+                                            fetchVotingStatus(sr.id);
+                                          }
+                                        }}
+                                      >
+                                        <Tag
+                                          color={statusInfo.color}
+                                          style={{ cursor: "pointer" }}
+                                        >
+                                          {statusInfo.text}
+                                          {/* Chỉ hiển thị số đếm trên tag khi status là VOTING */}
+                                          {hasVotingData &&
+                                            isVoting &&
+                                            ` (${votedCount}/${totalMembers})`}
+                                        </Tag>
+                                      </Popover>
+                                    );
+                                  };
+
                                   return (
                                     <List.Item
                                       actions={[
                                         <Tag key="type" color={typeInfo.color}>
                                           {typeInfo.text}
                                         </Tag>,
-                                        <Tag
-                                          key="status"
-                                          color={statusInfo.color}
-                                        >
-                                          {statusInfo.text}
-                                        </Tag>,
+                                        renderVotingTag(),
                                         // Show user's decision if already decided
                                         alreadyDecided && userDecision ? (
                                           <Tooltip
@@ -2042,7 +2566,33 @@ const MyGroup = () => {
                                       ].filter(Boolean)}
                                     >
                                       <List.Item.Meta
-                                        title={sr.title || sr.id}
+                                        title={
+                                          <div
+                                            style={{
+                                              display: "flex",
+                                              alignItems: "center",
+                                              gap: 8,
+                                            }}
+                                          >
+                                            <span>{sr.title || sr.id}</span>
+                                            <Button
+                                              type="link"
+                                              size="small"
+                                              icon={<EyeOutlined />}
+                                              onClick={() =>
+                                                fetchServiceRequestDetails(
+                                                  sr.id
+                                                )
+                                              }
+                                              style={{
+                                                padding: 0,
+                                                height: "auto",
+                                              }}
+                                            >
+                                              Nhìn tao nè
+                                            </Button>
+                                          </div>
+                                        }
                                         description={
                                           <div>
                                             {sr.description && (
@@ -2781,6 +3331,466 @@ const MyGroup = () => {
                 </Space>
               ) : (
                 <Empty description="No invoice data" />
+              )}
+            </Spin>
+          </Modal>
+
+          {/* Service Request Detail Modal */}
+          <Modal
+            title="Chi tiết Yêu cầu Dịch vụ"
+            open={serviceRequestDetailOpen}
+            onCancel={() => {
+              setServiceRequestDetailOpen(false);
+              setServiceRequestDetail(null);
+            }}
+            footer={[
+              <Button
+                key="close"
+                type="primary"
+                onClick={() => {
+                  setServiceRequestDetailOpen(false);
+                  setServiceRequestDetail(null);
+                }}
+              >
+                Đóng
+              </Button>,
+            ]}
+            width={1000}
+            style={{ top: 5, paddingBottom: 0 }}
+            bodyStyle={{
+              padding: "8px",
+              maxHeight: "calc(100vh - 80px)",
+              overflowY: "hidden",
+            }}
+          >
+            <Spin spinning={serviceRequestDetailLoading}>
+              {serviceRequestDetail ? (
+                <div style={{ padding: "0" }}>
+                  <Row gutter={[8, 4]}>
+                    {/* Left Column */}
+                    <Col xs={24} sm={24} md={12}>
+                      {/* Basic Information */}
+                      <Card
+                        size="small"
+                        style={{ marginBottom: 4 }}
+                        bodyStyle={{ padding: "8px" }}
+                      >
+                        <Title
+                          level={5}
+                          style={{
+                            marginBottom: 4,
+                            fontSize: 12,
+                            marginTop: 0,
+                            lineHeight: 1.2,
+                          }}
+                        >
+                          Thông tin cơ bản
+                        </Title>
+                        <Descriptions
+                          column={1}
+                          size="small"
+                          bordered
+                          labelStyle={{
+                            width: "40%",
+                            padding: "4px 6px",
+                            lineHeight: "1.3",
+                          }}
+                          contentStyle={{
+                            padding: "4px 6px",
+                            lineHeight: "1.3",
+                          }}
+                          style={{ fontSize: "12px" }}
+                        >
+                          {serviceRequestDetail.title && (
+                            <Descriptions.Item label="Tiêu đề">
+                              {serviceRequestDetail.title}
+                            </Descriptions.Item>
+                          )}
+                          {serviceRequestDetail.type && (
+                            <Descriptions.Item label="Loại">
+                              <Tag
+                                color={
+                                  serviceRequestDetail.type === "MAINTENANCE"
+                                    ? "blue"
+                                    : serviceRequestDetail.type === "REPAIR"
+                                    ? "orange"
+                                    : serviceRequestDetail.type === "INSPECTION"
+                                    ? "green"
+                                    : serviceRequestDetail.type === "CLEANING"
+                                    ? "cyan"
+                                    : serviceRequestDetail.type === "UPGRADE"
+                                    ? "purple"
+                                    : "default"
+                                }
+                              >
+                                {serviceRequestDetail.type}
+                              </Tag>
+                            </Descriptions.Item>
+                          )}
+                          {serviceRequestDetail.description && (
+                            <Descriptions.Item label="Mô tả">
+                              <Text style={{ wordBreak: "break-word" }}>
+                                {serviceRequestDetail.description}
+                              </Text>
+                            </Descriptions.Item>
+                          )}
+                          {serviceRequestDetail.status && (
+                            <Descriptions.Item label="Trạng thái">
+                              <Tag
+                                color={
+                                  serviceRequestDetail.status === "COMPLETED"
+                                    ? "green"
+                                    : serviceRequestDetail.status === "APPROVED"
+                                    ? "green"
+                                    : serviceRequestDetail.status === "REJECTED"
+                                    ? "red"
+                                    : serviceRequestDetail.status === "VOTING"
+                                    ? "orange"
+                                    : serviceRequestDetail.status ===
+                                      "PENDING_QUOTE"
+                                    ? "blue"
+                                    : serviceRequestDetail.status ===
+                                      "IN_PROGRESS"
+                                    ? "blue"
+                                    : serviceRequestDetail.status ===
+                                      "INPROGRESS"
+                                    ? "blue"
+                                    : serviceRequestDetail.status === "DRAFT"
+                                    ? "default"
+                                    : "default"
+                                }
+                              >
+                                {serviceRequestDetail.status}
+                              </Tag>
+                            </Descriptions.Item>
+                          )}
+                          {serviceRequestDetail.costEstimate !== undefined &&
+                            serviceRequestDetail.costEstimate !== null && (
+                              <Descriptions.Item label="Chi phí ước tính">
+                                {`${(
+                                  serviceRequestDetail.costEstimate / 1000
+                                ).toFixed(0)}K VNĐ`}
+                              </Descriptions.Item>
+                            )}
+                        </Descriptions>
+                      </Card>
+
+                      {/* Vehicle Information */}
+                      <Card
+                        size="small"
+                        style={{ marginBottom: 4 }}
+                        bodyStyle={{ padding: "8px" }}
+                      >
+                        <Title
+                          level={5}
+                          style={{
+                            marginBottom: 4,
+                            fontSize: 12,
+                            marginTop: 0,
+                            lineHeight: 1.2,
+                          }}
+                        >
+                          Thông tin xe
+                        </Title>
+                        <Descriptions
+                          column={1}
+                          size="small"
+                          bordered
+                          labelStyle={{
+                            width: "40%",
+                            padding: "4px 6px",
+                            lineHeight: "1.3",
+                          }}
+                          contentStyle={{
+                            padding: "4px 6px",
+                            lineHeight: "1.3",
+                          }}
+                          style={{ fontSize: "12px" }}
+                        >
+                          {serviceRequestDetail.vehicleName && (
+                            <Descriptions.Item label="Tên xe">
+                              {serviceRequestDetail.vehicleName}
+                            </Descriptions.Item>
+                          )}
+                          {serviceRequestDetail.plateNumber && (
+                            <Descriptions.Item label="Biển số">
+                              {serviceRequestDetail.plateNumber}
+                            </Descriptions.Item>
+                          )}
+                        </Descriptions>
+                      </Card>
+
+                      {/* Group Information */}
+                      <Card
+                        size="small"
+                        style={{ marginBottom: 4 }}
+                        bodyStyle={{ padding: "8px" }}
+                      >
+                        <Title
+                          level={5}
+                          style={{
+                            marginBottom: 4,
+                            fontSize: 12,
+                            marginTop: 0,
+                            lineHeight: 1.2,
+                          }}
+                        >
+                          Thông tin nhóm
+                        </Title>
+                        <Descriptions
+                          column={1}
+                          size="small"
+                          bordered
+                          labelStyle={{
+                            width: "40%",
+                            padding: "4px 6px",
+                            lineHeight: "1.3",
+                          }}
+                          contentStyle={{
+                            padding: "4px 6px",
+                            lineHeight: "1.3",
+                          }}
+                          style={{ fontSize: "12px" }}
+                        >
+                          {serviceRequestDetail.groupName && (
+                            <Descriptions.Item label="Tên nhóm">
+                              {serviceRequestDetail.groupName}
+                            </Descriptions.Item>
+                          )}
+                          {serviceRequestDetail.createdByName && (
+                            <Descriptions.Item label="Người tạo">
+                              {serviceRequestDetail.createdByName}
+                            </Descriptions.Item>
+                          )}
+                        </Descriptions>
+                      </Card>
+
+                      {/* Contract Information */}
+                      {serviceRequestDetail.vehicleContractStatus && (
+                        <Card
+                          size="small"
+                          style={{ marginBottom: 6 }}
+                          bodyStyle={{ padding: "10px" }}
+                        >
+                          <Title
+                            level={5}
+                            style={{
+                              marginBottom: 6,
+                              fontSize: 13,
+                              marginTop: 0,
+                            }}
+                          >
+                            Thông tin hợp đồng
+                          </Title>
+                          <Descriptions
+                            column={1}
+                            size="small"
+                            bordered
+                            labelStyle={{
+                              width: "40%",
+                              padding: "4px 6px",
+                              lineHeight: "1.3",
+                            }}
+                            contentStyle={{
+                              padding: "4px 6px",
+                              lineHeight: "1.3",
+                            }}
+                            style={{ fontSize: "12px" }}
+                          >
+                            <Descriptions.Item label="Trạng thái">
+                              <Tag
+                                color={
+                                  serviceRequestDetail.vehicleContractStatus ===
+                                  "APPROVED"
+                                    ? "green"
+                                    : serviceRequestDetail.vehicleContractStatus ===
+                                      "PENDING"
+                                    ? "orange"
+                                    : serviceRequestDetail.vehicleContractStatus ===
+                                      "REJECTED"
+                                    ? "red"
+                                    : "default"
+                                }
+                              >
+                                {serviceRequestDetail.vehicleContractStatus}
+                              </Tag>
+                            </Descriptions.Item>
+                            {serviceRequestDetail.contractEffectiveFrom && (
+                              <Descriptions.Item label="Hiệu lực từ">
+                                {formatDateTime(
+                                  serviceRequestDetail.contractEffectiveFrom
+                                )}
+                              </Descriptions.Item>
+                            )}
+                            {serviceRequestDetail.contractExpiresAt && (
+                              <Descriptions.Item label="Hết hạn">
+                                {formatDateTime(
+                                  serviceRequestDetail.contractExpiresAt
+                                )}
+                              </Descriptions.Item>
+                            )}
+                          </Descriptions>
+                        </Card>
+                      )}
+                    </Col>
+
+                    {/* Right Column */}
+                    <Col xs={24} sm={24} md={12}>
+                      {/* Service Center Information */}
+                      <Card
+                        size="small"
+                        style={{ marginBottom: 4 }}
+                        bodyStyle={{ padding: "8px" }}
+                      >
+                        <Title
+                          level={5}
+                          style={{
+                            marginBottom: 4,
+                            fontSize: 12,
+                            marginTop: 0,
+                            lineHeight: 1.2,
+                          }}
+                        >
+                          Trung tâm dịch vụ
+                        </Title>
+                        <Descriptions
+                          column={1}
+                          size="small"
+                          bordered
+                          labelStyle={{
+                            width: "40%",
+                            padding: "4px 6px",
+                            lineHeight: "1.3",
+                          }}
+                          contentStyle={{
+                            padding: "4px 6px",
+                            lineHeight: "1.3",
+                          }}
+                          style={{ fontSize: "12px" }}
+                        >
+                          {serviceRequestDetail.serviceCenterName && (
+                            <Descriptions.Item label="Tên trung tâm">
+                              {serviceRequestDetail.serviceCenterName}
+                            </Descriptions.Item>
+                          )}
+                          {serviceRequestDetail.serviceCenterAddress && (
+                            <Descriptions.Item label="Địa chỉ">
+                              <Text style={{ wordBreak: "break-word" }}>
+                                {serviceRequestDetail.serviceCenterAddress}
+                              </Text>
+                            </Descriptions.Item>
+                          )}
+                          {serviceRequestDetail.technicianName && (
+                            <Descriptions.Item label="Kỹ thuật viên">
+                              {serviceRequestDetail.technicianName}
+                            </Descriptions.Item>
+                          )}
+                        </Descriptions>
+                      </Card>
+
+                      {/* Inspection Information */}
+                      {serviceRequestDetail.inspectionScheduledAt && (
+                        <Card
+                          size="small"
+                          style={{ marginBottom: 6 }}
+                          bodyStyle={{ padding: "10px" }}
+                        >
+                          <Title
+                            level={5}
+                            style={{
+                              marginBottom: 6,
+                              fontSize: 13,
+                              marginTop: 0,
+                            }}
+                          >
+                            Thông tin kiểm tra
+                          </Title>
+                          <Descriptions
+                            column={1}
+                            size="small"
+                            bordered
+                            labelStyle={{
+                              width: "40%",
+                              padding: "4px 6px",
+                              lineHeight: "1.3",
+                            }}
+                            contentStyle={{
+                              padding: "4px 6px",
+                              lineHeight: "1.3",
+                            }}
+                            style={{ fontSize: "12px" }}
+                          >
+                            <Descriptions.Item label="Lịch kiểm tra">
+                              {formatDateTime(
+                                serviceRequestDetail.inspectionScheduledAt
+                              )}
+                            </Descriptions.Item>
+                            {serviceRequestDetail.inspectionNotes && (
+                              <Descriptions.Item label="Ghi chú">
+                                <Text style={{ wordBreak: "break-word" }}>
+                                  {serviceRequestDetail.inspectionNotes}
+                                </Text>
+                              </Descriptions.Item>
+                            )}
+                          </Descriptions>
+                        </Card>
+                      )}
+
+                      {/* Timestamps */}
+                      <Card size="small" bodyStyle={{ padding: "8px" }}>
+                        <Title
+                          level={5}
+                          style={{
+                            marginBottom: 4,
+                            fontSize: 12,
+                            marginTop: 0,
+                            lineHeight: 1.2,
+                          }}
+                        >
+                          Thời gian
+                        </Title>
+                        <Descriptions
+                          column={1}
+                          size="small"
+                          bordered
+                          labelStyle={{
+                            width: "40%",
+                            padding: "4px 6px",
+                            lineHeight: "1.3",
+                          }}
+                          contentStyle={{
+                            padding: "4px 6px",
+                            lineHeight: "1.3",
+                          }}
+                          style={{ fontSize: "12px" }}
+                        >
+                          {serviceRequestDetail.createdAt && (
+                            <Descriptions.Item label="Ngày tạo">
+                              {formatDateTime(serviceRequestDetail.createdAt)}
+                            </Descriptions.Item>
+                          )}
+                          {serviceRequestDetail.approvedAt && (
+                            <Descriptions.Item label="Ngày phê duyệt">
+                              {formatDateTime(serviceRequestDetail.approvedAt)}
+                            </Descriptions.Item>
+                          )}
+                          {serviceRequestDetail.completedAt && (
+                            <Descriptions.Item label="Ngày hoàn thành">
+                              {formatDateTime(serviceRequestDetail.completedAt)}
+                            </Descriptions.Item>
+                          )}
+                          {serviceRequestDetail.updatedAt && (
+                            <Descriptions.Item label="Ngày cập nhật">
+                              {formatDateTime(serviceRequestDetail.updatedAt)}
+                            </Descriptions.Item>
+                          )}
+                        </Descriptions>
+                      </Card>
+                    </Col>
+                  </Row>
+                </div>
+              ) : (
+                <Empty description="Không có dữ liệu" />
               )}
             </Spin>
           </Modal>
