@@ -48,6 +48,11 @@ const getMenuItems = (navigate) => [
       },
     ],
   },
+  {
+    key: "manage-booking",
+    icon: <FileTextOutlined />,
+    label: <Link to="/Manage.Booking">Manage Booking</Link>,
+  },
 ];
 
 /**
