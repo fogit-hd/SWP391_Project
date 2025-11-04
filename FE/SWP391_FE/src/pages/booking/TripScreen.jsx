@@ -22,7 +22,7 @@ const TripScreen = ({ visible, onCancel, booking, onComplete }) => {
       const response = await api.post(`/booking/check-out/${booking.id}`);
       console.log("Check-out response:", response.data);
       
-      message.success("Checked out successfully!");
+      message.success("Trả xe thành công!");
       form.resetFields();
       onComplete();
       onCancel();
@@ -32,7 +32,7 @@ const TripScreen = ({ visible, onCancel, booking, onComplete }) => {
       console.error("Error status:", error.response?.status);
       console.error("Error headers:", error.response?.headers);
       
-      let errorMsg = "Failed to check out";
+      let errorMsg = "Không thể trả xe";
       if (error.response?.data?.message) {
         errorMsg = error.response.data.message;
       } else if (error.response?.data?.error) {
@@ -52,7 +52,7 @@ const TripScreen = ({ visible, onCancel, booking, onComplete }) => {
       title={
         <Space>
           <CheckCircleOutlined />
-          Complete Trip - Check Out
+          Hoàn thành chuyến đi - Trả xe
         </Space>
       }
       open={visible}
@@ -61,12 +61,12 @@ const TripScreen = ({ visible, onCancel, booking, onComplete }) => {
       footer={null}
     >
       <Alert
-        message="Trip Summary"
+        message="Tóm tắt chuyến đi"
         description={
           <div>
-            <p><strong>Start:</strong> {dayjs(booking.startTime).format('YYYY-MM-DD HH:mm')}</p>
-            <p><strong>End:</strong> {dayjs(booking.endTime).format('YYYY-MM-DD HH:mm')}</p>
-            <p><strong>Duration:</strong> {dayjs(booking.endTime).diff(dayjs(booking.startTime), 'hour', true).toFixed(1)} hours</p>
+            <p><strong>Bắt đầu:</strong> {dayjs(booking.startTime).format('YYYY-MM-DD HH:mm')}</p>
+            <p><strong>Kết thúc:</strong> {dayjs(booking.endTime).format('YYYY-MM-DD HH:mm')}</p>
+            <p><strong>Thời lượng:</strong> {dayjs(booking.endTime).diff(dayjs(booking.startTime), 'hour', true).toFixed(1)} giờ</p>
           </div>
         }
         type="info"
@@ -81,14 +81,14 @@ const TripScreen = ({ visible, onCancel, booking, onComplete }) => {
       >
         <Form.Item style={{ marginBottom: 0, marginTop: 24 }}>
           <Space style={{ float: 'right' }}>
-            <Button onClick={onCancel}>Cancel</Button>
+            <Button onClick={onCancel}>Hủy</Button>
             <Button 
               type="primary" 
               htmlType="submit" 
               loading={loading}
               icon={<CheckCircleOutlined />}
             >
-              Complete Check-Out
+              Hoàn tất trả xe
             </Button>
           </Space>
         </Form.Item>

@@ -29,7 +29,7 @@ const BookingManagement = () => {
 
   useEffect(() => {
     if (!isAuthenticated || !isCoOwner) {
-      message.error("You must be a Co-owner to access booking");
+      message.error("Bạn phải là Đồng sở hữu để truy cập tính năng đặt chỗ");
       navigate("/login");
       return;
     }
@@ -48,7 +48,7 @@ const BookingManagement = () => {
       }
     } catch (error) {
       console.error("Failed to fetch groups:", error);
-      message.error("Failed to load your groups");
+      message.error("Không thể tải danh sách nhóm của bạn");
     }
   };
 
@@ -77,7 +77,7 @@ const BookingManagement = () => {
       }
     } catch (error) {
       console.error("Failed to fetch vehicles:", error);
-      message.error("Failed to load group vehicles");
+      message.error("Không thể tải danh sách xe của nhóm");
       setGroupVehicles([]);
     }
   };
@@ -96,7 +96,7 @@ const BookingManagement = () => {
       setBookings(activeBookings);
     } catch (error) {
       console.error("Failed to fetch bookings:", error);
-      message.error("Failed to load bookings");
+      message.error("Không thể tải danh sách đặt chỗ");
       setBookings([]);
     } finally {
       setLoading(false);
@@ -111,7 +111,7 @@ const BookingManagement = () => {
   const handleCreateSuccess = () => {
     setCreateModalVisible(false);
     fetchBookings();
-    message.success("Booking created successfully!");
+    message.success("Tạo đặt chỗ thành công!");
   };
 
   const handleBookingUpdate = () => {
@@ -133,12 +133,12 @@ const BookingManagement = () => {
               onClick={() => navigate("/")}
               style={{ marginRight: 16 }}
             >
-              Back to Home
+              Về trang chủ
             </Button>
             <UnorderedListOutlined className="booking-header-icon" />
             <div>
-              <h1 className="booking-header-title">Vehicle Booking Management</h1>
-              <p className="booking-header-subtitle">Manage your vehicle reservations with detailed view</p>
+              <h1 className="booking-header-title">Quản lý đặt chỗ xe</h1>
+              <p className="booking-header-subtitle">Quản lý việc đặt chỗ xe của bạn với chế độ xem chi tiết</p>
             </div>
           </div>
           <Space>
@@ -147,7 +147,7 @@ const BookingManagement = () => {
               onClick={() => fetchBookings()}
               loading={loading}
             >
-              Refresh
+              Làm mới
             </Button>
             <Button 
               type="primary" 
@@ -155,7 +155,7 @@ const BookingManagement = () => {
               onClick={() => setCreateModalVisible(true)}
               disabled={!selectedGroupId || !selectedVehicleId}
             >
-              New Booking
+              Đặt chỗ mới
             </Button>
           </Space>
         </div>
@@ -163,12 +163,12 @@ const BookingManagement = () => {
         <Card className="booking-filter-card">
           <Space size="large" wrap>
             <div>
-              <label className="booking-filter-label">Group:</label>
+              <label className="booking-filter-label">Nhóm:</label>
               <Select
                 style={{ width: 250 }}
                 value={selectedGroupId}
                 onChange={setSelectedGroupId}
-                placeholder="Select a group"
+                placeholder="Chọn nhóm"
               >
                 {myGroups.map(group => (
                   <Select.Option key={group.id} value={group.id}>
@@ -178,12 +178,12 @@ const BookingManagement = () => {
               </Select>
             </div>
             <div>
-              <label className="booking-filter-label">Vehicle:</label>
+              <label className="booking-filter-label">Xe:</label>
               <Select
                 style={{ width: 250 }}
                 value={selectedVehicleId}
                 onChange={setSelectedVehicleId}
-                placeholder="Select a vehicle"
+                placeholder="Chọn xe"
                 disabled={!selectedGroupId || groupVehicles.length === 0}
               >
                 {groupVehicles.map(vehicle => (

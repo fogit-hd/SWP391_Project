@@ -127,8 +127,8 @@ const BookingListView = ({ bookings = [], onBookingClick, loading = false }) => 
             <div className="time-block">
               <CalendarOutlined />
               <div>
-                <div className="time-label">Start</div>
-                <div className="time-value">{startTime.format('dddd, MMM DD, YYYY')}</div>
+                <div className="time-label">Bắt đầu</div>
+                <div className="time-value">{startTime.format('dddd, DD/MM/YYYY')}</div>
                 <div className="time-detail">{startTime.format('HH:mm')}</div>
               </div>
             </div>
@@ -140,8 +140,8 @@ const BookingListView = ({ bookings = [], onBookingClick, loading = false }) => 
             <div className="time-block">
               <CalendarOutlined />
               <div>
-                <div className="time-label">End</div>
-                <div className="time-value">{endTime.format('dddd, MMM DD, YYYY')}</div>
+                <div className="time-label">Kết thúc</div>
+                <div className="time-value">{endTime.format('dddd, DD/MM/YYYY')}</div>
                 <div className="time-detail">{endTime.format('HH:mm')}</div>
               </div>
             </div>
@@ -149,7 +149,7 @@ const BookingListView = ({ bookings = [], onBookingClick, loading = false }) => 
 
           {booking.notes && (
             <div className="booking-notes">
-              <strong>Notes:</strong> {booking.notes}
+              <strong>Ghi chú:</strong> {booking.notes}
             </div>
           )}
         </div>
@@ -165,7 +165,7 @@ const BookingListView = ({ bookings = [], onBookingClick, loading = false }) => 
           onChange={setStatusFilter}
           style={{ width: 150 }}
         >
-          <Select.Option value="all">All Status</Select.Option>
+          <Select.Option value="all">Tất cả trạng thái</Select.Option>
           {Object.keys(BOOKING_STATUS_LABELS).map(status => (
             <Select.Option key={status} value={status}>
               {BOOKING_STATUS_LABELS[status]}
@@ -176,9 +176,9 @@ const BookingListView = ({ bookings = [], onBookingClick, loading = false }) => 
 
       <div className="list-summary">
         <Space>
-          <span>Total: {filteredBookings.length} bookings</span>
+          <span>Tổng: {filteredBookings.length} đặt chỗ</span>
           <span>•</span>
-          <span>Long-term (1+ days): {filteredBookings.filter(b => 
+          <span>Dài hạn (1+ ngày): {filteredBookings.filter(b => 
             dayjs(b.endTime).diff(dayjs(b.startTime), 'day') >= 1
           ).length}</span>
         </Space>
@@ -188,7 +188,7 @@ const BookingListView = ({ bookings = [], onBookingClick, loading = false }) => 
         loading={loading}
         dataSource={filteredBookings}
         renderItem={renderBookingCard}
-        locale={{ emptyText: 'No bookings found' }}
+        locale={{ emptyText: 'Không tìm thấy đặt chỗ nào' }}
       />
     </div>
   );

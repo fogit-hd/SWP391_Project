@@ -37,7 +37,7 @@ const CreateBookingModal = ({ visible, onCancel, onSuccess, groupId, vehicleId, 
       setQuotaInfo(response.data);
     } catch (error) {
       console.error("Failed to fetch quota info:", error);
-      message.error("Failed to load booking quota information");
+      message.error("Không thể tải thông tin hạn ngạch đặt chỗ");
     } finally {
       setQuotaLoading(false);
     }
@@ -61,7 +61,7 @@ const CreateBookingModal = ({ visible, onCancel, onSuccess, groupId, vehicleId, 
       }
     } catch (error) {
       console.error("Failed to fetch bookings:", error);
-      message.error("Failed to load completed bookings");
+      message.error("Không thể tải danh sách đặt chỗ đã hoàn thành");
     } finally {
       setBookingsLoading(false);
     }
@@ -295,7 +295,7 @@ const CreateBookingModal = ({ visible, onCancel, onSuccess, groupId, vehicleId, 
       console.log("Creating booking with payload:", payload);
       const response = await api.post("/booking/create", payload);
       console.log("Booking created successfully:", response.data);
-      message.success("Booking created successfully!");
+      message.success("Tạo đặt chỗ thành công!");
       form.resetFields();
       setEstimatedDuration(null);
       setValidationError(null);
@@ -306,7 +306,7 @@ const CreateBookingModal = ({ visible, onCancel, onSuccess, groupId, vehicleId, 
       console.error("Error status:", error.response?.status);
       console.error("Error headers:", error.response?.headers);
       
-      let errorMsg = "Failed to create booking";
+      let errorMsg = "Không thể tạo đặt chỗ";
       if (error.response?.data?.message) {
         errorMsg = error.response.data.message;
       } else if (error.response?.data?.error) {
@@ -455,7 +455,7 @@ const CreateBookingModal = ({ visible, onCancel, onSuccess, groupId, vehicleId, 
 
   return (
     <Modal
-      title="Create New Booking"
+      title="Tạo đặt chỗ mới"
       open={visible}
       onCancel={handleCancel}
       footer={null}
@@ -463,13 +463,13 @@ const CreateBookingModal = ({ visible, onCancel, onSuccess, groupId, vehicleId, 
       destroyOnClose
     >
       <Alert
-        message="Booking Rules"
+        message="Quy tắc đặt chỗ"
         description={
           <ul style={{ margin: '8px 0', paddingLeft: '20px' }}>
-            <li>Book at least {BOOKING_CONSTRAINTS.MIN_ADVANCE_HOURS} hours in advance</li>
-            <li>Maximum {BOOKING_CONSTRAINTS.MAX_ADVANCE_DAYS} days in advance</li>
-            <li>End time must be after start time</li>
-            <li>Cannot overlap with existing bookings</li>
+            <li>Đặt trước ít nhất {BOOKING_CONSTRAINTS.MIN_ADVANCE_HOURS} giờ</li>
+            <li>Tối đa {BOOKING_CONSTRAINTS.MAX_ADVANCE_DAYS} ngày trước</li>
+            <li>Thời gian kết thúc phải sau thời gian bắt đầu</li>
+            <li>Không được trùng với các đặt chỗ hiện có</li>
           </ul>
         }
         type="info"
@@ -480,29 +480,29 @@ const CreateBookingModal = ({ visible, onCancel, onSuccess, groupId, vehicleId, 
       {/* Quota Information Alert */}
       {quotaLoading ? (
         <Alert
-          message="Loading quota information..."
+          message="Đang tải thông tin hạn ngạch..."
           type="info"
           showIcon
           style={{ marginBottom: 16 }}
         />
       ) : quotaInfo && quotaInfo.data && (
         <Alert
-          message="Booking Hours Quota"
+          message="Hạn ngạch giờ đặt chỗ"
           description={
             <div>
               <div style={{ marginBottom: 8 }}>
-                You have {quotaInfo.data.remainingHours.toFixed(0)} hours {((quotaInfo.data.remainingHours % 1) * 60).toFixed(0)} minutes left to book this week, and {quotaInfo.data.remainingHoursNextWeek.toFixed(0)} hours to book in advance for next week.
+                Bạn còn {quotaInfo.data.remainingHours.toFixed(0)} giờ {((quotaInfo.data.remainingHours % 1) * 60).toFixed(0)} phút để đặt trong tuần này, và {quotaInfo.data.remainingHoursNextWeek.toFixed(0)} giờ để đặt trước cho tuần sau.
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px', marginTop: 12 }}>
                 <div>
-                  <strong>Hours Used:</strong> <span style={{ color: '#1890ff', fontWeight: 600 }}>{quotaInfo.data.hoursUsed.toFixed(2)}h</span>
+                  <strong>Giờ đã dùng:</strong> <span style={{ color: '#1890ff', fontWeight: 600 }}>{quotaInfo.data.hoursUsed.toFixed(2)}h</span>
                 </div>
                 <div>
-                  <strong>Penalty Hours:</strong> <span style={{ color: '#ff4d4f', fontWeight: 600 }}>{quotaInfo.data.hoursDebt.toFixed(2)}h</span>
+                  <strong>Giờ phạt:</strong> <span style={{ color: '#ff4d4f', fontWeight: 600 }}>{quotaInfo.data.hoursDebt.toFixed(2)}h</span>
                 </div>
               </div>
               <div style={{ marginTop: 8, fontSize: '12px', color: '#8c8c8c' }}>
-                Week starting: {dayjs(quotaInfo.data.weekStartDate).format('MM/DD/YYYY')}
+                Tuần bắt đầu: {dayjs(quotaInfo.data.weekStartDate).format('DD/MM/YYYY')}
               </div>
             </div>
           }
@@ -515,20 +515,20 @@ const CreateBookingModal = ({ visible, onCancel, onSuccess, groupId, vehicleId, 
       {/* Completed Bookings This Week */}
       {bookingsLoading ? (
         <Alert
-          message="Loading completed bookings..."
+          message="Đang tải danh sách đặt chỗ đã hoàn thành..."
           type="info"
           showIcon
           style={{ marginBottom: 16 }}
         />
       ) : (
         <Alert
-          message="Completed Bookings This Week"
+          message="Đặt chỗ đã hoàn thành tuần này"
           description={
             <div>
               {completedBookings.length > 0 ? (
                 <>
                   <div style={{ marginBottom: 8 }}>
-                    {completedBookings.length} completed booking{completedBookings.length > 1 ? 's' : ''} this week:
+                    {completedBookings.length} đặt chỗ đã hoàn thành tuần này:
                   </div>
                   <div style={{ maxHeight: '120px', overflowY: 'auto' }}>
                     {completedBookings.map((booking, index) => {
@@ -549,10 +549,10 @@ const CreateBookingModal = ({ visible, onCancel, onSuccess, groupId, vehicleId, 
                           }}
                         >
                           <div style={{ fontWeight: 'bold', color: '#389e0d' }}>
-                            {startTime.format('MMM DD, YYYY HH:mm')} - {endTime.format('HH:mm')}
+                            {startTime.format('DD/MM/YYYY HH:mm')} - {endTime.format('HH:mm')}
                           </div>
                           <div style={{ color: '#666' }}>
-                            Duration: {duration.toFixed(1)} hours • Status: COMPLETE
+                            Thời lượng: {duration.toFixed(1)} giờ • Trạng thái: HOÀN THÀNH
                           </div>
                         </div>
                       );
@@ -561,12 +561,12 @@ const CreateBookingModal = ({ visible, onCancel, onSuccess, groupId, vehicleId, 
                 </>
               ) : (
                 <div style={{ color: '#666', fontStyle: 'italic' }}>
-                  No completed bookings this week yet.
+                  Chưa có đặt chỗ hoàn thành nào trong tuần này.
                 </div>
               )}
               {quotaInfo?.data && (
                 <div style={{ marginTop: 8, fontSize: '12px', color: '#8c8c8c' }}>
-                  Week starting: {dayjs(quotaInfo.data.weekStartDate).format('MM/DD/YYYY')}
+                  Tuần bắt đầu: {dayjs(quotaInfo.data.weekStartDate).format('DD/MM/YYYY')}
                 </div>
               )}
             </div>
@@ -580,7 +580,7 @@ const CreateBookingModal = ({ visible, onCancel, onSuccess, groupId, vehicleId, 
       {/* Validation Error Alert */}
       {validationError && (
         <Alert
-          message="Booking Validation Error"
+          message="Lỗi xác thực đặt chỗ"
           description={validationError}
           type="error"
           showIcon
@@ -597,8 +597,8 @@ const CreateBookingModal = ({ visible, onCancel, onSuccess, groupId, vehicleId, 
       >
         <Form.Item
           name="timeRange"
-          label="Booking Time"
-          rules={[{ required: true, message: "Please select booking time" }]}
+          label="Thời gian đặt chỗ"
+          rules={[{ required: true, message: "Vui lòng chọn thời gian đặt chỗ" }]}
         >
           <RangePicker
             showTime={{ format: 'HH:mm' }}
@@ -607,13 +607,13 @@ const CreateBookingModal = ({ visible, onCancel, onSuccess, groupId, vehicleId, 
             disabledDate={disabledDate}
             disabledTime={disabledTime}
             onChange={handleTimeChange}
-            minuteStep={15}
+            minuteStep={1}
           />
         </Form.Item>
 
         {estimatedDuration !== null && (
           <Alert
-            message={`Duration: ${estimatedDuration.toFixed(1)} hours`}
+            message={`Thời lượng: ${estimatedDuration.toFixed(1)} giờ`}
             type="success"
             showIcon
             icon={<ClockCircleOutlined />}
@@ -623,10 +623,10 @@ const CreateBookingModal = ({ visible, onCancel, onSuccess, groupId, vehicleId, 
 
         <Form.Item style={{ marginBottom: 0, marginTop: 24 }}>
           <Button onClick={handleCancel} style={{ marginRight: 8 }}>
-            Cancel
+            Hủy
           </Button>
           <Button type="primary" htmlType="submit" loading={loading}>
-            Create Booking
+            Tạo đặt chỗ
           </Button>
         </Form.Item>
       </Form>
