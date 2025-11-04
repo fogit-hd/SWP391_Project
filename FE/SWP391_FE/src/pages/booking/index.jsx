@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { Card, Button, Select, Space, Spin, message, Tag, Badge, Tooltip, Modal } from "antd";
+import { Card, Button, Select, Space, Spin, message, Tag, Badge, Tooltip, Modal, List } from "antd";
 import { CalendarOutlined, PlusOutlined, ReloadOutlined, CarOutlined, ArrowLeftOutlined, HomeOutlined, UnorderedListOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import dayjs from "dayjs";
@@ -22,6 +22,8 @@ const BookingManagement = () => {
   const [groupVehicles, setGroupVehicles] = useState([]);
   const [selectedVehicleId, setSelectedVehicleId] = useState(null);
   const [bookings, setBookings] = useState([]);
+  const [tripHistory, setTripHistory] = useState([]);
+  const [loadingTripHistory, setLoadingTripHistory] = useState(false);
   
   const [createModalVisible, setCreateModalVisible] = useState(false);
   const [detailModalVisible, setDetailModalVisible] = useState(false);
@@ -63,7 +65,39 @@ const BookingManagement = () => {
     if (selectedGroupId && selectedVehicleId) {
       fetchBookings();
     }
+    // load trip history when group selection changes
+    if (selectedGroupId) {
+      fetchTripHistory();
+    } else {
+      setTripHistory([]);
+    }
   }, [selectedGroupId, selectedVehicleId]);
+
+  // also refresh trip history when groupVehicles update (so vehicleNameById can find names)
+  useEffect(() => {
+    if (selectedGroupId) fetchTripHistory();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [groupVehicles]);
+
+  const fetchTripHistory = async () => {
+    setLoadingTripHistory(true);
+    try {
+      const res = await api.get(`/trip-events/History`);
+      const data = Array.isArray(res.data) ? res.data : res.data?.data || [];
+      // If we have group vehicles, narrow down to those vehicles belonging to the selected group
+      const vehicleIds = (groupVehicles || []).map((v) => v.id || v.vehicleId).filter(Boolean);
+      const filtered = vehicleIds.length > 0 ? data.filter((e) => vehicleIds.includes(e.vehicleId)) : data;
+      // sort newest first
+      filtered.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      setTripHistory(filtered.slice(0, 50)); // keep a reasonable number
+    } catch (err) {
+      console.error("Failed to fetch trip history:", err);
+      message.error("Không thể tải lịch sử sự kiện chuyến đi");
+      setTripHistory([]);
+    } finally {
+      setLoadingTripHistory(false);
+    }
+  };
 
   const fetchGroupVehicles = async () => {
     try {
@@ -75,6 +109,8 @@ const BookingManagement = () => {
       } else {
         setSelectedVehicleId(null);
       }
+      // refresh trip history after vehicles are loaded so we can resolve vehicle names
+      fetchTripHistory();
     } catch (error) {
       console.error("Failed to fetch vehicles:", error);
       message.error("Không thể tải danh sách xe của nhóm");
@@ -121,6 +157,12 @@ const BookingManagement = () => {
 
   const selectedGroup = myGroups.find(g => g.id === selectedGroupId);
   const selectedVehicle = groupVehicles.find(v => (v.id || v.vehicleId) === selectedVehicleId);
+
+  const vehicleNameById = (id) => {
+    const v = groupVehicles.find((x) => (x.id || x.vehicleId) === id);
+    if (!v) return id;
+    return `${v.make || v.model || ''} ${v.model || ''} ${v.plateNumber || v.plate || ''}`.trim();
+  };
 
   return (
     <div className="booking-management-page">
@@ -205,6 +247,29 @@ const BookingManagement = () => {
           onBookingClick={handleBookingClick}
           loading={loading}
         />
+
+        <Card style={{ marginTop: 16 }} title="Lịch sử sự kiện chuyến đi (trip events)">
+          {loadingTripHistory ? (
+            <Spin />
+          ) : (
+            <List
+              dataSource={tripHistory}
+              locale={{ emptyText: 'Không có sự kiện' }}
+              renderItem={(t) => (
+                <List.Item>
+                  <List.Item.Meta
+                    avatar={t.photosUrl ? <img src={t.photosUrl} alt="evt" style={{ width: 80, height: 56, objectFit: 'cover', borderRadius: 4 }} /> : null}
+                    title={<span><strong>{t.eventType}</strong> — {vehicleNameById(t.vehicleId)}</span>}
+                    description={<div>
+                      <div style={{ marginBottom: 6 }}>{t.description}</div>
+                      <div style={{ fontSize: 12, color: '#666' }}>By: {t.signedBy} • {t.bookingId ? `Booking: ${t.bookingId}` : ''} • {new Date(t.createdAt).toLocaleString()}</div>
+                    </div>}
+                  />
+                </List.Item>
+              )}
+            />
+          )}
+        </Card>
       </div>
 
       <CreateBookingModal
