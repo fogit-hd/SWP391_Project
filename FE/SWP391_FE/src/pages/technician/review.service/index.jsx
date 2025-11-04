@@ -20,6 +20,8 @@ import {
   Tabs,
   Upload,
   Popconfirm,
+  Descriptions,
+  Empty,
 } from "antd";
 import { useAuth } from "../../../components/hooks/useAuth";
 import {
@@ -54,6 +56,7 @@ import {
 const { Header, Content, Sider } = Layout;
 const { Title, Paragraph } = Typography;
 const { TextArea } = Input;
+const { Text: AntText } = Typography;
 
 const ReviewService = ({
   defaultTab = "service-requests",
@@ -87,6 +90,11 @@ const ReviewService = ({
   const [selectedJob, setSelectedJob] = useState(null);
   const [uploadFile, setUploadFile] = useState(null);
   const [jobStatusFilter, setJobStatusFilter] = useState("ALL"); // SCHEDULED, DONE, CANCELLED, ALL
+  
+  // Service Request Detail Modal States
+  const [serviceRequestDetailOpen, setServiceRequestDetailOpen] = useState(false);
+  const [serviceRequestDetail, setServiceRequestDetail] = useState(null);
+  const [serviceRequestDetailLoading, setServiceRequestDetailLoading] = useState(false);
 
   /**
    * Service Request Status Flow:
@@ -342,6 +350,45 @@ const ReviewService = ({
   const handleCompleteJob = async (jobId) => {
     try {
       console.log("✅ Completing job:", jobId);
+      
+      // Find the job to check estimatedFinishAt
+      const job = serviceJobs.find((j) => j.id === jobId) || allServiceJobsData.find((j) => j.id === jobId);
+      const now = new Date();
+      
+      // Get service request ID from job (could be serviceRequestId, requestId, or serviceRequest.id)
+      const serviceRequestId = job?.serviceRequestId || job?.requestId || job?.serviceRequest?.id;
+      
+      // If we have service request ID, check if estimatedFinishAt needs updating
+      if (serviceRequestId) {
+        try {
+          // Fetch service request to get estimatedFinishAt
+          const serviceResponse = await api.get(`/service-requests/${serviceRequestId}`);
+          const serviceRequest = serviceResponse.data?.data || serviceResponse.data;
+          
+          if (serviceRequest?.estimatedFinishAt) {
+            const estimatedDate = new Date(serviceRequest.estimatedFinishAt);
+            if (estimatedDate > now) {
+              console.log("⏰ Estimated finish date is in future, updating to now");
+              try {
+                // Update estimatedFinishAt to current time, preserve existing costEstimate and notes
+                await api.put(`/service-requests/${serviceRequestId}/estimate`, {
+                  costEstimate: serviceRequest.costEstimate || 0,
+                  estimatedFinishAt: now.toISOString(),
+                  notes: serviceRequest.notes || serviceRequest.estimateNotes || "",
+                });
+                console.log("✅ Updated estimatedFinishAt to current time");
+              } catch (updateError) {
+                console.error("⚠️ Failed to update estimatedFinishAt:", updateError);
+                // Continue with completing job even if update fails
+              }
+            }
+          }
+        } catch (fetchError) {
+          console.error("⚠️ Failed to fetch service request:", fetchError);
+          // Continue with completing job even if fetch fails
+        }
+      }
+      
       await completeServiceJob(jobId);
       toast.success("Service job marked as DONE!");
       loadServiceJobs(); // Reload jobs
@@ -388,6 +435,9 @@ const ReviewService = ({
     // Pre-fill form with existing estimate (NO default value)
     estimateForm.setFieldsValue({
       costEstimate: service.costEstimate || undefined,
+      estimatedFinishAt: service.estimatedFinishAt
+        ? dayjs(service.estimatedFinishAt)
+        : null,
       estimateNotes: service.estimateNotes || "",
     });
 
@@ -448,7 +498,10 @@ const ReviewService = ({
 
       const payload = {
         costEstimate: values.costEstimate,
-        estimateNotes: values.estimateNotes || "",
+        estimatedFinishAt: values.estimatedFinishAt
+          ? values.estimatedFinishAt.toISOString()
+          : null,
+        notes: values.estimateNotes || "",
       };
 
       console.log("💰 Updating estimate for service:", selectedServiceId);
@@ -485,6 +538,54 @@ const ReviewService = ({
       );
     } finally {
       setEstimateLoading(false);
+    }
+  };
+  
+  // Fetch service request details
+  const fetchServiceRequestDetails = async (requestId) => {
+    if (!requestId) {
+      console.warn("⚠️ No request ID provided");
+      return;
+    }
+
+    console.log("🔍 Fetching service request details for ID:", requestId);
+    setServiceRequestDetailLoading(true);
+    setServiceRequestDetailOpen(true);
+    try {
+      const response = await api.get(`/service-requests/${requestId}`);
+      console.log("✅ Service request details loaded:", response.data);
+      const data = response.data?.data || null;
+      if (data) {
+        console.log("📋 All fields in response:", {
+          completedAt: data.completedAt,
+          approvedAt: data.approvedAt,
+          inspectionScheduledAt: data.inspectionScheduledAt,
+          inspectionNotes: data.inspectionNotes,
+        });
+      }
+      setServiceRequestDetail(data);
+    } catch (error) {
+      console.error("❌ Failed to load service request details:", error);
+      message.error("Failed to load service request details");
+      setServiceRequestDetail(null);
+    } finally {
+      setServiceRequestDetailLoading(false);
+    }
+  };
+
+  // Format datetime to dd/mm/yyyy HH:mm
+  const formatDateTime = (dateString) => {
+    if (!dateString) return "-";
+    try {
+      const date = new Date(dateString);
+      const day = String(date.getDate()).padStart(2, "0");
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const year = date.getFullYear();
+      const hours = String(date.getHours()).padStart(2, "0");
+      const minutes = String(date.getMinutes()).padStart(2, "0");
+      return `${day}/${month}/${year} ${hours}:${minutes}`;
+    } catch (error) {
+      return "-";
     }
   };
 
@@ -725,7 +826,31 @@ const ReviewService = ({
       key: "title",
       width: 180,
       ellipsis: true,
-      render: (text) => <span style={{ fontSize: "13px" }}>{text}</span>,
+      render: (text, record) => (
+        <Button
+          type="link"
+          style={{
+            fontSize: "13px",
+            padding: 0,
+            height: "auto",
+            color: "#1890ff",
+            textDecoration: "underline",
+          }}
+          onClick={(e) => {
+            e.stopPropagation();
+            e.preventDefault();
+            console.log("🖱️ Title clicked, record ID:", record.id);
+            if (record.id) {
+              fetchServiceRequestDetails(record.id);
+            } else {
+              console.warn("⚠️ No record ID found");
+              message.warning("Không tìm thấy ID của service request");
+            }
+          }}
+        >
+          {text}
+        </Button>
+      ),
     },
     {
       title: "Type",
@@ -1319,6 +1444,25 @@ const ReviewService = ({
             />
           </Form.Item>
 
+          <Form.Item
+            name="estimatedFinishAt"
+            label="Estimated Completion Date"
+            rules={[
+              { required: true, message: "Please select estimated completion date" },
+            ]}
+          >
+            <DatePicker
+              showTime
+              format="MM/DD/YYYY HH:mm"
+              placeholder="Select estimated completion date and time"
+              style={{ width: "100%" }}
+              disabledDate={(current) => {
+                // Disable dates before today
+                return current && current < dayjs().startOf("day");
+              }}
+            />
+          </Form.Item>
+
           <Form.Item name="estimateNotes" label="Cost Notes">
             <TextArea
               rows={4}
@@ -1424,6 +1568,299 @@ const ReviewService = ({
             Documents (PDF, DOC, DOCX), Text files (TXT), and more.
           </Typography.Text>
         </div>
+      </Modal>
+
+      {/* Service Request Detail Modal */}
+      <Modal
+        title="Chi tiết Yêu cầu Dịch vụ"
+        open={serviceRequestDetailOpen}
+        onCancel={() => {
+          setServiceRequestDetailOpen(false);
+          setServiceRequestDetail(null);
+        }}
+        footer={[
+          <Button
+            key="close"
+            type="primary"
+            onClick={() => {
+              setServiceRequestDetailOpen(false);
+              setServiceRequestDetail(null);
+            }}
+          >
+            Đóng
+          </Button>,
+        ]}
+        width={1000}
+        style={{ top: 5, paddingBottom: 0 }}
+        bodyStyle={{ padding: "8px", maxHeight: "calc(100vh - 80px)", overflowY: "hidden" }}
+      >
+        <Spin spinning={serviceRequestDetailLoading}>
+          {serviceRequestDetail ? (
+            <div style={{ padding: "0" }}>
+              <Row gutter={[8, 4]}>
+                {/* Left Column */}
+                <Col xs={24} sm={24} md={12}>
+                  {/* Basic Information */}
+                  <Card size="small" style={{ marginBottom: 4 }} bodyStyle={{ padding: "8px" }}>
+                    <Title level={5} style={{ marginBottom: 4, fontSize: 12, marginTop: 0, lineHeight: 1.2 }}>
+                      Thông tin cơ bản
+                    </Title>
+                    <Descriptions 
+                      column={1} 
+                      size="small" 
+                      bordered 
+                      labelStyle={{ width: "40%", padding: "4px 6px", lineHeight: "1.3" }} 
+                      contentStyle={{ padding: "4px 6px", lineHeight: "1.3" }}
+                      style={{ fontSize: "12px" }}
+                    >
+                      {serviceRequestDetail.title && (
+                        <Descriptions.Item label="Tiêu đề">
+                          {serviceRequestDetail.title}
+                        </Descriptions.Item>
+                      )}
+                      {serviceRequestDetail.type && (
+                        <Descriptions.Item label="Loại">
+                          <Tag color={
+                            serviceRequestDetail.type === "MAINTENANCE" ? "blue" :
+                            serviceRequestDetail.type === "REPAIR" ? "orange" :
+                            serviceRequestDetail.type === "INSPECTION" ? "green" :
+                            serviceRequestDetail.type === "CLEANING" ? "cyan" :
+                            serviceRequestDetail.type === "UPGRADE" ? "purple" : "default"
+                          }>
+                            {serviceRequestDetail.type}
+                          </Tag>
+                        </Descriptions.Item>
+                      )}
+                      {serviceRequestDetail.description && (
+                        <Descriptions.Item label="Mô tả">
+                          <AntText style={{ wordBreak: "break-word" }}>
+                            {serviceRequestDetail.description}
+                          </AntText>
+                        </Descriptions.Item>
+                      )}
+                      {serviceRequestDetail.status && (
+                        <Descriptions.Item label="Trạng thái">
+                          <Tag color={
+                            serviceRequestDetail.status === "COMPLETED" ? "green" :
+                            serviceRequestDetail.status === "APPROVED" ? "green" :
+                            serviceRequestDetail.status === "REJECTED" ? "red" :
+                            serviceRequestDetail.status === "VOTING" ? "orange" :
+                            serviceRequestDetail.status === "PENDING_QUOTE" ? "blue" :
+                            serviceRequestDetail.status === "IN_PROGRESS" ? "blue" :
+                            serviceRequestDetail.status === "DRAFT" ? "default" : "default"
+                          }>
+                            {serviceRequestDetail.status}
+                          </Tag>
+                        </Descriptions.Item>
+                      )}
+                      {serviceRequestDetail.costEstimate !== undefined && serviceRequestDetail.costEstimate !== null && (
+                        <Descriptions.Item label="Chi phí ước tính">
+                          {`${(serviceRequestDetail.costEstimate / 1000).toFixed(0)}K VNĐ`}
+                        </Descriptions.Item>
+                      )}
+                      {serviceRequestDetail.estimatedFinishAt && (
+                        <Descriptions.Item label="Ngày hoàn thành dự kiến">
+                          {formatDateTime(serviceRequestDetail.estimatedFinishAt)}
+                        </Descriptions.Item>
+                      )}
+                    </Descriptions>
+                  </Card>
+
+                  {/* Vehicle Information */}
+                  <Card size="small" style={{ marginBottom: 4 }} bodyStyle={{ padding: "8px" }}>
+                    <Title level={5} style={{ marginBottom: 4, fontSize: 12, marginTop: 0, lineHeight: 1.2 }}>
+                      Thông tin xe
+                    </Title>
+                    <Descriptions 
+                      column={1} 
+                      size="small" 
+                      bordered 
+                      labelStyle={{ width: "40%", padding: "4px 6px", lineHeight: "1.3" }} 
+                      contentStyle={{ padding: "4px 6px", lineHeight: "1.3" }}
+                      style={{ fontSize: "12px" }}
+                    >
+                      {serviceRequestDetail.vehicleName && (
+                        <Descriptions.Item label="Tên xe">
+                          {serviceRequestDetail.vehicleName}
+                        </Descriptions.Item>
+                      )}
+                      {serviceRequestDetail.plateNumber && (
+                        <Descriptions.Item label="Biển số">
+                          {serviceRequestDetail.plateNumber}
+                        </Descriptions.Item>
+                      )}
+                    </Descriptions>
+                  </Card>
+
+                  {/* Group Information */}
+                  <Card size="small" style={{ marginBottom: 4 }} bodyStyle={{ padding: "8px" }}>
+                    <Title level={5} style={{ marginBottom: 4, fontSize: 12, marginTop: 0, lineHeight: 1.2 }}>
+                      Thông tin nhóm
+                    </Title>
+                    <Descriptions 
+                      column={1} 
+                      size="small" 
+                      bordered 
+                      labelStyle={{ width: "40%", padding: "4px 6px", lineHeight: "1.3" }} 
+                      contentStyle={{ padding: "4px 6px", lineHeight: "1.3" }}
+                      style={{ fontSize: "12px" }}
+                    >
+                      {serviceRequestDetail.groupName && (
+                        <Descriptions.Item label="Tên nhóm">
+                          {serviceRequestDetail.groupName}
+                        </Descriptions.Item>
+                      )}
+                      {serviceRequestDetail.createdByName && (
+                        <Descriptions.Item label="Người tạo">
+                          {serviceRequestDetail.createdByName}
+                        </Descriptions.Item>
+                      )}
+                    </Descriptions>
+                  </Card>
+
+                  {/* Contract Information - Hidden for technician */}
+                  {/* {serviceRequestDetail.vehicleContractStatus && (
+                    <Card size="small" style={{ marginBottom: 4 }} bodyStyle={{ padding: "8px" }}>
+                      <Title level={5} style={{ marginBottom: 4, fontSize: 12, marginTop: 0, lineHeight: 1.2 }}>
+                        Thông tin hợp đồng
+                      </Title>
+                      <Descriptions 
+                        column={1} 
+                        size="small" 
+                        bordered 
+                        labelStyle={{ width: "40%", padding: "4px 6px", lineHeight: "1.3" }} 
+                        contentStyle={{ padding: "4px 6px", lineHeight: "1.3" }}
+                        style={{ fontSize: "12px" }}
+                      >
+                        <Descriptions.Item label="Trạng thái">
+                          <Tag color={
+                            serviceRequestDetail.vehicleContractStatus === "APPROVED" ? "green" :
+                            serviceRequestDetail.vehicleContractStatus === "PENDING" ? "orange" :
+                            serviceRequestDetail.vehicleContractStatus === "REJECTED" ? "red" : "default"
+                          }>
+                            {serviceRequestDetail.vehicleContractStatus}
+                          </Tag>
+                        </Descriptions.Item>
+                        {serviceRequestDetail.contractEffectiveFrom && (
+                          <Descriptions.Item label="Hiệu lực từ">
+                            {formatDateTime(serviceRequestDetail.contractEffectiveFrom)}
+                          </Descriptions.Item>
+                        )}
+                        {serviceRequestDetail.contractExpiresAt && (
+                          <Descriptions.Item label="Hết hạn">
+                            {formatDateTime(serviceRequestDetail.contractExpiresAt)}
+                          </Descriptions.Item>
+                        )}
+                      </Descriptions>
+                    </Card>
+                  )} */}
+                </Col>
+
+                {/* Right Column */}
+                <Col xs={24} sm={24} md={12}>
+                  {/* Service Center Information */}
+                  <Card size="small" style={{ marginBottom: 4 }} bodyStyle={{ padding: "8px" }}>
+                    <Title level={5} style={{ marginBottom: 4, fontSize: 12, marginTop: 0, lineHeight: 1.2 }}>
+                      Trung tâm dịch vụ
+                    </Title>
+                    <Descriptions 
+                      column={1} 
+                      size="small" 
+                      bordered 
+                      labelStyle={{ width: "40%", padding: "4px 6px", lineHeight: "1.3" }} 
+                      contentStyle={{ padding: "4px 6px", lineHeight: "1.3" }}
+                      style={{ fontSize: "12px" }}
+                    >
+                      {serviceRequestDetail.serviceCenterName && (
+                        <Descriptions.Item label="Tên trung tâm">
+                          {serviceRequestDetail.serviceCenterName}
+                        </Descriptions.Item>
+                      )}
+                      {serviceRequestDetail.serviceCenterAddress && (
+                        <Descriptions.Item label="Địa chỉ">
+                          <AntText style={{ wordBreak: "break-word" }}>
+                            {serviceRequestDetail.serviceCenterAddress}
+                          </AntText>
+                        </Descriptions.Item>
+                      )}
+                      {serviceRequestDetail.technicianName && (
+                        <Descriptions.Item label="Kỹ thuật viên">
+                          {serviceRequestDetail.technicianName}
+                        </Descriptions.Item>
+                      )}
+                    </Descriptions>
+                  </Card>
+
+                  {/* Inspection Information */}
+                  {serviceRequestDetail.inspectionScheduledAt && (
+                    <Card size="small" style={{ marginBottom: 4 }} bodyStyle={{ padding: "8px" }}>
+                      <Title level={5} style={{ marginBottom: 4, fontSize: 12, marginTop: 0, lineHeight: 1.2 }}>
+                        Thông tin kiểm tra
+                      </Title>
+                      <Descriptions 
+                        column={1} 
+                        size="small" 
+                        bordered 
+                        labelStyle={{ width: "40%", padding: "4px 6px", lineHeight: "1.3" }} 
+                        contentStyle={{ padding: "4px 6px", lineHeight: "1.3" }}
+                        style={{ fontSize: "12px" }}
+                      >
+                        <Descriptions.Item label="Lịch kiểm tra">
+                          {formatDateTime(serviceRequestDetail.inspectionScheduledAt)}
+                        </Descriptions.Item>
+                        {serviceRequestDetail.inspectionNotes && (
+                          <Descriptions.Item label="Ghi chú">
+                            <AntText style={{ wordBreak: "break-word" }}>
+                              {serviceRequestDetail.inspectionNotes}
+                            </AntText>
+                          </Descriptions.Item>
+                        )}
+                      </Descriptions>
+                    </Card>
+                  )}
+
+                  {/* Timestamps */}
+                  <Card size="small" bodyStyle={{ padding: "8px" }}>
+                    <Title level={5} style={{ marginBottom: 4, fontSize: 12, marginTop: 0, lineHeight: 1.2 }}>
+                      Thời gian
+                    </Title>
+                    <Descriptions 
+                      column={1} 
+                      size="small" 
+                      bordered 
+                      labelStyle={{ width: "40%", padding: "4px 6px", lineHeight: "1.3" }} 
+                      contentStyle={{ padding: "4px 6px", lineHeight: "1.3" }}
+                      style={{ fontSize: "12px" }}
+                    >
+                      {serviceRequestDetail.createdAt && (
+                        <Descriptions.Item label="Ngày tạo">
+                          {formatDateTime(serviceRequestDetail.createdAt)}
+                        </Descriptions.Item>
+                      )}
+                      {serviceRequestDetail.approvedAt && (
+                        <Descriptions.Item label="Ngày phê duyệt">
+                          {formatDateTime(serviceRequestDetail.approvedAt)}
+                        </Descriptions.Item>
+                      )}
+                      {serviceRequestDetail.completedAt && (
+                        <Descriptions.Item label="Ngày hoàn thành">
+                          {formatDateTime(serviceRequestDetail.completedAt)}
+                        </Descriptions.Item>
+                      )}
+                      {serviceRequestDetail.updatedAt && (
+                        <Descriptions.Item label="Ngày cập nhật">
+                          {formatDateTime(serviceRequestDetail.updatedAt)}
+                        </Descriptions.Item>
+                      )}
+                    </Descriptions>
+                  </Card>
+                </Col>
+              </Row>
+            </div>
+          ) : (
+            <Empty description="Không có dữ liệu" />
+          )}
+        </Spin>
       </Modal>
     </Layout>
   );
