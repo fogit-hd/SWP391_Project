@@ -1,0 +1,384 @@
+import React, { useEffect, useState } from "react";
+import {
+  Card,
+  Select,
+  Button,
+  Input,
+  List,
+  message,
+  notification,
+  Divider,
+  Space,
+  Spin,
+  Tag,
+} from "antd";
+import api from "../../../config/axios";
+import "./manage-booking.css";
+
+const { Option } = Select;
+const { TextArea } = Input;
+
+export default function ManageBooking() {
+  const [groups, setGroups] = useState([]);
+  const [loadingGroups, setLoadingGroups] = useState(false);
+  const [selectedGroup, setSelectedGroup] = useState(null);
+  const [vehicles, setVehicles] = useState([]);
+  const [selectedVehicle, setSelectedVehicle] = useState(null);
+  const [bookings, setBookings] = useState([]);
+  const [loadingBookings, setLoadingBookings] = useState(false);
+  const [fileMap, setFileMap] = useState({}); // bookingId -> File
+  const [damageDesc, setDamageDesc] = useState("");
+  const [damageFile, setDamageFile] = useState(null);
+  const [damageSubmitting, setDamageSubmitting] = useState(false);
+  const [tripEvents, setTripEvents] = useState([]);
+  const [loadingTripEvents, setLoadingTripEvents] = useState(false);
+
+  useEffect(() => {
+    fetchGroups();
+  }, []);
+
+  const fetchGroups = async () => {
+    setLoadingGroups(true);
+    try {
+      const res = await api.get("/CoOwnership/all-groups");
+      const list = Array.isArray(res.data) ? res.data : res.data?.data || [];
+      const withContract = await Promise.all(
+        list.map(async (g) => {
+          try {
+            const r = await api.get("/contracts", { params: { groupId: g.id } });
+            const arr = Array.isArray(r.data) ? r.data : r.data?.data || [];
+            return { ...g, _hasContract: Array.isArray(arr) && arr.length > 0 };
+          } catch {
+            return { ...g, _hasContract: null };
+          }
+        })
+      );
+      setGroups(withContract.filter((g) => g._hasContract));
+    } catch (err) {
+      console.error(err);
+      message.error("Failed to load groups");
+    } finally {
+      setLoadingGroups(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!selectedGroup) {
+      setVehicles([]);
+      setSelectedVehicle(null);
+      setBookings([]);
+      return;
+    }
+    const vs = selectedGroup.vehicles || [];
+    setVehicles(vs);
+    setSelectedVehicle(null);
+    setBookings([]);
+  }, [selectedGroup]);
+
+  const fetchBookings = async (groupId, vehicleId) => {
+    if (!groupId || !vehicleId) return;
+    setLoadingBookings(true);
+    try {
+      const r = await api.get(`/booking/Get-Booking-by-group-and-vehicle/${groupId}/${vehicleId}`);
+      const data = r.data?.data || [];
+      setBookings(data);
+    } catch (err) {
+      console.error(err);
+      message.error("Failed to load bookings");
+      setBookings([]);
+    } finally {
+      setLoadingBookings(false);
+    }
+  };
+
+  useEffect(() => {
+    if (selectedGroup?.id && selectedVehicle?.id) {
+      fetchBookings(selectedGroup.id, selectedVehicle.id);
+    }
+  }, [selectedGroup, selectedVehicle]);
+
+  useEffect(() => {
+    fetchTripEvents();
+  }, []);
+
+  const fetchTripEvents = async () => {
+    setLoadingTripEvents(true);
+    try {
+      const r = await api.get(`/trip-events/All-trip-events/staff`);
+      const data = Array.isArray(r.data) ? r.data : r.data?.data || [];
+      setTripEvents(data);
+    } catch (err) {
+      console.error(err);
+      message.error("Failed to load trip events");
+      setTripEvents([]);
+    } finally {
+      setLoadingTripEvents(false);
+    }
+  };
+
+  const handleFileChangeForBooking = (bookingId, file) => {
+    setFileMap((m) => ({ ...m, [bookingId]: file }));
+  };
+
+  const doCheck = async (bookingId, endpoint) => {
+    const file = fileMap[bookingId];
+    if (!bookingId) return message.warning("Missing booking id");
+    // If checkout, require a photo from staff
+    if (endpoint === "check-out" && !file) {
+      return message.warning("Please attach a photo before checkout.");
+    }
+
+    const fd = new FormData();
+    fd.append("BookingId", bookingId);
+    if (file) fd.append("Photo", file);
+
+    // optimistic local status update helper
+    const optimisticUpdate = (newStatus) => {
+      setBookings((prev) =>
+        prev.map((b) => (b.id === bookingId ? { ...b, status: newStatus } : b))
+      );
+    };
+
+    try {
+      // Let the browser set the multipart Content-Type (with boundary).
+      const r = await api.post(`/booking/${endpoint}/staff`, fd);
+
+      // Map endpoint to desired status transition
+      const newStatus = endpoint === "check-in" ? "in use" : "completed";
+      optimisticUpdate(newStatus);
+
+      message.success(r.data?.message || `Booking marked ${newStatus}`);
+
+      // refresh from server to ensure canonical state
+      if (selectedGroup?.id && selectedVehicle?.id) {
+        // small delay to allow backend to commit
+        setTimeout(() => fetchBookings(selectedGroup.id, selectedVehicle.id), 500);
+      }
+    } catch (err) {
+      console.error(err);
+      message.error(err?.response?.data?.message || "Failed");
+      // on failure, refetch to restore correct state
+      if (selectedGroup?.id && selectedVehicle?.id) {
+        fetchBookings(selectedGroup.id, selectedVehicle.id);
+      }
+    }
+  };
+
+  const handleCreateDamageReport = async () => {
+    if (!selectedVehicle && !bookings.length) return message.warning("Choose vehicle or booking first");
+    const fd = new FormData();
+    const firstBooking = bookings[0];
+    // Backend expects the identifier in the field named "Id" (booking or vehicle id)
+    if (firstBooking && firstBooking.id) fd.append("Id", firstBooking.id);
+    else if (selectedVehicle?.id) fd.append("Id", selectedVehicle.id);
+    if (damageDesc) fd.append("Description", damageDesc);
+    if (damageFile) fd.append("Photo", damageFile);
+    try {
+      setDamageSubmitting(true);
+      // Let the browser set the multipart Content-Type (with boundary).
+      const r = await api.post(`/trip-events/create-damage-report/staff`, fd);
+      const msg = r.data?.message || "Damage report submitted";
+      // toast + Ant notification for clearer feedback
+      message.success(msg);
+      notification.success({
+        message: "Damage report submitted",
+        description: msg,
+      });
+      setDamageDesc("");
+      setDamageFile(null);
+      // refresh trip events so the new report appears in the list
+      fetchTripEvents();
+    } catch (err) {
+      console.error(err);
+      message.error(err?.response?.data?.message || "Failed to submit report");
+      notification.error({
+        message: "Submission failed",
+        description: err?.response?.data?.message || "Failed to submit report",
+      });
+    } finally {
+      setDamageSubmitting(false);
+    }
+  };
+
+  return (
+    <Card
+      className="manage-booking-card"
+      title={
+        <div className="manage-booking-header">
+          <h2>Staff — Checkin / Checkout / Damage Report</h2>
+        </div>
+      }
+    >
+      <div className="manage-booking-page">
+        <div className="manage-booking-content">
+          <Space direction="vertical" style={{ width: "100%" }}>
+        <div>
+          <div style={{ marginBottom: 8 }}>Select Group (groups with contracts only)</div>
+          <Select
+            showSearch
+            style={{ width: 420 }}
+            placeholder={loadingGroups ? "Loading..." : "Select group"}
+            loading={loadingGroups}
+            value={selectedGroup?.id}
+            onChange={(val) => {
+              const g = groups.find((x) => x.id === val) || null;
+              setSelectedGroup(g);
+            }}
+            filterOption={(input, option) =>
+              option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
+            }
+          >
+            {groups.map((g) => (
+              <Option key={g.id} value={g.id}>
+                {g.name}
+              </Option>
+            ))}
+          </Select>
+        </div>
+
+        <div>
+          <div style={{ marginBottom: 8 }}>Select Vehicle</div>
+          <Select
+            style={{ width: 420 }}
+            placeholder="Select vehicle"
+            value={selectedVehicle?.id}
+            onChange={(val) => {
+              const v = (vehicles || []).find((x) => x.id === val) || null;
+              setSelectedVehicle(v);
+            }}
+          >
+            {(vehicles || []).map((v) => (
+              <Option key={v.id} value={v.id}>
+                {v.plateNumber || v.plate || v.licensePlate || v.model || v.modelName}
+              </Option>
+            ))}
+          </Select>
+        </div>
+
+        <Divider />
+
+        <div>
+          <h4>Bookings for selected group & vehicle</h4>
+          {loadingBookings ? (
+            <Spin />
+          ) : (
+              <List
+                dataSource={bookings}
+                locale={{ emptyText: "No bookings" }}
+                renderItem={(b) => {
+                  const normalize = (s) => (s || "").toString().toLowerCase().replace(/[^a-z0-9]+/g, "").trim();
+                  const st = normalize(b.status);
+                  const isBooked = st === "booked";
+                  const isInUse = st === "inuse" || st === "inuse" || st === "inuse" || st === "inuse" || st === "in use";
+                  const isCompleted = st === "completed" || st === "complete";
+
+                  const tagColor = isBooked ? "blue" : isInUse ? "orange" : isCompleted ? "green" : "default";
+                  const tagText = b.status || "unknown";
+
+                  return (
+                    <List.Item>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                          <div>
+                            <strong>{b.id}</strong> — {new Date(b.startTime).toLocaleString()} to {new Date(b.endTime).toLocaleString()}
+                          </div>
+                          <div>
+                            <Tag color={tagColor}>{tagText}</Tag>
+                          </div>
+                        </div>
+                        <div style={{ marginTop: 8 }}>
+                          <Input
+                            type="file"
+                            onChange={(e) => handleFileChangeForBooking(b.id, e.target.files[0])}
+                          />
+                        </div>
+                      </div>
+                      <div style={{ display: "flex", gap: 8 }}>
+                        <Button
+                          onClick={() => doCheck(b.id, "check-in")}
+                          type="primary"
+                          disabled={!isBooked}
+                        >
+                          Check-in
+                        </Button>
+                        <Button
+                          onClick={() => doCheck(b.id, "check-out")}
+                          danger
+                          disabled={!isInUse || !fileMap[b.id]}
+                        >
+                          Check-out
+                        </Button>
+                      </div>
+                    </List.Item>
+                  );
+                }}
+              />
+          )}
+        </div>
+
+        <Divider />
+
+        <div className="manage-booking-card">
+          <h4>Create Damage Report</h4>
+          <div style={{ maxWidth: 720 }}>
+            <div style={{ marginBottom: 8 }}>
+              <TextArea
+                rows={3}
+                placeholder="Description of damage"
+                value={damageDesc}
+                onChange={(e) => setDamageDesc(e.target.value)}
+              />
+            </div>
+            <div style={{ marginBottom: 8 }}>
+              <Input type="file" onChange={(e) => setDamageFile(e.target.files[0])} />
+            </div>
+            <div>
+              <Button type="primary" onClick={handleCreateDamageReport}>
+                Submit Damage Report
+              </Button>
+            </div>
+          </div>
+        </div>
+        <Divider />
+
+        <div className="manage-booking-card">
+          <h4>Trip Events</h4>
+          {loadingTripEvents ? (
+            <Spin />
+          ) : (
+            <List
+              className="trip-events-list"
+              dataSource={tripEvents}
+              locale={{ emptyText: "No trip events" }}
+              renderItem={(t) => (
+                <List.Item>
+                  <div style={{ display: "flex", alignItems: "center", width: "100%" }}>
+                    <div className="trip-event-media">
+                      {t.photosUrl ? (
+                        <img src={t.photosUrl} alt="event" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                      ) : (
+                        <div style={{ fontSize: 12, color: '#9aa' }}>No photo</div>
+                      )}
+                    </div>
+                    <div className="trip-event-body">
+                      <div className="trip-event-title">{t.eventType || 'EVENT'}</div>
+                      <div className="trip-event-meta">{t.description}</div>
+                      <div className="trip-event-meta">Vehicle: {t.vehicleId} {t.bookingId ? `• Booking: ${t.bookingId}` : ''}</div>
+                    </div>
+                    <div className="trip-event-right">
+                      <Tag color={t.eventType === 'DAMAGE' ? 'red' : t.eventType === 'CHECKIN' ? 'blue' : 'green'}>{t.eventType}</Tag>
+                      <div className="trip-event-meta">{new Date(t.createdAt).toLocaleString()}</div>
+                    </div>
+                  </div>
+                </List.Item>
+              )}
+            />
+          )}
+        </div>
+
+      </Space>
+      </div>
+      </div>
+    </Card>
+  );
+}

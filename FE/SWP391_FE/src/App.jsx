@@ -33,6 +33,7 @@ import CreateServiceRequest from "./pages/create.service";
 import BookingCalendar from "./pages/booking";
 import PaymentHistory from "./pages/payment.history";
 import BookingManagement from "./pages/booking/index.jsx";
+import ManageBooking from "./pages/staff/Manage.Booking/index.jsx";
 
 function App() {
   const router = createBrowserRouter([
@@ -284,6 +285,16 @@ function App() {
         </ProtectedRoute>
       ),
     },
+
+
+    {
+      path :"/Manage.Booking",
+      element: (
+        <ProtectedRoute roleId={[1,2,3]}>
+          <ManageBooking />
+        </ProtectedRoute>
+      )
+    }
   ]);
 
   return (
