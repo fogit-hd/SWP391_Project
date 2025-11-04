@@ -307,15 +307,45 @@ const CreateBookingModal = ({ visible, onCancel, onSuccess, groupId, vehicleId, 
       console.error("Error headers:", error.response?.headers);
       
       let errorMsg = "Không thể tạo đặt chỗ";
-      if (error.response?.data?.message) {
-        errorMsg = error.response.data.message;
-      } else if (error.response?.data?.error) {
-        errorMsg = error.response.data.error;
-      } else if (error.message) {
-        errorMsg = error.message;
+      
+      // Try to extract error message from various response formats
+      if (error.response?.data) {
+        const errorData = error.response.data;
+        
+        // Check for message field (most common)
+        if (errorData.message) {
+          errorMsg = errorData.message;
+        }
+        // Check for error field
+        else if (errorData.error) {
+          errorMsg = errorData.error;
+        }
+        // Check for errors array (validation errors)
+        else if (errorData.errors && Array.isArray(errorData.errors)) {
+          errorMsg = errorData.errors.join(', ');
+        }
+        // Check for detail field
+        else if (errorData.detail) {
+          errorMsg = errorData.detail;
+        }
+        // If errorData is a string
+        else if (typeof errorData === 'string') {
+          errorMsg = errorData;
+        }
+      } 
+      // Network error or no response
+      else if (error.message) {
+        errorMsg = `Không thể tạo đặt chỗ: ${error.message}`;
       }
       
-      message.error(errorMsg);
+      // Display error with duration for better visibility
+      message.error({
+        content: errorMsg,
+        duration: 5, // Show for 5 seconds
+      });
+      
+      // Also set validation error to show in UI
+      setValidationError(errorMsg);
     } finally {
       setLoading(false);
     }
