@@ -15,6 +15,7 @@ import {
   Dropdown,
   Space,
   Typography,
+  Tabs,
 } from "antd";
 import "../view.myvehicle/my-vehicle.css";
 import {
@@ -28,7 +29,7 @@ import {
   ArrowLeftOutlined,
   SearchOutlined,
 } from "@ant-design/icons";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import api from "../../config/axios";
 import { toast } from "react-toastify";
 import { useAuth } from "../../components/hooks/useAuth";
@@ -43,6 +44,7 @@ const MyVehicle = () => {
   const {
     token: { colorBgContainer, borderRadiusLG },
   } = theme.useToken();
+  const location = useLocation();
 
   // State management
   const [data, setData] = useState([]);
@@ -517,6 +519,16 @@ const MyVehicle = () => {
               </Title>
             </Space>
           </Space>
+
+          <Tabs
+            activeKey={location.pathname}
+            onChange={(key) => navigate(key)}
+            items={[
+              { key: "/view-myvehicle", label: "My Vehicles" },
+              { key: "/my-vehicle-requests", label: "Yêu cầu xe" },
+            ]}
+            style={{ marginBottom: 16 }}
+          />
 
           <div
             style={{

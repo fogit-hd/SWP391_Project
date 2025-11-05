@@ -18,6 +18,7 @@ import {
   Image,
   Descriptions,
   Upload,
+  Tabs,
 } from "antd";
 import {
   DeleteOutlined,
@@ -554,6 +555,15 @@ const MyVehicleRequests = () => {
               Về trang chủ
             </Button>
           </div>
+          <Tabs
+            activeKey={location.pathname}
+            onChange={(key) => navigate(key)}
+            items={[
+              { key: "/view-myvehicle", label: "My Vehicles" },
+              { key: "/my-vehicle-requests", label: "Yêu cầu xe" },
+            ]}
+            style={{ marginBottom: 16 }}
+          />
           <div
             style={{
               padding: 24,
