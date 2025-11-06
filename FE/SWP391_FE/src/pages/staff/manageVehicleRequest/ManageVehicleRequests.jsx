@@ -17,7 +17,7 @@ import {
   Image,
   Descriptions,
 } from "antd";
-import "./vehicle-management.css";
+import "./vehicle-requests.css";
 import {
   CheckOutlined,
   CloseOutlined,
@@ -27,7 +27,7 @@ import {
 } from "@ant-design/icons";
 import { toast } from "react-toastify";
 import api from "../../../config/axios";
-import AdminSidebar from "../../../components/admin/AdminSidebar";
+import StaffSidebar from "../../../components/staff/StaffSidebar";
 
 const { Header, Content, Footer } = Layout;
 const { TextArea } = Input;
@@ -378,7 +378,7 @@ const ManageVehicleRequests = () => {
 
   return (
     <Layout style={{ minHeight: "100vh" }}>
-      <AdminSidebar
+      <StaffSidebar
         collapsed={collapsed}
         onCollapse={setCollapsed}
         selectedKey="manage-vehicle-requests"

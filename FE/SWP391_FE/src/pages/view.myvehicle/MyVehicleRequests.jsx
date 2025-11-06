@@ -559,8 +559,8 @@ const MyVehicleRequests = () => {
             activeKey={location.pathname}
             onChange={(key) => navigate(key)}
             items={[
-              { key: "/view-myvehicle", label: "My Vehicles" },
-              { key: "/my-vehicle-requests", label: "Yêu cầu xe" },
+              { key: "/view-myvehicle", label: "Danh sách các xe" },
+              { key: "/my-vehicle-requests", label: "Yêu cầu đăng ký xe" },
             ]}
             style={{ marginBottom: 16 }}
           />
@@ -678,9 +678,17 @@ const MyVehicleRequests = () => {
           <Form.Item
             name="modelYear"
             label="Năm sản xuất"
-            rules={[{ required: true, message: "Vui lòng nhập năm sản xuất" }]}
+            rules={[
+              { required: true, message: "Vui lòng nhập năm sản xuất" },
+              {
+                type: "number",
+                min: 1900,
+                max: 2026,
+                message: "Năm sản xuất phải từ 1900 đến 2026",
+              },
+            ]}
           >
-            <InputNumber min={1900} max={2100} style={{ width: "100%" }} />
+            <InputNumber min={1900} max={2026} style={{ width: "100%" }} />
           </Form.Item>
 
           <Form.Item
@@ -838,9 +846,15 @@ const MyVehicleRequests = () => {
               label="Năm sản xuất"
               rules={[
                 { required: true, message: "Vui lòng nhập năm sản xuất" },
+                {
+                  type: "number",
+                  min: 1900,
+                  max: 2026,
+                  message: "Năm sản xuất phải từ 1900 đến 2026",
+                },
               ]}
             >
-              <InputNumber min={1900} max={2100} style={{ width: "100%" }} />
+              <InputNumber min={1900} max={2026} style={{ width: "100%" }} />
             </Form.Item>
 
             <Form.Item
