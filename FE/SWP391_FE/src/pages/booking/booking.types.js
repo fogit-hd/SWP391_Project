@@ -33,9 +33,9 @@ export const GRACE_WINDOWS = {
 };
 
 export const BOOKING_CONSTRAINTS = {
-  MIN_ADVANCE_MINUTES: 15, // Đặt trước thời gian hiện tại ít nhất 15 phút
-  MAX_ADVANCE_DAYS: 14, // Chỉ có thể đặt trong tuần này và tuần sau (14 ngày)
+  MIN_ADVANCE_MINUTES: 15, 
+  MAX_ADVANCE_DAYS: 14, 
   MAX_DURATION_HOURS: 8,
-  MIN_GAP_MINUTES: 30, // Thời gian mỗi lần đặt cách nhau ít nhất 30 phút
+  MIN_GAP_MINUTES: 30, 
 };
 

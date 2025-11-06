@@ -253,10 +253,12 @@ const BookingDetailModal = ({ visible, onCancel, booking, onUpdate, groupId, veh
                 {BOOKING_STATUS_LABELS[booking.status]}
               </Tag>
             </Descriptions.Item>
-            <Descriptions.Item label="Người dùng">
-              {booking.userName || ''}
-              {isMyBooking() && <Tag color="green" style={{ marginLeft: 8 }}>Bạn</Tag>}
-            </Descriptions.Item>
+            {booking.status !== 'COMPLETE' && booking.status !== 'COMPLETED' && (
+              <Descriptions.Item label="Người dùng">
+                {booking.userName || ''}
+                {isMyBooking() && <Tag color="green" style={{ marginLeft: 8 }}>Bạn</Tag>}
+              </Descriptions.Item>
+            )}
             <Descriptions.Item label="Thời gian bắt đầu">
               {dayjs(booking.startTime).format('YYYY-MM-DD HH:mm')}
             </Descriptions.Item>
