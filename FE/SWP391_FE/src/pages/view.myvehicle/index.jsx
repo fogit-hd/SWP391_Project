@@ -585,13 +585,6 @@ const MyVehicle = () => {
             >
               <Space>
                 <Button
-                  type="primary"
-                  icon={<PlusOutlined />}
-                  onClick={() => navigate("/my-vehicle-requests?create=true")}
-                >
-                  Thêm xe
-                </Button>
-                <Button
                   icon={<ReloadOutlined />}
                   onClick={() => fetchVehicles()}
                   loading={loading}

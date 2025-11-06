@@ -138,14 +138,14 @@ const CreateBookingModal = ({ visible, onCancel, onSuccess, groupId, vehicleId, 
     const start = dates[0];
     const end = dates[1];
 
-    // Check minimum advance booking (có thể đặt trước hoặc sau thời điểm hiện tại 15 phút)
+    // Check minimum advance booking (phải đặt trước ít nhất 15 phút)
     const minutesFromNow = start.diff(now, 'minute', true);
-    const minAllowedTime = now.subtract(BOOKING_CONSTRAINTS.MIN_ADVANCE_MINUTES, 'minute');
+    const minAllowedTime = now.add(BOOKING_CONSTRAINTS.MIN_ADVANCE_MINUTES, 'minute');
     
     if (start.isBefore(minAllowedTime)) {
       return { 
         valid: false, 
-        error: `Thời gian bắt đầu phải trong khoảng 15 phút trước hoặc sau thời điểm hiện tại` 
+        error: `Thời gian bắt đầu phải cách thời gian hiện tại ít nhất ${BOOKING_CONSTRAINTS.MIN_ADVANCE_MINUTES} phút` 
       };
     }
 
@@ -398,8 +398,8 @@ const CreateBookingModal = ({ visible, onCancel, onSuccess, groupId, vehicleId, 
     // Nếu có thông tin quota với weekStartDate, dùng nó làm mốc
     if (quotaInfo?.data?.weekStartDate) {
       const weekStartDate = dayjs(quotaInfo.data.weekStartDate);
-      // Tuần sau kết thúc vào cuối tuần thứ 2
-      const twoWeeksEnd = weekStartDate.add(14, 'day').endOf('day');
+      // Tuần sau kết thúc vào Chủ nhật của tuần thứ 2 (13 ngày sau ngày bắt đầu)
+      const twoWeeksEnd = weekStartDate.add(13, 'day').endOf('day');
       
       // Không cho phép chọn ngày trong quá khứ và sau 2 tuần
       return current < now.startOf('day') || current > twoWeeksEnd;
@@ -412,8 +412,8 @@ const CreateBookingModal = ({ visible, onCancel, onSuccess, groupId, vehicleId, 
 
   const disabledTime = (current, type) => {
     const now = dayjs();
-    // Cho phép đặt từ 15 phút trước đến tương lai
-    const minAllowedTime = now.subtract(BOOKING_CONSTRAINTS.MIN_ADVANCE_MINUTES, 'minute');
+    // Phải đặt trước ít nhất 15 phút
+    const minAllowedTime = now.add(BOOKING_CONSTRAINTS.MIN_ADVANCE_MINUTES, 'minute');
     
     // Nếu không có ngày được chọn hoặc type không hợp lệ, không disable gì
     if (!current || !type) {
@@ -431,7 +431,7 @@ const CreateBookingModal = ({ visible, onCancel, onSuccess, groupId, vehicleId, 
         
         return {
           disabledHours: () => {
-            // Disable tất cả các giờ trước giờ tối thiểu (15 phút trước hiện tại)
+            // Disable tất cả các giờ trước giờ tối thiểu (15 phút sau hiện tại)
             const hours = [];
             for (let i = 0; i < minHour; i++) {
               hours.push(i);
@@ -552,7 +552,6 @@ const CreateBookingModal = ({ visible, onCancel, onSuccess, groupId, vehicleId, 
           <ul style={{ margin: '8px 0', paddingLeft: '20px' }}>
             <li>Đặt trước thời gian hiện tại ít nhất {BOOKING_CONSTRAINTS.MIN_ADVANCE_MINUTES} phút</li>
             <li>Chỉ có thể đặt trong tuần này và tuần sau (2 tuần)</li>
-            <li>Thời gian kết thúc phải sau thời gian bắt đầu</li>
             <li>Phải cách các booking khác ít nhất {BOOKING_CONSTRAINTS.MIN_GAP_MINUTES} phút</li>
             <li>Không được trùng với các đặt chỗ hiện có</li>
           </ul>

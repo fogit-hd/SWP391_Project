@@ -683,12 +683,12 @@ const MyVehicleRequests = () => {
               {
                 type: "number",
                 min: 1900,
-                max: 2026,
-                message: "Năm sản xuất phải từ 1900 đến 2026",
+                max: new Date().getFullYear(),
+                message: `Năm sản xuất phải từ 1900 đến ${new Date().getFullYear()}`,
               },
             ]}
           >
-            <InputNumber min={1900} max={2026} style={{ width: "100%" }} />
+            <InputNumber min={1900} max={new Date().getFullYear()} style={{ width: "100%" }} />
           </Form.Item>
 
           <Form.Item
@@ -849,12 +849,12 @@ const MyVehicleRequests = () => {
                 {
                   type: "number",
                   min: 1900,
-                  max: 2026,
-                  message: "Năm sản xuất phải từ 1900 đến 2026",
+                  max: new Date().getFullYear(),
+                  message: `Năm sản xuất phải từ 1900 đến ${new Date().getFullYear()}`,
                 },
               ]}
             >
-              <InputNumber min={1900} max={2026} style={{ width: "100%" }} />
+              <InputNumber min={1900} max={new Date().getFullYear()} style={{ width: "100%" }} />
             </Form.Item>
 
             <Form.Item
@@ -888,7 +888,7 @@ const MyVehicleRequests = () => {
               label="Biển số xe"
               rules={[{ required: true, message: "Vui lòng nhập biển số xe" }]}
             >
-              <Input placeholder="VD: 51F-12345" />
+              <Input placeholder="VD: 51F-12345" disabled />
             </Form.Item>
 
             <Form.Item
