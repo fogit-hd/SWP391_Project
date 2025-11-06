@@ -16,6 +16,10 @@ import {
   Space,
   Typography,
   Tabs,
+  Tag,
+  Tooltip,
+  Image,
+  Descriptions,
 } from "antd";
 import "../view.myvehicle/my-vehicle.css";
 import {
@@ -26,8 +30,8 @@ import {
   MoreOutlined,
   HomeOutlined,
   CopyOutlined,
-  ArrowLeftOutlined,
   SearchOutlined,
+  EyeOutlined,
 } from "@ant-design/icons";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import api from "../../config/axios";
@@ -54,13 +58,12 @@ const MyVehicle = () => {
   const [vehicleToDelete, setVehicleToDelete] = useState(null);
   const [searchText, setSearchText] = useState("");
   const [filteredData, setFilteredData] = useState([]);
+  const [allRequests, setAllRequests] = useState([]);
   const [pagination, setPagination] = useState({
     current: 1,
     pageSize: 10,
     total: 0,
   });
-  const [sortField, setSortField] = useState(null);
-  const [sortOrder, setSortOrder] = useState(null);
 
   // Modal states
   const [isAddModalVisible, setIsAddModalVisible] = useState(false);
@@ -68,87 +71,127 @@ const MyVehicle = () => {
   const [editingRecord, setEditingRecord] = useState(null);
   const [isUpdating, setIsUpdating] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
+  const [detailModalVisible, setDetailModalVisible] = useState(false);
+  const [selectedVehicle, setSelectedVehicle] = useState(null);
 
   // Forms
   const [addForm] = Form.useForm();
   const [editForm] = Form.useForm();
 
-  useEffect(() => {
-    fetchVehicles(pagination.current, pagination.pageSize);
-  }, []);
-
-  // Filter data when searchText or data changes
+  // Filter data when searchText changes
   useEffect(() => {
     if (!searchText.trim()) {
-      setFilteredData(data);
+      setFilteredData(allRequests);
     } else {
-      const filtered = data.filter((vehicle) => {
+      const filtered = allRequests.filter((request) => {
         const searchLower = searchText.toLowerCase();
         return (
-          vehicle.plateNumber?.toLowerCase().includes(searchLower) ||
-          vehicle.make?.toLowerCase().includes(searchLower) ||
-          vehicle.model?.toLowerCase().includes(searchLower)
+          request.plateNumber?.toLowerCase().includes(searchLower) ||
+          request.make?.toLowerCase().includes(searchLower) ||
+          request.model?.toLowerCase().includes(searchLower)
         );
       });
       setFilteredData(filtered);
     }
-  }, [searchText, data]);
+  }, [searchText, allRequests]);
+
+  // Update displayed data when filteredData or pagination changes
+  useEffect(() => {
+    const startIndex = (pagination.current - 1) * pagination.pageSize;
+    const paginatedData = filteredData.slice(
+      startIndex,
+      startIndex + pagination.pageSize
+    );
+    setData(paginatedData);
+    setPagination((prev) => ({
+      ...prev,
+      total: filteredData.length,
+    }));
+  }, [filteredData, pagination.current, pagination.pageSize]);
+
+  useEffect(() => {
+    fetchVehicles();
+  }, []);
 
   // Table columns definition
   const columns = [
     {
-      title: "Plate Number",
+      title: "ID",
+      dataIndex: "id",
+      key: "id",
+      width: 100,
+      ellipsis: true,
+      fixed: "left",
+      render: (id) => <Tooltip title={id}>{id.substring(0, 8)}...</Tooltip>,
+    },
+    {
+      title: "Biển số",
       dataIndex: "plateNumber",
       key: "plateNumber",
-      width: 120,
-      fixed: "left",
+      width: 130,
       sorter: (a, b) =>
         (a.plateNumber || "").localeCompare(b.plateNumber || ""),
     },
     {
-      title: "Make",
+      title: "Hãng xe",
       dataIndex: "make",
       key: "make",
-      width: 120,
+      width: 100,
       sorter: (a, b) => (a.make || "").localeCompare(b.make || ""),
     },
     {
       title: "Model",
       dataIndex: "model",
       key: "model",
-      width: 120,
+      width: 100,
       sorter: (a, b) => (a.model || "").localeCompare(b.model || ""),
     },
     {
-      title: "Year",
+      title: "Năm",
       dataIndex: "modelYear",
       key: "modelYear",
       width: 80,
       sorter: (a, b) => a.modelYear - b.modelYear,
     },
     {
-      title: "Color",
+      title: "Màu sắc",
       dataIndex: "color",
       key: "color",
       width: 100,
     },
     {
-      title: "Battery (kWh)",
+      title: "Trạng thái",
+      dataIndex: "status",
+      key: "status",
+      width: 110,
+      filters: [
+        { text: "Đã duyệt", value: "APPROVED" },
+      ],
+      onFilter: (value, record) => record.status === value,
+      render: (status) => {
+        let color = "green";
+        let text = "Đã duyệt";
+        return <Tag color={color}>{text}</Tag>;
+      },
+    },
+    {
+      title: "Pin (kWh)",
       dataIndex: "batteryCapacityKwh",
       key: "batteryCapacityKwh",
       width: 120,
     },
     {
-      title: "Range (km)",
+      title: "Phạm vi (km)",
       dataIndex: "rangeKm",
       key: "rangeKm",
       width: 100,
     },
     {
-      title: "Action",
+      title: "Thao tác",
       key: "action",
-      width: 80,
+      width: 150,
       fixed: "right",
+      align: "center",
       render: (_, record) => {
         const handleMenuClick = ({ key }) => {
           console.log("Menu item clicked:", key, "for vehicle ID:", record.id);
@@ -160,93 +203,79 @@ const MyVehicle = () => {
           } else if (key === "copy") {
             console.log("Copy ID action triggered");
             handleCopyId(record.id);
-          } else if (key === "delete") {
-            console.log("Delete action triggered - showing confirmation");
-            setVehicleToDelete(record);
-            setDeleteModalVisible(true);
           }
         };
 
         return (
-          <Dropdown
-            menu={{
-              items: [
-                {
-                  key: "edit",
-                  icon: <EditOutlined />,
-                  label: "Edit",
-                },
-                {
-                  key: "copy",
-                  icon: <CopyOutlined />,
-                  label: "Copy ID",
-                },
-                {
-                  type: "divider",
-                },
-                {
-                  key: "delete",
-                  icon: <DeleteOutlined />,
-                  label: "Delete",
-                  danger: true,
-                },
-              ],
-              onClick: handleMenuClick,
-            }}
-            trigger={["click"]}
-            placement="bottomRight"
-          >
-            <Button
-              type="text"
-              icon={<MoreOutlined />}
-              size="small"
-              className="vehicle-action-button"
-              onClick={(e) => {
-                e.stopPropagation();
-                console.log("Dropdown button clicked for vehicle:", record.id);
+          <Space size="small">
+            <Tooltip title="Xem chi tiết">
+              <Button
+                type="link"
+                icon={<EyeOutlined />}
+                onClick={() => handleViewDetail(record)}
+              />
+            </Tooltip>
+            <Dropdown
+              menu={{
+                items: [
+                  {
+                    key: "edit",
+                    icon: <EditOutlined />,
+                    label: "Chỉnh sửa",
+                  },
+                  {
+                    key: "copy",
+                    icon: <CopyOutlined />,
+                    label: "Sao chép ID",
+                  },
+                ],
+                onClick: handleMenuClick,
               }}
-            />
-          </Dropdown>
+              trigger={["click"]}
+              placement="bottomRight"
+            >
+              <Button
+                type="text"
+                icon={<MoreOutlined />}
+                size="small"
+                className="vehicle-action-button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  console.log("Dropdown button clicked for vehicle:", record.id);
+                }}
+              />
+            </Dropdown>
+          </Space>
         );
       },
     },
   ];
 
   // API Functions
-  const fetchVehicles = async (
-    page = 1,
-    pageSize = 10,
-    sortField = null,
-    sortOrder = null,
-    filters = {}
-  ) => {
+  const fetchVehicles = async () => {
     setLoading(true);
+    setError(null);
+
     try {
-      const response = await api.get("/Vehicle/my-vehicles", {
-        params: {
-          page,
-          pageSize,
-          sortField,
-          sortOrder,
-          ...filters,
-        },
-      });
+      const response = await api.get("/vehicle-requests/my-requests");
+      const requests = response.data || [];
 
-      const vehiclesData = response.data.data || response.data || [];
-      const total = response.data.total || vehiclesData.length;
+      // Chỉ lấy những request có status APPROVED
+      const approvedRequests = requests.filter(
+        (request) => request.status === "APPROVED"
+      );
 
-      setData(vehiclesData);
-      setFilteredData(vehiclesData);
-      setPagination((prev) => ({
-        ...prev,
-        current: page,
-        pageSize: pageSize,
-        total: total,
-      }));
+      // Sort by createdAt descending (newest first)
+      approvedRequests.sort(
+        (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+      );
+
+      setAllRequests(approvedRequests);
+      setFilteredData(approvedRequests);
       setError(null);
     } catch (err) {
       setError(err.message);
-      message.error(`Failed to fetch vehicles: ${err.message}`);
+      message.error(`Không thể tải danh sách xe: ${err.message}`);
     } finally {
       setLoading(false);
     }
@@ -405,12 +434,11 @@ const MyVehicle = () => {
 
   // Event handlers
   const handleTableChange = (paginationConfig, filters, sorter) => {
-    console.log("Table change:", { paginationConfig, filters, sorter });
-    setPagination({
+    setPagination((prev) => ({
+      ...prev,
       current: paginationConfig.current,
       pageSize: paginationConfig.pageSize,
-      total: filteredData.length,
-    });
+    }));
   };
 
   const onAddFinish = (values) => {
@@ -466,6 +494,15 @@ const MyVehicle = () => {
     }
   };
 
+  const handleViewDetail = (vehicle) => {
+    console.log("View detail clicked for:", vehicle.id);
+    console.log("Vehicle data:", vehicle);
+    console.log("Vehicle Image URL:", vehicle.vehicleImageUrl);
+    console.log("Registration Paper URL:", vehicle.registrationPaperUrl);
+    setSelectedVehicle(vehicle);
+    setDetailModalVisible(true);
+  };
+
   // Handle back navigation based on role
   const handleBack = () => {
     if (isStaff) {
@@ -499,33 +536,22 @@ const MyVehicle = () => {
     <>
       <Layout style={{ minHeight: "calc(100vh - 64px - 200px)" }}>
         <Content style={{ margin: "24px 16px 0" }}>
-          <Space
-            style={{
-              width: "100%",
-              justifyContent: "space-between",
-              marginBottom: 16,
-            }}
-          >
-            <Space>
-              <Button
-                type="text"
-                icon={<ArrowLeftOutlined />}
-                onClick={handleBack}
-              >
-                Quay lại
-              </Button>
-              <Title level={3} style={{ margin: 0 }}>
-                My Vehicles
-              </Title>
-            </Space>
-          </Space>
+          <div style={{ marginBottom: 16 }}>
+            <Button
+              type="default"
+              icon={<HomeOutlined />}
+              onClick={() => navigate("/")}
+            >
+              Về trang chủ
+            </Button>
+          </div>
 
           <Tabs
             activeKey={location.pathname}
             onChange={(key) => navigate(key)}
             items={[
-              { key: "/view-myvehicle", label: "My Vehicles" },
-              { key: "/my-vehicle-requests", label: "Yêu cầu xe" },
+              { key: "/view-myvehicle", label: "Danh sách các xe" },
+              { key: "/my-vehicle-requests", label: "Yêu cầu đăng ký xe" },
             ]}
             style={{ marginBottom: 16 }}
           />
@@ -563,20 +589,19 @@ const MyVehicle = () => {
                   icon={<PlusOutlined />}
                   onClick={() => navigate("/my-vehicle-requests?create=true")}
                 >
-                  Add Vehicle
+                  Thêm xe
                 </Button>
                 <Button
                   icon={<ReloadOutlined />}
-                  onClick={() =>
-                    fetchVehicles(pagination.current, pagination.pageSize)
-                  }
+                  onClick={() => fetchVehicles()}
+                  loading={loading}
                 >
-                  Refresh
+                  Làm mới
                 </Button>
               </Space>
 
               <Input
-                placeholder="Search by Plate Number, Make or Model"
+                placeholder="Tìm theo biển số, hãng hoặc model"
                 prefix={<SearchOutlined />}
                 value={searchText}
                 onChange={handleSearch}
@@ -588,15 +613,10 @@ const MyVehicle = () => {
 
             <Table
               columns={columns}
-              dataSource={filteredData}
+              dataSource={data}
               rowKey="id"
               loading={loading}
-              pagination={{
-                ...pagination,
-                total: filteredData.length,
-                showSizeChanger: true,
-                showTotal: (total) => `Total ${total} vehicles`,
-              }}
+              pagination={pagination}
               onChange={handleTableChange}
               scroll={{ x: 1200 }}
             />
@@ -604,7 +624,7 @@ const MyVehicle = () => {
         </Content>
 
         <Footer style={{ textAlign: "center" }}>
-          Vehicle Management ©2024
+          Quản lý xe ©2024
         </Footer>
 
         {/* Add Vehicle Modal */}
@@ -853,6 +873,119 @@ const MyVehicle = () => {
             />
             <span>Are you sure you want to delete this vehicle?</span>
           </div>
+        </Modal>
+
+        {/* Vehicle Detail Modal */}
+        <Modal
+          title="Chi tiết xe"
+          open={detailModalVisible}
+          onCancel={() => {
+            setDetailModalVisible(false);
+            setSelectedVehicle(null);
+          }}
+          footer={[
+            <Button
+              key="close"
+              onClick={() => {
+                setDetailModalVisible(false);
+                setSelectedVehicle(null);
+              }}
+            >
+              Đóng
+            </Button>,
+          ]}
+          width={800}
+        >
+          {selectedVehicle && (
+            <div>
+              <Descriptions bordered column={2} size="small">
+                <Descriptions.Item label="ID xe" span={2}>
+                  {selectedVehicle.id}
+                </Descriptions.Item>
+                <Descriptions.Item label="Biển số">
+                  {selectedVehicle.plateNumber}
+                </Descriptions.Item>
+                <Descriptions.Item label="Trạng thái">
+                  <Tag color="green">Đã duyệt</Tag>
+                </Descriptions.Item>
+                <Descriptions.Item label="Hãng xe">
+                  {selectedVehicle.make}
+                </Descriptions.Item>
+                <Descriptions.Item label="Model">
+                  {selectedVehicle.model}
+                </Descriptions.Item>
+                <Descriptions.Item label="Năm">
+                  {selectedVehicle.modelYear}
+                </Descriptions.Item>
+                <Descriptions.Item label="Màu sắc">
+                  {selectedVehicle.color || "N/A"}
+                </Descriptions.Item>
+                <Descriptions.Item label="Pin (kWh)">
+                  {selectedVehicle.batteryCapacityKwh}
+                </Descriptions.Item>
+                <Descriptions.Item label="Phạm vi (km)">
+                  {selectedVehicle.rangeKm}
+                </Descriptions.Item>
+              </Descriptions>
+
+              <div style={{ marginTop: 16 }}>
+                <Space direction="vertical" size="middle" style={{ width: "100%" }}>
+                  <div>
+                    <div style={{ fontWeight: "bold", marginBottom: 8 }}>
+                      Hình ảnh xe:
+                    </div>
+                    {selectedVehicle.vehicleImageUrl ? (
+                      <Image
+                        src={selectedVehicle.vehicleImageUrl}
+                        alt="Vehicle"
+                        style={{ maxWidth: "100%", maxHeight: 300, objectFit: "cover" }}
+                        preview
+                      />
+                    ) : (
+                      <div style={{ 
+                        width: "100%", 
+                        height: 200, 
+                        display: "flex", 
+                        alignItems: "center", 
+                        justifyContent: "center",
+                        backgroundColor: "#f0f0f0",
+                        border: "1px dashed #d9d9d9",
+                        borderRadius: 8
+                      }}>
+                        <span style={{ color: "#999" }}>Chưa có hình ảnh xe</span>
+                      </div>
+                    )}
+                  </div>
+                  <div>
+                    <div style={{ fontWeight: "bold", marginBottom: 8 }}>
+                      Giấy đăng ký xe:
+                    </div>
+                    {selectedVehicle.registrationPaperUrl ? (
+                      <Image
+                        src={selectedVehicle.registrationPaperUrl}
+                        alt="Registration"
+                        style={{ maxWidth: "100%", maxHeight: 300, objectFit: "cover" }}
+                        preview
+                      />
+                    ) : (
+                      <div style={{ 
+                        width: "100%", 
+                        height: 200, 
+                        display: "flex", 
+                        alignItems: "center", 
+                        justifyContent: "center",
+                        backgroundColor: "#f0f0f0",
+                        border: "1px dashed #d9d9d9",
+                        borderRadius: 8
+                      }}>
+                        <span style={{ color: "#999" }}>Chưa có giấy đăng ký xe</span>
+                      </div>
+                    )}
+                  </div>
+                </Space>
+              </div>
+            </div>
+          )}
         </Modal>
       </Layout>
     </>
