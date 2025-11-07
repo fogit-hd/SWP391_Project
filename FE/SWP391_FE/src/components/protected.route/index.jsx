@@ -1,7 +1,7 @@
 import { Button, Result } from "antd";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { getUserInfo } from "../utils/jwt";
+import { getUserInfo, hasRole } from "../utils/jwt";
 
 function ProtectedRoute({ roleId, children }) {
   const account = useSelector((store) => store.account);
@@ -31,40 +31,40 @@ function ProtectedRoute({ roleId, children }) {
   const currentRoleId = account?.roleId || userInfo?.roleId;
   console.log("ProtectedRoute - current roleId:", currentRoleId);
 
+  if (!currentRoleId) {
+    return (
+      <Result
+        status="403"
+        title="403"
+        subTitle="Bạn không có quyền truy cập trang này"
+        extra={
+          <Button onClick={() => navigate("/")} type="primary">
+            Về trang chủ
+          </Button>
+        }
+      />
+    );
+  }
+
   // Handle array of roleIds (multiple roles allowed)
   if (Array.isArray(roleId)) {
+    // Check if user's role is in the allowed list
     if (roleId.includes(currentRoleId)) {
       return children;
     }
-    // Admin can access everything
-    if (currentRoleId === 1) {
+    // Check if user has access to any of the required roles using hasRole
+    const hasAccess = roleId.some((requiredRoleId) => hasRole(currentRoleId, requiredRoleId));
+    if (hasAccess) {
       return children;
     }
   } else {
-    // Single roleId (original logic)
-    // Check role access
-    // Admin (1) can access everything
-    if (currentRoleId === 1) {
-      return children;
-    }
-
-    // Staff (2) can access Staff and CoOwner pages
-    if (currentRoleId === 2 && roleId >= 2) {
-      return children;
-    }
-
-    // Technician (3) can only access CoOwner pages
-    if (currentRoleId === 3 && roleId >= 3) {
-      return children;
-    }
-
-    // Co-Owner (4) has the most limited access
-    if (currentRoleId === 4 && roleId >= 4) {
-      return children;
-    }
-
-    // Exact match
-    if (currentRoleId === roleId) {
+    // Single roleId - use hasRole function from JWT utils
+    // This function handles all role hierarchy logic correctly:
+    // - Admin (1): Can access everything
+    // - Staff (2): Can access Staff (2) and CoOwner (3) pages
+    // - CoOwner (3): Can access CoOwner (3) pages only
+    // - Technician (4): Can access Technician (4) and CoOwner (3) pages
+    if (hasRole(currentRoleId, roleId)) {
       return children;
     }
   }

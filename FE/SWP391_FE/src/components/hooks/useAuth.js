@@ -18,7 +18,6 @@ export const useAuth = () => {
     const account = useSelector((state) => state.account);
     console.log('[HOOK] Redux account state:', {
         exists: !!account,
-        id: account?.id,
         roleId: account?.roleId,
         role: account?.role
     });
@@ -27,7 +26,6 @@ export const useAuth = () => {
     const userInfo = getUserInfo();
     console.log('[HOOK] userInfo from JWT/localStorage:', {
         exists: !!userInfo,
-        id: userInfo?.id,
         roleId: userInfo?.roleId,
         roleName: userInfo?.roleName
     });

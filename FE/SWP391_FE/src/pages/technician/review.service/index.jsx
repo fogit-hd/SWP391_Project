@@ -117,7 +117,7 @@ const ReviewService = ({
     }
 
     // Allow Admin and Technician to access this page
-    if (!isAdmin && !isTechnician && roleId !== 1 && roleId !== 4) {
+    if (!isAdmin && !isTechnician) {
       toast.error("You don't have permission to access this page");
       navigate("/");
       return;
@@ -125,7 +125,7 @@ const ReviewService = ({
 
     loadContracts();
     loadServiceJobs();
-  }, [isAuthenticated, isAdmin, isTechnician, roleId, navigate]);
+  }, [isAuthenticated, isAdmin, isTechnician, navigate]);
 
   // Filter and sort contracts
   const filterAndSortContracts = (contractsList, status, type, order) => {
@@ -252,10 +252,10 @@ const ReviewService = ({
 
       let response;
       // Admin gets all jobs, Technician gets only their jobs
-      if (isAdmin || roleId === 1) {
+      if (isAdmin) {
         console.log("📞 Calling API: GET /service-jobs (Admin - All jobs)");
         response = await getAllServiceJobs();
-      } else if (isTechnician || roleId === 4) {
+      } else if (isTechnician) {
         console.log(
           "📞 Calling API: GET /service-jobs/my (Technician - My jobs)"
         );

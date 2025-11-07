@@ -11,8 +11,10 @@ import dayjs from "dayjs";
 import api from "../../config/axios";
 import TripScreen from "./TripScreen";
 import { BOOKING_STATUS_COLORS, BOOKING_STATUS_LABELS, GRACE_WINDOWS } from "./booking.types";
+import { useAuth } from "../../components/hooks/useAuth";
 
 const BookingDetailModal = ({ visible, onCancel, booking, onUpdate, groupId, vehicleId }) => {
+  const { isCoOwner, user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [countdown, setCountdown] = useState("");
   const [canCheckIn, setCanCheckIn] = useState(false);
@@ -105,22 +107,11 @@ const BookingDetailModal = ({ visible, onCancel, booking, onUpdate, groupId, veh
   if (!booking) return null;
 
   const isMyBooking = () => {
-    try {
-      const userData = JSON.parse(localStorage.getItem("userData") || "{}");
-      return booking.userId === (userData.id || userData.userId);
-    } catch {
-      return false;
-    }
+    if (!user || !booking) return false;
+    const userId = user.id || user.userId || user.data?.id;
+    return booking.userId === userId;
   };
 
-  const isCoOwner = () => {
-    try {
-      const userData = JSON.parse(localStorage.getItem("userData") || "{}");
-      return userData.roleId === 3; // Role 3 = CoOwner
-    } catch {
-      return false;
-    }
-  };
 
   const getCheckInProgress = () => {
     const now = dayjs();
@@ -173,7 +164,7 @@ const BookingDetailModal = ({ visible, onCancel, booking, onUpdate, groupId, veh
                   </Button>
                 </Popconfirm>
               )}
-              {canCheckIn && !isCoOwner() && (
+              {canCheckIn && !isCoOwner && (
                 <Button 
                   type="primary" 
                   icon={<CheckCircleOutlined />}
@@ -183,7 +174,7 @@ const BookingDetailModal = ({ visible, onCancel, booking, onUpdate, groupId, veh
                   Nhận xe
                 </Button>
               )}
-              {canCheckOut && !isCoOwner() && (
+              {canCheckOut && !isCoOwner && (
                 <Button 
                   type="primary" 
                   icon={<CheckCircleOutlined />}

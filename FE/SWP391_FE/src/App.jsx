@@ -34,6 +34,7 @@ import BookingCalendar from "./pages/booking";
 import PaymentHistory from "./pages/payment.history";
 import BookingManagement from "./pages/booking/index.jsx";
 import ManageBooking from "./pages/staff/Manage.Booking/index.jsx";
+import ReactAdvances from "./components/react-examples";
 
 function App() {
   const router = createBrowserRouter([
@@ -169,6 +170,10 @@ function App() {
       path: "/terms",
       element: <TermsPage />,
     },
+    {
+      path: "/react-advances",
+      element: <ReactAdvances />,
+    },
 
     // CO-OWNER PAGE
     {
@@ -286,15 +291,14 @@ function App() {
       ),
     },
 
-
     {
-      path :"/Manage.Booking",
+      path: "/Manage.Booking",
       element: (
-        <ProtectedRoute roleId={[1,2,3]}>
+        <ProtectedRoute roleId={[1, 2, 3]}>
           <ManageBooking />
         </ProtectedRoute>
-      )
-    }
+      ),
+    },
   ]);
 
   return (

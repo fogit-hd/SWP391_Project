@@ -14,29 +14,28 @@ import {
   EyeOutlined,
 } from "@ant-design/icons";
 import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../hooks/useAuth";
 
 const { Sider } = Layout;
 
 /**
  * Get menu items for Admin Sidebar
  * @param {Function} navigate - Navigation function from useNavigate hook
+ * @param {Object} auth - Auth object from useAuth hook
  * @returns {Array} Menu items configuration
  */
-const getMenuItems = (navigate) => [
+const getMenuItems = (navigate, auth) => [
   {
     key: "dashboard",
     icon: <PieChartOutlined />,
     label: "Dashboard",
     onClick: () => {
       // Smart redirect based on user role
-      const userData = JSON.parse(localStorage.getItem("userData") || "{}");
-      const roleId = userData?.roleId;
-
-      if (roleId === 1) {
+      if (auth.isAdmin) {
         navigate("/admin/dashboard");
-      } else if (roleId === 2) {
+      } else if (auth.isStaff) {
         navigate("/staff/dashboard");
-      } else if (roleId === 4) {
+      } else if (auth.isTechnician) {
         navigate("/technician/dashboard");
       } else {
         navigate("/admin/dashboard"); // Default to admin
@@ -144,7 +143,8 @@ const getMenuItems = (navigate) => [
  */
 const AdminSidebar = ({ collapsed, onCollapse, selectedKey }) => {
   const navigate = useNavigate();
-  const menuItems = getMenuItems(navigate);
+  const auth = useAuth();
+  const menuItems = getMenuItems(navigate, auth);
 
   /**
    * Handle user logout
