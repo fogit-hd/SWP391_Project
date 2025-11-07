@@ -75,20 +75,41 @@ const TripScreen = ({ visible, onCancel, booking, onComplete }) => {
       // Hiển thị message từ backend
       const backendMessage = response.data?.message || response.data;
       
-      // Phân loại message dựa vào nội dung
-      if (backendMessage.includes("trễ") || backendMessage.includes("phạt")) {
-        message.warning({
-          content: backendMessage,
-          duration: 5,
-          icon: <WarningOutlined />
-        });
-      } else if (backendMessage.includes("sớm")) {
-        message.success({
-          content: backendMessage,
-          duration: 4
-        });
+      console.log("Backend message:", backendMessage);
+      console.log("Message type check:", {
+        hasPhạt: backendMessage.includes("phạt"),
+        hasTrễ: backendMessage.includes("trễ"),
+        hasSớm: backendMessage.includes("sớm")
+      });
+      
+      // Phân loại message dựa vào nội dung - cải thiện logic
+      if (backendMessage && typeof backendMessage === 'string') {
+        const lowerMessage = backendMessage.toLowerCase();
+        
+        if (lowerMessage.includes("trễ") || lowerMessage.includes("phạt") || lowerMessage.includes("penalty")) {
+          // Thông báo checkout trễ - hiển thị với icon warning và thời gian dài hơn
+          message.warning({
+            content: backendMessage,
+            duration: 6,
+            icon: <WarningOutlined />,
+            style: { fontSize: '15px' }
+          });
+        } else if (lowerMessage.includes("sớm")) {
+          // Thông báo checkout sớm
+          message.success({
+            content: backendMessage,
+            duration: 4
+          });
+        } else {
+          // Checkout đúng giờ
+          message.success({
+            content: backendMessage,
+            duration: 4
+          });
+        }
       } else {
-        message.success(backendMessage || "Trả xe thành công!");
+        // Fallback nếu không có message
+        message.success("Trả xe thành công!");
       }
       
       form.resetFields();
