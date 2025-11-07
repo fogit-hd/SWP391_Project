@@ -12,7 +12,7 @@ import api from "../../config/axios";
 import TripScreen from "./TripScreen";
 import { BOOKING_STATUS_COLORS, BOOKING_STATUS_LABELS, GRACE_WINDOWS } from "./booking.types";
 import { useAuth } from "../../components/hooks/useAuth";
-import { getUserIdFromToken } from "../../components/utils/jwt";
+// All role and user checks rely on useAuth (which is backed by JWT utils)
 
 const BookingDetailModal = ({ visible, onCancel, booking, onUpdate, groupId, vehicleId }) => {
   const { isCoOwner, user } = useAuth();
@@ -22,6 +22,11 @@ const BookingDetailModal = ({ visible, onCancel, booking, onUpdate, groupId, veh
   const [canCheckOut, setCanCheckOut] = useState(false);
   const [canCancel, setCanCancel] = useState(false);
   const [tripScreenVisible, setTripScreenVisible] = useState(false);
+
+  const getCurrentUserId = () => {
+    if (!user) return null;
+    return user.id || null;
+  };
 
   useEffect(() => {
     if (!booking || !visible) return;
@@ -56,13 +61,16 @@ const BookingDetailModal = ({ visible, onCancel, booking, onUpdate, groupId, veh
       setCanCheckOut(canCheckOutNow);
 
       // Check if can cancel - chỉ người tạo booking mới được cancel
-      const token = localStorage.getItem("token");
-      const currentUserId = getUserIdFromToken(token);
+      const currentUserId = getCurrentUserId();
+      const canCancelNow = 
+        booking.status === 'BOOKED' &&
+        currentUserId &&
+        booking.userId === currentUserId; // Chỉ người tạo booking mới được cancel
       
       console.log("Cancel check:", {
         bookingStatus: booking.status,
         bookingUserId: booking.userId,
-        currentUserId: currentUserId,
+        currentUserId,
         isBefore: now.isBefore(startTime),
         startTime: startTime.format(),
         now: now.format()
@@ -72,18 +80,13 @@ const BookingDetailModal = ({ visible, onCancel, booking, onUpdate, groupId, veh
       // 1. Status là BOOKED (chưa check-in)
       // 2. Là người tạo booking
       // Không kiểm tra thời gian vì nếu status vẫn BOOKED thì chưa bắt đầu sử dụng
-      const canCancelNow = 
-        booking.status === 'BOOKED' &&
-        booking.userId === currentUserId; // Chỉ người tạo booking mới được cancel
-      
-      console.log("canCancel:", canCancelNow);
       setCanCancel(canCancelNow);
     };
 
     updateStatus();
     const interval = setInterval(updateStatus, 1000);
     return () => clearInterval(interval);
-  }, [booking, visible]);
+  }, [booking, visible, user]);
 
   const handleCheckIn = async () => {
     setLoading(true);
@@ -214,23 +217,14 @@ const BookingDetailModal = ({ visible, onCancel, booking, onUpdate, groupId, veh
   if (!booking) return null;
 
   const isMyBooking = () => {
-    if (!user || !booking) return false;
-    const userId = user.id || user.userId || user.data?.id;
-    return booking.userId === userId;
-    try {
-      const token = localStorage.getItem("token");
-      const currentUserId = getUserIdFromToken(token);
-      const result = booking.userId === currentUserId;
-      console.log("isMyBooking check:", {
-        bookingUserId: booking.userId,
-        currentUserId: currentUserId,
-        result: result
-      });
-      return result;
-    } catch (error) {
-      console.error("isMyBooking error:", error);
-      return false;
-    }
+    if (!booking) return false;
+    const currentUserId = getCurrentUserId();
+    if (!currentUserId) return false;
+
+    const result = booking.userId === currentUserId;
+    console.log("isMyBooking check:", { bookingUserId: booking.userId, currentUserId, result });
+
+    return result;
   };
 
 
