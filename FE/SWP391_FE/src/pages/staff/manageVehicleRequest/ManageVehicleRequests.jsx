@@ -17,7 +17,7 @@ import {
   Image,
   Descriptions,
 } from "antd";
-import "./vehicle-management.css";
+import "./vehicle-requests.css";
 import {
   CheckOutlined,
   CloseOutlined,
@@ -27,7 +27,7 @@ import {
 } from "@ant-design/icons";
 import { toast } from "react-toastify";
 import api from "../../../config/axios";
-import AdminSidebar from "../../../components/admin/AdminSidebar";
+import StaffSidebar from "../../../components/staff/StaffSidebar";
 
 const { Header, Content, Footer } = Layout;
 const { TextArea } = Input;
@@ -295,18 +295,32 @@ const ManageVehicleRequests = () => {
       }
       
       console.log("Approve response:", response);
-      toast.success(`Vehicle request (${requestType}) approved successfully`);
+      
+      // Hiển thị message từ backend
+      const successMessage = response.data?.message || `Phê duyệt yêu cầu ${requestType} thành công`;
+      toast.success(successMessage);
+      
       setApproveModalVisible(false);
       setSelectedRequest(null);
       await fetchVehicleRequests();
     } catch (err) {
       console.error("Approve error:", err);
       console.error("Error response:", err.response);
-      const errorMessage =
-        err.response?.data?.message ||
+      
+      // Xử lý lỗi từ backend
+      const errorData = err.response?.data;
+      const errorMessage = 
+        errorData?.message ||
+        (errorData?.errors && Object.entries(errorData.errors)
+          .map(([field, messages]) => `${field}: ${messages.join(", ")}`)
+          .join("\n")) ||
+        (errorData?.title?.includes("Validation") && "Thông tin không hợp lệ") ||
+        (typeof errorData === "string" && errorData) ||
+        errorData?.error ||
         err.message ||
-        "Failed to approve request";
-      toast.error(errorMessage);
+        "Không thể phê duyệt yêu cầu";
+      
+      toast.error(errorMessage, { duration: 5000 });
     } finally {
       setLoading(false);
     }
@@ -331,20 +345,36 @@ const ManageVehicleRequests = () => {
       });
       console.log("Reject response:", response);
 
-      toast.success("Vehicle request rejected successfully");
+      // Hiển thị message từ backend
+      const successMessage = response.data?.message || "Đã từ chối yêu cầu thành công";
+      toast.success(successMessage);
+      
       setRejectModalVisible(false);
       rejectForm.resetFields();
       fetchVehicleRequests();
     } catch (err) {
       if (err.errorFields) {
-        // Validation error
+        // Validation error từ form
         return;
       }
+      
       console.error("Reject error:", err);
       console.error("Error response:", err.response);
-      const errorMessage =
-        err.response?.data?.message || err.message || "Failed to reject request";
-      toast.error(errorMessage);
+      
+      // Xử lý lỗi từ backend
+      const errorData = err.response?.data;
+      const errorMessage = 
+        errorData?.message ||
+        (errorData?.errors && Object.entries(errorData.errors)
+          .map(([field, messages]) => `${field}: ${messages.join(", ")}`)
+          .join("\n")) ||
+        (errorData?.title?.includes("Validation") && "Thông tin không hợp lệ") ||
+        (typeof errorData === "string" && errorData) ||
+        errorData?.error ||
+        err.message ||
+        "Không thể từ chối yêu cầu";
+      
+      toast.error(errorMessage, { duration: 5000 });
     } finally {
       setLoading(false);
     }
@@ -378,7 +408,7 @@ const ManageVehicleRequests = () => {
 
   return (
     <Layout style={{ minHeight: "100vh" }}>
-      <AdminSidebar
+      <StaffSidebar
         collapsed={collapsed}
         onCollapse={setCollapsed}
         selectedKey="manage-vehicle-requests"

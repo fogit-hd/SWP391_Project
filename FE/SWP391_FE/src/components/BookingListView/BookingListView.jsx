@@ -108,7 +108,7 @@ const BookingListView = ({ bookings = [], onBookingClick, loading = false }) => 
             <Space>
               <Avatar icon={<UserOutlined />} />
               <div>
-                <div className="booking-user">{booking.userName || ''}</div>
+                <div className="booking-user">{booking.userName || 'Không có tên'}</div>
                 <div className="booking-id">#{booking.id?.slice(-8)}</div>
               </div>
             </Space>

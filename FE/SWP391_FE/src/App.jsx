@@ -12,7 +12,7 @@ import ManageContract from "./pages/admin/manageContract";
 import ManageService from "./pages/admin/manageService";
 import ManageGroup from "./pages/admin/manageGroup";
 import ManageVehicle from "./pages/admin/manageVehicle";
-import ManageVehicleRequests from "./pages/admin/manageVehicle/ManageVehicleRequests";
+import ManageVehicleRequests from "./pages/staff/manageVehicleRequest/ManageVehicleRequests";
 import ForgotPassword from "./pages/forgot.password";
 import VerifyOTP from "./pages/verify.otp";
 import UpdateProfile from "./pages/update.profile";
@@ -87,14 +87,6 @@ function App() {
         </ProtectedRoute>
       ),
     },
-    {
-      path: "/admin/manage-vehicle-requests",
-      element: (
-        <ProtectedRoute roleId={1}>
-          <ManageVehicleRequests />
-        </ProtectedRoute>
-      ),
-    },
 
     // STAFF PAGE
 
@@ -103,6 +95,15 @@ function App() {
       element: (
         <ProtectedRoute roleId={[1, 2]}>
           <StaffDashboard />
+        </ProtectedRoute>
+      ),
+    },
+
+    {
+      path: "/staff/manage-vehicle-requests",
+      element: (
+        <ProtectedRoute roleId={[1, 2]}>
+          <ManageVehicleRequests />
         </ProtectedRoute>
       ),
     },

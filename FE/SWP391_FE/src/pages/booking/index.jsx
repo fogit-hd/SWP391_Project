@@ -247,29 +247,6 @@ const BookingManagement = () => {
           onBookingClick={handleBookingClick}
           loading={loading}
         />
-
-        <Card style={{ marginTop: 16 }} title="Lịch sử sự kiện chuyến đi (trip events)">
-          {loadingTripHistory ? (
-            <Spin />
-          ) : (
-            <List
-              dataSource={tripHistory}
-              locale={{ emptyText: 'Không có sự kiện' }}
-              renderItem={(t) => (
-                <List.Item>
-                  <List.Item.Meta
-                    avatar={t.photosUrl ? <img src={t.photosUrl} alt="evt" style={{ width: 80, height: 56, objectFit: 'cover', borderRadius: 4 }} /> : null}
-                    title={<span><strong>{t.eventType}</strong> — {vehicleNameById(t.vehicleId)}</span>}
-                    description={<div>
-                      <div style={{ marginBottom: 6 }}>{t.description}</div>
-                      <div style={{ fontSize: 12, color: '#666' }}>By: {t.signedBy} • {t.bookingId ? `Booking: ${t.bookingId}` : ''} • {new Date(t.createdAt).toLocaleString()}</div>
-                    </div>}
-                  />
-                </List.Item>
-              )}
-            />
-          )}
-        </Card>
       </div>
 
       <CreateBookingModal

@@ -138,22 +138,38 @@ const CreateBookingModal = ({ visible, onCancel, onSuccess, groupId, vehicleId, 
     const start = dates[0];
     const end = dates[1];
 
-    // Check minimum advance booking
-    const hoursUntilStart = start.diff(now, 'hour', true);
-    if (hoursUntilStart < BOOKING_CONSTRAINTS.MIN_ADVANCE_HOURS) {
+    // Check minimum advance booking (phải đặt trước ít nhất 15 phút)
+    const minutesFromNow = start.diff(now, 'minute', true);
+    const minAllowedTime = now.add(BOOKING_CONSTRAINTS.MIN_ADVANCE_MINUTES, 'minute');
+    
+    if (start.isBefore(minAllowedTime)) {
       return { 
         valid: false, 
-        error: `Booking must be at least ${BOOKING_CONSTRAINTS.MIN_ADVANCE_HOURS} hours in advance` 
+        error: `Thời gian bắt đầu phải cách thời gian hiện tại ít nhất ${BOOKING_CONSTRAINTS.MIN_ADVANCE_MINUTES} phút` 
       };
     }
 
-    // Check maximum advance booking
-    const daysUntilStart = start.diff(now, 'day', true);
-    if (daysUntilStart > BOOKING_CONSTRAINTS.MAX_ADVANCE_DAYS) {
-      return { 
-        valid: false, 
-        error: `Booking cannot be more than ${BOOKING_CONSTRAINTS.MAX_ADVANCE_DAYS} days in advance` 
-      };
+    // Check maximum advance booking (chỉ trong tuần này và tuần sau)
+    // Nếu có quota info, dùng weekStartDate làm mốc
+    if (quotaInfo?.data?.weekStartDate) {
+      const weekStartDate = dayjs(quotaInfo.data.weekStartDate);
+      const twoWeeksEnd = weekStartDate.add(14, 'day');
+      
+      if (start.isAfter(twoWeeksEnd)) {
+        return { 
+          valid: false, 
+          error: `Chỉ có thể đặt trong tuần này và tuần sau (từ ${weekStartDate.format('DD/MM/YYYY')} đến ${twoWeeksEnd.format('DD/MM/YYYY')})` 
+        };
+      }
+    } else {
+      // Fallback nếu chưa có quota info
+      const daysUntilStart = start.diff(now, 'day', true);
+      if (daysUntilStart > BOOKING_CONSTRAINTS.MAX_ADVANCE_DAYS) {
+        return { 
+          valid: false, 
+          error: `Chỉ có thể đặt trong tuần này và tuần sau (không quá ${BOOKING_CONSTRAINTS.MAX_ADVANCE_DAYS} ngày)` 
+        };
+      }
     }
 
     // Check basic duration validity
@@ -162,24 +178,47 @@ const CreateBookingModal = ({ visible, onCancel, onSuccess, groupId, vehicleId, 
       return { valid: false, error: "End time must be after start time" };
     }
 
-    // Check for overlapping bookings
-    const overlap = existingBookings.some(booking => {
+    // Check for overlapping bookings and minimum gap (30 phút)
+    const minGapMinutes = BOOKING_CONSTRAINTS.MIN_GAP_MINUTES;
+    const conflictBooking = existingBookings.find(booking => {
       if (booking.status === 'CANCELLED') {
         return false;
       }
       const bookingStart = dayjs(booking.startTime);
       const bookingEnd = dayjs(booking.endTime);
       
-      return (
-        (start.isBefore(bookingEnd) && end.isAfter(bookingStart)) ||
-        (start.isSame(bookingStart) || end.isSame(bookingEnd))
-      );
+      // Kiểm tra overlap trực tiếp
+      const hasOverlap = (start.isBefore(bookingEnd) && end.isAfter(bookingStart)) ||
+        (start.isSame(bookingStart) || end.isSame(bookingEnd));
+      
+      if (hasOverlap) {
+        return true;
+      }
+      
+      // Kiểm tra khoảng cách tối thiểu 30 phút
+      // Nếu booking mới kết thúc trước booking hiện tại
+      if (end.isBefore(bookingStart) || end.isSame(bookingStart)) {
+        const gapMinutes = bookingStart.diff(end, 'minute');
+        if (gapMinutes < minGapMinutes) {
+          return true;
+        }
+      }
+      
+      // Nếu booking mới bắt đầu sau booking hiện tại
+      if (start.isAfter(bookingEnd) || start.isSame(bookingEnd)) {
+        const gapMinutes = start.diff(bookingEnd, 'minute');
+        if (gapMinutes < minGapMinutes) {
+          return true;
+        }
+      }
+      
+      return false;
     });
 
-    if (overlap) {
+    if (conflictBooking) {
       return { 
         valid: false, 
-        error: "This time slot overlaps with an existing booking" 
+        error: `Thời gian đặt phải cách các booking khác ít nhất ${minGapMinutes} phút` 
       };
     }
 
@@ -295,7 +334,11 @@ const CreateBookingModal = ({ visible, onCancel, onSuccess, groupId, vehicleId, 
       console.log("Creating booking with payload:", payload);
       const response = await api.post("/booking/create", payload);
       console.log("Booking created successfully:", response.data);
-      message.success("Tạo đặt chỗ thành công!");
+      
+      // Hiển thị message từ backend hoặc message mặc định
+      const successMessage = response.data?.message || "Tạo đặt chỗ thành công!";
+      message.success(successMessage);
+      
       form.resetFields();
       setEstimatedDuration(null);
       setValidationError(null);
@@ -303,48 +346,61 @@ const CreateBookingModal = ({ visible, onCancel, onSuccess, groupId, vehicleId, 
     } catch (error) {
       console.error("Failed to create booking:", error);
       console.error("Error response:", error.response?.data);
-      console.error("Error status:", error.response?.status);
-      console.error("Error headers:", error.response?.headers);
       
       let errorMsg = "Không thể tạo đặt chỗ";
       
-      // Try to extract error message from various response formats
       if (error.response?.data) {
         const errorData = error.response.data;
         
-        // Check for message field (most common)
+        // 1. Ưu tiên message từ backend (đã có thông báo cụ thể)
         if (errorData.message) {
           errorMsg = errorData.message;
         }
-        // Check for error field
-        else if (errorData.error) {
-          errorMsg = errorData.error;
+        // 2. Xử lý validation errors
+        else if (errorData.errors) {
+          if (Array.isArray(errorData.errors)) {
+            errorMsg = errorData.errors.join(', ');
+          } else if (typeof errorData.errors === 'object') {
+            const fieldNames = {
+              'GroupId': 'Nhóm',
+              'VehicleId': 'Xe',
+              'StartTime': 'Thời gian bắt đầu',
+              'EndTime': 'Thời gian kết thúc'
+            };
+            
+            const errorMessages = Object.entries(errorData.errors)
+              .map(([field, messages]) => {
+                const messageArray = Array.isArray(messages) ? messages : [messages];
+                const fieldName = fieldNames[field] || field;
+                return `${fieldName}: ${messageArray.join(", ")}`;
+              })
+              .join("\n");
+            errorMsg = errorMessages;
+          }
         }
-        // Check for errors array (validation errors)
-        else if (errorData.errors && Array.isArray(errorData.errors)) {
-          errorMsg = errorData.errors.join(', ');
-        }
-        // Check for detail field
-        else if (errorData.detail) {
-          errorMsg = errorData.detail;
-        }
-        // If errorData is a string
+        // 3. Plain string error
         else if (typeof errorData === 'string') {
           errorMsg = errorData;
         }
+        // 4. Các format khác
+        else if (errorData.error) {
+          errorMsg = errorData.error;
+        }
+        else if (errorData.detail) {
+          errorMsg = errorData.detail;
+        }
       } 
-      // Network error or no response
+      // Network error
       else if (error.message) {
-        errorMsg = `Không thể tạo đặt chỗ: ${error.message}`;
+        errorMsg = `Không thể kết nối đến server: ${error.message}`;
       }
       
-      // Display error with duration for better visibility
+      // Hiển thị error message
       message.error({
         content: errorMsg,
-        duration: 5, // Show for 5 seconds
+        duration: 6,
       });
       
-      // Also set validation error to show in UI
       setValidationError(errorMsg);
     } finally {
       setLoading(false);
@@ -352,14 +408,29 @@ const CreateBookingModal = ({ visible, onCancel, onSuccess, groupId, vehicleId, 
   };
 
   const disabledDate = (current) => {
+    if (!current) return false;
+    
     const now = dayjs();
+    
+    // Nếu có thông tin quota với weekStartDate, dùng nó làm mốc
+    if (quotaInfo?.data?.weekStartDate) {
+      const weekStartDate = dayjs(quotaInfo.data.weekStartDate);
+      // Tuần sau kết thúc vào Chủ nhật của tuần thứ 2 (13 ngày sau ngày bắt đầu)
+      const twoWeeksEnd = weekStartDate.add(13, 'day').endOf('day');
+      
+      // Không cho phép chọn ngày trong quá khứ và sau 2 tuần
+      return current < now.startOf('day') || current > twoWeeksEnd;
+    }
+    
+    // Fallback: nếu chưa có quota info, dùng logic cũ
     const maxDate = dayjs().add(BOOKING_CONSTRAINTS.MAX_ADVANCE_DAYS, 'day');
-    return current && (current < now.startOf('day') || current > maxDate.endOf('day'));
+    return current < now.startOf('day') || current > maxDate.endOf('day');
   };
 
   const disabledTime = (current, type) => {
     const now = dayjs();
-    const minBookingTime = now.add(BOOKING_CONSTRAINTS.MIN_ADVANCE_HOURS, 'hour');
+    // Phải đặt trước ít nhất 15 phút
+    const minAllowedTime = now.add(BOOKING_CONSTRAINTS.MIN_ADVANCE_MINUTES, 'minute');
     
     // Nếu không có ngày được chọn hoặc type không hợp lệ, không disable gì
     if (!current || !type) {
@@ -372,12 +443,12 @@ const CreateBookingModal = ({ visible, onCancel, onSuccess, groupId, vehicleId, 
     if (type === 'start') {
       // Nếu ngày được chọn là hôm nay
       if (selectedDate.isSame(now, 'day')) {
-        const minHour = minBookingTime.hour();
-        const minMinute = minBookingTime.minute();
+        const minHour = minAllowedTime.hour();
+        const minMinute = minAllowedTime.minute();
         
         return {
           disabledHours: () => {
-            // Disable tất cả các giờ trước giờ tối thiểu
+            // Disable tất cả các giờ trước giờ tối thiểu (15 phút sau hiện tại)
             const hours = [];
             for (let i = 0; i < minHour; i++) {
               hours.push(i);
@@ -408,8 +479,8 @@ const CreateBookingModal = ({ visible, onCancel, onSuccess, groupId, vehicleId, 
       if (!startTime) {
         // Nếu chưa chọn start time, áp dụng rule giống start time
         if (selectedDate.isSame(now, 'day')) {
-          const minHour = minBookingTime.hour();
-          const minMinute = minBookingTime.minute();
+          const minHour = minAllowedTime.hour();
+          const minMinute = minAllowedTime.minute();
           
           return {
             disabledHours: () => {
@@ -496,9 +567,9 @@ const CreateBookingModal = ({ visible, onCancel, onSuccess, groupId, vehicleId, 
         message="Quy tắc đặt chỗ"
         description={
           <ul style={{ margin: '8px 0', paddingLeft: '20px' }}>
-            <li>Đặt trước ít nhất {BOOKING_CONSTRAINTS.MIN_ADVANCE_HOURS} giờ</li>
-            <li>Tối đa {BOOKING_CONSTRAINTS.MAX_ADVANCE_DAYS} ngày trước</li>
-            <li>Thời gian kết thúc phải sau thời gian bắt đầu</li>
+            <li>Đặt trước thời gian hiện tại ít nhất {BOOKING_CONSTRAINTS.MIN_ADVANCE_MINUTES} phút</li>
+            <li>Chỉ có thể đặt trong tuần này và tuần sau (2 tuần)</li>
+            <li>Phải cách các booking khác ít nhất {BOOKING_CONSTRAINTS.MIN_GAP_MINUTES} phút</li>
             <li>Không được trùng với các đặt chỗ hiện có</li>
           </ul>
         }

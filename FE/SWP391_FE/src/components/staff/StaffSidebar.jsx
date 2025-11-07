@@ -5,6 +5,7 @@ import {
   FileTextOutlined,
   LogoutOutlined,
   EyeOutlined,
+  CarOutlined,
 } from "@ant-design/icons";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
@@ -51,6 +52,11 @@ const getMenuItems = (navigate, auth) => [
     key: "manage-booking",
     icon: <FileTextOutlined />,
     label: <Link to="/Manage.Booking">Manage Booking</Link>,
+  },
+  {
+    key: "manage-vehicle-requests",
+    icon: <CarOutlined />,
+    label: <Link to="/staff/manage-vehicle-requests">Manage Vehicle Requests</Link>,
   },
 ];
 
