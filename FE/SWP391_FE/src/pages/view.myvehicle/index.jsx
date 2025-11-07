@@ -225,13 +225,9 @@ const MyVehicle = () => {
           } else if (key === "copy") {
             console.log("Copy ID action triggered");
             handleCopyId(record.id);
-          } else if (key === "delete") {
-            console.log("Delete action triggered");
-            handleDeleteClick(record);
           }
         };
 
-        
         const menuItems = [
           {
             key: "edit",
@@ -244,16 +240,6 @@ const MyVehicle = () => {
             label: "Sao chép ID",
           },
         ];
-
-        // Chỉ thêm Delete nếu hasGroup === false (xe chưa được assign vào group nào)
-        if (record.hasGroup === false) {
-          menuItems.push({
-            key: "delete",
-            icon: <DeleteOutlined />,
-            label: "Xóa",
-            danger: true,
-          });
-        }
 
         return (
           <Space size="small">
