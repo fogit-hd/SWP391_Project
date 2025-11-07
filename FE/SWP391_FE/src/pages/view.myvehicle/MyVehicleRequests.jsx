@@ -300,12 +300,14 @@ const MyVehicleRequests = () => {
     try {
       console.log("Deleting request with ID:", requestToDelete.id);
       setLoading(true);
-      const response = await api.delete(`/vehicle-requests/delete/${requestToDelete.id}`);
-      
+      const response = await api.delete(
+        `/vehicle-requests/delete/${requestToDelete.id}`
+      );
+
       // Hiển thị message từ backend hoặc message mặc định
       const successMessage = response.data?.message || "Xóa yêu cầu thành công";
       toast.success(successMessage);
-      
+
       setDeleteModalVisible(false);
       setRequestToDelete(null);
       fetchMyVehicleRequests();
@@ -320,7 +322,7 @@ const MyVehicleRequests = () => {
           errorMessage = errorData.message;
         }
         // Plain string error
-        else if (typeof errorData === 'string') {
+        else if (typeof errorData === "string") {
           errorMessage = errorData;
         }
       } else if (err.message) {
@@ -390,58 +392,46 @@ const MyVehicleRequests = () => {
       });
 
       // Hiển thị message từ backend hoặc message mặc định
-      const successMessage = response.data?.message || "Tạo yêu cầu xe mới thành công! Vui lòng chờ duyệt.";
+      // Loại bỏ cụm 'vui lòng chờ admin duyệt' hoặc 'vui lòng chờ duyệt' nếu backend trả về
+      const rawMessage =
+        response.data?.message ||
+        "Tạo yêu cầu xe mới thành công! Vui lòng chờ duyệt.";
+      const successMessage = rawMessage
+        .replace(/vui\s+lòng\s+chờ\s+admin\s+duyệt/gi, "")
+        .replace(/vui\s+lòng\s+chờ\s+duyệt/gi, "")
+        // remove trailing commas/extra spaces left after removal
+        .replace(/[.,\s]+$/g, "")
+        .replace(/\s{2,}/g, " ")
+        .trim();
+
       toast.success(successMessage);
-      
+
       setCreateModalVisible(false);
       createForm.resetFields();
       setVehicleImageFileList([]);
       setRegistrationPaperFileList([]);
       fetchMyVehicleRequests();
     } catch (err) {
-      console.error("Create request error:", err.response?.data);
+      console.error("=== CREATE REQUEST ERROR ===");
+      console.error("Status:", err.response?.status);
+      console.error("Response data:", err.response?.data);
+      console.error("Data type:", typeof err.response?.data);
+      console.error("Has errors?", err.response?.data?.errors);
+      console.error("Has title?", err.response?.data?.title);
+      console.error("Has message?", err.response?.data?.message);
       console.error("Full error object:", err);
-      const errorData = err.response?.data;
-      let errorMessage = "Không thể tạo yêu cầu";
 
-      if (errorData) {
-        // 1. Ưu tiên message từ backend (đã có thông báo cụ thể)
-        if (errorData.message) {
-          errorMessage = errorData.message;
-        }
-        // 2. Xử lý validation errors (format từ ASP.NET)
-        else if (errorData.errors && typeof errorData.errors === 'object') {
-          const fieldNames = {
-            'PlateNumber': 'Biển số xe',
-            'Make': 'Hãng xe',
-            'Model': 'Model',
-            'ModelYear': 'Năm sản xuất',
-            'Color': 'Màu sắc',
-            'BatteryCapacityKwh': 'Dung lượng pin',
-            'RangeKm': 'Quãng đường',
-            'VehicleImage': 'Hình ảnh xe',
-            'RegistrationPaperUrl': 'Giấy đăng ký'
-          };
-          
-          const errorMessages = Object.entries(errorData.errors)
-            .map(([field, messages]) => {
-              const messageArray = Array.isArray(messages) ? messages : [messages];
-              const fieldName = fieldNames[field] || field;
-              return `${fieldName}: ${messageArray.join(", ")}`;
-            })
-            .join("\n");
-          errorMessage = errorMessages || "Vui lòng kiểm tra lại thông tin";
-        }
-        // 3. Xử lý title + errors (ASP.NET Validation Problem)
-        else if (errorData.title && errorData.title.includes("Validation")) {
-          errorMessage = "Lỗi validation: Vui lòng kiểm tra lại thông tin";
-        }
-        // 4. Plain string error
-        else if (typeof errorData === 'string') {
-          errorMessage = errorData;
-        }
-      } else if (err.message) {
-        errorMessage = err.message;
+      const errorData = err.response?.data;
+      let errorMessage =
+        "Biển số xe đã tồn tại trong hệ thống. Vui lòng kiểm tra lại!";
+
+      // Nếu backend trả về message cụ thể thì dùng message đó
+      if (errorData?.message) {
+        errorMessage = errorData.message;
+      }
+      // Nếu có lỗi khác, mặc định vẫn là lỗi trùng biển số
+      else if (typeof errorData === "string" && errorData) {
+        errorMessage = errorData;
       }
 
       toast.error(errorMessage, { duration: 5000 });
@@ -493,9 +483,18 @@ const MyVehicleRequests = () => {
       });
 
       // Hiển thị message từ backend hoặc message mặc định
-      const successMessage = response.data?.message || "Tạo yêu cầu cập nhật xe thành công! Vui lòng chờ admin duyệt.";
+      // Loại bỏ cụm 'vui lòng chờ admin duyệt' hoặc 'vui lòng chờ duyệt' nếu backend trả về
+      const rawMessage =
+        response.data?.message || "Tạo yêu cầu cập nhật xe thành công!";
+      const successMessage = rawMessage
+        .replace(/vui\s+lòng\s+chờ\s+admin\s+duyệt/gi, "")
+        .replace(/vui\s+lòng\s+chờ\s+duyệt/gi, "")
+        .replace(/[.,\s]+$/g, "")
+        .replace(/\s{2,}/g, " ")
+        .trim();
+
       toast.success(successMessage);
-      
+
       setUpdateModalVisible(false);
       updateForm.resetFields();
       setVehicleImageFileList([]);
@@ -514,23 +513,25 @@ const MyVehicleRequests = () => {
           errorMessage = errorData.message;
         }
         // 2. Xử lý validation errors (format từ ASP.NET)
-        else if (errorData.errors && typeof errorData.errors === 'object') {
+        else if (errorData.errors && typeof errorData.errors === "object") {
           const fieldNames = {
-            'PlateNumber': 'Biển số xe',
-            'Make': 'Hãng xe',
-            'Model': 'Model',
-            'ModelYear': 'Năm sản xuất',
-            'Color': 'Màu sắc',
-            'BatteryCapacityKwh': 'Dung lượng pin',
-            'RangeKm': 'Quãng đường',
-            'VehicleImage': 'Hình ảnh xe',
-            'RegistrationPaperUrl': 'Giấy đăng ký',
-            'VehicleId': 'Xe'
+            PlateNumber: "Biển số xe",
+            Make: "Hãng xe",
+            Model: "Model",
+            ModelYear: "Năm sản xuất",
+            Color: "Màu sắc",
+            BatteryCapacityKwh: "Dung lượng pin",
+            RangeKm: "Quãng đường",
+            VehicleImage: "Hình ảnh xe",
+            RegistrationPaperUrl: "Giấy đăng ký",
+            VehicleId: "Xe",
           };
-          
+
           const errorMessages = Object.entries(errorData.errors)
             .map(([field, messages]) => {
-              const messageArray = Array.isArray(messages) ? messages : [messages];
+              const messageArray = Array.isArray(messages)
+                ? messages
+                : [messages];
               const fieldName = fieldNames[field] || field;
               return `${fieldName}: ${messageArray.join(", ")}`;
             })
@@ -542,7 +543,7 @@ const MyVehicleRequests = () => {
           errorMessage = "Lỗi validation: Vui lòng kiểm tra lại thông tin";
         }
         // 4. Plain string error
-        else if (typeof errorData === 'string') {
+        else if (typeof errorData === "string") {
           errorMessage = errorData;
         }
       } else if (err.message) {
@@ -761,7 +762,11 @@ const MyVehicleRequests = () => {
           <Form.Item
             name="make"
             label="Hãng xe"
-            rules={[{ required: true, message: "Vui lòng nhập hãng xe" }]}
+            rules={[
+              { required: true, message: "Vui lòng nhập hãng xe" },
+              { min: 2, message: "Hãng xe phải có ít nhất 2 ký tự" },
+              { max: 50, message: "Hãng xe không được quá 50 ký tự" },
+            ]}
           >
             <Input placeholder="VD: Toyota, Honda, Vinfast..." />
           </Form.Item>
@@ -769,7 +774,11 @@ const MyVehicleRequests = () => {
           <Form.Item
             name="model"
             label="Model"
-            rules={[{ required: true, message: "Vui lòng nhập model" }]}
+            rules={[
+              { required: true, message: "Vui lòng nhập model" },
+              { min: 1, message: "Model phải có ít nhất 1 ký tự" },
+              { max: 50, message: "Model không được quá 50 ký tự" },
+            ]}
           >
             <Input placeholder="VD: Vios, City, VF5..." />
           </Form.Item>
@@ -787,7 +796,11 @@ const MyVehicleRequests = () => {
               },
             ]}
           >
-            <InputNumber min={1900} max={new Date().getFullYear()} style={{ width: "100%" }} />
+            <InputNumber
+              min={1900}
+              max={new Date().getFullYear()}
+              style={{ width: "100%" }}
+            />
           </Form.Item>
 
           <Form.Item
@@ -803,23 +816,51 @@ const MyVehicleRequests = () => {
             label="Dung lượng pin (kWh)"
             rules={[
               { required: true, message: "Vui lòng nhập dung lượng pin" },
+              {
+                type: "number",
+                min: 0.1,
+                message: "Dung lượng pin phải lớn hơn 0",
+              },
             ]}
           >
-            <InputNumber min={0} style={{ width: "100%" }} />
+            <InputNumber
+              min={0.1}
+              step={0.1}
+              style={{ width: "100%" }}
+              placeholder="VD: 50.5"
+            />
           </Form.Item>
 
           <Form.Item
             name="rangeKm"
             label="Quãng đường (km)"
-            rules={[{ required: true, message: "Vui lòng nhập quãng đường" }]}
+            rules={[
+              { required: true, message: "Vui lòng nhập quãng đường" },
+              {
+                type: "number",
+                min: 1,
+                message: "Quãng đường phải lớn hơn 0",
+              },
+            ]}
           >
-            <InputNumber min={0} style={{ width: "100%" }} />
+            <InputNumber
+              min={1}
+              style={{ width: "100%" }}
+              placeholder="VD: 300"
+            />
           </Form.Item>
 
           <Form.Item
             name="plateNumber"
             label="Biển số xe"
-            rules={[{ required: true, message: "Vui lòng nhập biển số xe" }]}
+            rules={[
+              { required: true, message: "Vui lòng nhập biển số xe" },
+              {
+                pattern: /^[0-9]{2}[A-Z]{1,2}-[0-9]{4,5}$/,
+                message:
+                  "Biển số xe không đúng định dạng (VD: 51F-12345, 30A-99999)",
+              },
+            ]}
           >
             <Input placeholder="VD: 51F-12345" />
           </Form.Item>
@@ -953,7 +994,11 @@ const MyVehicleRequests = () => {
                 },
               ]}
             >
-              <InputNumber min={1900} max={new Date().getFullYear()} style={{ width: "100%" }} />
+              <InputNumber
+                min={1900}
+                max={new Date().getFullYear()}
+                style={{ width: "100%" }}
+              />
             </Form.Item>
 
             <Form.Item

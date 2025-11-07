@@ -66,9 +66,12 @@ const BookingDetailModal = ({ visible, onCancel, booking, onUpdate, groupId, veh
         now: now.format()
       });
       
+      // Cho phép cancel nếu:
+      // 1. Status là BOOKED (chưa check-in)
+      // 2. Là người tạo booking
+      // Không kiểm tra thời gian vì nếu status vẫn BOOKED thì chưa bắt đầu sử dụng
       const canCancelNow = 
         booking.status === 'BOOKED' &&
-        now.isBefore(startTime) &&
         booking.userId === currentUserId; // Chỉ người tạo booking mới được cancel
       
       console.log("canCancel:", canCancelNow);
@@ -314,16 +317,27 @@ const BookingDetailModal = ({ visible, onCancel, booking, onUpdate, groupId, veh
         <Space direction="vertical" style={{ width: '100%' }} size="large">
           {/* Status Alert */}
           {booking.status === 'BOOKED' && isMyBooking() && (
-            <Alert
-              message={
-                <Space>
-                  <ClockCircleOutlined />
-                  Thời gian đến lúc bắt đầu: {countdown}
-                </Space>
-              }
-              type={canCheckIn ? "success" : "info"}
-              showIcon
-            />
+            <>
+              <Alert
+                message={
+                  <Space>
+                    <ClockCircleOutlined />
+                    Thời gian đến lúc bắt đầu: {countdown}
+                  </Space>
+                }
+                type={canCheckIn ? "success" : "info"}
+                showIcon
+              />
+              {checkInProgress && checkInProgress.status === 'exception' && (
+                <Alert
+                  message="Đã hết thời gian nhận xe"
+                  description="Xin lỗi anh đã đi trễ quá 15 phút, anh vui lòng đợi hệ thống hủy chuyến và đặt lịch khác."
+                  type="error"
+                  showIcon
+                  style={{ marginTop: 16 }}
+                />
+              )}
+            </>
           )}
 
           {booking.status === 'INUSE' && isMyBooking() && (
@@ -368,7 +382,6 @@ const BookingDetailModal = ({ visible, onCancel, booking, onUpdate, groupId, veh
             {booking.status !== 'COMPLETE' && booking.status !== 'COMPLETED' && (
               <Descriptions.Item label="Người dùng">
                 {booking.userName || ''}
-                {isMyBooking() && <Tag color="green" style={{ marginLeft: 8 }}>Bạn</Tag>}
               </Descriptions.Item>
             )}
             <Descriptions.Item label="Thời gian bắt đầu">
