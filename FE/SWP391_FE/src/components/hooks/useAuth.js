@@ -30,6 +30,12 @@ export const useAuth = () => {
         roleName: userInfo?.roleName
     });
 
+    // Debug user IDs to confirm the field name
+    console.log('[HOOK] user IDs debug:', {
+        reduxId: account?.id,
+        jwtId: userInfo?.id
+    });
+
     // Check if user is authenticated (either from Redux or localStorage)
     const isAuthenticated = !!account || !!userInfo;
     console.log('[HOOK] isAuthenticated:', isAuthenticated);
