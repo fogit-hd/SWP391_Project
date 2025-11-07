@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
-import { Form, Input, Checkbox, Button, Card, Row, Col, message } from "antd";
+import { Checkbox, Button, Card, Row, Col, message } from "antd";
 import { MailOutlined, LockOutlined } from "@ant-design/icons";
+import { Formik, Form, Field, ErrorMessage } from "formik";
+import * as Yup from "yup";
 import api from "../../config/axios";
 import { toast } from "react-toastify";
 import { Link, useNavigate } from "react-router-dom";
@@ -8,13 +10,32 @@ import { useDispatch } from "react-redux";
 import { login } from "../../components/redux/accountSlice";
 import "./login.css";
 
+// Yup validation schema
+const validationSchema = Yup.object().shape({
+  email: Yup.string().email("Email không hợp lệ").required("Email is required"),
+  password: Yup.string()
+    .min(8, "Password must be at least 8 characters")
+    .required("Password is required"),
+  rememberMe: Yup.boolean(),
+});
+
+// Initial form values
+const getInitialValues = () => {
+  const rememberedEmail = localStorage.getItem("rememberedEmail");
+  return {
+    email: rememberedEmail || "",
+    password: "",
+    rememberMe: false,
+  };
+};
+
 const LoginPage = () => {
-  const [form] = Form.useForm();
   const [isLoading, setIsLoading] = useState(false);
   const [emailFocused, setEmailFocused] = useState(false);
   const [passwordFocused, setPasswordFocused] = useState(false);
   const [emailValue, setEmailValue] = useState("");
   const [passwordValue, setPasswordValue] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
@@ -29,17 +50,9 @@ const LoginPage = () => {
     localStorage.removeItem("password");
 
     sessionStorage.clear();
+  }, []);
 
-    // Load remembered email
-    const rememberedEmail = localStorage.getItem("rememberedEmail");
-    if (rememberedEmail) {
-      form.setFieldsValue({
-        email: rememberedEmail,
-      });
-    }
-  }, [form]);
-
-  const onFinish = async (values) => {
+  const onSubmit = async (values, { setSubmitting }) => {
     setIsLoading(true);
     try {
       console.log("\n[LOGIN] === LOGIN PROCESS START ===");
@@ -93,14 +106,6 @@ const LoginPage = () => {
         Admin: 1,
         Staff: 2,
         CoOwner: 3,
-        
-       
-        // Handle numeric roles
-        1: 1,
-        2: 2,
-        3: 3, 
-        
-     
         Technician: 4,
         // Handle numeric roles
         1: 1,
@@ -216,27 +221,24 @@ const LoginPage = () => {
       }
     } finally {
       setIsLoading(false);
+      setSubmitting(false);
     }
   };
 
   // Handle forgot password navigation
-  const handleForgotPassword = () => {
-    const currentEmail = form.getFieldValue("email");
-
+  const handleForgotPassword = (currentEmail) => {
     // Validate email before navigating
     if (!currentEmail) {
       message.error("Please enter your email address first");
       return;
     }
 
-    // Basic email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(currentEmail)) {
       message.error("Please enter a valid email address");
       return;
     }
 
-    // Store email and navigate to forgot password page
     localStorage.setItem("email", currentEmail);
     navigate("/forgot-password", { state: { email: currentEmail } });
   };
@@ -254,137 +256,261 @@ const LoginPage = () => {
             </p>
           </div>
 
-          <Form
-            form={form}
-            layout="vertical"
-            initialValues={{ rememberMe: false }}
-            onFinish={onFinish}
-            requiredMark={false}
-            className="login-form"
+          <Formik
+            initialValues={getInitialValues()}
+            validationSchema={validationSchema}
+            onSubmit={onSubmit}
           >
-            {/* Email Field */}
-            <Form.Item
-              name="email"
-              rules={[{ required: true, message: "Email is required" }]}
-              className="floating-label-form-item"
-            >
-              <div
-                className={`floating-label-wrapper ${
-                  emailFocused || emailValue ? "active" : ""
-                }`}
-              >
-                <Input
-                  prefix={<MailOutlined />}
-                  allowClear
-                  className="floating-input"
-                  onFocus={() => setEmailFocused(true)}
-                  onBlur={(e) => {
-                    setEmailFocused(false);
-                    setEmailValue(e.target.value);
-                  }}
-                  onChange={(e) => setEmailValue(e.target.value)}
-                />
-                <label className="floating-label">Email</label>
-              </div>
-            </Form.Item>
-            {/* Password Field */}
-            <Form.Item
-              name="password"
-              rules={[
-                { required: true, message: "Password is required" },
-                { min: 8, message: "Password must be at least 8 characters" },
-              ]}
-              className="floating-label-form-item"
-            >
-              <div
-                className={`floating-label-wrapper ${
-                  passwordFocused || passwordValue ? "active" : ""
-                }`}
-              >
-                <Input.Password
-                  prefix={<LockOutlined />}
-                  className="floating-input"
-                  onFocus={() => setPasswordFocused(true)}
-                  onBlur={(e) => {
-                    setPasswordFocused(false);
-                    setPasswordValue(e.target.value);
-                  }}
-                  onChange={(e) => setPasswordValue(e.target.value)}
-                />
-                <label className="floating-label">Password</label>
-              </div>
-            </Form.Item>
+            {({ values, errors, touched, setFieldValue, isSubmitting }) => {
+              return (
+                <Form className="login-form">
+                  {/* Email Field */}
+                  <div className="floating-label-form-item">
+                    <div
+                      className={`floating-label-wrapper ${
+                        emailFocused || values.email ? "active" : ""
+                      } ${errors.email && touched.email ? "has-error" : ""}`}
+                    >
+                      <div style={{ position: "relative", width: "100%" }}>
+                        <MailOutlined
+                          style={{
+                            position: "absolute",
+                            left: "12px",
+                            top: "50%",
+                            transform: "translateY(-50%)",
+                            color: "#999",
+                            fontSize: "1rem",
+                            zIndex: 2,
+                          }}
+                        />
+                        <Field
+                          type="email"
+                          name="email"
+                          className="floating-input"
+                          style={{
+                            paddingLeft: "40px",
+                            width: "100%",
+                            padding: "20px 12px 8px 40px",
+                            fontSize: "1rem",
+                            border:
+                              errors.email && touched.email
+                                ? "2px solid #ff4d4f"
+                                : "2px solid #d9d9d9",
+                            borderRadius: "8px",
+                            transition: "all 0.3s ease",
+                            backgroundColor: "#fff",
+                            outline: "none",
+                          }}
+                          onFocus={() => setEmailFocused(true)}
+                          onBlur={(e) => {
+                            setEmailFocused(false);
+                            setEmailValue(e.target.value);
+                          }}
+                          onChange={(e) => {
+                            const value = e.target.value;
+                            setFieldValue("email", value);
+                            setEmailValue(value);
+                          }}
+                        />
+                        <label className="floating-label">Email</label>
+                      </div>
+                      <ErrorMessage
+                        name="email"
+                        component="div"
+                        style={{
+                          color: "#ff4d4f",
+                          fontSize: "14px",
+                          marginTop: "4px",
+                        }}
+                      />
+                    </div>
+                  </div>
 
-            {/* Remember Me & Forgot Password */}
-            <Row
-              justify="space-between"
-              align="middle"
-              className="login-remember-row"
-            >
-              <Col>
-                <Form.Item name="rememberMe" valuePropName="checked" noStyle>
-                  <Checkbox>Remember me</Checkbox>
-                </Form.Item>
-              </Col>
-              <Col>
-                <a
-                  onClick={handleForgotPassword}
-                  className="login-forgot-link"
-                  style={{ cursor: "pointer" }}
-                >
-                  Forgot Password?
-                </a>
-              </Col>
-            </Row>
+                  {/* Password Field */}
+                  <div className="floating-label-form-item">
+                    <div
+                      className={`floating-label-wrapper ${
+                        passwordFocused || values.password ? "active" : ""
+                      } ${
+                        errors.password && touched.password ? "has-error" : ""
+                      }`}
+                    >
+                      <div style={{ position: "relative", width: "100%" }}>
+                        <LockOutlined
+                          style={{
+                            position: "absolute",
+                            left: "12px",
+                            top: "50%",
+                            transform: "translateY(-50%)",
+                            color: "#999",
+                            fontSize: "1rem",
+                            zIndex: 2,
+                          }}
+                        />
+                        <Field
+                          type={showPassword ? "text" : "password"}
+                          name="password"
+                          className="floating-input"
+                          autoComplete="current-password"
+                          style={{
+                            paddingLeft: "40px",
+                            paddingRight: "40px",
+                            width: "100%",
+                            padding: "20px 40px 8px 40px",
+                            fontSize: "1rem",
+                            border:
+                              errors.password && touched.password
+                                ? "2px solid #ff4d4f"
+                                : "2px solid #d9d9d9",
+                            borderRadius: "8px",
+                            transition: "all 0.3s ease",
+                            backgroundColor: "#fff",
+                            outline: "none",
+                            WebkitAppearance: "none",
+                            MozAppearance: "textfield",
+                          }}
+                          onFocus={() => setPasswordFocused(true)}
+                          onBlur={(e) => {
+                            setPasswordFocused(false);
+                            setPasswordValue(e.target.value);
+                          }}
+                          onChange={(e) => {
+                            const value = e.target.value;
+                            setFieldValue("password", value);
+                            setPasswordValue(value);
+                          }}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          style={{
+                            position: "absolute",
+                            right: "12px",
+                            top: "50%",
+                            transform: "translateY(-50%)",
+                            background: "none",
+                            border: "none",
+                            cursor: "pointer",
+                            color: "#999",
+                            fontSize: "1rem",
+                            zIndex: 2,
+                            padding: "4px",
+                            display: "flex",
+                            alignItems: "center",
+                          }}
+                          onMouseDown={(e) => e.preventDefault()}
+                        >
+                          {showPassword ? "🙈" : "👁️"}
+                        </button>
+                        <label className="floating-label">Password</label>
+                      </div>
+                      <ErrorMessage
+                        name="password"
+                        component="div"
+                        style={{
+                          color: "#ff4d4f",
+                          fontSize: "14px",
+                          marginTop: "4px",
+                        }}
+                      />
+                    </div>
+                  </div>
 
-            {/* Sign In Button */}
-            <Form.Item>
-              <Button
-                type="primary"
-                htmlType="submit"
-                loading={isLoading}
-                block
-                size="large"
-                className="login-submit-button"
-              >
-                {isLoading ? "Signing in..." : "Sign In"}
-              </Button>
-            </Form.Item>
+                  {/* Remember Me & Forgot Password */}
+                  <Row
+                    justify="space-between"
+                    align="middle"
+                    className="login-remember-row"
+                  >
+                    <Col>
+                      <Field name="rememberMe">
+                        {({ field }) => (
+                          <Checkbox
+                            {...field}
+                            checked={field.value}
+                            onChange={(e) => {
+                              setFieldValue("rememberMe", e.target.checked);
+                            }}
+                          >
+                            Remember me
+                          </Checkbox>
+                        )}
+                      </Field>
+                    </Col>
+                    <Col>
+                      <a
+                        onClick={() => handleForgotPassword(values.email)}
+                        className="login-forgot-link"
+                        style={{ cursor: "pointer" }}
+                      >
+                        Forgot Password?
+                      </a>
+                    </Col>
+                  </Row>
 
-            {/* Register Link */}
-            <Row justify="center" align="middle" style={{ marginTop: "16px" }}>
-              <Col>
-                <span style={{ color: "#6b7280" }}>
-                  Don't have an account?{" "}
-                </span>
-                <Link to="/register" className="login-register-link">
-                  Register here
-                </Link>
-              </Col>
-            </Row>
+                  {/* Sign In Button */}
+                  <div style={{ marginTop: "0.5rem" }}>
+                    <Button
+                      type="primary"
+                      htmlType="submit"
+                      loading={isLoading || isSubmitting}
+                      block
+                      size="large"
+                      className="login-submit-button"
+                    >
+                      {isLoading || isSubmitting ? "Signing in..." : "Sign In"}
+                    </Button>
+                  </div>
 
-            {/* Verify OTP Link */}
-            <Row justify="center" align="middle" style={{ marginTop: "12px" }}>
-              <Col>
-                <Link to="/verify-otp" className="login-verify-link">
-                  Need to verify your account?
-                </Link>
-              </Col>
-            </Row>
+                  {/* Register Link */}
+                  <Row
+                    justify="center"
+                    align="middle"
+                    style={{ marginTop: "16px" }}
+                  >
+                    <Col>
+                      <span style={{ color: "#6b7280" }}>
+                        Don't have an account?{" "}
+                      </span>
+                      <Link to="/register" className="login-register-link">
+                        Register here
+                      </Link>
+                    </Col>
+                  </Row>
 
-            {/* Back to Homepage Button */}
-            <Row justify="center" align="middle" style={{ marginTop: "20px" }}>
-              <Col>
-                <Button
-                  type="text"
-                  onClick={() => navigate("/")}
-                  className="login-back-button"
-                >
-                  ← Back to Homepage
-                </Button>
-              </Col>
-            </Row>
-          </Form>
+                  {/* Verify OTP Link */}
+                  <Row
+                    justify="center"
+                    align="middle"
+                    style={{ marginTop: "12px" }}
+                  >
+                    <Col>
+                      <Link to="/verify-otp" className="login-verify-link">
+                        Need to verify your account?
+                      </Link>
+                    </Col>
+                  </Row>
+
+                  {/* Back to Homepage Button */}
+                  <Row
+                    justify="center"
+                    align="middle"
+                    style={{ marginTop: "20px" }}
+                  >
+                    <Col>
+                      <Button
+                        type="text"
+                        onClick={() => navigate("/")}
+                        className="login-back-button"
+                      >
+                        ← Back to Homepage
+                      </Button>
+                    </Col>
+                  </Row>
+                </Form>
+              );
+            }}
+          </Formik>
         </Card>
       </div>
     </div>

@@ -38,9 +38,11 @@ export const decodeJWT = (token) => {
         const decoded = atob(payload.replace(/-/g, '+').replace(/_/g, '/'));
         const decodedObj = JSON.parse(decoded);
 
+        // Log ALL fields in JWT payload to help identify the correct field names
+        console.log('[JWT] Full JWT payload (all fields):', decodedObj);
         console.log('[JWT] Token decoded successfully:', {
             id: decodedObj.id,
-            roleId: decodedObj.roleId,
+            sub: decodedObj.sub,
             role: decodedObj.role,
             email: decodedObj.email,
             exp: decodedObj.exp
@@ -70,15 +72,12 @@ export const getRoleIdFromToken = (token) => {
     console.log('[JWT] Raw role value from token:', role, '(type:', typeof role, ')');
 
     // Convert string role to numeric roleId
+    // Note: JavaScript converts numeric keys to strings, so we only need string keys
     const roleMapping = {
         'Admin': 1,
         'Staff': 2,
         'CoOwner': 3,
         'Technician': 4,
-        1: 1,
-        2: 2,
-        3: 3,
-        4: 4,
         '1': 1,
         '2': 2,
         '3': 3,
@@ -100,8 +99,14 @@ export const getUserIdFromToken = (token) => {
     const decoded = decodeJWT(token);
     if (!decoded) return null;
 
-    const userId = decoded.id || decoded.userId || decoded.sub;
-    console.log('[JWT] getUserIdFromToken - userId:', userId);
+    // Backend uses 'id' field in JWT payload
+    const userId = decoded.id;
+
+    if (userId) {
+        console.log('[JWT] getUserIdFromToken - userId:', userId);
+    } else {
+        console.warn('[JWT] getUserIdFromToken - No id field found in token! Available fields:', Object.keys(decoded));
+    }
 
     return userId || null;
 };
@@ -252,10 +257,6 @@ export const getUserInfo = () => {
             try {
                 parsedUserData = JSON.parse(userData);
                 console.log('[AUTH] Parsed localStorage userData:', {
-                    id: parsedUserData.id,
-                    email: parsedUserData.email,
-                    fullName: parsedUserData.fullName,
-                    roleId: parsedUserData.roleId,
                     role: parsedUserData.role
                 });
             } catch (error) {
@@ -279,8 +280,6 @@ export const getUserInfo = () => {
 
         const userInfo = {
             id: userId || parsedUserData.id,
-            email: parsedUserData.email,
-            fullName: parsedUserData.fullName,
             roleId: finalRoleId,
             roleName: getRoleName(finalRoleId),
             ...parsedUserData
@@ -288,8 +287,6 @@ export const getUserInfo = () => {
 
         console.log('[AUTH] ✓ User info successfully created:', {
             id: userInfo.id,
-            email: userInfo.email,
-            fullName: userInfo.fullName,
             roleId: userInfo.roleId,
             roleName: userInfo.roleName
         });

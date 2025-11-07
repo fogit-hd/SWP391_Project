@@ -239,6 +239,56 @@
   color: #ff4d4f;
 }
 
+/* Error state for Formik */
+.floating-label-wrapper.has-error .floating-input,
+.floating-label-wrapper.has-error input {
+  border-color: #ff4d4f !important;
+}
+
+.floating-label-wrapper.has-error .floating-input:focus,
+.floating-label-wrapper.has-error input:focus {
+  box-shadow: 0 0 0 2px rgba(255, 77, 79, 0.1) !important;
+}
+
+.floating-label-wrapper.has-error.active .floating-label {
+  color: #ff4d4f;
+}
+
+/* Hide browser default password reveal button */
+.floating-input[type="password"]::-webkit-credentials-auto-fill-button,
+.floating-input[type="password"]::-webkit-strong-password-auto-fill-button,
+input[type="password"]::-webkit-credentials-auto-fill-button,
+input[type="password"]::-webkit-strong-password-auto-fill-button {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* Hide Firefox and Edge password reveal button */
+.floating-input[type="password"]::-ms-reveal,
+.floating-input[type="password"]::-ms-clear,
+input[type="password"]::-ms-reveal,
+input[type="password"]::-ms-clear {
+  display: none !important;
+  visibility: hidden !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+/* Hide all browser password reveal buttons */
+input[type="password"]::-webkit-inner-spin-button,
+input[type="password"]::-webkit-outer-spin-button,
+input[type="password"]::-webkit-search-cancel-button,
+input[type="password"]::-webkit-search-decoration {
+  display: none !important;
+  -webkit-appearance: none !important;
+}
+
 @media (max-width: 768px) {
   .login-card-container {
     max-width: 24rem;

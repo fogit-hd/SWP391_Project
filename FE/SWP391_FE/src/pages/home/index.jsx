@@ -827,14 +827,31 @@ const Homepage = () => {
       ],
     },
     {
-      label: "Liên hệ",
+      label: "Thông tin",
       bgColor: "#0D0716",
       textColor: "#fff",
       links: [
         {
+          key: "FERAD",
+          label: "React advances",
+          onClick: () => navigate("/react-advances"),
+        },
+        {
           key: "email",
           label: "Email",
-          onClick: () => navigate("contact-us"),
+          onClick: () => navigate("/contact-us"),
+        },
+      ],
+    },
+    {
+      label: "Demo",
+      bgColor: "#0D0716",
+      textColor: "#fff",
+      links: [
+        {
+          key: "react-examples",
+          label: "React Examples",
+          onClick: () => navigate("/react-advances"),
         },
       ],
     },
@@ -1177,7 +1194,8 @@ const Homepage = () => {
         <Divider className="footer-divider" />
         <div className="footer-copyright">
           <Text className="copyright-text">
-            &copy; {new Date().getFullYear()} EV CoShare. Bản quyền đã đăng ký.
+            &copy; {new Date().getFullYear()} EV CoShare. Chưa đăng kí bản quyền
+            nha.
           </Text>
         </div>
       </Footer>
@@ -1199,14 +1217,7 @@ const Homepage = () => {
                 <Avatar
                   size={100}
                   src={(() => {
-                    const avatarSrc = profileData?.imageUrl;
-                    console.log("profileImage:", profileData?.imageUrl);
-                    console.log(
-                      "profileData?.imageUrl:",
-                      profileData?.imageUrl
-                    );
-                    console.log("Final avatarSrc:", avatarSrc);
-                    return avatarSrc;
+                    return profileData?.imageUrl;
                   })()}
                   className="profile-modal-avatar avatar-with-background"
                 >

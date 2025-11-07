@@ -50,7 +50,7 @@ const ReviewEContract = () => {
   const [reviewLoading, setReviewLoading] = useState(false);
   const [selectedContractId, setSelectedContractId] = useState(null);
   const [selectedStatus, setSelectedStatus] = useState(
-    roleId === 1 ? "ALL" : "PENDING_REVIEW"
+    isAdmin ? "ALL" : "PENDING_REVIEW"
   ); // Filter status - Admin sees all, Staff sees only PENDING_REVIEW
   const [form] = Form.useForm();
 
@@ -66,8 +66,8 @@ const ReviewEContract = () => {
 
   // Filter contracts by status
   const filterContractsByStatus = (contractsList, status) => {
-    // Staff (roleId = 2) can only see PENDING_REVIEW contracts
-    if (roleId === 2 || isStaff) {
+    // Staff can only see PENDING_REVIEW contracts
+    if (isStaff) {
       const pendingStatuses = ["PENDING_REVIEW", "pending_review"];
 
       const filtered = contractsList.filter((contract) => {
@@ -148,7 +148,7 @@ const ReviewEContract = () => {
       setAllContracts(allContractsData);
 
       // Apply filter based on role and selected status
-      if (roleId === 2 || isStaff) {
+      if (isStaff) {
         // Staff can only see PENDING_REVIEW contracts
         console.log("👤 Staff role detected - filtering PENDING_REVIEW only");
 
