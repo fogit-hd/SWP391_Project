@@ -334,7 +334,11 @@ const CreateBookingModal = ({ visible, onCancel, onSuccess, groupId, vehicleId, 
       console.log("Creating booking with payload:", payload);
       const response = await api.post("/booking/create", payload);
       console.log("Booking created successfully:", response.data);
-      message.success("Tạo đặt chỗ thành công!");
+      
+      // Hiển thị message từ backend hoặc message mặc định
+      const successMessage = response.data?.message || "Tạo đặt chỗ thành công!";
+      message.success(successMessage);
+      
       form.resetFields();
       setEstimatedDuration(null);
       setValidationError(null);
@@ -342,48 +346,61 @@ const CreateBookingModal = ({ visible, onCancel, onSuccess, groupId, vehicleId, 
     } catch (error) {
       console.error("Failed to create booking:", error);
       console.error("Error response:", error.response?.data);
-      console.error("Error status:", error.response?.status);
-      console.error("Error headers:", error.response?.headers);
       
       let errorMsg = "Không thể tạo đặt chỗ";
       
-      // Try to extract error message from various response formats
       if (error.response?.data) {
         const errorData = error.response.data;
         
-        // Check for message field (most common)
+        // 1. Ưu tiên message từ backend (đã có thông báo cụ thể)
         if (errorData.message) {
           errorMsg = errorData.message;
         }
-        // Check for error field
-        else if (errorData.error) {
-          errorMsg = errorData.error;
+        // 2. Xử lý validation errors
+        else if (errorData.errors) {
+          if (Array.isArray(errorData.errors)) {
+            errorMsg = errorData.errors.join(', ');
+          } else if (typeof errorData.errors === 'object') {
+            const fieldNames = {
+              'GroupId': 'Nhóm',
+              'VehicleId': 'Xe',
+              'StartTime': 'Thời gian bắt đầu',
+              'EndTime': 'Thời gian kết thúc'
+            };
+            
+            const errorMessages = Object.entries(errorData.errors)
+              .map(([field, messages]) => {
+                const messageArray = Array.isArray(messages) ? messages : [messages];
+                const fieldName = fieldNames[field] || field;
+                return `${fieldName}: ${messageArray.join(", ")}`;
+              })
+              .join("\n");
+            errorMsg = errorMessages;
+          }
         }
-        // Check for errors array (validation errors)
-        else if (errorData.errors && Array.isArray(errorData.errors)) {
-          errorMsg = errorData.errors.join(', ');
-        }
-        // Check for detail field
-        else if (errorData.detail) {
-          errorMsg = errorData.detail;
-        }
-        // If errorData is a string
+        // 3. Plain string error
         else if (typeof errorData === 'string') {
           errorMsg = errorData;
         }
+        // 4. Các format khác
+        else if (errorData.error) {
+          errorMsg = errorData.error;
+        }
+        else if (errorData.detail) {
+          errorMsg = errorData.detail;
+        }
       } 
-      // Network error or no response
+      // Network error
       else if (error.message) {
-        errorMsg = `Không thể tạo đặt chỗ: ${error.message}`;
+        errorMsg = `Không thể kết nối đến server: ${error.message}`;
       }
       
-      // Display error with duration for better visibility
+      // Hiển thị error message
       message.error({
         content: errorMsg,
-        duration: 5, // Show for 5 seconds
+        duration: 6,
       });
       
-      // Also set validation error to show in UI
       setValidationError(errorMsg);
     } finally {
       setLoading(false);
