@@ -1,7 +1,9 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Modal, Form, Input, Button, message, Space, Alert } from "antd";
 import { 
-  CheckCircleOutlined
+  CheckCircleOutlined,
+  WarningOutlined,
+  ClockCircleOutlined
 } from "@ant-design/icons";
 import dayjs from "dayjs";
 import api from "../../config/axios";
@@ -11,32 +13,97 @@ const { TextArea } = Input;
 const TripScreen = ({ visible, onCancel, booking, onComplete }) => {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
+  const [overtimeInfo, setOvertimeInfo] = useState(null);
+
+  // Tính toán thông tin checkout trễ
+  useEffect(() => {
+    if (!booking || !visible) return;
+
+    const calculateOvertime = () => {
+      const now = dayjs();
+      const endTime = dayjs(booking.endTime);
+      const overtimeMinutes = now.diff(endTime, 'minute', true);
+
+      if (overtimeMinutes <= 5) {
+        setOvertimeInfo(null); // Không trễ hoặc trong vùng an toàn
+      } else if (overtimeMinutes > 5 && overtimeMinutes < 15) {
+        setOvertimeInfo({
+          type: 'warning',
+          minutes: overtimeMinutes,
+          penalty: 'Cảnh báo: Checkout trễ nhưng chưa bị phạt',
+          message: 'Bạn đang checkout trễ, vui lòng checkout sớm hơn vào lần sau.'
+        });
+      } else if (overtimeMinutes >= 15 && overtimeMinutes <= 30) {
+        setOvertimeInfo({
+          type: 'error',
+          minutes: overtimeMinutes,
+          penalty: 'Phạt: 30 phút sử dụng xe',
+          message: `Checkout trễ ${overtimeMinutes.toFixed(0)} phút. Bạn sẽ bị trừ 30 phút (0.5 giờ) quota sử dụng xe.`
+        });
+      } else if (overtimeMinutes > 30 && overtimeMinutes < 60) {
+        setOvertimeInfo({
+          type: 'error',
+          minutes: overtimeMinutes,
+          penalty: 'Phạt: 1 giờ sử dụng xe',
+          message: `Checkout trễ ${overtimeMinutes.toFixed(0)} phút. Bạn sẽ bị trừ 1 giờ quota sử dụng xe.`
+        });
+      } else {
+        const overtimeHours = overtimeMinutes / 60;
+        const penaltyHours = (overtimeHours * 4).toFixed(1);
+        setOvertimeInfo({
+          type: 'error',
+          minutes: overtimeMinutes,
+          penalty: `Phạt: ${penaltyHours} giờ sử dụng xe`,
+          message: `Checkout trễ ${overtimeMinutes.toFixed(0)} phút (${overtimeHours.toFixed(1)} giờ). Bạn sẽ bị trừ ${penaltyHours} giờ quota (phạt gấp 4 lần).`
+        });
+      }
+    };
+
+    calculateOvertime();
+    const interval = setInterval(calculateOvertime, 60000); // Update mỗi phút
+    return () => clearInterval(interval);
+  }, [booking, visible]);
 
   const handleCheckOut = async (values) => {
     setLoading(true);
     try {
       console.log("Booking ID:", booking.id);
-      console.log("API URL:", `/booking/check-out/${booking.id}`);
       
-      // API checkout chỉ cần id, không cần payload
       const response = await api.post(`/booking/check-out/${booking.id}`);
       console.log("Check-out response:", response.data);
       
-      message.success("Trả xe thành công!");
+      // Hiển thị message từ backend
+      const backendMessage = response.data?.message || response.data;
+      
+      // Phân loại message dựa vào nội dung
+      if (backendMessage.includes("trễ") || backendMessage.includes("phạt")) {
+        message.warning({
+          content: backendMessage,
+          duration: 5,
+          icon: <WarningOutlined />
+        });
+      } else if (backendMessage.includes("sớm")) {
+        message.success({
+          content: backendMessage,
+          duration: 4
+        });
+      } else {
+        message.success(backendMessage || "Trả xe thành công!");
+      }
+      
       form.resetFields();
       onComplete();
       onCancel();
     } catch (error) {
       console.error("Check-out failed:", error);
       console.error("Error response:", error.response?.data);
-      console.error("Error status:", error.response?.status);
-      console.error("Error headers:", error.response?.headers);
       
       let errorMsg = "Không thể trả xe";
-      if (error.response?.data?.message) {
-        errorMsg = error.response.data.message;
-      } else if (error.response?.data?.error) {
-        errorMsg = error.response.data.error;
+      
+      if (error.response?.data) {
+        const errorData = error.response.data;
+        // Ưu tiên message từ backend
+        errorMsg = errorData.message || errorData.error || errorData;
       } else if (error.message) {
         errorMsg = error.message;
       }
@@ -71,8 +138,33 @@ const TripScreen = ({ visible, onCancel, booking, onComplete }) => {
         }
         type="info"
         showIcon
-        style={{ marginBottom: 24 }}
+        style={{ marginBottom: 16 }}
       />
+
+      {/* Hiển thị cảnh báo phạt nếu checkout trễ */}
+      {overtimeInfo && (
+        <Alert
+          message={overtimeInfo.penalty}
+          description={
+            <div>
+              <p><ClockCircleOutlined /> {overtimeInfo.message}</p>
+              <p style={{ marginTop: 8, marginBottom: 0 }}>
+                <strong>Quy định phạt checkout trễ:</strong>
+              </p>
+              <ul style={{ marginTop: 4, marginBottom: 0, paddingLeft: 20 }}>
+                <li>Trễ 5-15 phút: Cảnh báo (chưa phạt)</li>
+                <li>Trễ 15-30 phút: Phạt 30 phút quota</li>
+                <li>Trễ 30-60 phút: Phạt 1 giờ quota</li>
+                <li>Trễ trên 1 giờ: Phạt gấp 4 lần thời gian trễ</li>
+              </ul>
+            </div>
+          }
+          type={overtimeInfo.type}
+          showIcon
+          icon={overtimeInfo.type === 'error' ? <WarningOutlined /> : <ClockCircleOutlined />}
+          style={{ marginBottom: 24 }}
+        />
+      )}
 
       <Form
         form={form}

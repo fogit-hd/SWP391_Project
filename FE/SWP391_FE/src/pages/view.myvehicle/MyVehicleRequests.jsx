@@ -238,6 +238,7 @@ const MyVehicleRequests = () => {
       // API có thể trả về data trong response.data.data hoặc response.data
       const vehicles = response.data.data || response.data || [];
       setMyVehicles(vehicles);
+      return vehicles; // Return vehicles để có thể sử dụng trong async/await
     } catch (err) {
       console.error("Failed to fetch my vehicles:", err);
       const errorMessage =
@@ -245,6 +246,7 @@ const MyVehicleRequests = () => {
         err.message ||
         "Không thể tải danh sách xe của bạn";
       message.error(errorMessage);
+      return []; // Return empty array on error
     }
   };
 
@@ -298,16 +300,34 @@ const MyVehicleRequests = () => {
     try {
       console.log("Deleting request with ID:", requestToDelete.id);
       setLoading(true);
-      await api.delete(`/vehicle-requests/delete/${requestToDelete.id}`);
-      toast.success("Xóa yêu cầu thành công");
+      const response = await api.delete(`/vehicle-requests/delete/${requestToDelete.id}`);
+      
+      // Hiển thị message từ backend hoặc message mặc định
+      const successMessage = response.data?.message || "Xóa yêu cầu thành công";
+      toast.success(successMessage);
+      
       setDeleteModalVisible(false);
       setRequestToDelete(null);
       fetchMyVehicleRequests();
     } catch (err) {
       console.error("Delete request error:", err.response?.data);
-      const errorMessage =
-        err.response?.data?.message || err.message || "Không thể xóa yêu cầu";
-      toast.error(errorMessage);
+      const errorData = err.response?.data;
+      let errorMessage = "Không thể xóa yêu cầu";
+
+      if (errorData) {
+        // Ưu tiên lấy message từ backend (đã có thông báo cụ thể)
+        if (errorData.message) {
+          errorMessage = errorData.message;
+        }
+        // Plain string error
+        else if (typeof errorData === 'string') {
+          errorMessage = errorData;
+        }
+      } else if (err.message) {
+        errorMessage = err.message;
+      }
+
+      toast.error(errorMessage, { duration: 5000 });
     } finally {
       setLoading(false);
     }
@@ -363,13 +383,16 @@ const MyVehicleRequests = () => {
         console.log(pair[0], pair[1]);
       }
 
-      await api.post("/vehicle-requests/create", formData, {
+      const response = await api.post("/vehicle-requests/create", formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
       });
 
-      toast.success("Tạo yêu cầu xe mới thành công! Vui lòng chờ admin duyệt.");
+      // Hiển thị message từ backend hoặc message mặc định
+      const successMessage = response.data?.message || "Tạo yêu cầu xe mới thành công! Vui lòng chờ duyệt.";
+      toast.success(successMessage);
+      
       setCreateModalVisible(false);
       createForm.resetFields();
       setVehicleImageFileList([]);
@@ -377,16 +400,46 @@ const MyVehicleRequests = () => {
       fetchMyVehicleRequests();
     } catch (err) {
       console.error("Create request error:", err.response?.data);
+      console.error("Full error object:", err);
       const errorData = err.response?.data;
       let errorMessage = "Không thể tạo yêu cầu";
 
-      if (errorData?.errors) {
-        const errors = Object.entries(errorData.errors)
-          .map(([field, messages]) => `${field}: ${messages.join(", ")}`)
-          .join("\n");
-        errorMessage = errors;
-      } else if (errorData?.message) {
-        errorMessage = errorData.message;
+      if (errorData) {
+        // 1. Ưu tiên message từ backend (đã có thông báo cụ thể)
+        if (errorData.message) {
+          errorMessage = errorData.message;
+        }
+        // 2. Xử lý validation errors (format từ ASP.NET)
+        else if (errorData.errors && typeof errorData.errors === 'object') {
+          const fieldNames = {
+            'PlateNumber': 'Biển số xe',
+            'Make': 'Hãng xe',
+            'Model': 'Model',
+            'ModelYear': 'Năm sản xuất',
+            'Color': 'Màu sắc',
+            'BatteryCapacityKwh': 'Dung lượng pin',
+            'RangeKm': 'Quãng đường',
+            'VehicleImage': 'Hình ảnh xe',
+            'RegistrationPaperUrl': 'Giấy đăng ký'
+          };
+          
+          const errorMessages = Object.entries(errorData.errors)
+            .map(([field, messages]) => {
+              const messageArray = Array.isArray(messages) ? messages : [messages];
+              const fieldName = fieldNames[field] || field;
+              return `${fieldName}: ${messageArray.join(", ")}`;
+            })
+            .join("\n");
+          errorMessage = errorMessages || "Vui lòng kiểm tra lại thông tin";
+        }
+        // 3. Xử lý title + errors (ASP.NET Validation Problem)
+        else if (errorData.title && errorData.title.includes("Validation")) {
+          errorMessage = "Lỗi validation: Vui lòng kiểm tra lại thông tin";
+        }
+        // 4. Plain string error
+        else if (typeof errorData === 'string') {
+          errorMessage = errorData;
+        }
       } else if (err.message) {
         errorMessage = err.message;
       }
@@ -433,15 +486,16 @@ const MyVehicleRequests = () => {
         console.log(pair[0], pair[1]);
       }
 
-      await api.post("/vehicle-requests/update", formData, {
+      const response = await api.post("/vehicle-requests/update", formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
       });
 
-      toast.success(
-        "Tạo yêu cầu cập nhật xe thành công! Vui lòng chờ admin duyệt."
-      );
+      // Hiển thị message từ backend hoặc message mặc định
+      const successMessage = response.data?.message || "Tạo yêu cầu cập nhật xe thành công! Vui lòng chờ admin duyệt.";
+      toast.success(successMessage);
+      
       setUpdateModalVisible(false);
       updateForm.resetFields();
       setVehicleImageFileList([]);
@@ -450,17 +504,47 @@ const MyVehicleRequests = () => {
       fetchMyVehicleRequests();
     } catch (err) {
       console.error("Update request error:", err.response?.data);
+      console.error("Full error object:", err);
       const errorData = err.response?.data;
       let errorMessage = "Không thể tạo yêu cầu cập nhật";
 
-      if (errorData?.errors) {
-        // Handle validation errors
-        const errors = Object.entries(errorData.errors)
-          .map(([field, messages]) => `${field}: ${messages.join(", ")}`)
-          .join("\n");
-        errorMessage = errors;
-      } else if (errorData?.message) {
-        errorMessage = errorData.message;
+      if (errorData) {
+        // 1. Ưu tiên message từ backend (đã có thông báo cụ thể)
+        if (errorData.message) {
+          errorMessage = errorData.message;
+        }
+        // 2. Xử lý validation errors (format từ ASP.NET)
+        else if (errorData.errors && typeof errorData.errors === 'object') {
+          const fieldNames = {
+            'PlateNumber': 'Biển số xe',
+            'Make': 'Hãng xe',
+            'Model': 'Model',
+            'ModelYear': 'Năm sản xuất',
+            'Color': 'Màu sắc',
+            'BatteryCapacityKwh': 'Dung lượng pin',
+            'RangeKm': 'Quãng đường',
+            'VehicleImage': 'Hình ảnh xe',
+            'RegistrationPaperUrl': 'Giấy đăng ký',
+            'VehicleId': 'Xe'
+          };
+          
+          const errorMessages = Object.entries(errorData.errors)
+            .map(([field, messages]) => {
+              const messageArray = Array.isArray(messages) ? messages : [messages];
+              const fieldName = fieldNames[field] || field;
+              return `${fieldName}: ${messageArray.join(", ")}`;
+            })
+            .join("\n");
+          errorMessage = errorMessages || "Vui lòng kiểm tra lại thông tin";
+        }
+        // 3. Xử lý title + errors (ASP.NET Validation Problem)
+        else if (errorData.title && errorData.title.includes("Validation")) {
+          errorMessage = "Lỗi validation: Vui lòng kiểm tra lại thông tin";
+        }
+        // 4. Plain string error
+        else if (typeof errorData === 'string') {
+          errorMessage = errorData;
+        }
       } else if (err.message) {
         errorMessage = err.message;
       }
@@ -503,9 +587,24 @@ const MyVehicleRequests = () => {
     if (editId) {
       // open update modal and preselect vehicle
       (async () => {
-        await fetchMyVehicles();
-        handleVehicleSelect(editId);
-        setUpdateModalVisible(true);
+        const vehicles = await fetchMyVehicles();
+        // Find vehicle from fetched data directly
+        const vehicle = vehicles.find((v) => v.id === editId);
+        if (vehicle) {
+          setSelectedVehicleId(editId);
+          updateForm.setFieldsValue({
+            plateNumber: vehicle.plateNumber,
+            make: vehicle.make,
+            model: vehicle.model,
+            modelYear: vehicle.modelYear,
+            color: vehicle.color,
+            batteryCapacityKwh: vehicle.batteryCapacityKwh,
+            rangeKm: vehicle.rangeKm,
+          });
+          setUpdateModalVisible(true);
+        } else {
+          message.error("Không tìm thấy xe này trong danh sách của bạn");
+        }
       })();
     }
   }, [location.search]);

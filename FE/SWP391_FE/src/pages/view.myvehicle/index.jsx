@@ -165,13 +165,17 @@ const MyVehicle = () => {
       key: "status",
       width: 110,
       filters: [
-        { text: "Đã duyệt", value: "APPROVED" },
+        { text: "Hoạt động", value: "ACTIVE" },
+        { text: "Không hoạt động", value: "INACTIVE" },
       ],
       onFilter: (value, record) => record.status === value,
       render: (status) => {
-        let color = "green";
-        let text = "Đã duyệt";
-        return <Tag color={color}>{text}</Tag>;
+        if (status === "ACTIVE") {
+          return <Tag color="green">Hoạt động</Tag>;
+        } else if (status === "INACTIVE") {
+          return <Tag color="red">Không hoạt động</Tag>;
+        }
+        return <Tag color="default">{status}</Tag>;
       },
     },
     {
@@ -203,8 +207,35 @@ const MyVehicle = () => {
           } else if (key === "copy") {
             console.log("Copy ID action triggered");
             handleCopyId(record.id);
+          } else if (key === "delete") {
+            console.log("Delete action triggered");
+            handleDeleteClick(record);
           }
         };
+
+        // Tạo menu items động - ẩn Delete nếu status là ACTIVE
+        const menuItems = [
+          {
+            key: "edit",
+            icon: <EditOutlined />,
+            label: "Chỉnh sửa",
+          },
+          {
+            key: "copy",
+            icon: <CopyOutlined />,
+            label: "Sao chép ID",
+          },
+        ];
+
+        // Chỉ thêm Delete nếu status KHÔNG phải ACTIVE
+        if (record.status !== "ACTIVE") {
+          menuItems.push({
+            key: "delete",
+            icon: <DeleteOutlined />,
+            label: "Xóa",
+            danger: true,
+          });
+        }
 
         return (
           <Space size="small">
@@ -217,18 +248,7 @@ const MyVehicle = () => {
             </Tooltip>
             <Dropdown
               menu={{
-                items: [
-                  {
-                    key: "edit",
-                    icon: <EditOutlined />,
-                    label: "Chỉnh sửa",
-                  },
-                  {
-                    key: "copy",
-                    icon: <CopyOutlined />,
-                    label: "Sao chép ID",
-                  },
-                ],
+                items: menuItems,
                 onClick: handleMenuClick,
               }}
               trigger={["click"]}
@@ -257,21 +277,19 @@ const MyVehicle = () => {
     setError(null);
 
     try {
-      const response = await api.get("/vehicle-requests/my-requests");
-      const requests = response.data || [];
+      const response = await api.get("/Vehicle/my-vehicles");
+      const vehicles = response.data || [];
 
-      // Chỉ lấy những request có status APPROVED
-      const approvedRequests = requests.filter(
-        (request) => request.status === "APPROVED"
-      );
+      // Sort by newest first if there's a creation date
+      const sortedVehicles = [...vehicles].sort((a, b) => {
+        if (a.createdAt && b.createdAt) {
+          return new Date(b.createdAt) - new Date(a.createdAt);
+        }
+        return 0;
+      });
 
-      // Sort by createdAt descending (newest first)
-      approvedRequests.sort(
-        (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
-      );
-
-      setAllRequests(approvedRequests);
-      setFilteredData(approvedRequests);
+      setAllRequests(sortedVehicles);
+      setFilteredData(sortedVehicles);
       setError(null);
     } catch (err) {
       setError(err.message);
@@ -473,6 +491,12 @@ const MyVehicle = () => {
     deleteVehicle(vehicleRecord);
   };
 
+  const handleDeleteClick = (record) => {
+    console.log("handleDeleteClick called with record:", record);
+    setVehicleToDelete(record);
+    setDeleteModalVisible(true);
+  };
+
   const handleCopyId = async (vehicleId) => {
     try {
       await navigator.clipboard.writeText(vehicleId);
@@ -494,13 +518,28 @@ const MyVehicle = () => {
     }
   };
 
-  const handleViewDetail = (vehicle) => {
+  const handleViewDetail = async (vehicle) => {
     console.log("View detail clicked for:", vehicle.id);
-    console.log("Vehicle data:", vehicle);
-    console.log("Vehicle Image URL:", vehicle.vehicleImageUrl);
-    console.log("Registration Paper URL:", vehicle.registrationPaperUrl);
-    setSelectedVehicle(vehicle);
-    setDetailModalVisible(true);
+    
+    try {
+      setLoading(true);
+      // Call API to get full vehicle details
+      const response = await api.get(`/Vehicle/get-vehicle-by-id?id=${vehicle.id}`);
+      console.log("Vehicle detail response:", response.data);
+      
+      setSelectedVehicle(response.data);
+      setDetailModalVisible(true);
+    } catch (err) {
+      console.error("Error fetching vehicle detail:", err);
+      
+      // Nếu API lỗi, vẫn hiển thị thông tin có sẵn
+      setSelectedVehicle(vehicle);
+      setDetailModalVisible(true);
+      
+      message.warning("Không thể tải chi tiết đầy đủ, hiển thị thông tin cơ bản");
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Handle back navigation based on role
@@ -839,7 +878,7 @@ const MyVehicle = () => {
 
         {/* Delete Confirmation Modal */}
         <Modal
-          title="Delete Vehicle"
+          title="Xóa xe"
           open={deleteModalVisible}
           onOk={() => {
             console.log(
@@ -855,8 +894,8 @@ const MyVehicle = () => {
             setDeleteModalVisible(false);
             setVehicleToDelete(null);
           }}
-          okText="Yes, Delete"
-          cancelText="Cancel"
+          okText="Xác nhận xóa"
+          cancelText="Hủy"
           okType="danger"
           className="delete-confirmation-modal"
         >
@@ -864,7 +903,7 @@ const MyVehicle = () => {
             <DeleteOutlined
               style={{ color: "#ff4d4f", fontSize: 20, marginRight: 8 }}
             />
-            <span>Are you sure you want to delete this vehicle?</span>
+            <span>Bạn có chắc chắn muốn xóa xe này không?</span>
           </div>
         </Modal>
 

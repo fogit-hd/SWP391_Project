@@ -11,6 +11,7 @@ import dayjs from "dayjs";
 import api from "../../config/axios";
 import TripScreen from "./TripScreen";
 import { BOOKING_STATUS_COLORS, BOOKING_STATUS_LABELS, GRACE_WINDOWS } from "./booking.types";
+import { getUserIdFromToken } from "../../components/utils/jwt";
 
 const BookingDetailModal = ({ visible, onCancel, booking, onUpdate, groupId, vehicleId }) => {
   const [loading, setLoading] = useState(false);
@@ -52,10 +53,25 @@ const BookingDetailModal = ({ visible, onCancel, booking, onUpdate, groupId, veh
         now.isAfter(endTime);
       setCanCheckOut(canCheckOutNow);
 
-      // Check if can cancel
+      // Check if can cancel - chỉ người tạo booking mới được cancel
+      const token = localStorage.getItem("token");
+      const currentUserId = getUserIdFromToken(token);
+      
+      console.log("Cancel check:", {
+        bookingStatus: booking.status,
+        bookingUserId: booking.userId,
+        currentUserId: currentUserId,
+        isBefore: now.isBefore(startTime),
+        startTime: startTime.format(),
+        now: now.format()
+      });
+      
       const canCancelNow = 
         booking.status === 'BOOKED' &&
-        now.isBefore(startTime);
+        now.isBefore(startTime) &&
+        booking.userId === currentUserId; // Chỉ người tạo booking mới được cancel
+      
+      console.log("canCancel:", canCancelNow);
       setCanCancel(canCancelNow);
     };
 
@@ -67,13 +83,54 @@ const BookingDetailModal = ({ visible, onCancel, booking, onUpdate, groupId, veh
   const handleCheckIn = async () => {
     setLoading(true);
     try {
-      await api.put(`/booking/check-in/${booking.id}`);
-      message.success("Nhận xe thành công!");
+      const response = await api.put(`/booking/check-in/${booking.id}`);
+      
+      // Hiển thị message từ backend hoặc message mặc định
+      const successMessage = response.data?.message || "Nhận xe thành công!";
+      message.success(successMessage);
+      
       onUpdate();
       onCancel();
     } catch (error) {
       console.error("Check-in failed:", error);
-      message.error(error.response?.data?.message || "Không thể nhận xe");
+      console.error("Error response:", error.response?.data);
+      
+      let errorMessage = "Không thể nhận xe";
+      
+      if (error.response?.data) {
+        const errorData = error.response.data;
+        
+        // Ưu tiên lấy message từ backend
+        if (errorData.message) {
+          errorMessage = errorData.message;
+        }
+        // Xử lý các lỗi cụ thể
+        else if (typeof errorData === 'string') {
+          if (errorData.includes("Không tìm thấy")) {
+            errorMessage = "Không tìm thấy lịch đặt";
+          }
+          else if (errorData.includes("trạng thái Booked")) {
+            errorMessage = "Chỉ có thể check-in lịch đang ở trạng thái Booked";
+          }
+          else if (errorData.includes("15 phút trước")) {
+            errorMessage = errorData; // Hiển thị đầy đủ thông tin còn bao nhiêu phút
+          }
+          else if (errorData.includes("trễ quá 15p")) {
+            errorMessage = "Check-in thất bại, bạn đã trễ quá 15 phút. Vui lòng đến sớm hơn vào lần sau";
+          }
+          else if (errorData.includes("chụp ảnh")) {
+            errorMessage = "Check-in thất bại, vui lòng chụp ảnh và thử lại";
+          }
+          else {
+            errorMessage = errorData;
+          }
+        }
+      }
+      
+      message.error({
+        content: errorMessage,
+        duration: 5
+      });
     } finally {
       setLoading(false);
     }
@@ -91,12 +148,59 @@ const BookingDetailModal = ({ visible, onCancel, booking, onUpdate, groupId, veh
   const handleCancel = async () => {
     setLoading(true);
     try {
-      await api.put(`/booking/cancel/${booking.id}`);
-      message.success("Hủy đặt chỗ thành công");
+      const response = await api.put(`/booking/cancel/${booking.id}`);
+      
+      // Hiển thị message từ backend (có thể có thông tin về phạt)
+      const successMessage = response.data?.message || "Hủy đặt chỗ thành công";
+      
+      // Kiểm tra nếu có thông tin phạt thì hiển thị warning thay vì success
+      if (successMessage.includes("phạt") || successMessage.includes("trễ")) {
+        message.warning({
+          content: successMessage,
+          duration: 5
+        });
+      } else {
+        message.success(successMessage);
+      }
+      
       onUpdate();
     } catch (error) {
       console.error("Cancel failed:", error);
-      message.error(error.response?.data?.message || "Không thể hủy đặt chỗ");
+      console.error("Error response:", error.response?.data);
+      
+      let errorMessage = "Không thể hủy đặt chỗ";
+      
+      if (error.response?.data) {
+        const errorData = error.response.data;
+        
+        // Ưu tiên lấy message từ backend
+        if (errorData.message) {
+          errorMessage = errorData.message;
+        }
+        // Xử lý các lỗi cụ thể
+        else if (typeof errorData === 'string') {
+          if (errorData.includes("Không tìm thấy")) {
+            errorMessage = "Không tìm thấy lịch đặt";
+          }
+          else if (errorData.includes("đã bị hủy")) {
+            errorMessage = "Lịch này đã bị hủy trước đó";
+          }
+          else if (errorData.includes("Huỷ lịch không thành công")) {
+            errorMessage = "Không thể hủy lịch đặt này. Vui lòng kiểm tra trạng thái lịch đặt";
+          }
+          else if (errorData.includes("quota")) {
+            errorMessage = "Không thể lấy thông tin quota để hoàn giờ";
+          }
+          else {
+            errorMessage = errorData;
+          }
+        }
+      }
+      
+      message.error({
+        content: errorMessage,
+        duration: 5
+      });
     } finally {
       setLoading(false);
     }
@@ -106,9 +210,17 @@ const BookingDetailModal = ({ visible, onCancel, booking, onUpdate, groupId, veh
 
   const isMyBooking = () => {
     try {
-      const userData = JSON.parse(localStorage.getItem("userData") || "{}");
-      return booking.userId === (userData.id || userData.userId);
-    } catch {
+      const token = localStorage.getItem("token");
+      const currentUserId = getUserIdFromToken(token);
+      const result = booking.userId === currentUserId;
+      console.log("isMyBooking check:", {
+        bookingUserId: booking.userId,
+        currentUserId: currentUserId,
+        result: result
+      });
+      return result;
+    } catch (error) {
+      console.error("isMyBooking error:", error);
       return false;
     }
   };
