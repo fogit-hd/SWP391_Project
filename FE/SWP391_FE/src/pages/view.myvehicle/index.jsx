@@ -179,6 +179,24 @@ const MyVehicle = () => {
       },
     },
     {
+      title: "Nhóm",
+      dataIndex: "hasGroup",
+      key: "hasGroup",
+      width: 100,
+      filters: [
+        { text: "Có nhóm", value: true },
+        { text: "Chưa có nhóm", value: false },
+      ],
+      onFilter: (value, record) => record.hasGroup === value,
+      render: (hasGroup) => {
+        if (hasGroup === true) {
+          return <Tag color="blue">Có nhóm</Tag>;
+        } else {
+          return <Tag color="default">Chưa có</Tag>;
+        }
+      },
+    },
+    {
       title: "Pin (kWh)",
       dataIndex: "batteryCapacityKwh",
       key: "batteryCapacityKwh",
@@ -213,7 +231,7 @@ const MyVehicle = () => {
           }
         };
 
-        // Tạo menu items động - ẩn Delete nếu status là ACTIVE
+        
         const menuItems = [
           {
             key: "edit",
@@ -227,8 +245,8 @@ const MyVehicle = () => {
           },
         ];
 
-        // Chỉ thêm Delete nếu status KHÔNG phải ACTIVE
-        if (record.status !== "ACTIVE") {
+        // Chỉ thêm Delete nếu hasGroup === false (xe chưa được assign vào group nào)
+        if (record.hasGroup === false) {
           menuItems.push({
             key: "delete",
             icon: <DeleteOutlined />,
