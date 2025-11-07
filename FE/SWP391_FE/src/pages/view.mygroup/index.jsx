@@ -1214,12 +1214,33 @@ const MyGroup = () => {
         message.success("Invite created");
       } else {
         setInviteCode(code);
-        // Use backend expiry if provided; else 15 minutes from now
-        const expiresAt =
-          res?.data?.expiresAt || res?.data?.data?.expiresAt || null;
-        const expiresAtVal = expiresAt
-          ? new Date(expiresAt).getTime()
-          : Date.now() + 30 * 1000;
+        // Use backend expiry if provided.
+        // Prefer to compute TTL from server times to avoid client/server clock skew:
+        // If backend returns both created_at (start time) and expires_at, compute
+        // ttl = expires_at - created_at, then set local expiry = Date.now() + ttl.
+        // Otherwise, fall back to direct expiresAt if present, or a short client-side fallback.
+        const raw = res?.data || res?.data?.data || {};
+        const expiresAtRaw = raw.expiresAt || raw.expires_at || raw.expires || null;
+        const createdAtRaw = raw.createdAt || raw.created_at || raw.created || null;
+
+        let expiresAtVal = null;
+        if (expiresAtRaw && createdAtRaw) {
+          try {
+            const expiresMs = new Date(expiresAtRaw).getTime();
+            const createdMs = new Date(createdAtRaw).getTime();
+            const ttl = Math.max(0, expiresMs - createdMs);
+            expiresAtVal = Date.now() + ttl;
+          } catch (e) {
+            // if parsing fails, fall back to direct expires
+            expiresAtVal = new Date(expiresAtRaw).getTime();
+          }
+        } else if (expiresAtRaw) {
+          // backend provided absolute expiry only
+          expiresAtVal = new Date(expiresAtRaw).getTime();
+        } else {
+          // no server expiry available — short fallback (30s) to avoid showing infinite countdown
+          expiresAtVal = Date.now() + 30 * 1000;
+        }
         setInviteExpiresAt(expiresAtVal);
         // Persist to storage so re-opening details retains countdown
         saveInviteToStorage(gid, code, expiresAtVal);

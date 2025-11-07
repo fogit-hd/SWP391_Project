@@ -32,6 +32,9 @@ export default function ManageBooking() {
   const [damageSubmitting, setDamageSubmitting] = useState(false);
   const [tripEvents, setTripEvents] = useState([]);
   const [loadingTripEvents, setLoadingTripEvents] = useState(false);
+  // track per-booking transient states so UI can hide/show buttons correctly
+  const [checkingMap, setCheckingMap] = useState({}); // bookingId -> boolean (in-progress)
+  const [checkedInMap, setCheckedInMap] = useState({}); // bookingId -> boolean (checked-in by staff)
 
   useEffect(() => {
     fetchGroups();
@@ -139,6 +142,9 @@ export default function ManageBooking() {
       );
     };
 
+    // mark this booking as in-progress so UI can hide the opposite button
+    setCheckingMap((m) => ({ ...m, [bookingId]: true }));
+
     try {
       // Let the browser set the multipart Content-Type (with boundary).
       const r = await api.post(`/booking/${endpoint}/staff`, fd);
@@ -146,6 +152,20 @@ export default function ManageBooking() {
       // Map endpoint to desired status transition
       const newStatus = endpoint === "check-in" ? "in use" : "completed";
       optimisticUpdate(newStatus);
+
+      // update checkedInMap for check-in and clear it for check-out
+      if (endpoint === "check-in") {
+        setCheckedInMap((m) => ({ ...m, [bookingId]: true }));
+      } else if (endpoint === "check-out") {
+        setCheckedInMap((m) => {
+          const copy = { ...m };
+          delete copy[bookingId];
+          return copy;
+        });
+      }
+
+      // clear checking flag
+      setCheckingMap((m) => ({ ...m, [bookingId]: false }));
 
       message.success(r.data?.message || `Booking marked ${newStatus}`);
 
@@ -157,6 +177,8 @@ export default function ManageBooking() {
     } catch (err) {
       console.error(err);
       message.error(err?.response?.data?.message || "Failed");
+      // on error clear checking flag
+      setCheckingMap((m) => ({ ...m, [bookingId]: false }));
       // on failure, refetch to restore correct state
       if (selectedGroup?.id && selectedVehicle?.id) {
         fetchBookings(selectedGroup.id, selectedVehicle.id);
@@ -201,14 +223,23 @@ export default function ManageBooking() {
   };
 
   return (
-    <Card
-      className="manage-booking-card"
-      title={
-        <div className="manage-booking-header">
-          <h2>Staff — Checkin / Checkout / Damage Report</h2>
+    <>
+      <div className="manage-booking-header-card">
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+            <div style={{ width: 40, height: 40, borderRadius: 8, background: "#eaf4ff", display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#1890ff', fontWeight: 700 }}>✎</div>
+            <div>
+              <h1 style={{ margin: 0, fontSize: 20 }}>Staff — Checkin / Checkout / Damage Report</h1>
+              <div style={{ color: '#6b7280', fontSize: 13 }}>Manage bookings and create damage reports</div>
+            </div>
+          </div>
+          <div style={{ display: 'flex', gap: 8 }}>
+            {/* placeholder for actions (refresh/new) kept minimal */}
+          </div>
         </div>
-      }
-    >
+      </div>
+
+      <Card className="manage-booking-card">
       <div className="manage-booking-page">
         <div className="manage-booking-content">
           <Space direction="vertical" style={{ width: "100%" }}>
@@ -269,15 +300,18 @@ export default function ManageBooking() {
                   const normalize = (s) => (s || "").toString().toLowerCase().replace(/[^a-z0-9]+/g, "").trim();
                   const st = normalize(b.status);
                   const isBooked = st === "booked";
-                  const isInUse = st === "inuse" || st === "inuse" || st === "inuse" || st === "inuse" || st === "in use";
-                  const isCompleted = st === "completed" || st === "complete";
+                  const isInUse = st.includes("inuse") || st === "inuse";
+                  const isCompleted = st.includes("complete") || st === "completed";
 
                   const tagColor = isBooked ? "blue" : isInUse ? "orange" : isCompleted ? "green" : "default";
                   const tagText = b.status || "unknown";
 
+                  const checking = !!checkingMap[b.id];
+                  const justCheckedIn = !!checkedInMap[b.id];
+
                   return (
                     <List.Item>
-                      <div style={{ flex: 1 }}>
+                      <div className="list-item-main" style={{ flex: 1 }}>
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                           <div>
                             <strong>{b.id}</strong> — {new Date(b.startTime).toLocaleString()} to {new Date(b.endTime).toLocaleString()}
@@ -293,21 +327,27 @@ export default function ManageBooking() {
                           />
                         </div>
                       </div>
-                      <div style={{ display: "flex", gap: 8 }}>
+                      <div className="list-item-actions" style={{ display: "flex", gap: 8 }}>
+                        {/* Always render Check-in button. When booking isn't 'booked' (or already checked-in) show it disabled/gray.
+                            When booking is bookable, make it primary (blue). While request is in-progress show 'Checking in...' */}
                         <Button
                           onClick={() => doCheck(b.id, "check-in")}
-                          type="primary"
-                          disabled={!isBooked}
+                          type={isBooked && !checking && !justCheckedIn ? "primary" : undefined}
+                          disabled={!isBooked || checking || justCheckedIn}
                         >
-                          Check-in
+                          {checking ? "Checking in..." : "Check-in"}
                         </Button>
-                        <Button
-                          onClick={() => doCheck(b.id, "check-out")}
-                          danger
-                          disabled={!isInUse || !fileMap[b.id]}
-                        >
-                          Check-out
-                        </Button>
+
+                        {/* Hide Check-out while a check-in is in progress for the same booking */}
+                        {!checking && (
+                          <Button
+                            onClick={() => doCheck(b.id, "check-out")}
+                            danger
+                            disabled={!isInUse || !fileMap[b.id]}
+                          >
+                            Check-out
+                          </Button>
+                        )}
                       </div>
                     </List.Item>
                   );
@@ -380,5 +420,6 @@ export default function ManageBooking() {
       </div>
       </div>
     </Card>
+    </>
   );
 }

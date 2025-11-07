@@ -40,6 +40,16 @@
   border-radius: 12px;
   border-bottom: 1px solid rgba(0,0,0,0.04);
   padding: 18px 24px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.manage-booking-header {
+  justify-content: center;
+}
+.manage-booking-header h2 {
+  text-align: center;
+  font-size: 22px;
 }
 .manage-booking-card .ant-card-body {
   padding: 18px 24px 24px 24px;
@@ -55,10 +65,15 @@
   margin-bottom: 18px;
 }
 
-.manage-booking-header-card h2 {
+.manage-booking-header-card h1 {
   font-size: 20px;
   margin: 0;
   color: #0b2234;
+}
+
+.manage-booking-header-card .subtitle {
+  color: #6b7280;
+  font-size: 13px;
 }
 
 .manage-booking-header-card a {
@@ -103,8 +118,27 @@
   align-items: center;
   gap: 12px;
 }
-.manage-booking-content .ant-list-item div[style*="flex: 1"] {
+
+.manage-booking-content .ant-list-item {
+  background: #ffffff;
+  border-radius: 10px;
+  box-shadow: 0 6px 18px rgba(11,26,40,0.03);
+  border: 1px solid rgba(0,0,0,0.03);
+  padding: 16px;
+  margin-bottom: 12px;
+  display: block;
+  gap: 12px;
+}
+.manage-booking-content .ant-list-item .list-item-main {
   min-width: 0; /* allow text truncation */
+}
+
+.manage-booking-content .ant-list-item .list-item-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-end;
+  margin-top: 8px;
 }
 
 .manage-booking-content .ant-tag {
@@ -183,6 +217,38 @@
   flex-direction: column;
   align-items: flex-end;
   gap: 8px;
+}
+
+/* disabled buttons look muted and gray */
+.manage-booking-card .ant-btn[disabled],
+.manage-booking-card .ant-btn[disabled]:hover {
+  background: #f0f2f5 !important;
+  color: rgba(0,0,0,0.45) !important;
+  box-shadow: none !important;
+  border: 1px solid rgba(0,0,0,0.04) !important;
+}
+
+/* form section center column */
+.manage-booking-form {
+  max-width: 760px;
+  margin: 0 auto 18px auto;
+  background: rgba(255,255,255,0.6);
+  padding: 18px;
+  border-radius: 10px;
+}
+
+/* make selects and inputs consistent width */
+.manage-booking-form .ant-select,
+.manage-booking-form .ant-input,
+.manage-booking-form input[type="file"] {
+  width: 100%;
+  max-width: 520px;
+}
+
+/* visually separate sections */
+.manage-booking-section {
+  padding: 18px 0;
+  border-bottom: 1px solid rgba(0,0,0,0.04);
 }
 
 @media (max-width: 768px) {
