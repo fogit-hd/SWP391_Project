@@ -120,18 +120,76 @@
 }
 
 .manage-booking-content .ant-list-item {
+.manage-booking-content .ant-list-item {
   background: #ffffff;
   border-radius: 10px;
   box-shadow: 0 6px 18px rgba(11,26,40,0.03);
   border: 1px solid rgba(0,0,0,0.03);
-  padding: 16px;
-  margin-bottom: 12px;
-  display: block;
-  gap: 12px;
+  padding: 18px;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  border-left: 6px solid #49c36a; /* green accent like booking page */
+}
+
+.manage-booking-content .ant-list-item.overtime {
+  border-left-color: #f43f5e; /* red accent for overtime */
 }
 .manage-booking-content .ant-list-item .list-item-main {
   min-width: 0; /* allow text truncation */
 }
+
+/* avatar block */
+.manage-booking-content .ant-list-item .list-item-avatar {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 140px;
+  gap: 8px;
+}
+.manage-booking-content .ant-list-item .list-item-avatar img {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+.manage-booking-content .ant-list-item .avatar-placeholder {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: linear-gradient(180deg,#eef7ff,#e6f4ff);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #0b66c2;
+  font-weight: 700;
+}
+.manage-booking-content .ant-list-item .avatar-meta {
+  text-align: center;
+}
+.manage-booking-content .ant-list-item .avatar-name {
+  font-weight: 700;
+}
+.manage-booking-content .ant-list-item .avatar-sub {
+  color: #94a3b8;
+  font-size: 12px;
+}
+
+/* clock badge */
+.manage-booking-content .ant-list-item .clock-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid #cfe9ff;
+  background: #ffffff;
+  color: #096dd9;
+  font-weight: 600;
+}
+.manage-booking-content .ant-list-item .clock-icon { font-size: 14px; }
+.manage-booking-content .ant-list-item .clock-text { font-size: 13px; }
 
 .manage-booking-content .ant-list-item .list-item-actions {
   display: flex;
@@ -139,6 +197,61 @@
   gap: 8px;
   align-items: flex-end;
   margin-top: 8px;
+}
+
+/* meta and time panel styles */
+.manage-booking-content .ant-list-item .meta-row {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.manage-booking-content .ant-list-item .time-panel {
+  display: flex;
+  gap: 18px;
+  margin-top: 6px;
+}
+
+.manage-booking-content .ant-list-item .time-col {
+  background: #f7f9fb;
+  padding: 12px 16px;
+  border-radius: 8px;
+  min-width: 220px;
+}
+
+.manage-booking-content .ant-list-item .time-label {
+  color: #6b7280;
+  font-size: 12px;
+  margin-bottom: 6px;
+}
+.manage-booking-content .ant-list-item .time-value {
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+.manage-booking-content .ant-list-item .time-sub {
+  color: #94a3b8;
+  font-size: 13px;
+}
+
+/* right-side actions box (status / timer) */
+.manage-booking-content .ant-list-item .list-item-actions {
+  min-width: 160px;
+  align-items: flex-end;
+}
+.manage-booking-content .ant-list-item .list-item-actions {
+  background: #ffffff;
+  border: 1px solid rgba(0,0,0,0.04);
+  padding: 12px;
+  border-radius: 8px;
+}
+.manage-booking-content .ant-list-item .list-item-actions .ant-btn {
+  min-width: 120px;
+}
+
+/* soften background of the whole page to match booking gradient */
+.manage-booking-page {
+  background: linear-gradient(180deg, #eaf5ff 0%, #f2f6fb 45%, #eaf5ff 100%);
 }
 
 .manage-booking-content .ant-tag {
@@ -167,6 +280,13 @@
 .manage-booking-content .ant-tag.green {
   background: #f6ffed;
   color: #389e0d;
+}
+
+.manage-booking-content .ant-tag.purple,
+.manage-booking-content .status-tag.overtime,
+.manage-booking-content .ant-tag.overtime {
+  background: #f3e8ff;
+  color: #6b21a8;
 }
 
 /* Trip events layout tweaks */
@@ -254,4 +374,5 @@
 @media (max-width: 768px) {
   .manage-booking-content { padding: 12px; }
   .trip-event-right { align-items: flex-start; }
+}
 }
