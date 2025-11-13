@@ -123,12 +123,22 @@ export default function ManageBooking() {
     setFileMap((m) => ({ ...m, [bookingId]: file }));
   };
 
+
+  const formatDuration = (ms) => {
+    if (!ms || ms < 0) return "0h";
+    const totalMin = Math.floor(ms / 60000);
+    const h = Math.floor(totalMin / 60);
+    const m = totalMin % 60;
+    return `${h}h ${m}m`;
+  };
+
   const doCheck = async (bookingId, endpoint) => {
     const file = fileMap[bookingId];
     if (!bookingId) return message.warning("Missing booking id");
     // If checkout, require a photo from staff
     if (endpoint === "check-out" && !file) {
-      return message.warning("Please attach a photo before checkout.");
+      alert ("Please upload a photo before checking out.");
+      return;
     }
 
     const fd = new FormData();
@@ -229,8 +239,8 @@ export default function ManageBooking() {
           <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
             <div style={{ width: 40, height: 40, borderRadius: 8, background: "#eaf4ff", display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#1890ff', fontWeight: 700 }}>✎</div>
             <div>
-              <h1 style={{ margin: 0, fontSize: 20 }}>Staff — Checkin / Checkout / Damage Report</h1>
-              <div style={{ color: '#6b7280', fontSize: 13 }}>Manage bookings and create damage reports</div>
+              <h1 style={{ margin: 0, fontSize: 20 }}>Quản lý đặt chỗ xe</h1>
+              <div style={{ color: '#6b7280', fontSize: 13 }}>Quản lý việc đặt chỗ xe của bạn với chế độ xem chi tiết</div>
             </div>
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
@@ -302,25 +312,37 @@ export default function ManageBooking() {
                   const isBooked = st === "booked";
                   const isInUse = st.includes("inuse") || st === "inuse";
                   const isCompleted = st.includes("complete") || st === "completed";
+                  const isOvertime = st === "overtime" || st.includes("overtime");
 
-                  const tagColor = isBooked ? "blue" : isInUse ? "orange" : isCompleted ? "green" : "default";
+                  const tagColor = isBooked ? "blue" : isInUse ? "orange" : isOvertime ? "purple" : isCompleted ? "green" : "default";
                   const tagText = b.status || "unknown";
 
                   const checking = !!checkingMap[b.id];
                   const justCheckedIn = !!checkedInMap[b.id];
 
                   return (
-                    <List.Item>
+                    <List.Item className={isOvertime ? 'overtime' : ''}>
+                     
                       <div className="list-item-main" style={{ flex: 1 }}>
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                          <div>
-                            <strong>{b.id}</strong> — {new Date(b.startTime).toLocaleString()} to {new Date(b.endTime).toLocaleString()}
+                        <div className="meta-row" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                          <div style={{ minWidth: 0 }}>
+                            <div style={{ fontWeight: 700, marginBottom: 8 }}>{b.id}</div>
+                            <div className="time-panel">
+                              <div className="time-col">
+                                <div className="time-label">Bắt đầu</div>
+                                <div className="time-value">{new Date(b.startTime).toLocaleString()}</div>
+                                <div className="time-sub">{new Date(b.startTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</div>
+                              </div>
+                              <div className="time-col">
+                                <div className="time-label">Kết thúc</div>
+                                <div className="time-value">{new Date(b.endTime).toLocaleString()}</div>
+                                <div className="time-sub">{new Date(b.endTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</div>
+                              </div>
+                            </div>
                           </div>
-                          <div>
-                            <Tag color={tagColor}>{tagText}</Tag>
-                          </div>
+                          <div />
                         </div>
-                        <div style={{ marginTop: 8 }}>
+                        <div style={{ marginTop: 12 }}>
                           <Input
                             type="file"
                             onChange={(e) => handleFileChangeForBooking(b.id, e.target.files[0])}
@@ -328,6 +350,19 @@ export default function ManageBooking() {
                         </div>
                       </div>
                       <div className="list-item-actions" style={{ display: "flex", gap: 8 }}>
+                        <div className="clock-badge" style={{ marginBottom: 8 }}>
+                          <span className="clock-icon">⏱</span>
+                          <span className="clock-text">
+                            {(() => {
+                              const start = new Date(b.startTime).getTime();
+                              const end = (isInUse || isOvertime) ? Date.now() : (b.endTime ? new Date(b.endTime).getTime() : Date.now());
+                              return formatDuration(Math.max(0, end - start));
+                            })()}
+                          </span>
+                        </div>
+                        <div style={{ marginBottom: 8 }}>
+                          <Tag color={tagColor} className={`status-tag ${st}`}>{tagText}</Tag>
+                        </div>
                         {/* Always render Check-in button. When booking isn't 'booked' (or already checked-in) show it disabled/gray.
                             When booking is bookable, make it primary (blue). While request is in-progress show 'Checking in...' */}
                         <Button
@@ -343,7 +378,7 @@ export default function ManageBooking() {
                           <Button
                             onClick={() => doCheck(b.id, "check-out")}
                             danger
-                            disabled={!isInUse || !fileMap[b.id]}
+                            disabled={!(isInUse || isOvertime) || !fileMap[b.id]}
                           >
                             Check-out
                           </Button>
