@@ -10,7 +10,6 @@ import { useDispatch } from "react-redux";
 import { login } from "../../components/redux/accountSlice";
 import "./login.css";
 
-// Yup validation schema
 const validationSchema = Yup.object().shape({
   email: Yup.string().email("Email không hợp lệ").required("Email is required"),
   password: Yup.string()
@@ -19,12 +18,12 @@ const validationSchema = Yup.object().shape({
   rememberMe: Yup.boolean(),
 });
 
-// Initial form values
 const getInitialValues = () => {
   const rememberedEmail = localStorage.getItem("rememberedEmail");
   return {
     email: rememberedEmail || "",
     password: "",
+
     rememberMe: false,
   };
 };
@@ -40,7 +39,6 @@ const LoginPage = () => {
   const dispatch = useDispatch();
 
   useEffect(() => {
-    // Clear all authentication data on component mount
     localStorage.removeItem("token");
     localStorage.removeItem("refreshToken");
     localStorage.removeItem("userData");
@@ -48,7 +46,6 @@ const LoginPage = () => {
     localStorage.removeItem("userRole");
     localStorage.removeItem("userId");
     localStorage.removeItem("password");
-
     sessionStorage.clear();
   }, []);
 
@@ -93,7 +90,7 @@ const LoginPage = () => {
       const decodedToken = decodeJWT(accessToken);
       console.log("[LOGIN] Decoded JWT:", decodedToken);
 
-      const role = decodedToken?.role || decodedToken?.roleId;
+      const role = decodedToken?.role;
       console.log(
         "[LOGIN] Raw role from JWT:",
         role,
@@ -167,21 +164,19 @@ const LoginPage = () => {
 
       // Navigate based on role
       if (roleId === 1) {
-        console.log("[LOGIN] ✓ Admin login - redirecting to /admin/dashboard");
+        console.log("[LOGIN] ✓ Admin login");
         navigate("/admin/dashboard");
       } else if (roleId === 2) {
-        console.log("[LOGIN] ✓ Staff login - redirecting to /staff/dashboard");
+        console.log("[LOGIN] ✓ Staff login");
         navigate("/staff/dashboard");
       } else if (roleId === 3) {
-        console.log("[LOGIN] ✓ CoOwner login - redirecting to /");
+        console.log("[LOGIN] ✓ CoOwner login");
         navigate("/");
       } else if (roleId === 4) {
-        console.log(
-          "[LOGIN] ✓ Technician login - redirecting to /technician/dashboard"
-        );
+        console.log("[LOGIN] ✓ Technician login");
         navigate("/technician/dashboard");
       } else {
-        console.warn("[LOGIN] ⚠ Unknown roleId - redirecting to homepage");
+        console.warn("[LOGIN] ⚠ Unknown roleId");
         navigate("/");
       }
 
@@ -193,7 +188,6 @@ const LoginPage = () => {
 
       let errorMessage = "Login failed. Please try again.";
 
-      // Check if account is not activated
       if (
         e.response?.status === 403 ||
         e.response?.data?.message?.includes("not activated") ||

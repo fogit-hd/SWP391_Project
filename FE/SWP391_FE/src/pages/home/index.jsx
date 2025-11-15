@@ -60,12 +60,11 @@ const Homepage = () => {
   const [profileData, setProfileData] = useState(null);
   const [isProfileLoading, setIsProfileLoading] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
-  const [authKey, setAuthKey] = useState(0); // Force re-render key
+  const [authKey, setAuthKey] = useState(0);
   const [hasContract, setHasContract] = useState(false);
   const [isCheckingContract, setIsCheckingContract] = useState(false);
   const navigate = useNavigate();
 
-  // Notifications state
   const [notifications, setNotifications] = useState([]);
   const [isNotifLoading, setIsNotifLoading] = useState(false);
   const [isNotifDrawerOpen, setIsNotifDrawerOpen] = useState(false);
@@ -74,7 +73,6 @@ const Homepage = () => {
 
   const unreadCount = notifications.filter((n) => !n.isRead).length;
 
-  // Debug: Log user state changes
   useEffect(() => {
     console.log("=== Auth State Debug ===");
     console.log("user:", user);
@@ -85,20 +83,17 @@ const Homepage = () => {
     console.log("=====================");
   }, [user, isAuthenticated, hasContract, isCheckingContract, authKey]);
 
-  // Log profileData changes for debugging (keep for important state changes)
   useEffect(() => {
     if (profileData) {
       console.log("Profile data updated:", profileData);
     }
   }, [profileData]);
 
-  // Initialize component and restore data from localStorage
   useEffect(() => {
     const token = localStorage.getItem("token")?.replaceAll('"', "");
     const userData = localStorage.getItem("userData");
     const savedProfileData = localStorage.getItem("profileData");
 
-    // Check authentication state on component mount
     console.log(
       "Component mount - Token exists:",
       !!token,
@@ -106,7 +101,6 @@ const Homepage = () => {
       !!user
     );
 
-    // Restore user data to Redux if we have token but no user in Redux
     if (token && userData && !user) {
       try {
         const parsedUserData = JSON.parse(userData);
@@ -114,11 +108,9 @@ const Homepage = () => {
         console.log("User data restored to Redux");
       } catch (error) {
         console.error("Error parsing saved user data:", error);
-        // Don't clear tokens on parse error - just log the error
       }
     }
 
-    // Load saved profile data from localStorage
     if (savedProfileData && !profileData) {
       try {
         const parsedProfileData = JSON.parse(savedProfileData);
@@ -130,36 +122,28 @@ const Homepage = () => {
       }
     }
 
-    // Mark as initialized after all restoration is done
     setIsInitialized(true);
-  }, []); // Only run on mount
+  }, []);
 
-  // Auto-fetch profile data when user is authenticated and no profile data
   useEffect(() => {
-    // Only proceed if component is initialized
     if (!isInitialized) return;
 
     const token = localStorage.getItem("token")?.replaceAll('"', "");
     const savedProfileData = localStorage.getItem("profileData");
 
-    // Auto-fetch profile data when conditions are met
-
-    // Only fetch from API if we have token, user data, and no profile data yet
     if (token && user && user.data && !profileData && !savedProfileData) {
       console.log("User is authenticated, auto-fetching profile data...");
       fetchProfileData();
     }
-  }, [isInitialized, user, profileData]); // Run when initialization, user or profileData changes
+  }, [isInitialized, user, profileData]);
 
-  // Check contracts when user is authenticated
   useEffect(() => {
     if (isInitialized && isAuthenticated && user) {
       console.log("Checking user contracts...");
       checkUserContracts();
     }
-  }, [isInitialized, isAuthenticated, user]); // Run when authentication state changes
+  }, [isInitialized, isAuthenticated, user]);
 
-  // Fetch notifications when user is authenticated
   useEffect(() => {
     if (isInitialized && isAuthenticated && user) {
       console.log("Fetching notifications on mount/refresh...");
@@ -177,7 +161,7 @@ const Homepage = () => {
       };
       fetchNotifs();
     }
-  }, [isInitialized, isAuthenticated, user]); // Run when authentication state changes
+  }, [isInitialized, isAuthenticated, user]);
 
   // Function to check user contracts
   const checkUserContracts = async () => {
@@ -314,25 +298,31 @@ const Homepage = () => {
   };
 
   // Function to handle user logout
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    const refreshToken = "";
+
+    try {
+      const response = await api.post("/auth/logout", refreshToken, {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+    } catch (error) {
+      console.error("Error during logout API call:", error);
+    }
     console.log("Đang đăng xuất người dùng...");
+    dispatch(logout());
     navigate("/login");
-    // Clear all auth-related state
+
     setProfileData(null);
     setProfileImage(null);
     setIsProfileModalVisible(false);
     setHasContract(false);
     setIsCheckingContract(false);
 
-    // Dispatch logout action (this will clear all localStorage items)
-    dispatch(logout());
-    // Force re-render by updating auth key
     setAuthKey((prev) => prev + 1);
-
-    // Show success message
     toast.success("Đăng xuất thành công!");
 
-    // Stay on homepage - no navigation
     console.log("Đã đăng xuất, ở lại trang chủ");
   };
 
@@ -1163,7 +1153,7 @@ const Homepage = () => {
             </Paragraph>
           </Col>
           <Col xs={24} md={7}>
-            <Title level={6} className="footer-section-title">
+            <Title level={5} className="footer-section-title">
               Công ty
             </Title>
             <Space direction="vertical" size="small" className="footer-links">

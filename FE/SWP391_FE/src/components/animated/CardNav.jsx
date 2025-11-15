@@ -95,8 +95,7 @@ const CardNav = ({
       tl?.kill();
       tlRef.current = null;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ease, items]);
+  }, [ease, items?.length]);
 
   useLayoutEffect(() => {
     const handleResize = () => {
