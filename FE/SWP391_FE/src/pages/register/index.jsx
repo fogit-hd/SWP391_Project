@@ -29,7 +29,7 @@ const RegisterPage = () => {
   const [isScanning, setIsScanning] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState([]);
   const [scannedData, setScannedData] = useState(null);
-  
+
   // Floating label states
   const [emailFocused, setEmailFocused] = useState(false);
   const [emailValue, setEmailValue] = useState("");
@@ -39,7 +39,7 @@ const RegisterPage = () => {
   const [passwordValue, setPasswordValue] = useState("");
   const [confirmPasswordFocused, setConfirmPasswordFocused] = useState(false);
   const [confirmPasswordValue, setConfirmPasswordValue] = useState("");
-  
+
   const navigate = useNavigate();
 
   const validateEmail = (email) => /\S+@\S+\.\S+/.test(email);
@@ -134,11 +134,8 @@ const RegisterPage = () => {
       console.log("Front side extracted data:", frontData);
       console.log("Back side extracted data:", backData);
 
-      // Combine data from both sides
-      // Smart merge: prioritize non-empty values, don't let "N/A" overwrite real data
       const combinedData = {};
 
-      // First add all front data
       Object.keys(frontData).forEach((key) => {
         const value = frontData[key];
         if (value && value !== "N/A" && value !== "undefined") {
@@ -150,7 +147,6 @@ const RegisterPage = () => {
       Object.keys(backData).forEach((key) => {
         const value = backData[key];
         if (value && value !== "N/A" && value !== "undefined") {
-          // Only add if field doesn't exist yet OR existing value is N/A
           if (!combinedData[key] || combinedData[key] === "N/A") {
             combinedData[key] = value;
           }
@@ -332,7 +328,7 @@ const RegisterPage = () => {
       <div className="register-background"></div>
 
       <div className="register-card-container">
-          <Card className="register-card">
+        <Card className="register-card">
           <div className="register-header">
             <h2 className="register-title">Join Our Community</h2>
             <p className="register-subtitle">
@@ -365,7 +361,11 @@ const RegisterPage = () => {
                   ]}
                   className="floating-label-form-item"
                 >
-                  <div className={`floating-label-wrapper ${emailFocused || emailValue ? 'active' : ''}`}>
+                  <div
+                    className={`floating-label-wrapper ${
+                      emailFocused || emailValue ? "active" : ""
+                    }`}
+                  >
                     <Input
                       type="email"
                       prefix={<MailOutlined />}
@@ -397,7 +397,11 @@ const RegisterPage = () => {
                   ]}
                   className="floating-label-form-item"
                 >
-                  <div className={`floating-label-wrapper ${phoneFocused || phoneValue ? 'active' : ''}`}>
+                  <div
+                    className={`floating-label-wrapper ${
+                      phoneFocused || phoneValue ? "active" : ""
+                    }`}
+                  >
                     <Input
                       prefix={<PhoneOutlined />}
                       allowClear
@@ -427,7 +431,11 @@ const RegisterPage = () => {
                   ]}
                   className="floating-label-form-item"
                 >
-                  <div className={`floating-label-wrapper ${passwordFocused || passwordValue ? 'active' : ''}`}>
+                  <div
+                    className={`floating-label-wrapper ${
+                      passwordFocused || passwordValue ? "active" : ""
+                    }`}
+                  >
                     <Input.Password
                       prefix={<LockOutlined />}
                       className="floating-input"
@@ -438,7 +446,9 @@ const RegisterPage = () => {
                       }}
                       onChange={(e) => setPasswordValue(e.target.value)}
                     />
-                    <label className="floating-label">Password (min 8 chars)</label>
+                    <label className="floating-label">
+                      Password (min 8 chars)
+                    </label>
                   </div>
                 </Form.Item>
               </Col>
@@ -463,7 +473,13 @@ const RegisterPage = () => {
                   ]}
                   className="floating-label-form-item"
                 >
-                  <div className={`floating-label-wrapper ${confirmPasswordFocused || confirmPasswordValue ? 'active' : ''}`}>
+                  <div
+                    className={`floating-label-wrapper ${
+                      confirmPasswordFocused || confirmPasswordValue
+                        ? "active"
+                        : ""
+                    }`}
+                  >
                     <Input.Password
                       prefix={<LockOutlined />}
                       className="floating-input"
@@ -618,7 +634,9 @@ const RegisterPage = () => {
             {/* Sign In Link */}
             <Row justify="center" align="middle" style={{ marginTop: "16px" }}>
               <Col>
-                <span style={{ color: "#6b7280" }}>Already have an account? </span>
+                <span style={{ color: "#6b7280" }}>
+                  Already have an account?{" "}
+                </span>
                 <Link to="/login" className="register-login-link">
                   Sign in
                 </Link>
@@ -628,8 +646,8 @@ const RegisterPage = () => {
             {/* Back to Homepage Button */}
             <Row justify="center" align="middle" style={{ marginTop: "20px" }}>
               <Col>
-                <Button 
-                  type="text" 
+                <Button
+                  type="text"
                   onClick={() => navigate("/")}
                   className="register-back-button"
                 >

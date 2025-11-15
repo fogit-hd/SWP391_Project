@@ -1,14 +1,14 @@
 .notification-detail-panel {
   position: fixed;
   top: 80px;
-  right: 444px; /* 420px drawer width + 24px gap */
+  right: 444px;
   width: 380px;
   max-height: 70vh;
   z-index: 1001;
   opacity: 0;
   transform: translateX(20px);
   transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-              transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   will-change: opacity, transform;
   pointer-events: none;
 }
