@@ -591,16 +591,28 @@ const CreateBookingModal = ({ visible, onCancel, onSuccess, groupId, vehicleId, 
           message="Hạn ngạch giờ đặt chỗ"
           description={
             <div>
-              <div style={{ marginBottom: 8 }}>
-                Bạn còn {quotaInfo.data.remainingHours.toFixed(0)} giờ {((quotaInfo.data.remainingHours % 1) * 60).toFixed(0)} phút để đặt trong tuần này, và {quotaInfo.data.remainingHoursNextWeek.toFixed(0)} giờ để đặt trước cho tuần sau.
+              <div style={{ marginBottom: 12 }}>
+                Bạn còn {Math.floor(quotaInfo.data.remainingHours)} giờ {Math.round((quotaInfo.data.remainingHours % 1) * 60)} phút để đặt trong tuần này, và {Math.floor(quotaInfo.data.remainingHoursNextWeek)} giờ{Math.round((quotaInfo.data.remainingHoursNextWeek % 1) * 60) > 0 ? ` ${Math.round((quotaInfo.data.remainingHoursNextWeek % 1) * 60)} phút` : ''} để đặt trước cho tuần sau.
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px', marginTop: 12 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px', marginBottom: 12 }}>
                 <div>
                   <strong>Giờ đã dùng:</strong> <span style={{ color: '#1890ff', fontWeight: 600 }}>{quotaInfo.data.hoursUsed.toFixed(2)}h</span>
                 </div>
                 <div>
                   <strong>Giờ phạt:</strong> <span style={{ color: '#ff4d4f', fontWeight: 600 }}>{quotaInfo.data.hoursDebt.toFixed(2)}h</span>
                 </div>
+                <div>
+                  <strong>Tỷ lệ sở hữu:</strong> <span style={{ color: '#52c41a', fontWeight: 600 }}>{quotaInfo.data.ownershipRate?.toFixed(2)}%</span>
+                </div>
+                <div>
+                  <strong>Giờ tối đa/tuần:</strong> <span style={{ color: '#722ed1', fontWeight: 600 }}>{((quotaInfo.data.weeklyQuotaHours || quotaInfo.data.hoursLimit) * (quotaInfo.data.ownershipRate || 100) / 100).toFixed(2)}h</span>
+                </div>
+              </div>
+              <div style={{ padding: '10px 12px', backgroundColor: '#f0f5ff', borderRadius: '4px', border: '1px solid #adc6ff', marginBottom: 8 }}>
+                <strong>Thời gian đặt trong tuần:</strong> <span style={{ color: '#1890ff', fontWeight: 600, fontSize: '15px' }}>{((quotaInfo.data.ownershipRate || 100) * quotaInfo.data.remainingHours / 100).toFixed(2)} giờ</span>
+                <span style={{ color: '#8c8c8c', fontSize: '12px', marginLeft: 8 }}>
+                  ({quotaInfo.data.ownershipRate?.toFixed(2)}% × {quotaInfo.data.remainingHours.toFixed(2)} giờ còn lại)
+                </span>
               </div>
               <div style={{ marginTop: 8, fontSize: '12px', color: '#8c8c8c' }}>
                 Tuần bắt đầu: {dayjs(quotaInfo.data.weekStartDate).format('DD/MM/YYYY')}
