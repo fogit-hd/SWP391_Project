@@ -331,7 +331,7 @@ const BookingDetailModal = ({ visible, onCancel, booking, onUpdate, groupId, veh
               {checkInProgress && checkInProgress.status === 'exception' && (
                 <Alert
                   message="Đã hết thời gian nhận xe"
-                  description="Xin lỗi anh đã đi trễ quá 15 phút, anh vui lòng đợi hệ thống hủy chuyến và đặt lịch khác."
+                  description="Xin lỗi anh đã đi trễ quá 15 phút, anh vui lòng đợi hệ thống hủy chuyến và đặt lịch khác. Booking sẽ tự động chuyển sang trạng thái Cancelled sau 5 phút."
                   type="error"
                   showIcon
                   style={{ marginTop: 16 }}
