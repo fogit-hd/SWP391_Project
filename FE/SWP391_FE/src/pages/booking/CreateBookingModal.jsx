@@ -131,7 +131,7 @@ const CreateBookingModal = ({ visible, onCancel, onSuccess, groupId, vehicleId, 
 
   const validateBookingTime = (dates) => {
     if (!dates || !dates[0] || !dates[1]) {
-      return { valid: false, error: "Please select start and end time" };
+      return { valid: false, error: "Vui lòng chọn thời gian bắt đầu và kết thúc" };
     }
 
     const now = dayjs();
@@ -175,7 +175,7 @@ const CreateBookingModal = ({ visible, onCancel, onSuccess, groupId, vehicleId, 
     // Check basic duration validity
     const duration = end.diff(start, 'hour', true);
     if (duration <= 0) {
-      return { valid: false, error: "End time must be after start time" };
+      return { valid: false, error: "Thời gian kết thúc phải sau thời gian bắt đầu" };
     }
 
     // Check for overlapping bookings and minimum gap (30 phút)
@@ -256,7 +256,7 @@ const CreateBookingModal = ({ visible, onCancel, onSuccess, groupId, vehicleId, 
         if (totalUsedCurrentWeek > quota.hoursLimit) {
           return {
             valid: false,
-            error: `Cannot book for current week. You need ${hoursCurrentWeek.toFixed(1)} hours but only ${quota.remainingHours.toFixed(1)} hours remaining (Used: ${quota.hoursUsed.toFixed(1)}h, Debt: ${quota.hoursDebt.toFixed(1)}h, Limit: ${quota.hoursLimit}h)`
+            error: `Không thể đặt cho tuần này. Bạn cần ${hoursCurrentWeek.toFixed(1)} giờ nhưng chỉ còn ${quota.remainingHours.toFixed(1)} giờ (Đã dùng: ${quota.hoursUsed.toFixed(1)}h, Nợ: ${quota.hoursDebt.toFixed(1)}h, Giới hạn: ${quota.hoursLimit}h)`
           };
         }
       }
@@ -268,7 +268,7 @@ const CreateBookingModal = ({ visible, onCancel, onSuccess, groupId, vehicleId, 
         if (totalUsedNextWeek > quota.hoursLimit) {
           return {
             valid: false,
-            error: `Cannot book for next week. You need ${hoursNextWeek.toFixed(1)} hours but only ${quota.remainingHoursNextWeek.toFixed(1)} hours remaining (Excess debt: ${excessDebt.toFixed(1)}h, Advance: ${quota.hoursAdvance.toFixed(1)}h, Limit: ${quota.hoursLimit}h)`
+            error: `Không thể đặt cho tuần sau. Bạn cần ${hoursNextWeek.toFixed(1)} giờ nhưng chỉ còn ${quota.remainingHoursNextWeek.toFixed(1)} giờ (Nợ dư: ${excessDebt.toFixed(1)}h, Trước: ${quota.hoursAdvance.toFixed(1)}h, Giới hạn: ${quota.hoursLimit}h)`
           };
         }
       }
@@ -282,7 +282,7 @@ const CreateBookingModal = ({ visible, onCancel, onSuccess, groupId, vehicleId, 
         if (!currentWeekCheck || !nextWeekCheck) {
           return {
             valid: false,
-            error: `Cannot book across weeks. Current week needs ${hoursCurrentWeek.toFixed(1)}h (${quota.remainingHours.toFixed(1)}h available), next week needs ${hoursNextWeek.toFixed(1)}h (${quota.remainingHoursNextWeek.toFixed(1)}h available)`
+            error: `Không thể đặt trải dài qua 2 tuần. Tuần này cần ${hoursCurrentWeek.toFixed(1)}h (còn ${quota.remainingHours.toFixed(1)}h), tuần sau cần ${hoursNextWeek.toFixed(1)}h (còn ${quota.remainingHoursNextWeek.toFixed(1)}h)`
           };
         }
       }
