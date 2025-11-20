@@ -53,7 +53,7 @@ const ManageService = () => {
     setLoading(true);
     try {
       const response = await api.get("/service-centers");
-      toast.success("Service centers loaded successfully");
+      toast.success("Tải danh sách trung tâm dịch vụ thành công");
       console.log("Service Centers Response:", response.data);
 
       if (response.data && response.data.data) {
@@ -65,7 +65,7 @@ const ManageService = () => {
       }
     } catch (error) {
       console.error("Error fetching service centers:", error);
-      toast.error("Failed to load service centers");
+      toast.error("Không thể tải danh sách trung tâm dịch vụ");
     } finally {
       setLoading(false);
     }
