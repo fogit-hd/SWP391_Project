@@ -35,6 +35,9 @@ export default function ManageBooking() {
   // track per-booking transient states so UI can hide/show buttons correctly
   const [checkingMap, setCheckingMap] = useState({}); // bookingId -> boolean (in-progress)
   const [checkedInMap, setCheckedInMap] = useState({}); // bookingId -> boolean (checked-in by staff)
+  // vehicle detail info (image, specs)
+  const [vehicleDetails, setVehicleDetails] = useState(null);
+  const [loadingVehicleDetails, setLoadingVehicleDetails] = useState(false);
 
   useEffect(() => {
     fetchGroups();
@@ -118,6 +121,30 @@ export default function ManageBooking() {
       setLoadingTripEvents(false);
     }
   };
+
+  const fetchVehicleDetails = async (id) => {
+    if (!id) return;
+    setLoadingVehicleDetails(true);
+    try {
+      const r = await api.get(`/Vehicle/get-vehicle-by-id`, { params: { id } });
+      // API returns object directly (not wrapped) per sample
+      const data = r.data?.data || r.data; // support both shapes
+      setVehicleDetails(data || null);
+    } catch (err) {
+      console.error(err);
+      setVehicleDetails(null);
+    } finally {
+      setLoadingVehicleDetails(false);
+    }
+  };
+
+  useEffect(() => {
+    if (selectedVehicle?.id) {
+      fetchVehicleDetails(selectedVehicle.id);
+    } else {
+      setVehicleDetails(null);
+    }
+  }, [selectedVehicle]);
 
   const handleFileChangeForBooking = (bookingId, file) => {
     setFileMap((m) => ({ ...m, [bookingId]: file }));
@@ -297,6 +324,44 @@ export default function ManageBooking() {
         </div>
 
         <div>
+          {selectedVehicle && (
+            <div style={{
+              display: 'flex',
+              gap: 16,
+              marginBottom: 16,
+              alignItems: 'center',
+              background: '#ffffff',
+              border: '1px solid rgba(0,0,0,0.05)',
+              borderRadius: 12,
+              padding: 12
+            }}>
+              <div style={{ width: 96, height: 72, borderRadius: 8, overflow: 'hidden', background: '#f0f2f5', flexShrink: 0 }}>
+                {loadingVehicleDetails ? (
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', fontSize: 12 }}>Loading...</div>
+                ) : vehicleDetails?.vehicleImageUrl ? (
+                  <img src={vehicleDetails.vehicleImageUrl} alt="vehicle" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                ) : (
+                  <div style={{ padding: 8, fontSize: 12, color: '#999' }}>No image</div>
+                )}
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontWeight: 600, marginBottom: 4 }}>
+                  {vehicleDetails?.plateNumber || selectedVehicle.plateNumber || selectedVehicle.licensePlate || 'Xe'}
+                </div>
+                <div style={{ fontSize: 12, color: '#555' }}>
+                  {(vehicleDetails?.make || selectedVehicle.make || '')} {vehicleDetails?.model || selectedVehicle.model || ''} {vehicleDetails?.modelYear ? `• ${vehicleDetails.modelYear}` : ''}
+                </div>
+                {vehicleDetails?.color && (
+                  <div style={{ fontSize: 12, color: '#555' }}>Màu: {vehicleDetails.color}</div>
+                )}
+                {vehicleDetails?.batteryCapacityKwh && (
+                  <div style={{ fontSize: 12, color: '#555' }}>
+                    Pin: {vehicleDetails.batteryCapacityKwh} kWh {vehicleDetails?.rangeKm ? `• Tầm: ${vehicleDetails.rangeKm} km` : ''}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
           <h4>Bookings for selected group & vehicle</h4>
           {loadingBookings ? (
             <Spin />
@@ -326,7 +391,10 @@ export default function ManageBooking() {
                       <div className="list-item-main" style={{ flex: 1 }}>
                         <div className="meta-row" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                           <div style={{ minWidth: 0 }}>
-                            <div style={{ fontWeight: 700, marginBottom: 8 }}>{b.id}</div>
+                            <div style={{ fontWeight: 700, marginBottom: 4 }}>{b.userName || 'Người đặt: (không rõ)'}</div>
+                            {b.userName && (
+                              <div style={{ fontSize: 12, color: '#94a3b8', marginBottom: 4 }}>Mã đặt: {b.id?.slice(0,8)}...</div>
+                            )}
                             <div className="time-panel">
                               <div className="time-col">
                                 <div className="time-label">Bắt đầu</div>
