@@ -4,7 +4,6 @@ import {
   Card,
   Table,
   Space,
-  Popconfirm,
   message,
   Spin,
   Alert,
@@ -20,9 +19,6 @@ import {
   Tooltip,
 } from "antd";
 import {
-  EditOutlined,
-  DeleteOutlined,
-  PlusOutlined,
   ReloadOutlined,
   UserOutlined,
   TeamOutlined,
@@ -58,7 +54,8 @@ const ManageAccount = () => {
 
   // Modal states
   const [isStaffModalVisible, setIsStaffModalVisible] = useState(false);
-  const [isTechnicianModalVisible, setIsTechnicianModalVisible] = useState(false);
+  const [isTechnicianModalVisible, setIsTechnicianModalVisible] =
+    useState(false);
   const [staffForm] = Form.useForm();
   const [technicianForm] = Form.useForm();
   const [staffUploadedFiles, setStaffUploadedFiles] = useState([]);
@@ -97,9 +94,13 @@ const ManageAccount = () => {
       const frontFile = files[0].originFileObj || files[0];
       frontFormData.append("file", frontFile);
 
-      const frontResponse = await api.post("/auth/identity-card", frontFormData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
+      const frontResponse = await api.post(
+        "/auth/identity-card",
+        frontFormData,
+        {
+          headers: { "Content-Type": "multipart/form-data" },
+        }
+      );
 
       // Scan back side
       const backFormData = new FormData();
@@ -147,7 +148,9 @@ const ManageAccount = () => {
 
       if (missingFields.length > 0) {
         toast.warning(
-          `CCCD đã được quét nhưng thiếu: ${missingFields.join(", ")}. Vui lòng kiểm tra lại thông tin.`
+          `CCCD đã được quét nhưng thiếu: ${missingFields.join(
+            ", "
+          )}. Vui lòng kiểm tra lại thông tin.`
         );
       } else {
         toast.success("Quét CCCD thành công! Đã trích xuất tất cả thông tin.");
@@ -179,22 +182,35 @@ const ManageAccount = () => {
       phone: "",
       password: "",
       confirmPassword: "",
-      dateOfBirth: scannedData.dateOfBirth ? formatDate(scannedData.dateOfBirth) : "",
-      gender: scannedData.gender === "true" || scannedData.gender === "Male" || scannedData.gender === "Nam" || scannedData.gender === true
-        ? "male"
-        : scannedData.gender === "false" || scannedData.gender === "Female" || scannedData.gender === "Nữ" || scannedData.gender === false
-        ? "female"
-        : "male",
+      dateOfBirth: scannedData.dateOfBirth
+        ? formatDate(scannedData.dateOfBirth)
+        : "",
+      gender:
+        scannedData.gender === "true" ||
+        scannedData.gender === "Male" ||
+        scannedData.gender === "Nam" ||
+        scannedData.gender === true
+          ? "male"
+          : scannedData.gender === "false" ||
+            scannedData.gender === "Female" ||
+            scannedData.gender === "Nữ" ||
+            scannedData.gender === false
+          ? "female"
+          : "male",
       idNumber: scannedData.idNumber || "",
       issueDate: scannedData.issueDate ? formatDate(scannedData.issueDate) : "",
-      expiryDate: scannedData.expiryDate ? formatDate(scannedData.expiryDate) : "",
+      expiryDate: scannedData.expiryDate
+        ? formatDate(scannedData.expiryDate)
+        : "",
       placeOfIssue: scannedData.placeOfIssue || "",
       placeOfBirth: scannedData.placeOfBirth || "",
       address: scannedData.address || "",
     };
 
     form.setFieldsValue(formValues);
-    toast.info("Form đã được điền tự động từ CCCD. Bạn vẫn có thể chỉnh sửa các trường.");
+    toast.info(
+      "Form đã được điền tự động từ CCCD. Bạn vẫn có thể chỉnh sửa các trường."
+    );
   };
 
   const columns = [
@@ -255,37 +271,6 @@ const ManageAccount = () => {
       sorter: false,
       render: (date) => (date ? formatDate(date) : "N/A"),
     },
-    {
-      title: "Action",
-      key: "action",
-      render: (_, record) => (
-        <Space size="middle">
-          <Button
-            type="primary"
-            icon={<EditOutlined />}
-            size="small"
-            onClick={() => handleEdit(record)}
-          >
-            Edit
-          </Button>
-          <Popconfirm
-            title="Are you sure to delete this user?"
-            onConfirm={() => handleDelete(record.id)}
-            okText="Yes"
-            cancelText="No"
-          >
-            <Button
-              type="primary"
-              danger
-              icon={<DeleteOutlined />}
-              size="small"
-            >
-              Delete
-            </Button>
-          </Popconfirm>
-        </Space>
-      ),
-    },
   ];
 
   // API Functions
@@ -333,16 +318,6 @@ const ManageAccount = () => {
     }
   };
 
-  const deleteUser = async (userId) => {
-    try {
-      await api.delete(`/users/${userId}`);
-      message.success("User deleted successfully");
-      fetchUsers(pagination.current, pagination.pageSize);
-    } catch (err) {
-      message.error(`Failed to delete user: ${err.message}`);
-    }
-  };
-
   // Create Staff Account
   const handleCreateStaff = async (values) => {
     if (staffUploadedFiles.length < 2) {
@@ -355,25 +330,55 @@ const ManageAccount = () => {
       const formData = new FormData();
 
       // Add form fields
-      formData.append("fullName", values.fullName || staffScannedData?.fullName || "");
+      formData.append(
+        "fullName",
+        values.fullName || staffScannedData?.fullName || ""
+      );
       formData.append("email", values.email);
       formData.append("password", values.password);
       formData.append("phone", values.phone);
-      formData.append("dateOfBirth", values.dateOfBirth || staffScannedData?.dateOfBirth || "");
-      
+      formData.append(
+        "dateOfBirth",
+        values.dateOfBirth || staffScannedData?.dateOfBirth || ""
+      );
+
       const genderValue = values.gender || staffScannedData?.gender || "";
-      if (genderValue === "male" || genderValue === true || genderValue === "true" || genderValue === "Male" || genderValue === "Nam") {
+      if (
+        genderValue === "male" ||
+        genderValue === true ||
+        genderValue === "true" ||
+        genderValue === "Male" ||
+        genderValue === "Nam"
+      ) {
         formData.append("gender", "true");
       } else {
         formData.append("gender", "false");
       }
 
-      formData.append("idNumber", values.idNumber || staffScannedData?.idNumber || "");
-      formData.append("issueDate", values.issueDate || staffScannedData?.issueDate || "");
-      formData.append("expiryDate", values.expiryDate || staffScannedData?.expiryDate || "");
-      formData.append("placeOfIssue", values.placeOfIssue || staffScannedData?.placeOfIssue || "");
-      formData.append("placeOfBirth", values.placeOfBirth || staffScannedData?.placeOfBirth || "");
-      formData.append("address", values.address || staffScannedData?.address || "");
+      formData.append(
+        "idNumber",
+        values.idNumber || staffScannedData?.idNumber || ""
+      );
+      formData.append(
+        "issueDate",
+        values.issueDate || staffScannedData?.issueDate || ""
+      );
+      formData.append(
+        "expiryDate",
+        values.expiryDate || staffScannedData?.expiryDate || ""
+      );
+      formData.append(
+        "placeOfIssue",
+        values.placeOfIssue || staffScannedData?.placeOfIssue || ""
+      );
+      formData.append(
+        "placeOfBirth",
+        values.placeOfBirth || staffScannedData?.placeOfBirth || ""
+      );
+      formData.append(
+        "address",
+        values.address || staffScannedData?.address || ""
+      );
       formData.append("roleId", "2"); // Staff roleId = 2
 
       // Add uploaded files
@@ -401,7 +406,8 @@ const ManageAccount = () => {
     } catch (err) {
       message.destroy();
       console.error("Create staff error:", err);
-      const errorMessage = err.response?.data?.message || "Không thể tạo tài khoản nhân viên.";
+      const errorMessage =
+        err.response?.data?.message || "Không thể tạo tài khoản nhân viên.";
       toast.error(errorMessage);
     } finally {
       setIsStaffSubmitting(false);
@@ -420,25 +426,55 @@ const ManageAccount = () => {
       const formData = new FormData();
 
       // Add form fields
-      formData.append("fullName", values.fullName || technicianScannedData?.fullName || "");
+      formData.append(
+        "fullName",
+        values.fullName || technicianScannedData?.fullName || ""
+      );
       formData.append("email", values.email);
       formData.append("password", values.password);
       formData.append("phone", values.phone);
-      formData.append("dateOfBirth", values.dateOfBirth || technicianScannedData?.dateOfBirth || "");
-      
+      formData.append(
+        "dateOfBirth",
+        values.dateOfBirth || technicianScannedData?.dateOfBirth || ""
+      );
+
       const genderValue = values.gender || technicianScannedData?.gender || "";
-      if (genderValue === "male" || genderValue === true || genderValue === "true" || genderValue === "Male" || genderValue === "Nam") {
+      if (
+        genderValue === "male" ||
+        genderValue === true ||
+        genderValue === "true" ||
+        genderValue === "Male" ||
+        genderValue === "Nam"
+      ) {
         formData.append("gender", "true");
       } else {
         formData.append("gender", "false");
       }
 
-      formData.append("idNumber", values.idNumber || technicianScannedData?.idNumber || "");
-      formData.append("issueDate", values.issueDate || technicianScannedData?.issueDate || "");
-      formData.append("expiryDate", values.expiryDate || technicianScannedData?.expiryDate || "");
-      formData.append("placeOfIssue", values.placeOfIssue || technicianScannedData?.placeOfIssue || "");
-      formData.append("placeOfBirth", values.placeOfBirth || technicianScannedData?.placeOfBirth || "");
-      formData.append("address", values.address || technicianScannedData?.address || "");
+      formData.append(
+        "idNumber",
+        values.idNumber || technicianScannedData?.idNumber || ""
+      );
+      formData.append(
+        "issueDate",
+        values.issueDate || technicianScannedData?.issueDate || ""
+      );
+      formData.append(
+        "expiryDate",
+        values.expiryDate || technicianScannedData?.expiryDate || ""
+      );
+      formData.append(
+        "placeOfIssue",
+        values.placeOfIssue || technicianScannedData?.placeOfIssue || ""
+      );
+      formData.append(
+        "placeOfBirth",
+        values.placeOfBirth || technicianScannedData?.placeOfBirth || ""
+      );
+      formData.append(
+        "address",
+        values.address || technicianScannedData?.address || ""
+      );
       formData.append("roleId", "4"); // Technician roleId = 4
 
       // Add uploaded files
@@ -466,21 +502,12 @@ const ManageAccount = () => {
     } catch (err) {
       message.destroy();
       console.error("Create technician error:", err);
-      const errorMessage = err.response?.data?.message || "Không thể tạo tài khoản kỹ thuật viên.";
+      const errorMessage =
+        err.response?.data?.message || "Không thể tạo tài khoản kỹ thuật viên.";
       toast.error(errorMessage);
     } finally {
       setIsTechnicianSubmitting(false);
     }
-  };
-
-  // Event Handlers
-  const handleEdit = (record) => {
-    message.info(`Edit user: ${record.fullName}`);
-    // TODO: Implement edit modal/form
-  };
-
-  const handleDelete = (id) => {
-    deleteUser(id);
   };
 
   const handleRefresh = () => {
@@ -549,17 +576,17 @@ const ManageAccount = () => {
         >
           <Row gutter={16}>
             <Col span={24}>
-              <Form.Item
-                label="CCCD Verification"
-                required
-              >
+              <Form.Item label="CCCD Verification" required>
                 <Upload
                   accept=".png,.jpg,.jpeg"
                   multiple
                   maxCount={2}
                   beforeUpload={(file) => {
                     const isPng = file.type === "image/png";
-                    const isJpeg = file.type === "image/jpeg" || file.type === "image/jpg" || /\.jpe?g$/i.test(file.name);
+                    const isJpeg =
+                      file.type === "image/jpeg" ||
+                      file.type === "image/jpg" ||
+                      /\.jpe?g$/i.test(file.name);
                     if (!isPng && !isJpeg) {
                       message.error(`${file.name} must be PNG or JPG/JPEG.`);
                       return Upload.LIST_IGNORE;
@@ -593,7 +620,10 @@ const ManageAccount = () => {
                       const t = f.type || "";
                       const name = f.name || "";
                       const isP = t === "image/png";
-                      const isJ = t === "image/jpeg" || t === "image/jpg" || /\.jpe?g$/i.test(name);
+                      const isJ =
+                        t === "image/jpeg" ||
+                        t === "image/jpg" ||
+                        /\.jpe?g$/i.test(name);
                       return isP || isJ;
                     });
                     if (list.length > 2) list = list.slice(list.length - 2);
@@ -612,7 +642,9 @@ const ManageAccount = () => {
                       icon={<IdcardOutlined />}
                       loading={isScanning}
                       onClick={async () => {
-                        const files = uploadedFiles.map((file) => file.originFileObj || file);
+                        const files = uploadedFiles.map(
+                          (file) => file.originFileObj || file
+                        );
                         const result = await scanCCCD(
                           files,
                           setScannedData,
@@ -662,7 +694,10 @@ const ManageAccount = () => {
                 label="Phone"
                 rules={[
                   { required: true, message: "Phone is required" },
-                  { pattern: /^[0-9]+$/, message: "Phone must contain only numbers" },
+                  {
+                    pattern: /^[0-9]+$/,
+                    message: "Phone must contain only numbers",
+                  },
                   { min: 10, message: "Phone must be at least 10 digits" },
                 ]}
               >
@@ -673,7 +708,9 @@ const ManageAccount = () => {
               <Form.Item
                 name="dateOfBirth"
                 label="Date of Birth"
-                rules={[{ required: true, message: "Date of birth is required" }]}
+                rules={[
+                  { required: true, message: "Date of birth is required" },
+                ]}
               >
                 <Input placeholder="DD/MM/YYYY" />
               </Form.Item>
@@ -729,7 +766,9 @@ const ManageAccount = () => {
                       if (!value || getFieldValue("password") === value) {
                         return Promise.resolve();
                       }
-                      return Promise.reject(new Error("Passwords do not match"));
+                      return Promise.reject(
+                        new Error("Passwords do not match")
+                      );
                     },
                   }),
                 ]}
