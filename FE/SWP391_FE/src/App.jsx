@@ -149,11 +149,7 @@ function App() {
 
     {
       path: "/",
-      element: (
-        <ProtectedRoute roleId={3}>
-          <Homepage />
-        </ProtectedRoute>
-      ),
+      element: <Homepage />,
     },
     {
       path: "/login",

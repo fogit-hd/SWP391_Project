@@ -61,9 +61,9 @@ function ProtectedRoute({ roleId, children }) {
     );
   }
 
-  // Get dashboard path for current user role
+  // Get dashboard path and role name for current user role (safe with null check)
   const dashboardPath = getDashboardPath(currentRoleId);
-  const roleName = getRoleName(currentRoleId);
+  const roleName = currentRoleId ? getRoleName(currentRoleId) : "Unknown";
 
   // Handle array of roleIds (multiple roles allowed)
   if (Array.isArray(roleId)) {
