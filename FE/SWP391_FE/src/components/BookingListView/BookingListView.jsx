@@ -68,14 +68,18 @@ const BookingListView = ({ bookings = [], onBookingClick, loading = false }) => 
   const calculateDuration = (startTime, endTime) => {
     const start = dayjs(startTime);
     const end = dayjs(endTime);
-    const hours = end.diff(start, 'hour');
-    const days = Math.floor(hours / 24);
-    const remainingHours = hours % 24;
+    const totalMinutes = end.diff(start, 'minute');
+    const days = Math.floor(totalMinutes / (24 * 60));
+    const hours = Math.floor((totalMinutes % (24 * 60)) / 60);
+    const minutes = totalMinutes % 60;
 
     if (days > 0) {
-      return `${days}d ${remainingHours}h`;
+      return `${days}d ${hours}h ${minutes}m`;
     }
-    return `${hours}h`;
+    if (hours > 0) {
+      return `${hours}h ${minutes}m`;
+    }
+    return `${minutes}m`;
   };
 
   const getStatusIcon = (status) => {
