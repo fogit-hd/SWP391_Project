@@ -14,6 +14,7 @@ import api from "../../config/axios";
 import TripScreen from "./TripScreen";
 import { BOOKING_STATUS_COLORS, BOOKING_STATUS_LABELS, GRACE_WINDOWS, BOOKING_CONSTRAINTS } from "./booking.types";
 import { useAuth } from "../../components/hooks/useAuth";
+import { getUserIdFromToken } from "../../components/utils/jwt";
 // All role and user checks rely on useAuth (which is backed by JWT utils)
 
 const BookingDetailModal = ({ visible, onCancel, booking, onUpdate, groupId, vehicleId, existingBookings = [] }) => {
@@ -30,8 +31,28 @@ const BookingDetailModal = ({ visible, onCancel, booking, onUpdate, groupId, veh
   const { RangePicker } = DatePicker;
 
   const getCurrentUserId = () => {
-    if (!user) return null;
-    return user.id || null;
+    try {
+      const userDataStr = localStorage.getItem('userData');
+      if (!userDataStr) {
+        console.log('[getCurrentUserId] No userData in localStorage');
+        return null;
+      }
+      
+      const userData = JSON.parse(userDataStr);
+      const token = userData?.data?.accessToken;
+      
+      if (!token) {
+        console.log('[getCurrentUserId] No accessToken found in userData');
+        return null;
+      }
+      
+      const userId = getUserIdFromToken(token);
+      console.log('[getCurrentUserId] Extracted userId from JWT:', userId);
+      return userId;
+    } catch (error) {
+      console.error('[getCurrentUserId] Error extracting user ID:', error);
+      return null;
+    }
   };
 
   const isMyBooking = () => {

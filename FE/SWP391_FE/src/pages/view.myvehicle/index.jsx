@@ -165,15 +165,15 @@ const MyVehicle = () => {
       key: "status",
       width: 110,
       filters: [
-        { text: "Hoạt động", value: "ACTIVE" },
-        { text: "Không hoạt động", value: "INACTIVE" },
+        { text: "Đã kích hoạt", value: "ACTIVE" },
+        { text: "Chưa kích hoạt", value: "INACTIVE" },
       ],
       onFilter: (value, record) => record.status === value,
       render: (status) => {
         if (status === "ACTIVE") {
-          return <Tag color="green">Hoạt động</Tag>;
+          return <Tag color="green">Đã kích hoạt</Tag>;
         } else if (status === "INACTIVE") {
-          return <Tag color="red">Không hoạt động</Tag>;
+          return <Tag color="red">Chưa kích hoạt</Tag>;
         }
         return <Tag color="default">{status}</Tag>;
       },
@@ -234,11 +234,11 @@ const MyVehicle = () => {
             icon: <EditOutlined />,
             label: "Chỉnh sửa",
           },
-          {
-            key: "copy",
-            icon: <CopyOutlined />,
-            label: "Sao chép ID",
-          },
+          // {
+          //   key: "copy",
+          //   icon: <CopyOutlined />,
+          //   label: "Sao chép ID",
+          // },
         ];
 
         return (

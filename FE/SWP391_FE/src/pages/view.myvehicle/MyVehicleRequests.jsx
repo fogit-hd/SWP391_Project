@@ -777,7 +777,6 @@ const MyVehicleRequests = () => {
           <Form.Item
             name="color"
             label="Màu sắc"
-            rules={[{ required: true, message: "Vui lòng nhập màu sắc" }]}
           >
             <Input placeholder="VD: Trắng, Đen, Xanh..." />
           </Form.Item>
@@ -786,30 +785,28 @@ const MyVehicleRequests = () => {
             name="batteryCapacityKwh"
             label="Dung lượng pin (kWh)"
             rules={[
-              { required: true, message: "Vui lòng nhập dung lượng pin" },
               { 
                 type: 'number',
-                min: 0.1,
-                message: "Dung lượng pin phải lớn hơn 0"
+                min: 0,
+                message: "Dung lượng pin không được là số âm"
               }
             ]}
           >
-            <InputNumber min={0.1} step={0.1} style={{ width: "100%" }} placeholder="VD: 50.5" />
+            <InputNumber min={0} step={0.1} style={{ width: "100%" }} placeholder="VD: 50.5" />
           </Form.Item>
 
           <Form.Item
             name="rangeKm"
             label="Quãng đường (km)"
             rules={[
-              { required: true, message: "Vui lòng nhập quãng đường" },
               { 
                 type: 'number',
-                min: 1,
-                message: "Quãng đường phải lớn hơn 0"
+                min: 0,
+                message: "Quãng đường không được là số âm"
               }
             ]}
           >
-            <InputNumber min={1} style={{ width: "100%" }} placeholder="VD: 300" />
+            <InputNumber min={0} style={{ width: "100%" }} placeholder="VD: 300" />
           </Form.Item>
 
           <Form.Item
@@ -961,7 +958,6 @@ const MyVehicleRequests = () => {
             <Form.Item
               name="color"
               label="Màu sắc"
-              rules={[{ required: true, message: "Vui lòng nhập màu sắc" }]}
             >
               <Input placeholder="VD: Trắng, Đen, Xanh..." />
             </Form.Item>
@@ -970,7 +966,11 @@ const MyVehicleRequests = () => {
               name="batteryCapacityKwh"
               label="Dung lượng pin (kWh)"
               rules={[
-                { required: true, message: "Vui lòng nhập dung lượng pin" },
+                { 
+                  type: 'number',
+                  min: 0,
+                  message: "Dung lượng pin không được là số âm"
+                }
               ]}
             >
               <InputNumber min={0} style={{ width: "100%" }} />
@@ -979,7 +979,13 @@ const MyVehicleRequests = () => {
             <Form.Item
               name="rangeKm"
               label="Quãng đường (km)"
-              rules={[{ required: true, message: "Vui lòng nhập quãng đường" }]}
+              rules={[
+                { 
+                  type: 'number',
+                  min: 0,
+                  message: "Quãng đường không được là số âm"
+                }
+              ]}
             >
               <InputNumber min={0} style={{ width: "100%" }} />
             </Form.Item>

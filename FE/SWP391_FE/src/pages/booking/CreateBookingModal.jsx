@@ -726,7 +726,11 @@ const CreateBookingModal = ({ visible, onCancel, onSuccess, groupId, vehicleId, 
 
         {estimatedDuration !== null && (
           <Alert
-            message={`Thời lượng: ${estimatedDuration.toFixed(1)} giờ`}
+            message={
+              estimatedDuration < 1 
+                ? `Thời lượng: ${Math.round(estimatedDuration * 60)} phút` 
+                : `Thời lượng: ${estimatedDuration.toFixed(1)} giờ`
+            }
             type="success"
             showIcon
             icon={<ClockCircleOutlined />}
