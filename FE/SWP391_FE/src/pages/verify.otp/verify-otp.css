@@ -254,6 +254,31 @@
   transform: translateX(-4px);
 }
 
+.verify-login-link {
+  text-align: center;
+  margin-top: 16px;
+  font-size: 14px;
+  color: #595959;
+  position: relative;
+  z-index: 10;
+}
+
+.verify-login-link a {
+  color: #1890ff;
+  text-decoration: none;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  position: relative;
+  z-index: 11;
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+.verify-login-link a:hover {
+  color: #40a9ff;
+  text-decoration: underline;
+}
+
 .verify-otp-info-box {
   background: #f0f5ff;
   border-left: 4px solid #1890ff;

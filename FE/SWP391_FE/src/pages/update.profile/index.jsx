@@ -186,7 +186,7 @@ const UpdateProfile = () => {
         emailFromProfile;
 
       if (!finalEmail || finalEmail.trim() === "" || finalEmail === "N/A") {
-        message.error("Email not found. Please enter your email address first");
+        message.error("Không tìm thấy email. Vui lòng nhập địa chỉ email trước");
         setIsLoading(false);
         return;
       }
@@ -208,14 +208,14 @@ const UpdateProfile = () => {
       // Validate OTP
       const otpCode = values["verification-code"];
       if (!otpCode || otpCode.trim() === "") {
-        message.error("Verification code (OTP) is required");
+        message.error("Mã xác thực (OTP) là bắt buộc");
         setIsLoading(false);
         return;
       }
 
       // Validate that we have a phone number to send
       if (!phoneNumber || phoneNumber.trim() === "" || phoneNumber === "N/A") {
-        message.error("Phone number is required. Please enter a phone number.");
+        message.error("Số điện thoại là bắt buộc. Vui lòng nhập số điện thoại.");
         setIsLoading(false);
         return;
       }
@@ -232,13 +232,13 @@ const UpdateProfile = () => {
 
       // Additional validation
       if (!finalEmailToSend || finalEmailToSend.trim() === "") {
-        message.error("Email is required");
+        message.error("Email là bắt buộc");
         setIsLoading(false);
         return;
       }
 
       if (!finalPhoneToSend || finalPhoneToSend.trim() === "") {
-        message.error("Phone number is required");
+        message.error("Số điện thoại là bắt buộc");
         setIsLoading(false);
         return;
       }
@@ -304,7 +304,7 @@ const UpdateProfile = () => {
 
       console.log("API URL:", apiUrl);
 
-      message.loading("Changing profile...", 0);
+      message.loading("Đang cập nhật hồ sơ...", 0);
 
       const response = await api.put(apiUrl, formData, {
         headers: { "Content-Type": "multipart/form-data" },
@@ -314,7 +314,7 @@ const UpdateProfile = () => {
 
       // Check if response is successful
       if (response.status === 200 || response.status === 201) {
-        toast.success("Update profile successfully!");
+        toast.success("Cập nhật hồ sơ thành công!");
         console.log("Profile updated successfully:", response.data);
 
         // Fetch updated profile data from API
@@ -345,7 +345,7 @@ const UpdateProfile = () => {
               // Show success message with option to go back
               message.success({
                 content:
-                  "Profile updated successfully! You can now go back to see your updated information.",
+                  "Cập nhật hồ sơ thành công! Bạn có thể quay lại để xem thông tin đã cập nhật.",
                 duration: 5,
               });
             } else {
@@ -370,7 +370,7 @@ const UpdateProfile = () => {
 
           message.success({
             content:
-              "Profile updated successfully! You can now go back to see your updated information.",
+              "Cập nhật hồ sơ thành công! Bạn có thể quay lại để xem thông tin đã cập nhật.",
             duration: 5,
           });
         }
@@ -385,14 +385,14 @@ const UpdateProfile = () => {
       console.error("Error data:", error.response?.data);
       console.error("Error status:", error.response?.status);
 
-      let errorMessage = "Update profile failed. Please try again.";
+      let errorMessage = "Cập nhật hồ sơ thất bại. Vui lòng thử lại.";
 
       if (error.response?.status === 400) {
         errorMessage =
           error.response.data?.message ||
-          "Invalid Verification Code. Please check and try again.";
+          "Mã xác thực không hợp lệ. Vui lòng kiểm tra và thử lại.";
       } else if (error.response?.status === 404) {
-        errorMessage = "Email not found. Please double check again.";
+        errorMessage = "Không tìm thấy email. Vui lòng kiểm tra lại.";
       } else {
         errorMessage = error.response?.data?.message || errorMessage;
       }
@@ -422,13 +422,13 @@ const UpdateProfile = () => {
   // Function to scan CCCD using AI
   const scanCCCD = async (files) => {
     if (files.length < 2) {
-      message.error("Please upload both front and back images of your CCCD.");
+      message.error("Vui lòng tải lên cả mặt trước và mặt sau của CCCD.");
       return;
     }
 
     setIsScanning(true);
     try {
-      message.loading("Scanning CCCD...", 0);
+      message.loading("Đang quét CCCD...", 0);
 
       // Try to scan front side first
       const frontFormData = new FormData();
@@ -498,24 +498,24 @@ const UpdateProfile = () => {
       // Validate that we got some essential data from API
       if (Object.keys(combinedData).length === 0) {
         throw new Error(
-          "Unable to extract information from CCCD. Please ensure images are clear and readable."
+          "Không thể trích xuất thông tin từ CCCD. Vui lòng đảm bảo hình ảnh rõ ràng và dễ đọc."
         );
       }
 
       // Validate essential fields
       const missingFields = [];
-      if (!combinedData.fullName) missingFields.push("Full Name");
-      if (!combinedData.idNumber) missingFields.push("ID Number");
-      if (!combinedData.dateOfBirth) missingFields.push("Date of Birth");
+      if (!combinedData.fullName) missingFields.push("Họ và tên");
+      if (!combinedData.idNumber) missingFields.push("Số CMND/CCCD");
+      if (!combinedData.dateOfBirth) missingFields.push("Ngày sinh");
 
       if (missingFields.length > 0) {
         toast.warning(
-          `CCCD scanned but missing: ${missingFields.join(
+          `CCCD đã được quét nhưng thiếu: ${missingFields.join(
             ", "
-          )}. Please verify the information.`
+          )}. Vui lòng kiểm tra lại thông tin.`
         );
       } else {
-        toast.success("CCCD scanned successfully! All information extracted.");
+        toast.success("Quét CCCD thành công! Đã trích xuất tất cả thông tin.");
       }
 
       setScannedData(combinedData);
@@ -528,10 +528,10 @@ const UpdateProfile = () => {
         error.response?.data?.message || error.message
       );
 
-      let errorMessage = "CCCD scan failed. Please try again.";
+      let errorMessage = "Quét CCCD thất bại. Vui lòng thử lại.";
       if (error.response?.status === 400) {
         errorMessage =
-          "Unable to scan CCCD. Please ensure images are clear and show complete CCCD.";
+          "Không thể quét CCCD. Vui lòng đảm bảo hình ảnh rõ ràng và hiển thị đầy đủ CCCD.";
       }
 
       toast.error(errorMessage);
@@ -572,11 +572,11 @@ const UpdateProfile = () => {
 
     if (!currentEmail || currentEmail.trim() === "" || currentEmail === "N/A") {
       console.error("No valid email found!");
-      message.error("Email not found. Please enter your email address first");
+      message.error("Không tìm thấy email. Vui lòng nhập địa chỉ email trước");
       return;
     }
     try {
-      message.loading("Sending Verification Code...", 0);
+      message.loading("Đang gửi mã xác thực...", 0);
 
       // API expects email as query parameter, not in request body
       const apiUrl = `/settings/request-profile-update-otp?email=${encodeURIComponent(
@@ -592,7 +592,7 @@ const UpdateProfile = () => {
       );
 
       message.destroy();
-      toast.success("Activation Code has been resent to your email!");
+      toast.success("Mã kích hoạt đã được gửi lại đến email của bạn!");
 
       // Bắt đầu countdown 60s
       startCountdown();
@@ -603,7 +603,7 @@ const UpdateProfile = () => {
         error.response?.data?.message || error.message
       );
 
-      let errorMessage = "Failed to send Activation Code. Please try again.";
+      let errorMessage = "Gửi mã kích hoạt thất bại. Vui lòng thử lại.";
 
       // Check if account is not activated
       if (
@@ -612,12 +612,12 @@ const UpdateProfile = () => {
         error.response?.data?.message?.includes("inactive")
       ) {
         errorMessage =
-          "Your account is not activated yet. Please verify your account first before resetting password.";
+          "Tài khoản của bạn chưa được kích hoạt. Vui lòng xác thực tài khoản trước khi đặt lại mật khẩu.";
         toast.error(errorMessage);
       } else if (error.response?.status === 400) {
         errorMessage =
           error.response?.data?.message ||
-          "Bad request. Please check your email.";
+          "Yêu cầu không hợp lệ. Vui lòng kiểm tra email của bạn.";
         toast.error(errorMessage);
       } else {
         errorMessage = error.response?.data?.message || errorMessage;
@@ -636,10 +636,10 @@ const UpdateProfile = () => {
           <div className="verify-card-container">
             <Card className="verify-card">
               <div className="verify-header">
-                <h2 className="verify-title">Setting Your Account</h2>
+                <h2 className="verify-title">Cài đặt tài khoản của bạn</h2>
                 <p className="verify-subtitle">
-                  Please enter the Verification Code sent to your email address
-                  to create a new password.
+                  Vui lòng nhập mã xác thực được gửi đến địa chỉ email của bạn
+                  để tạo mật khẩu mới.
                 </p>
               </div>
 
@@ -652,7 +652,7 @@ const UpdateProfile = () => {
                   className="verify-form"
                 >
                   {/* Current Email (Read-only) */}
-                  <Form.Item label="Current Email">
+                  <Form.Item label="Email hiện tại">
                     <Input
                       value={email || "N/A"}
                       prefix={<MailOutlined />}
@@ -663,17 +663,17 @@ const UpdateProfile = () => {
 
                   {/* New Email */}
                   <Form.Item
-                    label="New Email Address (Optional)"
+                    label="Địa chỉ Email mới (Tùy chọn)"
                     name="newEmail"
                     rules={[
                       {
                         type: "email",
-                        message: "Please enter a valid email address",
+                        message: "Vui lòng nhập địa chỉ email hợp lệ",
                       },
                     ]}
                   >
                     <Input
-                      placeholder="Enter your new email address (leave blank to keep current)"
+                      placeholder="Nhập địa chỉ email mới của bạn (để trống để giữ email hiện tại)"
                       type="email"
                       prefix={<MailOutlined />}
                       allowClear
@@ -681,7 +681,7 @@ const UpdateProfile = () => {
                   </Form.Item>
 
                   {/* Current Phone (Read-only) */}
-                  <Form.Item label="Current Phone Number">
+                  <Form.Item label="Số điện thoại hiện tại">
                     <Input
                       value={location.state?.profileData?.phone || "N/A"}
                       prefix={<PhoneOutlined />}
@@ -692,18 +692,18 @@ const UpdateProfile = () => {
 
                   {/* New Phone */}
                   <Form.Item
-                    label="New Phone Number (Optional)"
+                    label="Số điện thoại mới (Tùy chọn)"
                     name="newPhone"
                     rules={[
                       {
                         pattern: /^[0-9]+$/,
-                        message: "Phone must contain only numbers",
+                        message: "Số điện thoại chỉ được chứa số",
                       },
-                      { min: 10, message: "Phone must be at least 10 digits" },
+                      { min: 10, message: "Số điện thoại phải có ít nhất 10 chữ số" },
                     ]}
                   >
                     <Input
-                      placeholder="Enter your new phone number (leave blank to keep current)"
+                      placeholder="Nhập số điện thoại mới của bạn (để trống để giữ số hiện tại)"
                       prefix={<PhoneOutlined />}
                       allowClear
                     />
@@ -717,7 +717,7 @@ const UpdateProfile = () => {
                         color: "#1f2937",
                       }}
                     >
-                      CCCD Verification
+                      Xác thực CCCD
                     </h3>
                     <div className="upload-item">
                       <Upload
@@ -732,13 +732,13 @@ const UpdateProfile = () => {
                             /\.jpe?g$/i.test(file.name);
                           if (!isPng && !isJpeg) {
                             message.error(
-                              `${file.name} must be PNG or JPG/JPEG.`
+                              `${file.name} phải là PNG hoặc JPG/JPEG.`
                             );
                             return Upload.LIST_IGNORE;
                           }
                           const isLt5M = file.size / 1024 / 1024 < 5;
                           if (!isLt5M) {
-                            message.error("Image must be smaller than 5MB!");
+                            message.error("Hình ảnh phải nhỏ hơn 5MB!");
                             return Upload.LIST_IGNORE;
                           }
                           return false;
@@ -774,7 +774,7 @@ const UpdateProfile = () => {
                         }}
                       >
                         <Button icon={<UploadOutlined />}>
-                          Upload CCCD Images (2 files)
+                          Tải lên hình ảnh CCCD (2 tệp)
                         </Button>
                       </Upload>
 
@@ -793,7 +793,7 @@ const UpdateProfile = () => {
                             }}
                             style={{ marginTop: "10px" }}
                           >
-                            {isScanning ? "Scanning CCCD..." : "Scan CCCD"}
+                            {isScanning ? "Đang quét CCCD..." : "Quét CCCD"}
                           </Button>
                           <p
                             style={{
@@ -802,7 +802,7 @@ const UpdateProfile = () => {
                               marginTop: "5px",
                             }}
                           >
-                            Click to scan and extract information from your CCCD
+                            Nhấp để quét và trích xuất thông tin từ CCCD của bạn
                           </p>
                         </div>
                       )}
@@ -811,31 +811,31 @@ const UpdateProfile = () => {
 
                   {/* Verification Code */}
                   <Form.Item
-                    label="Verification Code"
+                    label="Mã xác thực"
                     name="verification-code"
                     rules={[
                       {
                         required: true,
-                        message: "Verification Code is required",
+                        message: "Mã xác thực là bắt buộc",
                       },
                       {
                         min: 6,
                         message:
-                          "Verification Code must be at least 6 characters",
+                          "Mã xác thực phải có ít nhất 6 ký tự",
                       },
                       {
                         max: 6,
                         message:
-                          "Verification Code must be exactly 6 characters",
+                          "Mã xác thực phải có đúng 6 ký tự",
                       },
                       {
                         pattern: /^[0-9]+$/,
-                        message: "Verification Code must contain only numbers",
+                        message: "Mã xác thực chỉ được chứa số",
                       },
                     ]}
                   >
                     <Input
-                      placeholder="Enter 6-digit Verification Code"
+                      placeholder="Nhập mã xác thực 6 chữ số"
                       type="text"
                       prefix={<SafetyOutlined />}
                       allowClear
@@ -845,7 +845,7 @@ const UpdateProfile = () => {
                   {/* Resend Activation Code Link */}
                   <div className="send-activation-code-container">
                     <p>
-                      Didn't receive the code?{" "}
+                      Không nhận được mã?{" "}
                       <Button
                         type="link"
                         onClick={sendVerificationCode}
@@ -853,10 +853,10 @@ const UpdateProfile = () => {
                         className="send-verification-code-link"
                       >
                         {isResendDisabled
-                          ? `Send Verification Code (${countdown}s)`
+                          ? `Gửi mã xác thực (${countdown}s)`
                           : hasRequestedResend
-                          ? "Send Verification Code"
-                          : "Send Verification Code"}
+                          ? "Gửi mã xác thực"
+                          : "Gửi mã xác thực"}
                       </Button>
                     </p>
                   </div>
@@ -870,7 +870,7 @@ const UpdateProfile = () => {
                       size="large"
                       className="verify-submit-button"
                     >
-                      {isLoading ? "Verifying..." : "Verify your Account"}
+                      {isLoading ? "Đang xác thực..." : "Xác thực tài khoản"}
                     </Button>
                   </Form.Item>
                   <div className="verify-login-link">
@@ -882,7 +882,7 @@ const UpdateProfile = () => {
                         updated: true,
                       }}
                     >
-                      Back
+                      Quay lại
                     </Link>
                   </div>
                 </Form>
@@ -892,30 +892,30 @@ const UpdateProfile = () => {
           {/* Independent CCCD Info Table */}
           <div className={`cccd-info-table ${!scannedData ? "hidden" : ""}`}>
             <div className="cccd-info-header">
-              <h3>📋 Identify card Information</h3>
+              <h3>📋 Thông tin thẻ căn cước</h3>
             </div>
             {scannedData && (
               <div className="cccd-info-grid">
                 <div className="cccd-info-item">
-                  <span className="cccd-info-label">Full Name:</span>
+                  <span className="cccd-info-label">Họ và tên:</span>
                   <span className="cccd-info-value">
                     {scannedData.fullName}
                   </span>
                 </div>
                 <div className="cccd-info-item">
-                  <span className="cccd-info-label">ID Number:</span>
+                  <span className="cccd-info-label">Số CMND/CCCD:</span>
                   <span className="cccd-info-value">
                     {scannedData.idNumber}
                   </span>
                 </div>
                 <div className="cccd-info-item">
-                  <span className="cccd-info-label">Date of Birth:</span>
+                  <span className="cccd-info-label">Ngày sinh:</span>
                   <span className="cccd-info-value">
                     {formatDate(scannedData.dateOfBirth)}
                   </span>
                 </div>
                 <div className="cccd-info-item">
-                  <span className="cccd-info-label">Gender:</span>
+                  <span className="cccd-info-label">Giới tính:</span>
                   <span className="cccd-info-value">
                     {scannedData.gender === true ||
                     scannedData.gender === "true" ||
@@ -931,31 +931,31 @@ const UpdateProfile = () => {
                   </span>
                 </div>
                 <div className="cccd-info-item">
-                  <span className="cccd-info-label">Place of Birth:</span>
+                  <span className="cccd-info-label">Nơi sinh:</span>
                   <span className="cccd-info-value">
                     {scannedData.placeOfBirth || "N/A"}
                   </span>
                 </div>
                 <div className="cccd-info-item">
-                  <span className="cccd-info-label">Address:</span>
+                  <span className="cccd-info-label">Địa chỉ:</span>
                   <span className="cccd-info-value">
                     {scannedData.address || "N/A"}
                   </span>
                 </div>
                 <div className="cccd-info-item">
-                  <span className="cccd-info-label">Issue Date:</span>
+                  <span className="cccd-info-label">Ngày cấp:</span>
                   <span className="cccd-info-value">
                     {formatDate(scannedData.issueDate)}
                   </span>
                 </div>
                 <div className="cccd-info-item">
-                  <span className="cccd-info-label">Expiry Date:</span>
+                  <span className="cccd-info-label">Ngày hết hạn:</span>
                   <span className="cccd-info-value">
                     {formatDate(scannedData.expiryDate)}
                   </span>
                 </div>
                 <div className="cccd-info-item">
-                  <span className="cccd-info-label">Place of Issue:</span>
+                  <span className="cccd-info-label">Nơi cấp:</span>
                   <span className="cccd-info-value">
                     {scannedData.placeOfIssue || "N/A"}
                   </span>

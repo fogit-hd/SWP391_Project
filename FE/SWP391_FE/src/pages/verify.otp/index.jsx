@@ -38,15 +38,15 @@ const VerifyOTP = () => {
 
       console.log("Verifying OTP with data:", requestData);
 
-      message.loading("Verifying OTP...", 0);
+      message.loading("Đang xác thực OTP...", 0);
 
       const response = await api.post("/auth/verify-account", requestData, {
         headers: { "Content-Type": "application/json" },
       });
 
       message.destroy();
-      toast.success("Account verified successfully!");
-      toast.success("Your account is now activated! You can now sign in.");
+      toast.success("Xác thực tài khoản thành công!");
+      toast.success("Tài khoản của bạn đã được kích hoạt! Bạn có thể đăng nhập ngay bây giờ.");
 
       // Clear email from localStorage
       localStorage.removeItem("email");
@@ -60,22 +60,22 @@ const VerifyOTP = () => {
       console.error("Verification error:", error);
       console.error("Error response:", error.response?.data);
 
-      let errorMessage = "OTP verification failed. Please try again.";
+      let errorMessage = "Xác thực OTP thất bại. Vui lòng thử lại.";
 
       if (error.response?.status === 400) {
         errorMessage =
           error.response.data?.message ||
-          "Invalid OTP. Please check and try again.";
+          "OTP không hợp lệ. Vui lòng kiểm tra và thử lại.";
       } else if (error.response?.status === 404) {
-        errorMessage = "Email not found. Please register again.";
+        errorMessage = "Không tìm thấy email. Vui lòng đăng ký lại.";
       } else if (error.response?.status === 410) {
         errorMessage =
           error.response.data?.message ||
-          "OTP has expired. Please request a new one.";
+          "OTP đã hết hạn. Vui lòng yêu cầu mã mới.";
       } else if (error.response?.status === 500) {
         errorMessage =
           error.response.data?.message ||
-          "Server error. Please try again later.";
+          "Lỗi máy chủ. Vui lòng thử lại sau.";
       } else {
         errorMessage = error.response?.data?.message || errorMessage;
       }
@@ -104,7 +104,7 @@ const VerifyOTP = () => {
 
   const resendOTP = async () => {
     try {
-      message.loading("Resending OTP...", 0);
+      message.loading("Đang gửi lại OTP...", 0);
 
       await api.post(
         "/auth/resend-otp",
@@ -115,7 +115,7 @@ const VerifyOTP = () => {
       );
 
       message.destroy();
-      toast.success("OTP has been resent to your email!");
+      toast.success("OTP đã được gửi lại đến email của bạn!");
 
       // Bắt đầu countdown 60s
       startCountdown();
@@ -124,19 +124,19 @@ const VerifyOTP = () => {
       console.error("Resend OTP error:", error);
       console.error("Error response:", error.response?.data);
 
-      let errorMessage = "Failed to resend OTP. Please try again.";
+      let errorMessage = "Gửi lại OTP thất bại. Vui lòng thử lại.";
 
       if (error.response?.status === 400) {
-        errorMessage = error.response.data?.message || "Invalid email address.";
+        errorMessage = error.response.data?.message || "Địa chỉ email không hợp lệ.";
       } else if (error.response?.status === 404) {
-        errorMessage = "Email not found. Please register first.";
+        errorMessage = "Không tìm thấy email. Vui lòng đăng ký trước.";
       } else if (error.response?.status === 429) {
         errorMessage =
-          "Too many requests. Please wait before requesting another OTP.";
+          "Quá nhiều yêu cầu. Vui lòng đợi trước khi yêu cầu OTP mới.";
       } else if (error.response?.status === 500) {
         errorMessage =
           error.response.data?.message ||
-          "Server error. Please try again later.";
+          "Lỗi máy chủ. Vui lòng thử lại sau.";
       } else {
         errorMessage = error.response?.data?.message || errorMessage;
       }
@@ -155,10 +155,10 @@ const VerifyOTP = () => {
           <div className="verify-card-container">
             <Card className="verify-card">
               <div className="verify-header">
-                <h2 className="verify-title">Verify Your Account</h2>
+                <h2 className="verify-title">Xác thực tài khoản của bạn</h2>
                 <p className="verify-subtitle">
-                  Please enter the OTP sent to your email address to change
-                  password.
+                  Vui lòng nhập OTP được gửi đến địa chỉ email của bạn để đổi
+                  mật khẩu.
                   <br />
                   <MailOutlined />{" "}
                   <strong>{localStorage.getItem("email")}</strong>
@@ -174,20 +174,20 @@ const VerifyOTP = () => {
               >
                 {/* OTP */}
                 <Form.Item
-                  label="Verification Code"
+                  label="Mã xác thực"
                   name="otp"
                   rules={[
-                    { required: true, message: "OTP is required" },
-                    { min: 6, message: "OTP must be at least 6 characters" },
-                    { max: 6, message: "OTP must be exactly 6 characters" },
+                    { required: true, message: "OTP là bắt buộc" },
+                    { min: 6, message: "OTP phải có ít nhất 6 ký tự" },
+                    { max: 6, message: "OTP phải có đúng 6 ký tự" },
                     {
                       pattern: /^[0-9]+$/,
-                      message: "OTP must contain only numbers",
+                      message: "OTP chỉ được chứa số",
                     },
                   ]}
                 >
                   <Input
-                    placeholder="Enter 6-digit OTP"
+                    placeholder="Nhập OTP 6 chữ số"
                     type="text"
                     prefix={<SafetyOutlined />}
                     allowClear
@@ -198,7 +198,7 @@ const VerifyOTP = () => {
                 {/* Resend OTP Link */}
                 <div className="resend-otp-container">
                   <p>
-                    Didn't receive the code?{" "}
+                    Không nhận được mã?{" "}
                     <Button
                       type="link"
                       onClick={resendOTP}
@@ -206,10 +206,10 @@ const VerifyOTP = () => {
                       className="resend-otp-link"
                     >
                       {isResendDisabled
-                        ? `Resend OTP (${countdown}s)`
+                        ? `Gửi lại OTP (${countdown}s)`
                         : hasRequestedResend
-                        ? "Resend OTP"
-                        : "Resend OTP"}
+                        ? "Gửi lại OTP"
+                        : "Gửi lại OTP"}
                     </Button>
                   </p>
                 </div>
@@ -223,14 +223,14 @@ const VerifyOTP = () => {
                     size="large"
                     className="verify-submit-button"
                   >
-                    {isLoading ? "Verifying..." : "Verify Account"}
+                    {isLoading ? "Đang xác thực..." : "Xác thực tài khoản"}
                   </Button>
                 </Form.Item>
-
-                <div className="verify-login-link">
-                  Already verified? <Link to="/login">Sign in</Link>
-                </div>
               </Form>
+              
+              <div className="verify-login-link" style={{ position: 'relative', zIndex: 10, marginTop: '16px', textAlign: 'center' }}>
+                Đã xác thực? <Link to="/login" style={{ pointerEvents: 'auto', cursor: 'pointer', color: '#1890ff', textDecoration: 'none', fontWeight: 500 }}>Đăng nhập</Link>
+              </div>
             </Card>
           </div>
         </div>

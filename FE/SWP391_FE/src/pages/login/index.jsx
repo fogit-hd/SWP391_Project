@@ -11,10 +11,10 @@ import { login } from "../../components/redux/accountSlice";
 import "./login.css";
 
 const validationSchema = Yup.object().shape({
-  email: Yup.string().email("Email không hợp lệ").required("Email is required"),
+  email: Yup.string().email("Email không hợp lệ").required("Email là bắt buộc"),
   password: Yup.string()
-    .min(8, "Password must be at least 8 characters")
-    .required("Password is required"),
+    .min(8, "Mật khẩu phải có ít nhất 8 ký tự")
+    .required("Mật khẩu là bắt buộc"),
   rememberMe: Yup.boolean(),
 });
 
@@ -57,7 +57,7 @@ const LoginPage = () => {
       });
 
       const response = await api.post("/auth/login", values);
-      toast.success("Successfully logged in!");
+      toast.success("Đăng nhập thành công!");
 
       console.log("[LOGIN] API Response received");
       console.log("[LOGIN] Full API response:", response);
@@ -118,7 +118,9 @@ const LoginPage = () => {
 
       if (!roleId) {
         console.error("[LOGIN] ✗ Unknown role from server:", role);
-        toast.error(`Unknown role: ${role}. Please contact administrator.`);
+        toast.error(
+          `Vai trò không xác định: ${role}. Vui lòng liên hệ quản trị viên.`
+        );
         return;
       }
 
@@ -184,7 +186,7 @@ const LoginPage = () => {
       console.error("[LOGIN] Error:", e);
       console.error("[LOGIN] Error response:", e.response?.data);
 
-      let errorMessage = "Login failed. Please try again.";
+      let errorMessage = "Đăng nhập thất bại. Vui lòng thử lại.";
 
       if (
         e.response?.status === 403 ||
@@ -192,20 +194,20 @@ const LoginPage = () => {
         e.response?.data?.message?.includes("inactive")
       ) {
         errorMessage =
-          "Your account is not activated yet. Please check your email and verify your account first.";
+          "Tài khoản của bạn chưa được kích hoạt. Vui lòng kiểm tra email và xác thực tài khoản trước.";
         toast.error(errorMessage);
       } else if (e.response?.status === 401) {
         errorMessage =
           e.response?.data?.message ||
-          "Invalid email or password. Please check your credentials.";
+          "Email hoặc mật khẩu không đúng. Vui lòng kiểm tra lại thông tin đăng nhập.";
         toast.error(errorMessage);
       } else if (e.response?.status === 404) {
         errorMessage =
-          "Email not found. Please check your email or register first.";
+          "Không tìm thấy email. Vui lòng kiểm tra email hoặc đăng ký trước.";
         toast.error(errorMessage);
       } else if (e.response?.status === 500) {
         errorMessage =
-          e.response?.data?.message || "Server error. Please try again later.";
+          e.response?.data?.message || "Lỗi máy chủ. Vui lòng thử lại sau.";
         toast.error(errorMessage);
       } else {
         errorMessage = e.response?.data?.message || errorMessage;
@@ -221,18 +223,38 @@ const LoginPage = () => {
   const handleForgotPassword = (currentEmail) => {
     // Validate email before navigating
     if (!currentEmail) {
-      message.error("Please enter your email address first");
+      message.error("Vui lòng nhập địa chỉ email trước");
       return;
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(currentEmail)) {
-      message.error("Please enter a valid email address");
+      message.error("Vui lòng nhập địa chỉ email hợp lệ");
       return;
     }
 
     localStorage.setItem("email", currentEmail);
     navigate("/forgot-password", { state: { email: currentEmail } });
+  };
+
+  // Handle verify account navigation
+  const handleVerifyAccount = (currentEmail) => {
+    // Check if email is empty
+    if (!currentEmail || currentEmail.trim() === "") {
+      toast.error("Email field không được để trống");
+      return;
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(currentEmail)) {
+      toast.error("Sai định dạng email");
+      return;
+    }
+
+    // If email is valid, navigate to verify-otp page
+    localStorage.setItem("email", currentEmail);
+    navigate("/verify-otp", { state: { email: currentEmail } });
   };
 
   return (
@@ -242,9 +264,9 @@ const LoginPage = () => {
       <div className="login-card-container">
         <Card className="login-card">
           <div className="login-header">
-            <h2 className="login-title">Welcome Back, Co-owner</h2>
+            <h2 className="login-title">WELCOME BACK</h2>
             <p className="login-subtitle">
-              Please enter your credentials to continue
+              Vui lòng nhập thông tin đăng nhập để tiếp tục
             </p>
           </div>
 
@@ -385,7 +407,7 @@ const LoginPage = () => {
                         >
                           {showPassword ? "🙈" : "👁️"}
                         </button>
-                        <label className="floating-label">Password</label>
+                        <label className="floating-label">Mật khẩu</label>
                       </div>
                       <ErrorMessage
                         name="password"
@@ -415,7 +437,7 @@ const LoginPage = () => {
                               setFieldValue("rememberMe", e.target.checked);
                             }}
                           >
-                            Remember me
+                            Ghi nhớ đăng nhập
                           </Checkbox>
                         )}
                       </Field>
@@ -426,7 +448,7 @@ const LoginPage = () => {
                         className="login-forgot-link"
                         style={{ cursor: "pointer" }}
                       >
-                        Forgot Password?
+                        Quên mật khẩu?
                       </a>
                     </Col>
                   </Row>
@@ -441,7 +463,9 @@ const LoginPage = () => {
                       size="large"
                       className="login-submit-button"
                     >
-                      {isLoading || isSubmitting ? "Signing in..." : "Sign In"}
+                      {isLoading || isSubmitting
+                        ? "Đang đăng nhập..."
+                        : "Đăng nhập"}
                     </Button>
                   </div>
 
@@ -453,10 +477,10 @@ const LoginPage = () => {
                   >
                     <Col>
                       <span style={{ color: "#6b7280" }}>
-                        Don't have an account?{" "}
+                        Chưa có tài khoản?{" "}
                       </span>
                       <Link to="/register" className="login-register-link">
-                        Register here
+                        Đăng ký tại đây
                       </Link>
                     </Col>
                   </Row>
@@ -468,9 +492,13 @@ const LoginPage = () => {
                     style={{ marginTop: "12px" }}
                   >
                     <Col>
-                      <Link to="/verify-otp" className="login-verify-link">
-                        Need to verify your account?
-                      </Link>
+                      <a
+                        onClick={() => handleVerifyAccount(values.email)}
+                        className="login-verify-link"
+                        style={{ cursor: "pointer" }}
+                      >
+                        Cần xác thực tài khoản?
+                      </a>
                     </Col>
                   </Row>
 
@@ -486,7 +514,7 @@ const LoginPage = () => {
                         onClick={() => navigate("/")}
                         className="login-back-button"
                       >
-                        ← Back to Homepage
+                        ← Về trang chủ
                       </Button>
                     </Col>
                   </Row>
