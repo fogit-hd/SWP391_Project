@@ -198,7 +198,7 @@ const CreateBookingModal = ({ visible, onCancel, onSuccess, groupId, vehicleId, 
       // Kiểm tra khoảng cách tối thiểu 30 phút
       // Nếu booking mới kết thúc trước booking hiện tại
       if (end.isBefore(bookingStart) || end.isSame(bookingStart)) {
-        const gapMinutes = bookingStart.diff(end, 'minute');
+        const gapMinutes = bookingStart.diff(end, 'minute', true);
         if (gapMinutes < minGapMinutes) {
           return true;
         }
@@ -206,7 +206,7 @@ const CreateBookingModal = ({ visible, onCancel, onSuccess, groupId, vehicleId, 
       
       // Nếu booking mới bắt đầu sau booking hiện tại
       if (start.isAfter(bookingEnd) || start.isSame(bookingEnd)) {
-        const gapMinutes = start.diff(bookingEnd, 'minute');
+        const gapMinutes = start.diff(bookingEnd, 'minute', true);
         if (gapMinutes < minGapMinutes) {
           return true;
         }
@@ -611,7 +611,7 @@ const CreateBookingModal = ({ visible, onCancel, onSuccess, groupId, vehicleId, 
               <div style={{ padding: '10px 12px', backgroundColor: '#f0f5ff', borderRadius: '4px', border: '1px solid #adc6ff', marginBottom: 8 }}>
                 <strong>Thời gian đặt trong tuần:</strong> <span style={{ color: '#1890ff', fontWeight: 600, fontSize: '15px' }}>{((quotaInfo.data.ownershipRate || 100) * quotaInfo.data.remainingHours / 100).toFixed(2)} giờ</span>
                 <span style={{ color: '#8c8c8c', fontSize: '12px', marginLeft: 8 }}>
-                  ({quotaInfo.data.ownershipRate?.toFixed(2)}% × {quotaInfo.data.remainingHours.toFixed(2)} giờ còn lại)
+                  ({((quotaInfo.data.ownershipRate || 100) / 100).toFixed(2)} × {quotaInfo.data.remainingHours.toFixed(2)} giờ còn lại)
                 </span>
               </div>
               <div style={{ marginTop: 8, fontSize: '12px', color: '#8c8c8c' }}>

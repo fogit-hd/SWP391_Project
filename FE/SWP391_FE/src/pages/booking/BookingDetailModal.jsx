@@ -1,20 +1,22 @@
 import React, { useState, useEffect } from "react";
-import { Modal, Descriptions, Tag, Button, Space, message, Alert, Progress, Popconfirm } from "antd";
+import { Modal, Descriptions, Tag, Button, Space, Alert, Progress, Popconfirm, Form, DatePicker } from "antd";
+import { toast } from "react-toastify";
 import { 
   CheckCircleOutlined, 
   CloseCircleOutlined, 
   ClockCircleOutlined,
   CarOutlined,
-  DeleteOutlined 
+  DeleteOutlined,
+  EditOutlined 
 } from "@ant-design/icons";
 import dayjs from "dayjs";
 import api from "../../config/axios";
 import TripScreen from "./TripScreen";
-import { BOOKING_STATUS_COLORS, BOOKING_STATUS_LABELS, GRACE_WINDOWS } from "./booking.types";
+import { BOOKING_STATUS_COLORS, BOOKING_STATUS_LABELS, GRACE_WINDOWS, BOOKING_CONSTRAINTS } from "./booking.types";
 import { useAuth } from "../../components/hooks/useAuth";
 // All role and user checks rely on useAuth (which is backed by JWT utils)
 
-const BookingDetailModal = ({ visible, onCancel, booking, onUpdate, groupId, vehicleId }) => {
+const BookingDetailModal = ({ visible, onCancel, booking, onUpdate, groupId, vehicleId, existingBookings = [] }) => {
   const { isCoOwner, user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [countdown, setCountdown] = useState("");
@@ -22,10 +24,25 @@ const BookingDetailModal = ({ visible, onCancel, booking, onUpdate, groupId, veh
   const [canCheckOut, setCanCheckOut] = useState(false);
   const [canCancel, setCanCancel] = useState(false);
   const [tripScreenVisible, setTripScreenVisible] = useState(false);
+  const [updateModalVisible, setUpdateModalVisible] = useState(false);
+  const [updateForm] = Form.useForm();
+  const [validationError, setValidationError] = useState(null);
+  const { RangePicker } = DatePicker;
 
   const getCurrentUserId = () => {
     if (!user) return null;
     return user.id || null;
+  };
+
+  const isMyBooking = () => {
+    if (!booking) return false;
+    const currentUserId = getCurrentUserId();
+    if (!currentUserId) return false;
+
+    const result = booking.userId === currentUserId;
+    console.log("isMyBooking check:", { bookingUserId: booking.userId, currentUserId, result });
+
+    return result;
   };
 
   useEffect(() => {
@@ -95,7 +112,7 @@ const BookingDetailModal = ({ visible, onCancel, booking, onUpdate, groupId, veh
       
       // Hiển thị message từ backend hoặc message mặc định
       const successMessage = response.data?.message || "Nhận xe thành công!";
-      message.success(successMessage);
+      toast.success(successMessage);
       
       onUpdate();
       onCancel();
@@ -135,10 +152,7 @@ const BookingDetailModal = ({ visible, onCancel, booking, onUpdate, groupId, veh
         }
       }
       
-      message.error({
-        content: errorMessage,
-        duration: 5
-      });
+      toast.error(errorMessage, { autoClose: 6000 });
     } finally {
       setLoading(false);
     }
@@ -153,6 +167,271 @@ const BookingDetailModal = ({ visible, onCancel, booking, onUpdate, groupId, veh
     onUpdate();
   };
 
+  const handleOpenUpdateModal = () => {
+    updateForm.setFieldsValue({
+      timeRange: [dayjs(booking.startTime), dayjs(booking.endTime)]
+    });
+    setValidationError(null);
+    setUpdateModalVisible(true);
+  };
+
+  const disabledDate = (current) => {
+    if (!current) return false;
+    
+    const now = dayjs();
+    const maxDate = dayjs().add(BOOKING_CONSTRAINTS.MAX_ADVANCE_DAYS, 'day');
+    return current < now.startOf('day') || current > maxDate.endOf('day');
+  };
+
+  const disabledTime = (current, type) => {
+    const now = dayjs();
+    const minAllowedTime = now.add(BOOKING_CONSTRAINTS.MIN_ADVANCE_MINUTES, 'minute');
+    
+    if (!current || !type) {
+      return {};
+    }
+
+    const selectedDate = dayjs(current);
+
+    // Xử lý cho start time
+    if (type === 'start') {
+      if (selectedDate.isSame(now, 'day')) {
+        const minHour = minAllowedTime.hour();
+        const minMinute = minAllowedTime.minute();
+        
+        return {
+          disabledHours: () => {
+            const hours = [];
+            for (let i = 0; i < minHour; i++) {
+              hours.push(i);
+            }
+            return hours;
+          },
+          disabledMinutes: (selectedHour) => {
+            if (selectedHour === minHour) {
+              const minutes = [];
+              for (let i = 0; i < minMinute; i++) {
+                minutes.push(i);
+              }
+              return minutes;
+            }
+            return [];
+          },
+          disabledSeconds: () => [],
+        };
+      }
+    }
+    
+    // Xử lý cho end time
+    if (type === 'end') {
+      const timeRange = updateForm.getFieldValue('timeRange');
+      const startTime = timeRange && timeRange[0] ? dayjs(timeRange[0]) : null;
+      
+      if (!startTime) {
+        if (selectedDate.isSame(now, 'day')) {
+          const minHour = minAllowedTime.hour();
+          const minMinute = minAllowedTime.minute();
+          
+          return {
+            disabledHours: () => {
+              const hours = [];
+              for (let i = 0; i < minHour; i++) {
+                hours.push(i);
+              }
+              return hours;
+            },
+            disabledMinutes: (selectedHour) => {
+              if (selectedHour === minHour) {
+                const minutes = [];
+                for (let i = 0; i < minMinute; i++) {
+                  minutes.push(i);
+                }
+                return minutes;
+              }
+              return [];
+            },
+            disabledSeconds: () => [],
+          };
+        }
+      } else {
+        if (selectedDate.isSame(startTime, 'day')) {
+          const startHour = startTime.hour();
+          const startMinute = startTime.minute();
+          
+          return {
+            disabledHours: () => {
+              const hours = [];
+              for (let i = 0; i <= startHour; i++) {
+                hours.push(i);
+              }
+              return hours;
+            },
+            disabledMinutes: (selectedHour) => {
+              if (selectedHour === startHour + 1) {
+                const minutes = [];
+                for (let i = 0; i <= startMinute; i++) {
+                  minutes.push(i);
+                }
+                return minutes;
+              }
+              return [];
+            },
+            disabledSeconds: () => [],
+          };
+        }
+      }
+    }
+    
+    return {
+      disabledHours: () => [],
+      disabledMinutes: () => [],
+      disabledSeconds: () => [],
+    };
+  };
+
+  const validateUpdateTime = (dates) => {
+    if (!dates || !dates[0] || !dates[1]) {
+      return { valid: false, error: "Vui lòng chọn thời gian bắt đầu và kết thúc" };
+    }
+
+    const now = dayjs();
+    const start = dates[0];
+    const end = dates[1];
+
+    // Check minimum advance booking (phải đặt trước ít nhất 15 phút)
+    const minAllowedTime = now.add(BOOKING_CONSTRAINTS.MIN_ADVANCE_MINUTES, 'minute');
+    
+    if (start.isBefore(minAllowedTime)) {
+      return { 
+        valid: false, 
+        error: `Thời gian bắt đầu phải cách thời gian hiện tại ít nhất ${BOOKING_CONSTRAINTS.MIN_ADVANCE_MINUTES} phút` 
+      };
+    }
+
+    // Check maximum advance booking (14 ngày)
+    const daysUntilStart = start.diff(now, 'day', true);
+    if (daysUntilStart > BOOKING_CONSTRAINTS.MAX_ADVANCE_DAYS) {
+      return { 
+        valid: false, 
+        error: `Chỉ có thể đặt trong tuần này và tuần sau (không quá ${BOOKING_CONSTRAINTS.MAX_ADVANCE_DAYS} ngày)` 
+      };
+    }
+
+    // Check basic duration validity
+    const duration = end.diff(start, 'hour', true);
+    if (duration <= 0) {
+      return { valid: false, error: "Thời gian kết thúc phải sau thời gian bắt đầu" };
+    }
+
+    // Check for overlapping bookings (exclude current booking being updated)
+    const minGapMinutes = BOOKING_CONSTRAINTS.MIN_GAP_MINUTES;
+    const conflictBooking = existingBookings.find(existingBooking => {
+      // Skip cancelled bookings and the current booking being edited
+      if (existingBooking.status === 'CANCELLED' || existingBooking.id === booking.id) {
+        return false;
+      }
+      
+      const bookingStart = dayjs(existingBooking.startTime);
+      const bookingEnd = dayjs(existingBooking.endTime);
+      
+      // Kiểm tra overlap trực tiếp
+      const hasOverlap = (start.isBefore(bookingEnd) && end.isAfter(bookingStart)) ||
+        (start.isSame(bookingStart) || end.isSame(bookingEnd));
+      
+      if (hasOverlap) {
+        return true;
+      }
+      
+      // Kiểm tra khoảng cách tối thiểu 30 phút
+      if (end.isBefore(bookingStart) || end.isSame(bookingStart)) {
+        const gapMinutes = bookingStart.diff(end, 'minute', true);
+        if (gapMinutes < minGapMinutes) {
+          return true;
+        }
+      }
+      
+      if (start.isAfter(bookingEnd) || start.isSame(bookingEnd)) {
+        const gapMinutes = start.diff(bookingEnd, 'minute', true);
+        if (gapMinutes < minGapMinutes) {
+          return true;
+        }
+      }
+      
+      return false;
+    });
+
+    if (conflictBooking) {
+      return { 
+        valid: false, 
+        error: `Thời gian đặt phải cách các booking khác ít nhất ${minGapMinutes} phút` 
+      };
+    }
+
+    return { valid: true };
+  };
+
+  const handleUpdateBooking = async (values) => {
+    const { timeRange } = values;
+    
+    // Validate trước khi gửi
+    const validation = validateUpdateTime(timeRange);
+    if (!validation.valid) {
+      setValidationError(validation.error);
+      toast.error(validation.error);
+      return;
+    }
+
+    setValidationError(null);
+    setLoading(true);
+    try {
+      const payload = {
+        id: booking.id,
+        startTime: timeRange[0].format('YYYY-MM-DDTHH:mm:ss.SSS'),
+        endTime: timeRange[1].format('YYYY-MM-DDTHH:mm:ss.SSS')
+      };
+
+      const response = await api.put('/booking/update', payload);
+      
+      const successMessage = response.data?.message || "Cập nhật đặt chỗ thành công!";
+      toast.success(successMessage);
+      
+      setUpdateModalVisible(false);
+      updateForm.resetFields();
+      onUpdate();
+    } catch (error) {
+      console.error("Update booking failed:", error);
+      console.error("Error response:", error.response?.data);
+      
+      let errorMessage = "Không thể cập nhật đặt chỗ";
+      
+      if (error.response?.data) {
+        const errorData = error.response.data;
+        
+        if (errorData.message) {
+          errorMessage = errorData.message;
+        } else if (typeof errorData === 'string') {
+          errorMessage = errorData;
+        } else if (errorData.errors) {
+          if (Array.isArray(errorData.errors)) {
+            errorMessage = errorData.errors.join(', ');
+          } else if (typeof errorData.errors === 'object') {
+            const errorMessages = Object.entries(errorData.errors)
+              .map(([field, messages]) => {
+                const messageArray = Array.isArray(messages) ? messages : [messages];
+                return `${field}: ${messageArray.join(", ")}`;
+              })
+              .join("\n");
+            errorMessage = errorMessages;
+          }
+        }
+      }
+      
+      toast.error(errorMessage, { autoClose: 6000 });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleCancel = async () => {
     setLoading(true);
     try {
@@ -163,12 +442,9 @@ const BookingDetailModal = ({ visible, onCancel, booking, onUpdate, groupId, veh
       
       // Kiểm tra nếu có thông tin phạt thì hiển thị warning thay vì success
       if (successMessage.includes("phạt") || successMessage.includes("trễ")) {
-        message.warning({
-          content: successMessage,
-          duration: 5
-        });
+        toast.warning(successMessage, { autoClose: 5000 });
       } else {
-        message.success(successMessage);
+        toast.success(successMessage);
       }
       
       onUpdate();
@@ -205,28 +481,13 @@ const BookingDetailModal = ({ visible, onCancel, booking, onUpdate, groupId, veh
         }
       }
       
-      message.error({
-        content: errorMessage,
-        duration: 5
-      });
+      toast.error(errorMessage, { autoClose: 5000 });
     } finally {
       setLoading(false);
     }
   };
 
   if (!booking) return null;
-
-  const isMyBooking = () => {
-    if (!booking) return false;
-    const currentUserId = getCurrentUserId();
-    if (!currentUserId) return false;
-
-    const result = booking.userId === currentUserId;
-    console.log("isMyBooking check:", { bookingUserId: booking.userId, currentUserId, result });
-
-    return result;
-  };
-
 
   const getCheckInProgress = () => {
     const now = dayjs();
@@ -266,6 +527,15 @@ const BookingDetailModal = ({ visible, onCancel, booking, onUpdate, groupId, veh
           isMyBooking() ? (
             <Space>
               <Button onClick={onCancel}>Đóng</Button>
+              {booking.status === 'BOOKED' && (
+                <Button 
+                  icon={<EditOutlined />}
+                  onClick={handleOpenUpdateModal}
+                  loading={loading}
+                >
+                  Chỉnh sửa
+                </Button>
+              )}
               {canCancel && (
                 <Popconfirm
                   title="Hủy đặt chỗ"
@@ -406,6 +676,92 @@ const BookingDetailModal = ({ visible, onCancel, booking, onUpdate, groupId, veh
             )}
           </Descriptions>
         </Space>
+      </Modal>
+
+      <Modal
+        title="Chỉnh sửa đặt chỗ"
+        open={updateModalVisible}
+        onCancel={() => {
+          setUpdateModalVisible(false);
+          updateForm.resetFields();
+          setValidationError(null);
+        }}
+        footer={null}
+        width={600}
+      >
+        <Alert
+          message="Quy tắc cập nhật đặt chỗ"
+          description={
+            <ul style={{ margin: '8px 0', paddingLeft: '20px' }}>
+              <li>Đặt trước thời gian hiện tại ít nhất {BOOKING_CONSTRAINTS.MIN_ADVANCE_MINUTES} phút</li>
+              <li>Chỉ có thể đặt trong tuần này và tuần sau (không quá {BOOKING_CONSTRAINTS.MAX_ADVANCE_DAYS} ngày)</li>
+              <li>Phải cách các booking khác ít nhất {BOOKING_CONSTRAINTS.MIN_GAP_MINUTES} phút</li>
+              <li>Không được trùng với các đặt chỗ hiện có</li>
+            </ul>
+          }
+          type="info"
+          showIcon
+          style={{ marginBottom: 16 }}
+        />
+
+        {validationError && (
+          <Alert
+            message="Lỗi xác thực"
+            description={validationError}
+            type="error"
+            showIcon
+            closable
+            onClose={() => setValidationError(null)}
+            style={{ marginBottom: 16 }}
+          />
+        )}
+
+        <Form
+          form={updateForm}
+          layout="vertical"
+          onFinish={handleUpdateBooking}
+        >
+          <Form.Item
+            name="timeRange"
+            label="Thời gian đặt chỗ"
+            rules={[{ required: true, message: "Vui lòng chọn thời gian đặt chỗ" }]}
+          >
+            <RangePicker
+              showTime={{ format: 'HH:mm' }}
+              format="YYYY-MM-DD HH:mm"
+              style={{ width: '100%' }}
+              minuteStep={1}
+              disabledDate={disabledDate}
+              disabledTime={disabledTime}
+              onChange={(dates) => {
+                setValidationError(null);
+                if (dates && dates[0] && dates[1]) {
+                  const validation = validateUpdateTime(dates);
+                  if (!validation.valid) {
+                    setValidationError(validation.error);
+                  }
+                }
+              }}
+            />
+          </Form.Item>
+
+          <Form.Item style={{ marginBottom: 0, marginTop: 24 }}>
+            <Space>
+              <Button 
+                onClick={() => {
+                  setUpdateModalVisible(false);
+                  updateForm.resetFields();
+                  setValidationError(null);
+                }}
+              >
+                Hủy
+              </Button>
+              <Button type="primary" htmlType="submit" loading={loading}>
+                Cập nhật
+              </Button>
+            </Space>
+          </Form.Item>
+        </Form>
       </Modal>
 
       {tripScreenVisible && (

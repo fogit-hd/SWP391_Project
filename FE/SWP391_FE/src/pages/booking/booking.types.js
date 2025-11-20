@@ -11,11 +11,11 @@ export const BOOKING_STATUS = {
 };
 
 export const BOOKING_STATUS_COLORS = {
-  BOOKED: '#1890ff',
-  CANCELLED: '#ff4d4f',
-  INUSE: '#52c41a',
-  OVERTIME: '#faad14',
-  COMPLETE: '#52c41a', 
+  BOOKED: '#69c0ff',    
+  CANCELLED: '#ff7875', 
+  INUSE: '#ffc53d',     
+  OVERTIME: '#b37feb', 
+  COMPLETE: '#95de64',  
 };
 
 export const BOOKING_STATUS_LABELS = {
