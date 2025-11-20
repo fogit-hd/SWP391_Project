@@ -257,8 +257,8 @@ const MyGroup = () => {
 
       setGroups(enriched);
     } catch (err) {
-      console.error("Failed to load my groups:", err);
-      message.error("Failed to load your groups");
+      console.error("Không thể tải danh sách nhóm:", err);
+      message.error("Không thể tải danh sách nhóm của bạn");
       setGroups([]);
     } finally {
       setLoading(false);
@@ -267,7 +267,7 @@ const MyGroup = () => {
 
   const loadServiceRequests = async (groupId) => {
     if (!groupId) {
-      console.warn("[LOAD-SERVICE-REQUESTS] No groupId provided");
+      console.warn("[LOAD-SERVICE-REQUESTS] Không có groupId được cung cấp");
       setServiceRequests([]);
       return;
     }
@@ -275,7 +275,7 @@ const MyGroup = () => {
     setServiceRequestsLoading(true);
     try {
       console.log(
-        "[LOAD-SERVICE-REQUESTS] Fetching service requests for group:",
+        "[LOAD-SERVICE-REQUESTS] Đang tải yêu cầu dịch vụ cho nhóm:",
         groupId
       );
 
@@ -284,9 +284,9 @@ const MyGroup = () => {
       // Use group-specific endpoint
       try {
         const endpoint = `/service-requests/my-group/${groupId}`;
-        console.log("[LOAD-SERVICE-REQUESTS] Using endpoint:", endpoint);
+        console.log("[LOAD-SERVICE-REQUESTS] Sử dụng endpoint:", endpoint);
         const response = await api.get(endpoint);
-        console.log("[LOAD-SERVICE-REQUESTS] Response:", response.data);
+        console.log("[LOAD-SERVICE-REQUESTS] Phản hồi:", response.data);
 
         if (Array.isArray(response.data)) {
           raw = response.data;
@@ -295,17 +295,17 @@ const MyGroup = () => {
         }
 
         console.log(
-          "[LOAD-SERVICE-REQUESTS] Loaded",
+          "[LOAD-SERVICE-REQUESTS] Đã tải",
           raw.length,
-          "service request(s)"
+          "yêu cầu dịch vụ"
         );
       } catch (err) {
         console.error(
-          "[LOAD-SERVICE-REQUESTS] Error loading service requests:",
+          "[LOAD-SERVICE-REQUESTS] Lỗi khi tải yêu cầu dịch vụ:",
           err
         );
         console.error(
-          "[LOAD-SERVICE-REQUESTS] Error response:",
+          "[LOAD-SERVICE-REQUESTS] Phản hồi lỗi:",
           err.response?.data
         );
         throw err;
@@ -315,15 +315,15 @@ const MyGroup = () => {
 
       if (raw.length > 0) {
         console.log(
-          "[LOAD-SERVICE-REQUESTS] Service requests loaded successfully"
+          "[LOAD-SERVICE-REQUESTS] Đã tải yêu cầu dịch vụ thành công"
         );
       }
     } catch (error) {
       console.error(
-        "[LOAD-SERVICE-REQUESTS] Failed to load service requests: ",
+        "[LOAD-SERVICE-REQUESTS] Không thể tải yêu cầu dịch vụ: ",
         error
       );
-      toast.error("Failed to load service requests");
+      toast.error("Không thể tải yêu cầu dịch vụ");
       setServiceRequests([]);
     } finally {
       setServiceRequestsLoading(false);
@@ -333,20 +333,20 @@ const MyGroup = () => {
   const loadServiceCenters = async () => {
     setLoadingServiceCenters(true);
     try {
-      console.log("[LOAD-SERVICE-CENTERS] Fetching service centers...");
+      console.log("[LOAD-SERVICE-CENTERS] Đang tải trung tâm dịch vụ...");
       const response = await api.get("/service-centers");
       let centerList = Array.isArray(response.data)
         ? response.data
         : response.data?.data || [];
       console.log(
-        "[LOAD-SERVICE-CENTERS] Loaded",
+        "[LOAD-SERVICE-CENTERS] Đã tải",
         centerList.length,
-        "centers"
+        "trung tâm"
       );
       setServiceCenters(centerList);
     } catch (error) {
-      console.error("[LOAD-SERVICE-CENTERS] Error:", error);
-      toast.error("Failed to load service centers");
+      console.error("[LOAD-SERVICE-CENTERS] Lỗi:", error);
+      toast.error("Không thể tải trung tâm dịch vụ");
       setServiceCenters([]);
     } finally {
       setLoadingServiceCenters(false);
@@ -356,19 +356,19 @@ const MyGroup = () => {
   const loadMyConfirmations = async () => {
     setConfirmationsLoading(true);
     try {
-      console.log("[LOAD-MY-CONFIRMATIONS] Fetching my confirmations...");
+      console.log("[LOAD-MY-CONFIRMATIONS] Đang tải xác nhận của tôi...");
       const response = await api.get("/service-request-confirmations/my");
       let confirmationList = Array.isArray(response.data)
         ? response.data
         : response.data?.data || [];
       console.log(
-        "[LOAD-MY-CONFIRMATIONS] Loaded",
+        "[LOAD-MY-CONFIRMATIONS] Đã tải",
         confirmationList.length,
-        "confirmations"
+        "xác nhận"
       );
       setMyConfirmations(confirmationList);
     } catch (error) {
-      console.error("[LOAD-MY-CONFIRMATIONS] Error:", error);
+      console.error("[LOAD-MY-CONFIRMATIONS] Lỗi:", error);
       // Don't show error toast, just log it
       setMyConfirmations([]);
     } finally {
@@ -412,19 +412,19 @@ const MyGroup = () => {
       const votingData = response.data?.data || [];
       const totalMembers = members.length; // Tổng số thành viên trong group
 
-      console.log("[FETCH-VOTING-STATUS] Request ID:", requestId);
-      console.log("[FETCH-VOTING-STATUS] Voting data:", votingData);
-      console.log("[FETCH-VOTING-STATUS] Total members:", totalMembers);
+      console.log("[FETCH-VOTING-STATUS] ID yêu cầu:", requestId);
+      console.log("[FETCH-VOTING-STATUS] Dữ liệu bỏ phiếu:", votingData);
+      console.log("[FETCH-VOTING-STATUS] Tổng số thành viên:", totalMembers);
       console.log(
-        "[FETCH-VOTING-STATUS] Voted count:",
+        "[FETCH-VOTING-STATUS] Số người đã vote:",
         votingData.filter((v) => v.decision !== "PENDING").length
       );
       console.log(
-        "[FETCH-VOTING-STATUS] Confirmed users:",
+        "[FETCH-VOTING-STATUS] Người dùng đã xác nhận:",
         votingData.filter((v) => v.decision === "CONFIRM")
       );
       console.log(
-        "[FETCH-VOTING-STATUS] Pending users:",
+        "[FETCH-VOTING-STATUS] Người dùng chưa vote:",
         votingData.filter((v) => v.decision === "PENDING")
       );
 
@@ -436,7 +436,7 @@ const MyGroup = () => {
         },
       }));
     } catch (error) {
-      console.error("Failed to load voting status:", error);
+      console.error("Không thể tải trạng thái bỏ phiếu:", error);
       setVotingStatuses((prev) => ({
         ...prev,
         [requestId]: {
@@ -463,7 +463,7 @@ const MyGroup = () => {
       const response = await api.get(`/service-requests/${requestId}`);
       setServiceRequestDetail(response.data?.data || null);
     } catch (error) {
-      console.error("Failed to load service request details:", error);
+      console.error("Không thể tải chi tiết yêu cầu dịch vụ:", error);
       toast.error("Không thể tải chi tiết yêu cầu dịch vụ");
       setServiceRequestDetail(null);
     } finally {
@@ -527,7 +527,7 @@ const MyGroup = () => {
 
   const loadGroupExpenses = async (groupId) => {
     if (!groupId) {
-      console.warn("[LOAD-GROUP-EXPENSES] No groupId provided");
+      console.warn("[LOAD-GROUP-EXPENSES] Không có groupId được cung cấp");
       setGroupExpenses([]);
       return;
     }
@@ -535,14 +535,14 @@ const MyGroup = () => {
     setExpensesLoading(true);
     try {
       console.log(
-        "[LOAD-GROUP-EXPENSES] Fetching expenses for group:",
+        "[LOAD-GROUP-EXPENSES] Đang tải chi phí cho nhóm:",
         groupId
       );
 
       const endpoint = `/group-expenses/group/${groupId}`;
-      console.log("[LOAD-GROUP-EXPENSES] Using endpoint:", endpoint);
+      console.log("[LOAD-GROUP-EXPENSES] Sử dụng endpoint:", endpoint);
       const response = await api.get(endpoint);
-      console.log("[LOAD-GROUP-EXPENSES] Response:", response.data);
+      console.log("[LOAD-GROUP-EXPENSES] Phản hồi:", response.data);
 
       let expenseList = [];
       if (Array.isArray(response.data)) {
@@ -552,18 +552,18 @@ const MyGroup = () => {
       }
 
       console.log(
-        "[LOAD-GROUP-EXPENSES] Loaded",
+        "[LOAD-GROUP-EXPENSES] Đã tải",
         expenseList.length,
-        "expense(s)"
+        "chi phí"
       );
       setGroupExpenses(expenseList);
     } catch (err) {
-      console.error("[LOAD-GROUP-EXPENSES] Error:", err);
+      console.error("[LOAD-GROUP-EXPENSES] Lỗi:", err);
       console.error(
-        "[LOAD-GROUP-EXPENSES] Error response:",
+        "[LOAD-GROUP-EXPENSES] Phản hồi lỗi:",
         err.response?.data
       );
-      toast.error("Failed to load group expenses");
+      toast.error("Không thể tải chi phí nhóm");
       setGroupExpenses([]);
     } finally {
       setExpensesLoading(false);
@@ -573,12 +573,12 @@ const MyGroup = () => {
   const loadMyInvoices = async () => {
     setInvoicesLoading(true);
     try {
-      console.log("[LOAD-MY-INVOICES] Fetching my invoices...");
+      console.log("[LOAD-MY-INVOICES] Đang tải hóa đơn của tôi...");
 
       const endpoint = "/member-invoices/my";
-      console.log("[LOAD-MY-INVOICES] Using endpoint:", endpoint);
+      console.log("[LOAD-MY-INVOICES] Sử dụng endpoint:", endpoint);
       const response = await api.get(endpoint);
-      console.log("[LOAD-MY-INVOICES] Response:", response.data);
+      console.log("[LOAD-MY-INVOICES] Phản hồi:", response.data);
 
       let invoiceList = [];
       if (Array.isArray(response.data)) {
@@ -588,15 +588,15 @@ const MyGroup = () => {
       }
 
       console.log(
-        "[LOAD-MY-INVOICES] Loaded",
+        "[LOAD-MY-INVOICES] Đã tải",
         invoiceList.length,
-        "invoice(s)"
+        "hóa đơn"
       );
       setMyInvoices(invoiceList);
     } catch (err) {
-      console.error("[LOAD-MY-INVOICES] Error:", err);
-      console.error("[LOAD-MY-INVOICES] Error response:", err.response?.data);
-      toast.error("Failed to load invoices");
+      console.error("[LOAD-MY-INVOICES] Lỗi:", err);
+      console.error("[LOAD-MY-INVOICES] Phản hồi lỗi:", err.response?.data);
+      toast.error("Không thể tải hóa đơn");
       setMyInvoices([]);
     } finally {
       setInvoicesLoading(false);
@@ -608,23 +608,23 @@ const MyGroup = () => {
 
     setInvoiceDetailLoading(true);
     try {
-      console.log("[LOAD-INVOICE-DETAIL] Fetching invoice detail:", invoiceId);
+      console.log("[LOAD-INVOICE-DETAIL] Đang tải chi tiết hóa đơn:", invoiceId);
 
       const endpoint = `/member-invoices/${invoiceId}`;
-      console.log("[LOAD-INVOICE-DETAIL] Using endpoint:", endpoint);
+      console.log("[LOAD-INVOICE-DETAIL] Sử dụng endpoint:", endpoint);
       const response = await api.get(endpoint);
-      console.log("[LOAD-INVOICE-DETAIL] Response:", response.data);
+      console.log("[LOAD-INVOICE-DETAIL] Phản hồi:", response.data);
 
       let invoiceDetail = response.data?.data || response.data;
       setSelectedInvoice(invoiceDetail);
       setInvoiceDetailOpen(true);
     } catch (err) {
-      console.error("[LOAD-INVOICE-DETAIL] Error:", err);
+      console.error("[LOAD-INVOICE-DETAIL] Lỗi:", err);
       console.error(
-        "[LOAD-INVOICE-DETAIL] Error response:",
+        "[LOAD-INVOICE-DETAIL] Phản hồi lỗi:",
         err.response?.data
       );
-      toast.error("Failed to load invoice details");
+      toast.error("Không thể tải chi tiết hóa đơn");
     } finally {
       setInvoiceDetailLoading(false);
     }
@@ -635,15 +635,17 @@ const MyGroup = () => {
 
     setPaymentLoading(true);
     try {
-      const baseUrl = " http://localhost:5173";
-      const returnUrl = `${baseUrl}/view-mygroup?invoiceId=${invoiceId}`;
-      const cancelUrl = `${baseUrl}/view-mygroup?invoiceId=${invoiceId}`;
+      // Use current origin instead of hardcoded localhost
+      const baseUrl = window.location.origin;
+      // Include payment parameter in return URLs so we can detect payment status
+      const returnUrl = `${baseUrl}/view-mygroup?payment=success&invoiceId=${invoiceId}`;
+      const cancelUrl = `${baseUrl}/view-mygroup?payment=cancelled&invoiceId=${invoiceId}`;
 
-      console.log("[PAYMENT] ========== PAYMENT INITIATED ==========");
-      console.log("[PAYMENT] Invoice ID:", invoiceId);
+      console.log("[PAYMENT] ========== BẮT ĐẦU THANH TOÁN ==========");
+      console.log("[PAYMENT] ID hóa đơn:", invoiceId);
       console.log("[PAYMENT] API:", `/invoice-payments/${invoiceId}`);
-      console.log("[PAYMENT] Return URL:", returnUrl);
-      console.log("[PAYMENT] Cancel URL:", cancelUrl);
+      console.log("[PAYMENT] URL trả về:", returnUrl);
+      console.log("[PAYMENT] URL hủy:", cancelUrl);
 
       const response = await api.post(`/invoice-payments/${invoiceId}`, null, {
         params: {
@@ -652,47 +654,47 @@ const MyGroup = () => {
         },
       });
 
-      console.log("[PAYMENT] ========== RESPONSE RECEIVED ==========");
-      console.log("[PAYMENT] Full Response:", response);
-      console.log("[PAYMENT] Response Data:", response.data);
-      console.log("[PAYMENT] Response Data Type:", typeof response.data);
+      console.log("[PAYMENT] ========== ĐÃ NHẬN PHẢN HỒI ==========");
+      console.log("[PAYMENT] Phản hồi đầy đủ:", response);
+      console.log("[PAYMENT] Dữ liệu phản hồi:", response.data);
+      console.log("[PAYMENT] Kiểu dữ liệu phản hồi:", typeof response.data);
 
       // Try multiple ways to get payment URL
       const paymentUrl =
         response.data?.checkoutUrl || response.data?.data?.checkoutUrl;
 
-      console.log("[PAYMENT] Extracted Payment URL:", paymentUrl);
+      console.log("[PAYMENT] URL thanh toán đã trích xuất:", paymentUrl);
 
       if (paymentUrl) {
         console.log(
-          "[PAYMENT] ✅ Payment URL found! Redirecting to:",
+          "[PAYMENT] ✅ Đã tìm thấy URL thanh toán! Đang chuyển hướng đến:",
           paymentUrl
         );
-        toast.success("Redirecting to payment gateway...");
+        toast.success("Đang chuyển hướng đến cổng thanh toán...");
 
         // Small delay to show toast
         setTimeout(() => {
-          console.log("[PAYMENT] 🚀 Now redirecting...");
+          console.log("[PAYMENT] 🚀 Đang chuyển hướng...");
           window.location.href = paymentUrl;
         }, 500);
       } else {
-        console.warn("[PAYMENT] ⚠️ No payment URL found in response");
+        console.warn("[PAYMENT] ⚠️ Không tìm thấy URL thanh toán trong phản hồi");
         console.log(
-          "[PAYMENT] Available keys in response.data:",
+          "[PAYMENT] Các khóa có sẵn trong response.data:",
           Object.keys(response.data || {})
         );
         console.log(
-          "[PAYMENT] Full response.data structure:",
+          "[PAYMENT] Cấu trúc response.data đầy đủ:",
           JSON.stringify(response.data, null, 2)
         );
-        toast.error("Payment URL not found in response");
+        toast.error("Không tìm thấy URL thanh toán trong phản hồi");
       }
     } catch (err) {
-      console.error("[PAYMENT] ========== ERROR OCCURRED ==========");
-      console.error("[PAYMENT] Error:", err);
-      console.error("[PAYMENT] Error Response:", err.response);
-      console.error("[PAYMENT] Error Data:", err.response?.data);
-      toast.error(err?.response?.data?.message || "Failed to initiate payment");
+      console.error("[PAYMENT] ========== ĐÃ XẢY RA LỖI ==========");
+      console.error("[PAYMENT] Lỗi:", err);
+      console.error("[PAYMENT] Phản hồi lỗi:", err.response);
+      console.error("[PAYMENT] Dữ liệu lỗi:", err.response?.data);
+      toast.error(err?.response?.data?.message || "Không thể khởi tạo thanh toán");
     } finally {
       setPaymentLoading(false);
     }
@@ -700,7 +702,7 @@ const MyGroup = () => {
 
   const createServiceRequest = async () => {
     if (!selectedGroup?.id) {
-      toast.warning("No group selected");
+      toast.warning("Chưa chọn nhóm");
       return;
     }
     if (
@@ -709,13 +711,13 @@ const MyGroup = () => {
       !serviceForm.title
     ) {
       toast.warning(
-        "Please fill in required fields (Vehicle, Service Center & Title)"
+        "Vui lòng điền đầy đủ các trường bắt buộc (Xe, Trung tâm dịch vụ & Tiêu đề)"
       );
       return;
     }
 
     setCreateServiceSubmitting(true);
-    console.log("[CREATE-SERVICE-REQUEST] Starting creation with data:", {
+    console.log("[CREATE-SERVICE-REQUEST] Bắt đầu tạo với dữ liệu:", {
       groupId: selectedGroup.id,
       vehicleId: serviceForm.vehicleId,
       serviceCenterId: serviceForm.serviceCenterId,
@@ -740,8 +742,8 @@ const MyGroup = () => {
         },
       });
 
-      console.log("[CREATE-SERVICE-REQUEST] Response:", response.data);
-      toast.success("Service request created successfully!");
+      console.log("[CREATE-SERVICE-REQUEST] Phản hồi:", response.data);
+      toast.success("Tạo yêu cầu dịch vụ thành công!");
 
       setCreateServiceOpen(false);
       setServiceForm({
@@ -753,18 +755,18 @@ const MyGroup = () => {
       });
 
       console.log(
-        "[CREATE-SERVICE-REQUEST] Reloading service requests for group:",
+        "[CREATE-SERVICE-REQUEST] Đang tải lại yêu cầu dịch vụ cho nhóm:",
         selectedGroup.id
       );
       await loadServiceRequests(selectedGroup.id);
     } catch (err) {
-      console.error("[CREATE-SERVICE-REQUEST] Error:", err);
+      console.error("[CREATE-SERVICE-REQUEST] Lỗi:", err);
       console.error(
-        "[CREATE-SERVICE-REQUEST] Error response:",
+        "[CREATE-SERVICE-REQUEST] Phản hồi lỗi:",
         err.response?.data
       );
       toast.error(
-        err?.response?.data?.message || "Failed to create service request"
+        err?.response?.data?.message || "Không thể tạo yêu cầu dịch vụ"
       );
     } finally {
       setCreateServiceSubmitting(false);
@@ -780,18 +782,18 @@ const MyGroup = () => {
 
   const submitConfirmation = async () => {
     if (!confirmingRequest?.id) {
-      toast.warning("No service request selected");
+      toast.warning("Chưa chọn yêu cầu dịch vụ");
       return;
     }
 
     // Require reason for rejection
     if (!confirmAction && !confirmReason.trim()) {
-      toast.warning("Please provide a reason for rejection");
+      toast.warning("Vui lòng cung cấp lý do từ chối");
       return;
     }
 
     setConfirmSubmitting(true);
-    console.log("[CONFIRM-SERVICE-REQUEST] Submitting confirmation:", {
+    console.log("[CONFIRM-SERVICE-REQUEST] Đang gửi xác nhận:", {
       requestId: confirmingRequest.id,
       confirm: confirmAction,
       reason: confirmReason,
@@ -808,12 +810,12 @@ const MyGroup = () => {
         "/service-request-confirmations",
         payload
       );
-      console.log("[CONFIRM-SERVICE-REQUEST] Response:", response.data);
+      console.log("[CONFIRM-SERVICE-REQUEST] Phản hồi:", response.data);
 
       toast.success(
         confirmAction
-          ? "Service request confirmed successfully!"
-          : "Service request rejected"
+          ? "Xác nhận yêu cầu dịch vụ thành công!"
+          : "Đã từ chối yêu cầu dịch vụ"
       );
 
       setConfirmModalOpen(false);
@@ -830,23 +832,23 @@ const MyGroup = () => {
 
         // Force reload voting status with retry mechanism to ensure API has updated
         const requestId = confirmingRequest.id;
-        console.log("[VOTE] Starting retry mechanism for request:", requestId);
+        console.log("[VOTE] Bắt đầu cơ chế thử lại cho yêu cầu:", requestId);
 
         // Retry 3 times with increasing delays
         for (let i = 0; i < 3; i++) {
           await new Promise((resolve) => setTimeout(resolve, (i + 1) * 1000));
-          console.log(`[VOTE] Reloading voting status (attempt ${i + 1}/3)`);
+          console.log(`[VOTE] Đang tải lại trạng thái bỏ phiếu (lần thử ${i + 1}/3)`);
           await fetchVotingStatus(requestId, true);
         }
       }
     } catch (err) {
-      console.error("[CONFIRM-SERVICE-REQUEST] Error:", err);
+      console.error("[CONFIRM-SERVICE-REQUEST] Lỗi:", err);
       console.error(
-        "[CONFIRM-SERVICE-REQUEST] Error response:",
+        "[CONFIRM-SERVICE-REQUEST] Phản hồi lỗi:",
         err.response?.data
       );
       toast.error(
-        err?.response?.data?.message || "Failed to submit confirmation"
+        err?.response?.data?.message || "Không thể gửi xác nhận"
       );
     } finally {
       setConfirmSubmitting(false);
@@ -855,13 +857,13 @@ const MyGroup = () => {
 
   useEffect(() => {
     if (!isAuthenticated) {
-      message.error("Please login to view your groups");
+      message.error("Vui lòng đăng nhập để xem nhóm của bạn");
       navigate("/login");
       return;
     }
 
     if (!isCoOwner && !isAdmin && !isStaff) {
-      message.error("You don't have permission to access this page");
+      message.error("Bạn không có quyền truy cập trang này");
       navigate("/");
       return;
     }
@@ -905,41 +907,99 @@ const MyGroup = () => {
     const paymentStatus = searchParams.get("payment");
     const invoiceId = searchParams.get("invoiceId");
 
-    if (paymentStatus && invoiceId && groups.length > 0) {
-      console.log("[PAYMENT-RETURN] Payment status:", paymentStatus);
-      console.log("[PAYMENT-RETURN] Invoice ID:", invoiceId);
+    // Also check for common payment gateway return parameters (VNPay, etc.)
+    const vnpResponseCode = searchParams.get("vnp_ResponseCode");
+    const vnpTransactionStatus = searchParams.get("vnp_TransactionStatus");
+    const vnpTxnRef = searchParams.get("vnp_TxnRef");
+    
+    // Determine payment status from various sources
+    let finalPaymentStatus = paymentStatus;
+    let finalInvoiceId = invoiceId;
 
+    // If payment gateway returns different format, try to parse it
+    if (!finalPaymentStatus && vnpResponseCode) {
+      // VNPay format: "00" means success
+      if (vnpResponseCode === "00" || vnpTransactionStatus === "00") {
+        finalPaymentStatus = "success";
+      } else {
+        finalPaymentStatus = "failed";
+      }
+    }
+
+    // Try to get invoiceId from different sources
+    if (!finalInvoiceId && vnpTxnRef) {
+      finalInvoiceId = vnpTxnRef;
+    }
+
+    // Also check if payment gateway appends invoiceId to URL path
+    if (!finalInvoiceId) {
+      const pathMatch = location.pathname.match(/invoiceId[=:]([^&\/]+)/);
+      if (pathMatch) {
+        finalInvoiceId = pathMatch[1];
+      }
+    }
+
+    console.log("[PAYMENT-RETURN] ========== PHÁT HIỆN TRẢ VỀ TỪ THANH TOÁN ==========");
+    console.log("[PAYMENT-RETURN] URL đầy đủ:", window.location.href);
+    console.log("[PAYMENT-RETURN] Tìm kiếm vị trí:", location.search);
+    console.log("[PAYMENT-RETURN] Trạng thái thanh toán:", finalPaymentStatus);
+    console.log("[PAYMENT-RETURN] ID hóa đơn:", finalInvoiceId);
+    console.log("[PAYMENT-RETURN] Mã phản hồi VNPay:", vnpResponseCode);
+    console.log("[PAYMENT-RETURN] Nhóm đã tải:", groups.length > 0);
+
+    if (finalPaymentStatus && finalInvoiceId) {
       // Show notification based on payment status
-      if (paymentStatus === "success") {
-        toast.success("Payment completed successfully!");
-      } else if (paymentStatus === "cancelled") {
-        toast.info("Payment was cancelled");
+      if (finalPaymentStatus === "success") {
+        toast.success("Thanh toán thành công!");
+      } else if (finalPaymentStatus === "cancelled") {
+        toast.info("Thanh toán đã bị hủy");
+      } else if (finalPaymentStatus === "failed") {
+        toast.error("Thanh toán thất bại. Vui lòng thử lại.");
       }
 
-      // Just open invoice detail modal, no need to open group modal
+      // Handle payment return
       const handlePaymentReturn = async () => {
         try {
-          console.log("[PAYMENT-RETURN] Loading invoices...");
+          console.log("[PAYMENT-RETURN] Đang tải hóa đơn...");
           // Load all invoices first to refresh the list
           await loadMyInvoices();
 
           console.log(
-            "[PAYMENT-RETURN] Opening invoice detail modal for:",
-            invoiceId
+            "[PAYMENT-RETURN] Đang mở modal chi tiết hóa đơn cho:",
+            finalInvoiceId
           );
           // Load invoice detail and open modal (standalone)
-          await loadInvoiceDetail(invoiceId);
+          await loadInvoiceDetail(finalInvoiceId);
         } catch (err) {
-          console.error("[PAYMENT-RETURN] Error:", err);
+          console.error("[PAYMENT-RETURN] Lỗi:", err);
+          toast.error("Không thể tải chi tiết hóa đơn");
         }
       };
 
+      // Wait for groups to load if not loaded yet
+      if (groups.length === 0) {
+        console.log("[PAYMENT-RETURN] Nhóm chưa được tải, đang chờ...");
+        reloadGroups().then(() => {
       handlePaymentReturn();
+        });
+      } else {
+        handlePaymentReturn();
+      }
 
-      // Clean up URL
+      // Clean up URL after processing
+      setTimeout(() => {
       navigate("/view-mygroup", { replace: true });
+      }, 100);
+    } else if (location.search.includes("payment") || location.search.includes("vnp_")) {
+      // If we detect payment-related params but can't parse them, log for debugging
+      console.warn("[PAYMENT-RETURN] Phát hiện tham số thanh toán nhưng không thể phân tích:", {
+        search: location.search,
+        paymentStatus: finalPaymentStatus,
+        invoiceId: finalInvoiceId,
+      });
     }
-  }, [location.search, groups]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.search, location.pathname, groups.length]);
 
   const getCurrentUserId = () => {
     // Try localStorage userData first
@@ -1020,7 +1080,7 @@ const MyGroup = () => {
     if (!ids.includes(group.id)) ids.push(group.id);
     setHiddenIds(ids);
     setGroups((prev) => prev.filter((x) => x.id !== group.id));
-    message.success("Group hidden on this device");
+    message.success("Đã ẩn nhóm trên thiết bị này");
   };
 
   const hasAnyContract = (item) => {
@@ -1104,7 +1164,7 @@ const MyGroup = () => {
         g.id !== renameTarget.id
     );
     if (exists) {
-      message.error("Group name already exists. Please choose another name.");
+      message.error("Tên nhóm đã tồn tại. Vui lòng chọn tên khác.");
       return;
     }
     setRenameSubmitting(true);
@@ -1112,14 +1172,14 @@ const MyGroup = () => {
       await api.put(`/CoOwnership/${renameTarget.id}/rename`, {
         name: newName,
       });
-      message.success("Group renamed");
+      message.success("Đã đổi tên nhóm");
       setRenameOpen(false);
       setRenameTarget(null);
       setRenameValue("");
       await reloadGroups();
     } catch (err) {
-      console.error("Rename group failed", err);
-      message.error(err?.response?.data?.message || "Rename group failed");
+      console.error("Đổi tên nhóm thất bại", err);
+      message.error(err?.response?.data?.message || "Đổi tên nhóm thất bại");
     } finally {
       setRenameSubmitting(false);
     }
@@ -1135,8 +1195,8 @@ const MyGroup = () => {
       else if (Array.isArray(res.data?.data)) setMembers(res.data.data);
       else setMembers([]);
     } catch (err) {
-      console.error("Load members failed", err);
-      message.error("Failed to load members");
+      console.error("Không thể tải thành viên", err);
+      message.error("Không thể tải thành viên");
       setMembers([]);
     } finally {
       setMembersLoading(false);
@@ -1167,8 +1227,8 @@ const MyGroup = () => {
       });
       setVehicles(normalized);
     } catch (err) {
-      console.error("Load vehicles failed", err);
-      message.error("Failed to load vehicles");
+      console.error("Không thể tải xe", err);
+      message.error("Không thể tải xe");
       setVehicles([]);
     } finally {
       setVehiclesLoading(false);
@@ -1181,11 +1241,11 @@ const MyGroup = () => {
       await api.delete(
         `/GroupMember/deleteMember/${selectedGroup.id}/${member.userId}`
       );
-      message.success("Removed member");
+      message.success("Đã xóa thành viên");
       await loadMembers(selectedGroup.id);
     } catch (err) {
-      console.error("Remove member failed", err);
-      message.error(err?.response?.data?.message || "Failed to remove member");
+      console.error("Xóa thành viên thất bại", err);
+      message.error(err?.response?.data?.message || "Không thể xóa thành viên");
     }
   };
 
@@ -1198,7 +1258,7 @@ const MyGroup = () => {
         ? maybeId
         : selectedGroup?.id;
     if (!gid) {
-      message.error("Missing group id");
+      message.error("Thiếu ID nhóm");
       return;
     }
     setInviteLoading(true);
@@ -1211,7 +1271,7 @@ const MyGroup = () => {
         res?.data?.data?.code ||
         "";
       if (!code) {
-        message.success("Invite created");
+        message.success("Đã tạo lời mời");
       } else {
         setInviteCode(code);
         // Use backend expiry if provided.
@@ -1248,8 +1308,8 @@ const MyGroup = () => {
         setInviteModalVisible(true);
       }
     } catch (err) {
-      console.error("Create invite failed", err);
-      message.error(err?.response?.data?.message || "Failed to create invite");
+      console.error("Tạo lời mời thất bại", err);
+      message.error(err?.response?.data?.message || "Không thể tạo lời mời");
     } finally {
       setInviteLoading(false);
     }
@@ -1266,9 +1326,9 @@ const MyGroup = () => {
     if (!inviteCode) return;
     try {
       await navigator.clipboard.writeText(inviteCode);
-      message.success("Copied invite code");
+      message.success("Đã sao chép mã mời");
     } catch {
-      message.info("Invite code: " + inviteCode);
+      message.info("Mã mời: " + inviteCode);
     }
   };
 
@@ -1280,13 +1340,13 @@ const MyGroup = () => {
       setMembersVisible(false);
       setSelectedGroup(null);
     }
-    message.success("Group hidden on this device");
+    message.success("Đã ẩn nhóm trên thiết bị này");
   };
 
   const submitJoin = async () => {
     const code = (joinValue || "").trim();
     if (!code) {
-      message.warning("Enter an invite code");
+      message.warning("Nhập mã mời");
       return;
     }
     setJoinSubmitting(true);
@@ -1294,13 +1354,13 @@ const MyGroup = () => {
       await api.post(`/GroupInvite/join-by-invite`, null, {
         params: { inviteCode: code },
       });
-      message.success("Joined group successfully");
+      message.success("Tham gia nhóm thành công");
       setJoinOpen(false);
       setJoinValue("");
       await reloadGroups();
     } catch (err) {
-      console.error("Join by code failed", err);
-      message.error(err?.response?.data?.message || "Failed to join by code");
+      console.error("Tham gia bằng mã thất bại", err);
+      message.error(err?.response?.data?.message || "Không thể tham gia bằng mã");
     } finally {
       setJoinSubmitting(false);
     }
@@ -1310,17 +1370,17 @@ const MyGroup = () => {
   const loadMyVehicles = async () => {
     setMyVehiclesLoading(true);
     try {
-      console.log("[LOAD-MY-VEHICLES] Fetching vehicles...");
+      console.log("[LOAD-MY-VEHICLES] Đang tải xe...");
       const res = await api.get("/Vehicle/my-vehicles");
       let list = [];
       if (Array.isArray(res.data)) list = res.data;
       else if (Array.isArray(res.data?.data)) list = res.data.data;
       else list = [];
-      console.log("[LOAD-MY-VEHICLES] Loaded", list.length, "vehicles");
+      console.log("[LOAD-MY-VEHICLES] Đã tải", list.length, "xe");
       setMyVehicles(list);
     } catch (err) {
-      console.error("[LOAD-MY-VEHICLES] Error:", err);
-      toast.error("Failed to load your vehicles");
+      console.error("[LOAD-MY-VEHICLES] Lỗi:", err);
+      toast.error("Không thể tải xe của bạn");
       setMyVehicles([]);
     } finally {
       setMyVehiclesLoading(false);
@@ -1332,9 +1392,9 @@ const MyGroup = () => {
     if (!selectedGroup?.id || !vehicleId) return;
     setAttachSubmitting(true);
     console.log(
-      "[ATTACH-VEHICLE] Attaching vehicle:",
+      "[ATTACH-VEHICLE] Đang gắn xe:",
       vehicleId,
-      "to group:",
+      "vào nhóm:",
       selectedGroup.id
     );
 
@@ -1343,12 +1403,12 @@ const MyGroup = () => {
         groupId: selectedGroup.id,
         vehicleId: vehicleId,
       });
-      console.log("[ATTACH-VEHICLE] Success:", response.data);
-      toast.success("Vehicle attached to group successfully!");
+      console.log("[ATTACH-VEHICLE] Thành công:", response.data);
+      toast.success("Gắn xe vào nhóm thành công!");
       await Promise.all([loadVehicles(selectedGroup.id), loadMyVehicles()]);
     } catch (err) {
-      console.error("[ATTACH-VEHICLE] Error:", err);
-      console.error("[ATTACH-VEHICLE] Error response:", err.response?.data);
+      console.error("[ATTACH-VEHICLE] Lỗi:", err);
+      console.error("[ATTACH-VEHICLE] Phản hồi lỗi:", err.response?.data);
       const backendMsg = err?.response?.data?.message || err?.message || "";
       const status = err?.response?.status;
       const isDuplicate =
@@ -1357,9 +1417,9 @@ const MyGroup = () => {
           backendMsg
         );
       if (isDuplicate) {
-        toast.warning("Vehicle is already attached to another group");
+        toast.warning("Xe đã được gắn vào nhóm khác");
       } else {
-        toast.error(backendMsg || "Failed to attach vehicle");
+        toast.error(backendMsg || "Không thể gắn xe");
       }
     } finally {
       setAttachSubmitting(false);
@@ -1376,7 +1436,7 @@ const MyGroup = () => {
     // extra safety: prevent detach when the vehicle is active
     const v = vehicles.find((x) => x.id === vehicleId);
     if (v && v.isActive) {
-      message.warning("Please deactivate the vehicle before detaching");
+      message.warning("Vui lòng vô hiệu hóa xe trước khi tháo gỡ");
       return;
     }
     try {
@@ -1384,11 +1444,11 @@ const MyGroup = () => {
         groupId: selectedGroup.id,
         vehicleId,
       });
-      message.success("Vehicle detached from group");
+      message.success("Đã tháo gỡ xe khỏi nhóm");
       await loadVehicles(selectedGroup.id);
     } catch (err) {
-      console.error("Detach vehicle failed", err);
-      message.error(err?.response?.data?.message || "Detach vehicle failed");
+      console.error("Tháo gỡ xe thất bại", err);
+      message.error(err?.response?.data?.message || "Tháo gỡ xe thất bại");
     }
   };
 
@@ -1405,10 +1465,10 @@ const MyGroup = () => {
     try {
       if (targetActive) {
         await api.put(`/CoOwnership/vehicle/${id}/activate`);
-        message.success("Vehicle activated");
+        message.success("Đã kích hoạt xe");
       } else {
         await api.put(`/CoOwnership/vehicle/${id}/deactivate`);
-        message.success("Vehicle deactivated");
+        message.success("Đã vô hiệu hóa xe");
       }
       // Optimistically update UI
       setVehicles((prev) =>
@@ -1438,9 +1498,9 @@ const MyGroup = () => {
         retry(3, 300);
       }
     } catch (err) {
-      console.error("Toggle vehicle status failed", err);
+      console.error("Thay đổi trạng thái xe thất bại", err);
       message.error(
-        err?.response?.data?.message || "Failed to update vehicle status"
+        err?.response?.data?.message || "Không thể cập nhật trạng thái xe"
       );
     } finally {
       setTogglingVehicleIds((prev) => {
@@ -1468,11 +1528,11 @@ const MyGroup = () => {
     <Card>
       <Empty
         image={Empty.PRESENTED_IMAGE_SIMPLE}
-        description={<Text>You don't have any group</Text>}
+        description={<Text>Bạn chưa có nhóm nào</Text>}
       >
         <Link to="/create-group">
           <Button type="primary" icon={<PlusOutlined />}>
-            Create group
+            Tạo nhóm
           </Button>
         </Link>
       </Empty>
@@ -1497,15 +1557,15 @@ const MyGroup = () => {
                   icon={<ArrowLeftOutlined />}
                   onClick={handleBack}
                 >
-                  Back to homepage
+                  Về trang chủ
                 </Button>
                 <Title level={3} style={{ margin: 0 }}>
-                  <TeamOutlined /> My Groups
+                  <TeamOutlined /> Nhóm của tôi
                 </Title>
               </Space>
               <Space wrap>
                 <Input
-                  placeholder="Search by group name"
+                  placeholder="Tìm kiếm theo tên nhóm"
                   value={searchText}
                   onChange={(e) => setSearchText(e.target.value)}
                   style={{ width: 220 }}
@@ -1520,9 +1580,9 @@ const MyGroup = () => {
                     border: "1px solid #d9d9d9",
                   }}
                 >
-                  <option value="all">All</option>
-                  <option value="active">Active</option>
-                  <option value="inactive">Inactive</option>
+                  <option value="all">Tất cả</option>
+                  <option value="active">Đang hoạt động</option>
+                  <option value="inactive">Không hoạt động</option>
                 </select>
                 <Button
                   onClick={() => {
@@ -1530,15 +1590,15 @@ const MyGroup = () => {
                     setStatusFilter("all");
                   }}
                 >
-                  Clear
+                  Xóa bộ lọc
                 </Button>
-                <Button onClick={() => setJoinOpen(true)}>Join by code</Button>
+                <Button onClick={() => setJoinOpen(true)}>Tham gia bằng mã</Button>
                 <Button
                   type="primary"
                   icon={<PlusOutlined />}
                   onClick={() => navigate("/create-group")}
                 >
-                  Create group
+                  Tạo nhóm
                 </Button>
               </Space>
             </Space>
@@ -1581,14 +1641,14 @@ const MyGroup = () => {
                             color="green"
                             icon={<CheckCircleTwoTone twoToneColor="#52c41a" />}
                           >
-                            Active
+                            Đang hoạt động
                           </Tag>
                         ) : (
                           <Tag
                             color="red"
                             icon={<CloseCircleTwoTone twoToneColor="#ff4d4f" />}
                           >
-                            Inactive
+                            Không hoạt động
                           </Tag>
                         ),
                         <Button
@@ -1596,7 +1656,7 @@ const MyGroup = () => {
                           type="link"
                           onClick={() => openMembers(item)}
                         >
-                          Details
+                          Chi tiết
                         </Button>,
                         // No delete on the row; only inside Details for owners
                       ].filter(Boolean)}
@@ -1606,7 +1666,7 @@ const MyGroup = () => {
                         description={
                           <>
                             <Text type="secondary">
-                              Created by: {item.createdByName || "Unknown"}
+                              Tạo bởi: {item.createdByName || "Không xác định"}
                             </Text>
                           </>
                         }
@@ -1621,10 +1681,11 @@ const MyGroup = () => {
           <Modal
             open={renameOpen}
             title={
-              renameTarget ? `Rename: ${renameTarget.name}` : "Rename group"
+              renameTarget ? `Đổi tên: ${renameTarget.name}` : "Đổi tên nhóm"
             }
             onCancel={() => setRenameOpen(false)}
             onOk={submitRename}
+            okText="Đổi tên"
             okButtonProps={{
               loading: renameSubmitting,
               disabled:
@@ -1635,7 +1696,7 @@ const MyGroup = () => {
           >
             <Input
               autoFocus
-              placeholder="Enter new group name"
+              placeholder="Nhập tên nhóm mới"
               value={renameValue}
               onChange={(e) => setRenameValue(e.target.value)}
               maxLength={100}
@@ -1643,18 +1704,18 @@ const MyGroup = () => {
           </Modal>
 
           <Modal
-            title="Join a group by invite code"
+            title="Tham gia nhóm bằng mã mời"
             open={joinOpen}
             onCancel={() => setJoinOpen(false)}
             onOk={submitJoin}
-            okText="Join"
+            okText="Tham gia"
             okButtonProps={{
               loading: joinSubmitting,
               disabled: joinSubmitting || !joinValue.trim(),
             }}
           >
             <Input
-              placeholder="Enter invite code (e.g., 8A7A0D84)"
+              placeholder="Nhập mã mời (ví dụ: 8A7A0D84)"
               value={joinValue}
               onChange={(e) => setJoinValue(e.target.value.toUpperCase())}
               maxLength={16}
@@ -1663,7 +1724,7 @@ const MyGroup = () => {
 
           {/* Invite modal - professional popup for showing invite code */}
           <Modal
-            title="Invite code"
+            title="Mã mời"
             open={inviteModalVisible}
             onCancel={() => setInviteModalVisible(false)}
             footer={
@@ -1676,12 +1737,12 @@ const MyGroup = () => {
               >
                 <div>
                   {inviteCode ? (
-                    <Button onClick={copyInvite}>Copy code</Button>
+                    <Button onClick={copyInvite}>Sao chép mã</Button>
                   ) : null}
                 </div>
                 <div>
                   <Button onClick={() => setInviteModalVisible(false)}>
-                    Close
+                    Đóng
                   </Button>
                 </div>
               </div>
@@ -1689,7 +1750,7 @@ const MyGroup = () => {
           >
             <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
               <div style={{ fontSize: 14, color: "#595959" }}>
-                Share this code with others to let them join the group.
+                Chia sẻ mã này với người khác để họ tham gia nhóm.
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                 <Input
@@ -1700,7 +1761,7 @@ const MyGroup = () => {
                 <Tag color="purple">{inviteCode}</Tag>
               </div>
               <div style={{ color: "#8c8c8c" }}>
-                Expires in{" "}
+                Hết hạn sau{" "}
                 {inviteCountdown === "expired"
                   ? "00:00"
                   : inviteCountdown || "15:00"}
@@ -1710,10 +1771,10 @@ const MyGroup = () => {
                   type="link"
                   onClick={() => {
                     navigator.clipboard.writeText(inviteCode);
-                    message.success("Copied invite code");
+                    message.success("Đã sao chép mã mời");
                   }}
                 >
-                  Copy to clipboard
+                  Sao chép vào clipboard
                 </Button>
               </div>
             </div>
@@ -1723,19 +1784,19 @@ const MyGroup = () => {
             title={
               selectedGroup ? (
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <span>Group: {selectedGroup.name}</span>
+                  <span>Nhóm: {selectedGroup.name}</span>
                   {isCurrentUserOwner(selectedGroup, members) && (
                     <Button
                       type="link"
                       size="small"
                       onClick={() => openRename(selectedGroup)}
                     >
-                      Rename
+                      Đổi tên
                     </Button>
                   )}
                 </div>
               ) : (
-                "Group details"
+                "Chi tiết nhóm"
               )
             }
             open={membersVisible}
@@ -1757,18 +1818,18 @@ const MyGroup = () => {
                   !selectedGroup._hasContract ? (
                     <Popconfirm
                       key="delete-group-footer"
-                      title="Delete this group permanently?"
-                      okText="Delete"
+                      title="Xóa nhóm này vĩnh viễn?"
+                      okText="Xóa"
                       okButtonProps={{ danger: true }}
                       onConfirm={() => deleteGroup(selectedGroup)}
                     >
-                      <Button danger>Delete group</Button>
+                      <Button danger>Xóa nhóm</Button>
                     </Popconfirm>
                   ) : null}
                 </div>
                 <div>
                   <Button onClick={() => setMembersVisible(false)}>
-                    Close
+                    Đóng
                   </Button>
                 </div>
               </div>
@@ -1799,7 +1860,7 @@ const MyGroup = () => {
                       items={[
                         {
                           key: "members",
-                          label: "Members",
+                          label: "Thành viên",
                           children: (
                             <>
                               {iAmOwner && (
@@ -1811,36 +1872,36 @@ const MyGroup = () => {
                                     >
                                       {inviteCode &&
                                       inviteCountdown !== "expired"
-                                        ? "Regenerate invite code"
-                                        : "Create invite code"}
+                                        ? "Tạo lại mã mời"
+                                        : "Tạo mã mời"}
                                     </Button>
                                     {!selectedGroup?._hasContract ? (
                                       <Link
                                         to="/create-econtract"
                                         state={{ groupId: selectedGroup?.id }}
                                       >
-                                        <Button>Create contract</Button>
+                                        <Button>Tạo hợp đồng</Button>
                                       </Link>
                                     ) : null}
                                     {inviteCode ? (
                                       <Space>
                                         <Tag color="purple">
-                                          Code: {inviteCode}
+                                          Mã: {inviteCode}
                                         </Tag>
                                         <Tag>
-                                          Expires in{" "}
+                                          Hết hạn sau{" "}
                                           {inviteCountdown === "expired"
                                             ? "00:00"
                                             : inviteCountdown || "15:00"}
                                         </Tag>
-                                        <Tooltip title="Copy to clipboard">
+                                        <Tooltip title="Sao chép vào clipboard">
                                           <Button
                                             onClick={copyInvite}
                                             disabled={
                                               inviteCountdown === "expired"
                                             }
                                           >
-                                            Copy
+                                            Sao chép
                                           </Button>
                                         </Tooltip>
                                       </Space>
@@ -1861,7 +1922,7 @@ const MyGroup = () => {
                                         className="booking-btn"
                                         type="primary"
                                       >
-                                        Go to Booking
+                                        Đi đến Đặt lịch
                                       </Button>
                                     </Link>
                                   </Space>
@@ -1894,15 +1955,15 @@ const MyGroup = () => {
                                         canDelete ? (
                                           <Popconfirm
                                             key="delete"
-                                            title={`Remove ${
+                                            title={`Xóa ${
                                               m.fullName || m.userId
                                             }?`}
-                                            okText="Delete"
+                                            okText="Xóa"
                                             okButtonProps={{ danger: true }}
                                             onConfirm={() => kickMember(m)}
                                           >
                                             <Button danger type="link">
-                                              Kick
+                                              Xóa
                                             </Button>
                                           </Popconfirm>
                                         ) : null,
@@ -1920,7 +1981,7 @@ const MyGroup = () => {
                                         description={
                                           m.inviteStatus ? (
                                             <span>
-                                              Invite:{" "}
+                                              Lời mời:{" "}
                                               <Tag>{m.inviteStatus}</Tag>
                                             </span>
                                           ) : null
@@ -1935,7 +1996,7 @@ const MyGroup = () => {
                         },
                         {
                           key: "vehicles",
-                          label: "Vehicles",
+                          label: "Xe",
                           children: (
                             <>
                               {iAmOwner &&
@@ -1944,7 +2005,7 @@ const MyGroup = () => {
                                   <div style={{ marginBottom: 12 }}>
                                     <Space>
                                       <Button onClick={openAttachModal}>
-                                        Attach vehicle
+                                        Gắn xe
                                       </Button>
                                     </Space>
                                   </div>
@@ -1963,7 +2024,7 @@ const MyGroup = () => {
                                         v.modelName ||
                                         v.model ||
                                         v.licensePlate ||
-                                        "Vehicle";
+                                        "Xe";
                                       const avatarText = (displayName || "?")
                                         .toString()
                                         .slice(0, 1)
@@ -1984,7 +2045,7 @@ const MyGroup = () => {
                                                 <div className="vehicle-info-grid">
                                                   <div className="vehicle-info-row">
                                                     <div className="vehicle-info-label">
-                                                      Plate
+                                                      Biển số
                                                     </div>
                                                     <div className="vehicle-info-val">
                                                       {v.plateNumber ||
@@ -1994,7 +2055,7 @@ const MyGroup = () => {
                                                   </div>
                                                   <div className="vehicle-info-row">
                                                     <div className="vehicle-info-label">
-                                                      Make
+                                                      Hãng
                                                     </div>
                                                     <div className="vehicle-info-val">
                                                       {v.make ||
@@ -2005,7 +2066,7 @@ const MyGroup = () => {
                                                   </div>
                                                   <div className="vehicle-info-row">
                                                     <div className="vehicle-info-label">
-                                                      Year
+                                                      Năm
                                                     </div>
                                                     <div className="vehicle-info-val">
                                                       {v.modelYear ||
@@ -2015,7 +2076,7 @@ const MyGroup = () => {
                                                   </div>
                                                   <div className="vehicle-info-row">
                                                     <div className="vehicle-info-label">
-                                                      Color
+                                                      Màu
                                                     </div>
                                                     <div className="vehicle-info-val">
                                                       {v.color ||
@@ -2025,7 +2086,7 @@ const MyGroup = () => {
                                                   </div>
                                                   <div className="vehicle-info-row">
                                                     <div className="vehicle-info-label">
-                                                      Battery (kWh)
+                                                      Pin (kWh)
                                                     </div>
                                                     <div className="vehicle-info-val">
                                                       {v.batteryCapacityKwh ||
@@ -2036,7 +2097,7 @@ const MyGroup = () => {
                                                   </div>
                                                   <div className="vehicle-info-row">
                                                     <div className="vehicle-info-label">
-                                                      Range (km)
+                                                      Tầm hoạt động (km)
                                                     </div>
                                                     <div className="vehicle-info-val">
                                                       {v.rangeKm ||
@@ -2056,8 +2117,8 @@ const MyGroup = () => {
                                                     }
                                                   >
                                                     {v.isActive
-                                                      ? "Active"
-                                                      : "Inactive"}
+                                                      ? "Đang hoạt động"
+                                                      : "Không hoạt động"}
                                                   </Tag>
                                                   {iAmOwner ? (
                                                     <>
@@ -2069,13 +2130,13 @@ const MyGroup = () => {
                                                         }
                                                       >
                                                         {v.isActive
-                                                          ? "Deactivate"
-                                                          : "Activate"}
+                                                          ? "Vô hiệu hóa"
+                                                          : "Kích hoạt"}
                                                       </Button>
                                                       {!v.isActive ? (
                                                         <Popconfirm
                                                           key="detach"
-                                                          title="Detach this vehicle from group?"
+                                                          title="Tháo gỡ xe này khỏi nhóm?"
                                                           onConfirm={() =>
                                                             detachVehicle(v.id)
                                                           }
@@ -2085,7 +2146,7 @@ const MyGroup = () => {
                                                             type="link"
                                                             disabled={disabled}
                                                           >
-                                                            Detach
+                                                            Tháo gỡ
                                                           </Button>
                                                         </Popconfirm>
                                                       ) : null}
@@ -2106,7 +2167,7 @@ const MyGroup = () => {
                         },
                         {
                           key: "serviceRequests",
-                          label: "Service Requests",
+                          label: "Yêu cầu dịch vụ",
                           children: (
                             <>
                               <div style={{ marginBottom: 12 }}>
@@ -2117,7 +2178,7 @@ const MyGroup = () => {
                                     loadServiceCenters();
                                   }}
                                 >
-                                  Create Service Request
+                                  Tạo yêu cầu dịch vụ
                                 </Button>
                               </div>
                               <Divider style={{ margin: "12px 0" }} />
@@ -2126,72 +2187,50 @@ const MyGroup = () => {
                                 itemLayout="horizontal"
                                 dataSource={serviceRequests}
                                 locale={{
-                                  emptyText: "No service requests yet",
+                                  emptyText: "Chưa có yêu cầu dịch vụ",
                                 }}
                                 renderItem={(sr) => {
                                   const statusMap = {
-                                    draft: { color: "default", text: "Draft" },
-                                    DRAFT: { color: "default", text: "Draft" },
-                                    pending_quote: {
-                                      color: "blue",
-                                      text: "Pending Quote",
-                                    },
+                                    DRAFT: { color: "default", text: "Nháp" },
                                     PENDING_QUOTE: {
                                       color: "blue",
-                                      text: "Pending Quote",
+                                      text: "Chờ báo giá",
                                     },
-                                    voting: { color: "orange", text: "Voting" },
-                                    VOTING: { color: "orange", text: "Voting" },
-                                    approved: {
-                                      color: "green",
-                                      text: "Approved",
-                                    },
+                                    VOTING: { color: "orange", text: "Đang bỏ phiếu" },
                                     APPROVED: {
                                       color: "green",
-                                      text: "Approved",
-                                    },
-                                    rejected: {
-                                      color: "red",
-                                      text: "Rejected",
+                                      text: "Đã phê duyệt",
                                     },
                                     REJECTED: {
                                       color: "red",
-                                      text: "Rejected",
-                                    },
-                                    in_progress: {
-                                      color: "blue",
-                                      text: "In Progress",
+                                      text: "Đã từ chối",
                                     },
                                     IN_PROGRESS: {
                                       color: "blue",
-                                      text: "In Progress",
-                                    },
-                                    completed: {
-                                      color: "success",
-                                      text: "Completed",
+                                      text: "Đang thực hiện",
                                     },
                                     COMPLETED: {
                                       color: "success",
-                                      text: "Completed",
+                                      text: "Hoàn thành",
                                     },
                                   };
                                   const typeMap = {
                                     MAINTENANCE: {
                                       color: "blue",
-                                      text: "Maintenance",
+                                      text: "Bảo dưỡng",
                                     },
-                                    REPAIR: { color: "orange", text: "Repair" },
+                                    REPAIR: { color: "orange", text: "Sửa chữa" },
                                     INSPECTION: {
                                       color: "green",
-                                      text: "Inspection",
+                                      text: "Kiểm tra",
                                     },
                                     CLEANING: {
                                       color: "cyan",
-                                      text: "Cleaning",
+                                      text: "Vệ sinh",
                                     },
                                     UPGRADE: {
                                       color: "purple",
-                                      text: "Upgrade",
+                                      text: "Nâng cấp",
                                     },
                                   };
                                   const statusInfo = statusMap[sr.status] || {
@@ -2342,7 +2381,7 @@ const MyGroup = () => {
                                             }}
                                           >
                                             {votedCount} / {totalMembers} đã
-                                            vote
+                                            bỏ phiếu
                                           </div>
 
                                           {confirmedUsers.length > 0 && (
@@ -2351,7 +2390,7 @@ const MyGroup = () => {
                                                 strong
                                                 style={{ color: "#52c41a" }}
                                               >
-                                                Đã vote:
+                                                Đã bỏ phiếu:
                                               </Text>
                                               <div
                                                 style={{
@@ -2494,13 +2533,13 @@ const MyGroup = () => {
                                                 type="secondary"
                                                 style={{ color: "#52c41a" }}
                                               >
-                                                ✓ Tất cả đã vote và không có ai
+                                                ✓ Tất cả đã bỏ phiếu và không có ai
                                                 từ chối
                                               </Text>
                                             )}
                                           {votingData.length === 0 && (
                                             <Text type="secondary">
-                                              Chưa có dữ liệu vote
+                                              Chưa có dữ liệu bỏ phiếu
                                             </Text>
                                           )}
                                         </div>
@@ -2550,8 +2589,8 @@ const MyGroup = () => {
                                             key="my-decision"
                                             title={
                                               userDecision.reason
-                                                ? `Reason: ${userDecision.reason}`
-                                                : "No reason provided"
+                                                ? `Lý do: ${userDecision.reason}`
+                                                : "Không có lý do"
                                             }
                                           >
                                             <Tag
@@ -2562,11 +2601,11 @@ const MyGroup = () => {
                                                   : "red"
                                               }
                                             >
-                                              You{" "}
+                                              Bạn{" "}
                                               {userDecision.decision ===
                                               "CONFIRM"
-                                                ? "Confirmed"
-                                                : "Rejected"}
+                                                ? "đã xác nhận"
+                                                : "đã từ chối"}
                                             </Tag>
                                           </Tooltip>
                                         ) : null,
@@ -2580,7 +2619,7 @@ const MyGroup = () => {
                                               openConfirmModal(sr, true)
                                             }
                                           >
-                                            Confirm
+                                            Xác nhận
                                           </Button>
                                         ) : null,
                                         // Show Reject button only if: 1) in VOTING status, 2) not decided yet
@@ -2593,7 +2632,7 @@ const MyGroup = () => {
                                               openConfirmModal(sr, false)
                                             }
                                           >
-                                            Reject
+                                            Từ chối
                                           </Button>
                                         ) : null,
                                       ].filter(Boolean)}
@@ -2633,7 +2672,7 @@ const MyGroup = () => {
                                             )}
                                             {sr.costEstimate ? (
                                               <span>
-                                                Cost Estimate:{" "}
+                                                Ước tính chi phí:{" "}
                                                 {(
                                                   sr.costEstimate / 1000
                                                 ).toFixed(0)}
@@ -2664,7 +2703,7 @@ const MyGroup = () => {
                         },
                         {
                           key: "groupExpenses",
-                          label: "Group Expenses",
+                          label: "Chi phí nhóm",
                           children: (
                             <>
                               <List
@@ -2672,21 +2711,21 @@ const MyGroup = () => {
                                 itemLayout="horizontal"
                                 dataSource={groupExpenses}
                                 locale={{
-                                  emptyText: "No expenses yet",
+                                  emptyText: "Chưa có chi phí",
                                 }}
                                 renderItem={(expense) => {
                                   const statusMap = {
                                     CONFIRMED: {
                                       color: "green",
-                                      text: "Confirmed",
+                                      text: "Đã xác nhận",
                                     },
                                     PENDING: {
                                       color: "orange",
-                                      text: "Pending",
+                                      text: "Chờ xử lý",
                                     },
                                     REJECTED: {
                                       color: "red",
-                                      text: "Rejected",
+                                      text: "Đã từ chối",
                                     },
                                   };
                                   const statusInfo = statusMap[
@@ -2734,10 +2773,10 @@ const MyGroup = () => {
                                           <div>
                                             {expense.incurredAt && (
                                               <span style={{ color: "#888" }}>
-                                                Incurred:{" "}
+                                                Phát sinh:{" "}
                                                 {new Date(
                                                   expense.incurredAt
-                                                ).toLocaleDateString("en-US")}
+                                                ).toLocaleDateString("vi-VN")}
                                               </span>
                                             )}
                                           </div>
@@ -2752,7 +2791,7 @@ const MyGroup = () => {
                         },
                         {
                           key: "myInvoices",
-                          label: "My Invoices",
+                          label: "Hóa đơn của tôi",
                           children: (
                             <>
                               <List
@@ -2760,14 +2799,14 @@ const MyGroup = () => {
                                 itemLayout="horizontal"
                                 dataSource={myInvoices}
                                 locale={{
-                                  emptyText: "No invoices yet",
+                                  emptyText: "Chưa có hóa đơn",
                                 }}
                                 renderItem={(invoice) => {
                                   const statusMap = {
-                                    DUE: { color: "orange", text: "Due" },
-                                    PAID: { color: "green", text: "Paid" },
-                                    OVERDUE: { color: "red", text: "Overdue" },
-                                    PENDING: { color: "blue", text: "Pending" },
+                                    DUE: { color: "orange", text: "Đến hạn" },
+                                    PAID: { color: "green", text: "Đã thanh toán" },
+                                    OVERDUE: { color: "red", text: "Quá hạn" },
+                                    PENDING: { color: "blue", text: "Chờ xử lý" },
                                   };
                                   const statusInfo = statusMap[
                                     invoice.status
@@ -2851,7 +2890,7 @@ const MyGroup = () => {
                                             loadInvoiceDetail(invoice.id)
                                           }
                                         >
-                                          View Details
+                                          Xem chi tiết
                                         </Button>,
                                       ].filter(Boolean)}
                                     >
@@ -2865,15 +2904,15 @@ const MyGroup = () => {
                                             🧾
                                           </Avatar>
                                         }
-                                        title={invoice.title || "Invoice"}
+                                        title={invoice.title || "Hóa đơn"}
                                         description={
                                           <div>
                                             {invoice.createdAt && (
                                               <span style={{ color: "#888" }}>
-                                                Created:{" "}
+                                                Tạo:{" "}
                                                 {new Date(
                                                   invoice.createdAt
-                                                ).toLocaleDateString("en-US")}
+                                                ).toLocaleDateString("vi-VN")}
                                               </span>
                                             )}
                                           </div>
@@ -2892,19 +2931,19 @@ const MyGroup = () => {
                 })()}
               </div>
             ) : (
-              <Empty description="No group selected" />
+              <Empty description="Chưa chọn nhóm" />
             )}
           </Modal>
 
           <Modal
             open={attachOpen}
-            title="Attach vehicle to this group"
+            title="Gắn xe vào nhóm này"
             onCancel={() => setAttachOpen(false)}
             footer={null}
             width={800}
           >
             <Space style={{ marginBottom: 12 }}>
-              <Text>Filter by contract status:</Text>
+              <Text>Lọc theo trạng thái hợp đồng:</Text>
               <select
                 value={vehicleContractFilter}
                 onChange={(e) => setVehicleContractFilter(e.target.value)}
@@ -2914,9 +2953,9 @@ const MyGroup = () => {
                   border: "1px solid #d9d9d9",
                 }}
               >
-                <option value="all">All Vehicles</option>
-                <option value="with_contract">With Contract</option>
-                <option value="without_contract">Without Contract</option>
+                <option value="all">Tất cả xe</option>
+                <option value="with_contract">Có hợp đồng</option>
+                <option value="without_contract">Không có hợp đồng</option>
               </select>
             </Space>
             <List
@@ -2931,7 +2970,7 @@ const MyGroup = () => {
                 return true;
               })}
               locale={{
-                emptyText: "No vehicles available",
+                emptyText: "Không có xe nào",
               }}
               renderItem={(v) => {
                 const hasContract = v.hasContract || v.contractId || false;
@@ -2947,11 +2986,11 @@ const MyGroup = () => {
                     actions={[
                       hasContract ? (
                         <Tag color="green" key="contract">
-                          Has Contract
+                          Có hợp đồng
                         </Tag>
                       ) : (
                         <Tag color="red" key="no-contract">
-                          No Contract
+                          Không có hợp đồng
                         </Tag>
                       ),
                       !hasContract ? (
@@ -2962,7 +3001,7 @@ const MyGroup = () => {
                           loading={attachSubmitting}
                           onClick={() => attachVehicle(v.id)}
                         >
-                          Attach
+                          Gắn
                         </Button>
                       ) : null,
                     ].filter(Boolean)}
@@ -2979,7 +3018,7 @@ const MyGroup = () => {
                       title={displayName}
                       description={
                         <div>
-                          {v.licensePlate && <div>Plate: {v.licensePlate}</div>}
+                          {v.licensePlate && <div>Biển số: {v.licensePlate}</div>}
                           {v.id && (
                             <div style={{ fontSize: "12px", color: "#999" }}>
                               ID: {v.id.substring(0, 8)}...
@@ -2996,7 +3035,7 @@ const MyGroup = () => {
 
           <Modal
             open={createServiceOpen}
-            title="Create Service Request"
+            title="Tạo yêu cầu dịch vụ"
             onCancel={() => {
               setCreateServiceOpen(false);
               setServiceForm({
@@ -3008,7 +3047,7 @@ const MyGroup = () => {
               });
             }}
             onOk={createServiceRequest}
-            okText="Create"
+            okText="Tạo"
             okButtonProps={{
               loading: createServiceSubmitting,
               disabled:
@@ -3026,7 +3065,7 @@ const MyGroup = () => {
                 size="middle"
               >
                 <div>
-                  <Text strong>Vehicle *</Text>
+                  <Text strong>Xe *</Text>
                   <select
                     value={serviceForm.vehicleId}
                     onChange={(e) =>
@@ -3043,7 +3082,7 @@ const MyGroup = () => {
                       marginTop: 4,
                     }}
                   >
-                    <option value="">Select a vehicle</option>
+                    <option value="">Chọn xe</option>
                     {vehicles.map((v) => {
                       const make = v.make || v.brand || "";
                       const model = v.model || "";
@@ -3058,7 +3097,7 @@ const MyGroup = () => {
                         displayText = plate;
                       } else {
                         displayText =
-                          v.vehicleName || v.name || v.id || "Unknown Vehicle";
+                          v.vehicleName || v.name || v.id || "Xe không xác định";
                       }
 
                       return (
@@ -3071,7 +3110,7 @@ const MyGroup = () => {
                 </div>
 
                 <div>
-                  <Text strong>Service Center *</Text>
+                  <Text strong>Trung tâm dịch vụ *</Text>
                   <select
                     value={serviceForm.serviceCenterId}
                     onChange={(e) =>
@@ -3088,7 +3127,7 @@ const MyGroup = () => {
                       marginTop: 4,
                     }}
                   >
-                    <option value="">Select a service center</option>
+                    <option value="">Chọn trung tâm dịch vụ</option>
                     {serviceCenters.map((center) => (
                       <option key={center.id} value={center.id}>
                         {center.name} - {center.address}
@@ -3098,7 +3137,7 @@ const MyGroup = () => {
                 </div>
 
                 <div>
-                  <Text strong>Type *</Text>
+                  <Text strong>Loại *</Text>
                   <select
                     value={serviceForm.type}
                     onChange={(e) =>
@@ -3112,18 +3151,18 @@ const MyGroup = () => {
                       marginTop: 4,
                     }}
                   >
-                    <option value="MAINTENANCE">Maintenance</option>
-                    <option value="REPAIR">Repair</option>
-                    <option value="INSPECTION">Inspection</option>
-                    <option value="CLEANING">Cleaning</option>
-                    <option value="UPGRADE">Upgrade</option>
+                    <option value="MAINTENANCE">Bảo dưỡng</option>
+                    <option value="REPAIR">Sửa chữa</option>
+                    <option value="INSPECTION">Kiểm tra</option>
+                    <option value="CLEANING">Vệ sinh</option>
+                    <option value="UPGRADE">Nâng cấp</option>
                   </select>
                 </div>
 
                 <div>
-                  <Text strong>Title *</Text>
+                  <Text strong>Tiêu đề *</Text>
                   <Input
-                    placeholder="Enter service request title"
+                    placeholder="Nhập tiêu đề yêu cầu dịch vụ"
                     value={serviceForm.title}
                     onChange={(e) =>
                       setServiceForm({ ...serviceForm, title: e.target.value })
@@ -3134,9 +3173,9 @@ const MyGroup = () => {
                 </div>
 
                 <div>
-                  <Text strong>Description (Optional)</Text>
+                  <Text strong>Mô tả (Tùy chọn)</Text>
                   <Input.TextArea
-                    placeholder="Enter description"
+                    placeholder="Nhập mô tả"
                     value={serviceForm.description}
                     onChange={(e) =>
                       setServiceForm({
@@ -3157,8 +3196,8 @@ const MyGroup = () => {
             open={confirmModalOpen}
             title={
               confirmAction
-                ? "Confirm Service Request"
-                : "Reject Service Request"
+                ? "Đã đồng ý yêu cầu dịch vụ"
+                : "Đã từ chối yêu cầu dịch vụ"
             }
             onCancel={() => {
               setConfirmModalOpen(false);
@@ -3166,7 +3205,7 @@ const MyGroup = () => {
               setConfirmReason("");
             }}
             onOk={submitConfirmation}
-            okText={confirmAction ? "Confirm" : "Reject"}
+            okText={confirmAction ? "Đồng ý" : "Từ chối"}
             okButtonProps={{
               loading: confirmSubmitting,
               disabled:
@@ -3178,7 +3217,7 @@ const MyGroup = () => {
             <Space direction="vertical" style={{ width: "100%" }} size="middle">
               {confirmingRequest && (
                 <div>
-                  <Text strong>Service Request:</Text>
+                  <Text strong>Yêu cầu dịch vụ:</Text>
                   <div style={{ marginTop: 8, marginBottom: 16 }}>
                     <div>
                       <Text>
@@ -3196,14 +3235,14 @@ const MyGroup = () => {
 
               <div>
                 <Text strong>
-                  Reason{" "}
+                  Lý do{" "}
                   {!confirmAction && <span style={{ color: "red" }}>*</span>}
                 </Text>
                 <Input.TextArea
                   placeholder={
                     confirmAction
-                      ? "Optional: Add a note for your confirmation"
-                      : "Required: Please provide a reason for rejection"
+                      ? "Tùy chọn: Thêm ghi chú cho xác nhận của bạn"
+                      : "Bắt buộc: Vui lòng cung cấp lý do từ chối"
                   }
                   value={confirmReason}
                   onChange={(e) => setConfirmReason(e.target.value)}
@@ -3217,7 +3256,7 @@ const MyGroup = () => {
 
           <Modal
             open={invoiceDetailOpen}
-            title="Invoice Details"
+            title="Chi tiết hóa đơn"
             onCancel={() => {
               setInvoiceDetailOpen(false);
               setSelectedInvoice(null);
@@ -3232,7 +3271,7 @@ const MyGroup = () => {
                     handlePayment(selectedInvoice.id);
                   }}
                 >
-                  Pay Now
+                  Thanh toán ngay
                 </Button>
               ) : null,
               <Button
@@ -3242,7 +3281,7 @@ const MyGroup = () => {
                   setSelectedInvoice(null);
                 }}
               >
-                Close
+                Đóng
               </Button>,
             ].filter(Boolean)}
             width={600}
@@ -3257,7 +3296,7 @@ const MyGroup = () => {
                   {/* Title */}
                   {selectedInvoice.title && (
                     <div>
-                      <Text strong>Title:</Text>
+                      <Text strong>Tiêu đề:</Text>
                       <div style={{ marginTop: 4 }}>
                         <Text>{selectedInvoice.title}</Text>
                       </div>
@@ -3266,7 +3305,7 @@ const MyGroup = () => {
 
                   {/* Amount Information */}
                   <div>
-                    <Text strong>Amount Information:</Text>
+                    <Text strong>Thông tin số tiền:</Text>
                     <div style={{ marginTop: 8 }}>
                       <div
                         style={{
@@ -3275,7 +3314,7 @@ const MyGroup = () => {
                           marginBottom: 8,
                         }}
                       >
-                        <Text>Total Amount:</Text>
+                        <Text>Tổng số tiền:</Text>
                         <Text
                           strong
                           style={{ color: "#1890ff", fontSize: "16px" }}
@@ -3291,7 +3330,7 @@ const MyGroup = () => {
                           marginBottom: 8,
                         }}
                       >
-                        <Text>Ownership Share:</Text>
+                        <Text>Tỷ lệ sở hữu:</Text>
                         <Text strong style={{ color: "#722ed1" }}>
                           {(selectedInvoice.ownershipSharePercent || 0).toFixed(
                             2
@@ -3306,7 +3345,7 @@ const MyGroup = () => {
                           marginBottom: 8,
                         }}
                       >
-                        <Text>Amount Paid:</Text>
+                        <Text>Đã thanh toán:</Text>
                         <Text strong style={{ color: "#52c41a" }}>
                           {(selectedInvoice.amountPaid || 0).toLocaleString()}{" "}
                           VNĐ
@@ -3319,7 +3358,7 @@ const MyGroup = () => {
                           justifyContent: "space-between",
                         }}
                       >
-                        <Text strong>Remaining:</Text>
+                        <Text strong>Còn lại:</Text>
                         <Text
                           strong
                           style={{ color: "#ff4d4f", fontSize: "16px" }}
@@ -3336,7 +3375,7 @@ const MyGroup = () => {
 
                   {/* Status */}
                   <div>
-                    <Text strong>Status:</Text>
+                    <Text strong>Trạng thái:</Text>
                     <div style={{ marginTop: 4 }}>
                       <Tag
                         color={
@@ -3357,11 +3396,11 @@ const MyGroup = () => {
                   {/* Created Date */}
                   {selectedInvoice.createdAt && (
                     <div>
-                      <Text strong>Created Date:</Text>
+                      <Text strong>Ngày tạo:</Text>
                       <div style={{ marginTop: 4 }}>
                         <Text>
                           {new Date(selectedInvoice.createdAt).toLocaleString(
-                            "en-US",
+                            "vi-VN",
                             {
                               year: "numeric",
                               month: "long",
@@ -3376,7 +3415,7 @@ const MyGroup = () => {
                   )}
                 </Space>
               ) : (
-                <Empty description="No invoice data" />
+                <Empty description="Không có dữ liệu hóa đơn" />
               )}
             </Spin>
           </Modal>

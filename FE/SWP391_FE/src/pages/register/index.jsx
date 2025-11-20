@@ -58,13 +58,13 @@ const RegisterPage = () => {
   // Function to scan CCCD using AI
   const scanCCCD = async (files) => {
     if (files.length < 2) {
-      message.error("Please upload both front and back images of your CCCD.");
+      message.error("Vui lòng tải lên cả mặt trước và mặt sau của CCCD.");
       return;
     }
 
     setIsScanning(true);
     try {
-      message.loading("Scanning CCCD...", 0);
+      message.loading("Đang quét CCCD...", 0);
 
       console.log("Files to scan:", files);
 
@@ -156,7 +156,7 @@ const RegisterPage = () => {
       // Validate that we got some essential data from API
       if (Object.keys(combinedData).length === 0) {
         throw new Error(
-          "Unable to extract information from CCCD. Please ensure images are clear and readable."
+          "Không thể trích xuất thông tin từ CCCD. Vui lòng đảm bảo hình ảnh rõ ràng và dễ đọc."
         );
       }
 
@@ -164,19 +164,19 @@ const RegisterPage = () => {
 
       // Validate essential fields
       const missingFields = [];
-      if (!combinedData.fullName) missingFields.push("Full Name");
-      if (!combinedData.idNumber) missingFields.push("ID Number");
-      if (!combinedData.dateOfBirth) missingFields.push("Date of Birth");
+      if (!combinedData.fullName) missingFields.push("Họ và tên");
+      if (!combinedData.idNumber) missingFields.push("Số CMND/CCCD");
+      if (!combinedData.dateOfBirth) missingFields.push("Ngày sinh");
 
       if (missingFields.length > 0) {
         console.warn("Missing essential fields:", missingFields);
         toast.warning(
-          `CCCD scanned but missing: ${missingFields.join(
+          `CCCD đã được quét nhưng thiếu: ${missingFields.join(
             ", "
-          )}. Please verify the information.`
+          )}. Vui lòng kiểm tra lại thông tin.`
         );
       } else {
-        toast.success("CCCD scanned successfully! All information extracted.");
+        toast.success("Quét CCCD thành công! Đã trích xuất tất cả thông tin.");
       }
 
       setScannedData(combinedData);
@@ -188,10 +188,10 @@ const RegisterPage = () => {
       console.error("Error response:", error.response?.data);
       console.error("Error status:", error.response?.status);
 
-      let errorMessage = "CCCD scan failed. Please try again.";
+      let errorMessage = "Quét CCCD thất bại. Vui lòng thử lại.";
       if (error.response?.status === 400) {
         errorMessage =
-          "Unable to scan CCCD. Please ensure images are clear and show complete CCCD.";
+          "Không thể quét CCCD. Vui lòng đảm bảo hình ảnh rõ ràng và hiển thị đầy đủ CCCD.";
       }
 
       toast.error(errorMessage);
@@ -204,12 +204,12 @@ const RegisterPage = () => {
   const onFinish = async (values) => {
     // Validate that both ID images are present and scanned
     if (uploadedFiles.length < 2) {
-      message.error("Please upload both front and back images of your CCCD.");
+      message.error("Vui lòng tải lên cả mặt trước và mặt sau của CCCD.");
       return;
     }
 
     if (!scannedData) {
-      message.error("Please scan your CCCD first.");
+      message.error("Vui lòng quét CCCD trước.");
       return;
     }
 
@@ -279,15 +279,15 @@ const RegisterPage = () => {
         }
       }
 
-      message.loading("Creating your account...", 0);
+      message.loading("Đang tạo tài khoản...", 0);
       const response = await api.post("/auth/register", formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
 
       message.destroy();
-      toast.success("Successfully created new account!");
+      toast.success("Tạo tài khoản mới thành công!");
       toast.info(
-        "Your account is not activated yet. Please verify your email to activate your account."
+        "Tài khoản của bạn chưa được kích hoạt. Vui lòng xác thực email để kích hoạt tài khoản."
       );
 
       // Save email to localStorage as fallback
@@ -299,19 +299,19 @@ const RegisterPage = () => {
       console.error("Registration error:", e);
       console.error("Error response:", e.response?.data);
 
-      let errorMessage = "Registration failed. Please try again.";
+      let errorMessage = "Đăng ký thất bại. Vui lòng thử lại.";
 
       if (e.response?.status === 400) {
         errorMessage =
           e.response.data?.message ||
-          "Invalid registration data. Please check your information.";
+          "Dữ liệu đăng ký không hợp lệ. Vui lòng kiểm tra lại thông tin.";
       } else if (e.response?.status === 409) {
         errorMessage =
           e.response.data?.message ||
-          "Email already exists. Please use a different email.";
+          "Email đã tồn tại. Vui lòng sử dụng email khác.";
       } else if (e.response?.status === 500) {
         errorMessage =
-          e.response.data?.message || "Server error. Please try again later.";
+          e.response.data?.message || "Lỗi máy chủ. Vui lòng thử lại sau.";
       } else {
         errorMessage = e.response?.data?.message || errorMessage;
       }
@@ -330,9 +330,9 @@ const RegisterPage = () => {
       <div className="register-card-container">
         <Card className="register-card">
           <div className="register-header">
-            <h2 className="register-title">Join Our Community</h2>
+            <h2 className="register-title">Tham gia cộng đồng của chúng tôi</h2>
             <p className="register-subtitle">
-              a Start your electric vehicle co-ownership journey today.
+              Bắt đầu hành trình đồng sở hữu xe điện của bạn ngay hôm nay.
             </p>
           </div>
 
@@ -349,13 +349,13 @@ const RegisterPage = () => {
                 <Form.Item
                   name="email"
                   rules={[
-                    { required: true, message: "Email is required" },
+                    { required: true, message: "Email là bắt buộc" },
                     {
                       validator: (_, v) =>
                         !v || validateEmail(v)
                           ? Promise.resolve()
                           : Promise.reject(
-                              new Error("Please enter a valid email")
+                              new Error("Vui lòng nhập email hợp lệ")
                             ),
                     },
                   ]}
@@ -378,7 +378,7 @@ const RegisterPage = () => {
                       }}
                       onChange={(e) => setEmailValue(e.target.value)}
                     />
-                    <label className="floating-label">Email Address</label>
+                    <label className="floating-label">Địa chỉ Email</label>
                   </div>
                 </Form.Item>
               </Col>
@@ -388,12 +388,15 @@ const RegisterPage = () => {
                 <Form.Item
                   name="phone"
                   rules={[
-                    { required: true, message: "Phone number is required" },
+                    { required: true, message: "Số điện thoại là bắt buộc" },
                     {
                       pattern: /^[0-9]+$/,
-                      message: "Phone must contain only numbers",
+                      message: "Số điện thoại chỉ được chứa số",
                     },
-                    { min: 10, message: "Phone must be at least 10 digits" },
+                    {
+                      min: 10,
+                      message: "Số điện thoại phải có ít nhất 10 chữ số",
+                    },
                   ]}
                   className="floating-label-form-item"
                 >
@@ -413,7 +416,7 @@ const RegisterPage = () => {
                       }}
                       onChange={(e) => setPhoneValue(e.target.value)}
                     />
-                    <label className="floating-label">Phone Number</label>
+                    <label className="floating-label">Số điện thoại</label>
                   </div>
                 </Form.Item>
               </Col>
@@ -423,10 +426,10 @@ const RegisterPage = () => {
                 <Form.Item
                   name="password"
                   rules={[
-                    { required: true, message: "Password is required" },
+                    { required: true, message: "Mật khẩu là bắt buộc" },
                     {
                       min: 8,
-                      message: "Password must be at least 8 characters",
+                      message: "Mật khẩu phải có ít nhất 8 ký tự",
                     },
                   ]}
                   className="floating-label-form-item"
@@ -446,9 +449,7 @@ const RegisterPage = () => {
                       }}
                       onChange={(e) => setPasswordValue(e.target.value)}
                     />
-                    <label className="floating-label">
-                      Password (min 8 chars)
-                    </label>
+                    <label className="floating-label">Mật khẩu</label>
                   </div>
                 </Form.Item>
               </Col>
@@ -459,15 +460,13 @@ const RegisterPage = () => {
                   name="confirmPassword"
                   dependencies={["password"]}
                   rules={[
-                    { required: true, message: "Please confirm your password" },
+                    { required: true, message: "Vui lòng xác nhận mật khẩu" },
                     ({ getFieldValue }) => ({
                       validator(_, value) {
                         if (!value || getFieldValue("password") === value) {
                           return Promise.resolve();
                         }
-                        return Promise.reject(
-                          new Error("Passwords do not match")
-                        );
+                        return Promise.reject(new Error("Mật khẩu không khớp"));
                       },
                     }),
                   ]}
@@ -490,7 +489,7 @@ const RegisterPage = () => {
                       }}
                       onChange={(e) => setConfirmPasswordValue(e.target.value)}
                     />
-                    <label className="floating-label">Confirm Password</label>
+                    <label className="floating-label">Xác nhận mật khẩu</label>
                   </div>
                 </Form.Item>
               </Col>
@@ -505,7 +504,7 @@ const RegisterPage = () => {
                   color: "#1f2937",
                 }}
               >
-                CCCD Verification
+                Xác thực CCCD
               </h3>
               <div className="upload-item">
                 <Upload
@@ -519,12 +518,12 @@ const RegisterPage = () => {
                       file.type === "image/jpg" ||
                       /\.jpe?g$/i.test(file.name);
                     if (!isPng && !isJpeg) {
-                      message.error(`${file.name} must be PNG or JPG/JPEG.`);
+                      message.error(`${file.name} phải là PNG hoặc JPG/JPEG.`);
                       return Upload.LIST_IGNORE;
                     }
                     const isLt5M = file.size / 1024 / 1024 < 5;
                     if (!isLt5M) {
-                      message.error("Image must be smaller than 5MB!");
+                      message.error("Hình ảnh phải nhỏ hơn 5MB!");
                       return Upload.LIST_IGNORE;
                     }
                     return false;
@@ -559,7 +558,7 @@ const RegisterPage = () => {
                   }}
                 >
                   <Button icon={<UploadOutlined />}>
-                    Upload CCCD Images (2 files)
+                    Tải lên hình ảnh CCCD (2 tệp)
                   </Button>
                 </Upload>
 
@@ -578,7 +577,7 @@ const RegisterPage = () => {
                       }}
                       style={{ marginTop: "10px" }}
                     >
-                      {isScanning ? "Scanning CCCD..." : "Scan CCCD"}
+                      {isScanning ? "Đang quét CCCD..." : "Quét CCCD"}
                     </Button>
                     <p
                       style={{
@@ -587,7 +586,7 @@ const RegisterPage = () => {
                         marginTop: "5px",
                       }}
                     >
-                      Click to scan and extract information from your CCCD
+                      Nhấp để quét và trích xuất thông tin từ CCCD của bạn
                     </p>
                   </div>
                 )}
@@ -604,14 +603,16 @@ const RegisterPage = () => {
                   validator: (_, v) =>
                     v
                       ? Promise.resolve()
-                      : Promise.reject(new Error("You must accept the Terms.")),
+                      : Promise.reject(
+                          new Error("Bạn phải chấp nhận Điều khoản.")
+                        ),
                 },
               ]}
             >
               <Checkbox>
-                I agree to the{" "}
+                Tôi đồng ý với{" "}
                 <Link to="/terms" className="register-terms-link">
-                  Co-ownership Terms &amp; Privacy Policy
+                  Điều khoản đồng sở hữu &amp; Chính sách bảo mật
                 </Link>
               </Checkbox>
             </Form.Item>
@@ -627,18 +628,16 @@ const RegisterPage = () => {
                 className="register-submit-button"
                 disabled={!scannedData}
               >
-                {isLoading ? "Creating account..." : "Create Account"}
+                {isLoading ? "Đang tạo tài khoản..." : "Tạo tài khoản"}
               </Button>
             </Form.Item>
 
             {/* Sign In Link */}
             <Row justify="center" align="middle" style={{ marginTop: "16px" }}>
               <Col>
-                <span style={{ color: "#6b7280" }}>
-                  Already have an account?{" "}
-                </span>
+                <span style={{ color: "#6b7280" }}>Đã có tài khoản? </span>
                 <Link to="/login" className="register-login-link">
-                  Sign in
+                  Đăng nhập
                 </Link>
               </Col>
             </Row>
@@ -651,7 +650,7 @@ const RegisterPage = () => {
                   onClick={() => navigate("/")}
                   className="register-back-button"
                 >
-                  ← Back to Homepage
+                  ← Về trang chủ
                 </Button>
               </Col>
             </Row>
@@ -662,26 +661,26 @@ const RegisterPage = () => {
       {/* Independent CCCD Info Table */}
       <div className={`cccd-info-table ${!scannedData ? "hidden" : ""}`}>
         <div className="cccd-info-header">
-          <h3>📋 Identify card Information</h3>
+          <h3>📋 Thông tin thẻ căn cước</h3>
         </div>
         {scannedData && (
           <div className="cccd-info-grid">
             <div className="cccd-info-item">
-              <span className="cccd-info-label">Full Name:</span>
+              <span className="cccd-info-label">Họ và tên:</span>
               <span className="cccd-info-value">{scannedData.fullName}</span>
             </div>
             <div className="cccd-info-item">
-              <span className="cccd-info-label">ID Number:</span>
+              <span className="cccd-info-label">Số CMND/CCCD:</span>
               <span className="cccd-info-value">{scannedData.idNumber}</span>
             </div>
             <div className="cccd-info-item">
-              <span className="cccd-info-label">Date of Birth:</span>
+              <span className="cccd-info-label">Ngày sinh:</span>
               <span className="cccd-info-value">
                 {formatDate(scannedData.dateOfBirth)}
               </span>
             </div>
             <div className="cccd-info-item">
-              <span className="cccd-info-label">Gender:</span>
+              <span className="cccd-info-label">Giới tính:</span>
               <span className="cccd-info-value">
                 {scannedData.gender === true ||
                 scannedData.gender === "true" ||
@@ -697,31 +696,31 @@ const RegisterPage = () => {
               </span>
             </div>
             <div className="cccd-info-item">
-              <span className="cccd-info-label">Place of Birth:</span>
+              <span className="cccd-info-label">Nơi sinh:</span>
               <span className="cccd-info-value">
                 {scannedData.placeOfBirth || "N/A"}
               </span>
             </div>
             <div className="cccd-info-item">
-              <span className="cccd-info-label">Address:</span>
+              <span className="cccd-info-label">Địa chỉ:</span>
               <span className="cccd-info-value">
                 {scannedData.address || "N/A"}
               </span>
             </div>
             <div className="cccd-info-item">
-              <span className="cccd-info-label">Issue Date:</span>
+              <span className="cccd-info-label">Ngày cấp:</span>
               <span className="cccd-info-value">
                 {formatDate(scannedData.issueDate)}
               </span>
             </div>
             <div className="cccd-info-item">
-              <span className="cccd-info-label">Expiry Date:</span>
+              <span className="cccd-info-label">Ngày hết hạn:</span>
               <span className="cccd-info-value">
                 {formatDate(scannedData.expiryDate)}
               </span>
             </div>
             <div className="cccd-info-item">
-              <span className="cccd-info-label">Place of Issue:</span>
+              <span className="cccd-info-label">Nơi cấp:</span>
               <span className="cccd-info-value">
                 {scannedData.placeOfIssue || "N/A"}
               </span>
