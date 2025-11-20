@@ -121,20 +121,20 @@ const PaymentHistory = () => {
 
   const columns = [
     {
-      title: "Order Code",
+      title: "Mã đơn hàng",
       dataIndex: "orderCode",
       key: "orderCode",
       render: (text) => <Text code>{text || "N/A"}</Text>,
     },
     {
-      title: "Payment Date",
+      title: "Ngày thanh toán",
       dataIndex: "paidAt",
       key: "paidAt",
       render: (date) => (date ? dayjs(date).format("DD/MM/YYYY HH:mm") : "N/A"),
       sorter: (a, b) => dayjs(a.paidAt).unix() - dayjs(b.paidAt).unix(),
     },
     {
-      title: "Amount",
+      title: "Số tiền",
       dataIndex: "amount",
       key: "amount",
       render: (amount) => (
@@ -145,34 +145,45 @@ const PaymentHistory = () => {
       sorter: (a, b) => (a.amount || 0) - (b.amount || 0),
     },
     {
-      title: "Status",
+      title: "Trạng thái",
       dataIndex: "status",
       key: "status",
-      render: (status) => (
-        <Tag color={getStatusColor(status)}>{status || "UNKNOWN"}</Tag>
-      ),
+      render: (status) => {
+        const statusMap = {
+          PAID: "Đã thanh toán",
+          PENDING: "Đang chờ",
+          FAILED: "Thất bại",
+          CANCELLED: "Đã hủy",
+          REFUNDED: "Đã hoàn tiền",
+        };
+        return (
+          <Tag color={getStatusColor(status)}>
+            {statusMap[status] || status || "KHÔNG XÁC ĐỊNH"}
+          </Tag>
+        );
+      },
       filters: [
-        { text: "Paid", value: "PAID" },
-        { text: "Pending", value: "PENDING" },
-        { text: "Failed", value: "FAILED" },
-        { text: "Cancelled", value: "CANCELLED" },
-        { text: "Refunded", value: "REFUNDED" },
+        { text: "Đã thanh toán", value: "PAID" },
+        { text: "Đang chờ", value: "PENDING" },
+        { text: "Thất bại", value: "FAILED" },
+        { text: "Đã hủy", value: "CANCELLED" },
+        { text: "Đã hoàn tiền", value: "REFUNDED" },
       ],
       onFilter: (value, record) => record.status === value,
     },
     {
-      title: "Payment Method",
+      title: "Phương thức thanh toán",
       dataIndex: "method",
       key: "method",
       render: (method) => method || "N/A",
     },
     {
-      title: "Description",
+      title: "Mô tả",
       dataIndex: "description",
       key: "description",
       render: (desc) => (
         <Text ellipsis style={{ maxWidth: 200 }}>
-          {desc || "No description"}
+          {desc || "Không có mô tả"}
         </Text>
       ),
     },
@@ -187,16 +198,16 @@ const PaymentHistory = () => {
           onClick={() => navigate("/")}
           className="back-button"
         >
-          Back to Home
+          Về trang chủ
         </Button>
         <div className="header-content">
           <FileTextOutlined className="header-icon" />
           <div>
             <Title level={2} className="page-title">
-              Payment History
+              Lịch sử thanh toán
             </Title>
             <Text type="secondary">
-              View your payment transactions and invoices
+              Xem các giao dịch thanh toán và hóa đơn của bạn
             </Text>
           </div>
         </div>
@@ -207,7 +218,7 @@ const PaymentHistory = () => {
         <Col xs={24} sm={8}>
           <Card>
             <Statistic
-              title="Total Transactions"
+              title="Tổng giao dịch"
               value={stats.totalTransactions}
               prefix={<FileTextOutlined />}
             />
@@ -216,7 +227,7 @@ const PaymentHistory = () => {
         <Col xs={24} sm={8}>
           <Card>
             <Statistic
-              title="Total Amount"
+              title="Tổng số tiền"
               value={stats.totalAmount}
               suffix={"VNĐ"}
               precision={0}
@@ -226,7 +237,7 @@ const PaymentHistory = () => {
         <Col xs={24} sm={8}>
           <Card>
             <Statistic
-              title="Paid Amount"
+              title="Số tiền đã thanh toán"
               value={stats.paidAmount}
               suffix={"VNĐ"}
               precision={0}
@@ -240,28 +251,28 @@ const PaymentHistory = () => {
       <Card className="filters-card">
         <Space wrap>
           <div>
-            <Text strong>Status:</Text>
+            <Text strong>Trạng thái:</Text>
             <Select
               value={statusFilter}
               onChange={setStatusFilter}
               style={{ width: 120, marginLeft: 8 }}
             >
-              <Select.Option value="all">All Status</Select.Option>
-              <Select.Option value="PAID">Paid</Select.Option>
-              <Select.Option value="PENDING">Pending</Select.Option>
-              <Select.Option value="FAILED">Failed</Select.Option>
-              <Select.Option value="CANCELLED">Cancelled</Select.Option>
-              <Select.Option value="REFUNDED">Refunded</Select.Option>
+              <Select.Option value="all">Tất cả</Select.Option>
+              <Select.Option value="PAID">Đã thanh toán</Select.Option>
+              <Select.Option value="PENDING">Đang chờ</Select.Option>
+              <Select.Option value="FAILED">Thất bại</Select.Option>
+              <Select.Option value="CANCELLED">Đã hủy</Select.Option>
+              <Select.Option value="REFUNDED">Đã hoàn tiền</Select.Option>
             </Select>
           </div>
 
           <div>
-            <Text strong>Date Range:</Text>
+            <Text strong>Khoảng thời gian:</Text>
             <RangePicker
               value={dateRange}
               onChange={setDateRange}
               style={{ marginLeft: 8 }}
-              placeholder={["Start Date", "End Date"]}
+              placeholder={["Ngày bắt đầu", "Ngày kết thúc"]}
             />
           </div>
 
@@ -272,7 +283,7 @@ const PaymentHistory = () => {
               setDateRange(null);
             }}
           >
-            Clear Filters
+            Xóa bộ lọc
           </Button>
         </Space>
       </Card>
@@ -289,10 +300,10 @@ const PaymentHistory = () => {
             showSizeChanger: true,
             showQuickJumper: true,
             showTotal: (total, range) =>
-              `${range[0]}-${range[1]} of ${total} transactions`,
+              `${range[0]}-${range[1]} trong tổng số ${total} giao dịch`,
           }}
           locale={{
-            emptyText: loading ? <Spin /> : "No payment history found",
+            emptyText: loading ? <Spin /> : "Không tìm thấy lịch sử thanh toán",
           }}
         />
       </Card>

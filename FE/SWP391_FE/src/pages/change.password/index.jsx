@@ -38,7 +38,7 @@ const ChangePassword = () => {
 
       console.log("Changing password with data:", requestData);
 
-      message.loading("Changing password...", 0);
+      message.loading("Đang đổi mật khẩu...", 0);
 
       // Thử với PUT method trước, nếu không được thì thử POST
       let response;
@@ -58,7 +58,7 @@ const ChangePassword = () => {
       }
 
       message.destroy();
-      toast.success("Password changed successfully!");
+      toast.success("Đổi mật khẩu thành công!");
 
       // Cập nhật password mới vào localStorage
       localStorage.setItem("password", values.newPassword);
@@ -82,9 +82,9 @@ const ChangePassword = () => {
           <Card className="change-password-card" bordered={false}>
             <div className="change-password-header">
               <LockOutlined className="change-password-icon" />
-              <h2 className="change-password-title">Change Your Password</h2>
+              <h2 className="change-password-title">Đổi mật khẩu của bạn</h2>
               <p className="change-password-subtitle">
-                Secure your account with a new password
+                Bảo mật tài khoản của bạn bằng mật khẩu mới
               </p>
             </div>
 
@@ -98,39 +98,39 @@ const ChangePassword = () => {
               >
                 {/* Old Password */}
                 <Form.Item
-                  label="Old Password"
+                  label="Mật khẩu cũ"
                   name="oldPassword"
                   rules={[
-                    { required: true, message: "Password is required" },
+                    { required: true, message: "Mật khẩu là bắt buộc" },
                     {
                       min: 8,
-                      message: "Password must be at least 8 characters",
+                      message: "Mật khẩu phải có ít nhất 8 ký tự",
                     },
                   ]}
                   hasFeedback
                 >
                   <Input.Password
-                    placeholder="Enter your old password"
+                    placeholder="Nhập mật khẩu cũ của bạn"
                     prefix={<LockOutlined />}
                   />
                 </Form.Item>
 
                 {/* New Password */}
                 <Form.Item
-                  label="New Password"
+                  label="Mật khẩu mới"
                   name="newPassword"
                   rules={[
-                    { required: true, message: "Password is required" },
+                    { required: true, message: "Mật khẩu là bắt buộc" },
                     {
                       min: 8,
-                      message: "Password must be at least 8 characters",
+                      message: "Mật khẩu phải có ít nhất 8 ký tự",
                     },
                     {
                       validator: (_, value) => {
                         if (value && value === savedPassword) {
                           return Promise.reject(
                             new Error(
-                              "New password must be different from old password"
+                              "Mật khẩu mới phải khác với mật khẩu cũ"
                             )
                           );
                         }
@@ -141,33 +141,33 @@ const ChangePassword = () => {
                   hasFeedback
                 >
                   <Input.Password
-                    placeholder="Create a password (min 8 chars)"
+                    placeholder="Tạo mật khẩu (tối thiểu 8 ký tự)"
                     prefix={<LockOutlined />}
                   />
                 </Form.Item>
 
                 {/* Confirm Password */}
                 <Form.Item
-                  label="Confirm Password"
+                  label="Xác nhận mật khẩu"
                   name="confirmPassword"
                   dependencies={["newPassword"]}
                   hasFeedback
                   rules={[
-                    { required: true, message: "Please confirm your password" },
+                    { required: true, message: "Vui lòng xác nhận mật khẩu" },
                     ({ getFieldValue }) => ({
                       validator(_, value) {
                         if (!value || getFieldValue("newPassword") === value) {
                           return Promise.resolve();
                         }
                         return Promise.reject(
-                          new Error("Passwords do not match")
+                          new Error("Mật khẩu không khớp")
                         );
                       },
                     }),
                   ]}
                 >
                   <Input.Password
-                    placeholder="Confirm your password"
+                    placeholder="Xác nhận mật khẩu của bạn"
                     prefix={<LockOutlined />}
                   />
                 </Form.Item>
@@ -181,7 +181,7 @@ const ChangePassword = () => {
                     size="large"
                     className="change-password-submit-btn"
                   >
-                    {isLoading ? "Changing..." : "Change Password"}
+                    {isLoading ? "Đang đổi..." : "Đổi mật khẩu"}
                   </Button>
                 </Form.Item>
               </Form>
@@ -189,7 +189,7 @@ const ChangePassword = () => {
 
             <div className="change-password-footer">
               <Link to="/" className="change-password-back-link">
-                <ArrowLeftOutlined /> Back to Home
+                <ArrowLeftOutlined /> Về trang chủ
               </Link>
             </div>
           </Card>
