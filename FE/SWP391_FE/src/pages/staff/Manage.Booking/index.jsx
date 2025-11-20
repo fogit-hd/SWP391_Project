@@ -234,26 +234,26 @@ export default function ManageBooking() {
 
   return (
     <>
-      <div className="manage-booking-header-card">
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-            <div style={{ width: 40, height: 40, borderRadius: 8, background: "#eaf4ff", display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#1890ff', fontWeight: 700 }}>✎</div>
-            <div>
-              <h1 style={{ margin: 0, fontSize: 20 }}>Quản lý đặt chỗ xe</h1>
-              <div style={{ color: '#6b7280', fontSize: 13 }}>Quản lý việc đặt chỗ xe của bạn với chế độ xem chi tiết</div>
+      <div className="manage-booking-page">
+        <div className="manage-booking-header-card">
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+              <div style={{ width: 40, height: 40, borderRadius: 8, background: "#eaf4ff", display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#1890ff', fontWeight: 700 }}>✎</div>
+              <div>
+                <h1 style={{ margin: 0, fontSize: 20 }}>Quản lý đặt chỗ xe</h1>
+                <div style={{ color: '#6b7280', fontSize: 13 }}>Quản lý Checkin-Checkout , tạo báo cáo hư hỏng</div>
+              </div>
+            </div>
+            <div style={{ display: 'flex', gap: 8 }}>
+              {/* placeholder for actions (refresh/new) kept minimal */}
             </div>
           </div>
-          <div style={{ display: 'flex', gap: 8 }}>
-            {/* placeholder for actions (refresh/new) kept minimal */}
-          </div>
         </div>
-      </div>
 
-      <Card className="manage-booking-card">
-      <div className="manage-booking-page">
-        <div className="manage-booking-content">
+        <Card className="manage-booking-card">
+          <div className="manage-booking-content">
           <Space direction="vertical" style={{ width: "100%" }}>
-        <div>
+        <div className="manage-booking-form">
           <div style={{ marginBottom: 8 }}>Select Group (groups with contracts only)</div>
           <Select
             showSearch
@@ -275,10 +275,8 @@ export default function ManageBooking() {
               </Option>
             ))}
           </Select>
-        </div>
 
-        <div>
-          <div style={{ marginBottom: 8 }}>Select Vehicle</div>
+          <div style={{ marginTop: 18, marginBottom: 8 }}>Select Vehicle</div>
           <Select
             style={{ width: 420 }}
             placeholder="Select vehicle"
@@ -294,9 +292,9 @@ export default function ManageBooking() {
               </Option>
             ))}
           </Select>
-        </div>
 
-        <Divider />
+          <Divider />
+        </div>
 
         <div>
           <h4>Bookings for selected group & vehicle</h4>
@@ -308,7 +306,9 @@ export default function ManageBooking() {
                 locale={{ emptyText: "No bookings" }}
                 renderItem={(b) => {
                   const normalize = (s) => (s || "").toString().toLowerCase().replace(/[^a-z0-9]+/g, "").trim();
-                  const st = normalize(b.status);
+                  const rawStatus = normalize(b.status);
+                  // Backend sometimes sends 'cancell' instead of 'cancelled'; unify here
+                  const st = rawStatus === 'cancell' ? 'cancelled' : rawStatus;
                   const isBooked = st === "booked";
                   const isInUse = st.includes("inuse") || st === "inuse";
                   const isCompleted = st.includes("complete") || st === "completed";
@@ -321,7 +321,7 @@ export default function ManageBooking() {
                   const justCheckedIn = !!checkedInMap[b.id];
 
                   return (
-                    <List.Item className={isOvertime ? 'overtime' : ''}>
+                    <List.Item className={`${st} ${isOvertime ? 'overtime' : ''}`}>
                      
                       <div className="list-item-main" style={{ flex: 1 }}>
                         <div className="meta-row" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -452,9 +452,9 @@ export default function ManageBooking() {
         </div>
 
       </Space>
+          </div>
+        </Card>
       </div>
-      </div>
-    </Card>
     </>
   );
 }
