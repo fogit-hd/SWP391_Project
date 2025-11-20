@@ -3,24 +3,26 @@
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background: radial-gradient(circle 600px at 0% 200px, #e6f2ff, transparent), radial-gradient(circle 600px at 100% 200px, #e6f2ff, transparent), #f5f7fb;
+  /* full-screen pale blue background to match co-owner booking page */
+  background: linear-gradient(180deg, #e9f6ff 0%, #e6f5ff 40%, #f0f7ff 100%);
 }
 
 .manage-booking-content {
   padding: 24px;
-  padding-top: 48px;
+  padding-top: 24px;
   flex: 1;
   max-width: 1200px;
   margin: 0 auto;
 }
 
 .manage-booking-card {
-  background: linear-gradient(135deg, #ffffff 0%, #fbfdff 100%);
-  border-radius: 12px;
-  box-shadow: 0 6px 18px rgba(11, 26, 40, 0.04);
+  background: #ffffff;
+  border-radius: 18px; /* larger rounded (oval-like) */
+  box-shadow: 0 14px 40px rgba(11, 26, 40, 0.06);
   border: 1px solid rgba(0,0,0,0.04);
-  padding: 18px;
-  margin-bottom: 18px;
+  padding: 20px;
+  margin: 18px auto;
+  max-width: 1200px;
 }
 
 /* Page header in the Card title to match My Groups style */
@@ -57,28 +59,29 @@
 
 /* Header card at top of page (like My Groups header) */
 .manage-booking-header-card {
-  background: linear-gradient(135deg, #ffffff 0%, #f8fbff 100%);
-  border-radius: 12px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
-  border: 1px solid #f0f0f0;
-  padding: 18px 22px;
-  margin-bottom: 18px;
+  background: #ffffff; /* header sits inside a white rounded box */
+  border-radius: 14px;
+  box-shadow: 0 10px 26px rgba(11,26,40,0.06);
+  padding: 18px 20px;
+  margin: 18px auto 8px auto;
+  max-width: 1200px;
+  width: calc(100% - 48px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .manage-booking-header-card h1 {
   font-size: 20px;
   margin: 0;
   color: #0b2234;
+  text-align: center;
 }
 
 .manage-booking-header-card .subtitle {
   color: #6b7280;
   font-size: 13px;
-}
-
-.manage-booking-header-card a {
-  color: #505050;
-  font-weight: 500;
+  text-align: center;
 }
 
 /* Buttons and inputs: make them match My Groups theme */
@@ -109,28 +112,28 @@
 /* Bookings list styling */
 .manage-booking-content .ant-list-item {
   background: #ffffff;
-  border-radius: 10px;
-  box-shadow: 0 6px 18px rgba(11,26,40,0.03);
+  border-radius: 18px;
+  box-shadow: 0 8px 28px rgba(11,26,40,0.04);
   border: 1px solid rgba(0,0,0,0.03);
-  padding: 16px;
-  margin-bottom: 12px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.manage-booking-content .ant-list-item {
-.manage-booking-content .ant-list-item {
-  background: #ffffff;
-  border-radius: 10px;
-  box-shadow: 0 6px 18px rgba(11,26,40,0.03);
-  border: 1px solid rgba(0,0,0,0.03);
-  padding: 18px;
+  padding: 18px 18px 18px 28px; /* leave space for accent */
   margin-bottom: 16px;
   display: flex;
   align-items: flex-start;
   gap: 16px;
-  border-left: 6px solid #49c36a; /* green accent like booking page */
+  overflow: hidden;
+  position: relative;
+}
+
+.manage-booking-content .ant-list-item::before {
+  content: "";
+  position: absolute;
+  left: 10px;
+  top: 12px;
+  bottom: 12px;
+  width: 8px;
+  background: #49c36a;
+  border-radius: 8px;
+  display: block;
 }
 
 .manage-booking-content .ant-list-item.overtime {
@@ -289,6 +292,50 @@
   color: #6b21a8;
 }
 
+/* Explicit status-based tag colors (use .status-tag.<status>) */
+.manage-booking-content .status-tag.booked {
+  background: #e6f4ff;
+  color: #096dd9;
+  border-radius: 8px;
+  padding: 4px 8px;
+  font-weight: 600;
+}
+.manage-booking-content .status-tag.inuse {
+  background: #fff7d6; /* pale yellow */
+  color: #d48806; /* darker yellow/orange */
+  border-radius: 8px;
+  padding: 4px 8px;
+  font-weight: 600;
+}
+.manage-booking-content .status-tag.completed {
+  background: #f6ffed;
+  color: #389e0d;
+  border-radius: 8px;
+  padding: 4px 8px;
+  font-weight: 600;
+}
+.manage-booking-content .status-tag.cancelled {
+  background: #fff1f0;
+  color: #cf1322;
+  border-radius: 8px;
+  padding: 4px 8px;
+  font-weight: 600;
+}
+.manage-booking-content .status-tag.overtime {
+  background: #f3e8ff;
+  color: #6b21a8;
+  border-radius: 8px;
+  padding: 4px 8px;
+  font-weight: 600;
+}
+
+/* Accent stripe color by status on the left of each booking item */
+.manage-booking-content .ant-list-item.booked::before { background: #096dd9; }
+.manage-booking-content .ant-list-item.inuse::before { background: #d48806; }
+.manage-booking-content .ant-list-item.completed::before { background: #49c36a; }
+.manage-booking-content .ant-list-item.cancelled::before { background: #cf1322; }
+.manage-booking-content .ant-list-item.overtime::before { background: #6b21a8; }
+
 /* Trip events layout tweaks */
 .trip-events-list .ant-list-item {
   padding: 12px 14px;
@@ -303,6 +350,12 @@
   border: 1px solid rgba(0,0,0,0.04);
   margin-bottom: 12px;
   padding: 12px 16px;
+}
+
+/* Remove left green accent bar on trip events items (override generic booking stripe) */
+.trip-events-list .ant-list-item::before {
+  display: none !important;
+  content: none;
 }
 
 .trip-event-media {
@@ -352,9 +405,9 @@
 .manage-booking-form {
   max-width: 760px;
   margin: 0 auto 18px auto;
-  background: rgba(255,255,255,0.6);
+  background: #ffffff;
   padding: 18px;
-  border-radius: 10px;
+  border-radius: 14px;
 }
 
 /* make selects and inputs consistent width */
@@ -374,5 +427,4 @@
 @media (max-width: 768px) {
   .manage-booking-content { padding: 12px; }
   .trip-event-right { align-items: flex-start; }
-}
 }

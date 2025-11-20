@@ -185,11 +185,10 @@ const MyGroup = () => {
         }
         // 2) Try explicit statuses that should count as "has contract"
         const statuses = [
-          "DRAFT",
-          "APPROVED",
+          
           "APPROVE", // some backends use APPROVE
-          "SIGNING",
-          "PENDING_REVIEW", // safety: often used between DRAFT and APPROVED
+          
+           // safety: often used between DRAFT and APPROVED
         ];
         try {
           const results = await Promise.all(
@@ -1294,13 +1293,13 @@ const MyGroup = () => {
       await api.post(`/GroupInvite/join-by-invite`, null, {
         params: { inviteCode: code },
       });
-      message.success("Joined group successfully");
+      alert("Tham gia nhóm thành công");
       setJoinOpen(false);
       setJoinValue("");
       await reloadGroups();
     } catch (err) {
       console.error("Join by code failed", err);
-      message.error(err?.response?.data?.message || "Failed to join by code");
+      alert(err?.response?.data?.message || "tham gia nhóm thất bại");
     } finally {
       setJoinSubmitting(false);
     }
@@ -2924,6 +2923,17 @@ const MyGroup = () => {
               itemLayout="horizontal"
               dataSource={myVehicles.filter((v) => {
                 const hasContract = v.hasContract || v.contractId || false;
+                // Consider a vehicle "attached" if it reports any group/co-ownership id
+                const isAttached = Boolean(
+                  v.groupId ||
+                    v.group?.id ||
+                    v.coOwnershipId ||
+                    v.coOwnership?.id ||
+                    v.ownerGroupId ||
+                    v.parentGroupId
+                );
+                // Exclude vehicles that are already attached to a group
+                if (isAttached) return false;
                 if (vehicleContractFilter === "with_contract")
                   return hasContract;
                 if (vehicleContractFilter === "without_contract")
