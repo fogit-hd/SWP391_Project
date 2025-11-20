@@ -12,6 +12,7 @@ import ManageContract from "./pages/admin/manageContract";
 import ManageService from "./pages/admin/manageService";
 import ManageGroup from "./pages/admin/manageGroup";
 import ManageVehicle from "./pages/admin/manageVehicle";
+import ManageStatistic from "./pages/admin/manageStatistic";
 import ManageVehicleRequests from "./pages/staff/manageVehicleRequest/ManageVehicleRequests";
 import ForgotPassword from "./pages/forgot.password";
 import VerifyOTP from "./pages/verify.otp";
@@ -84,6 +85,14 @@ function App() {
       element: (
         <ProtectedRoute roleId={1}>
           <ManageVehicle />
+        </ProtectedRoute>
+      ),
+    },
+    {
+      path: "/admin/manage-statistic",
+      element: (
+        <ProtectedRoute roleId={1}>
+          <ManageStatistic />
         </ProtectedRoute>
       ),
     },
