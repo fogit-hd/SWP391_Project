@@ -147,20 +147,20 @@ const ManageAccount = () => {
 
       if (missingFields.length > 0) {
         toast.warning(
-          `CCCD scanned but missing: ${missingFields.join(", ")}. Please verify the information.`
+          `CCCD đã được quét nhưng thiếu: ${missingFields.join(", ")}. Vui lòng kiểm tra lại thông tin.`
         );
       } else {
-        toast.success("CCCD scanned successfully! All information extracted.");
+        toast.success("Quét CCCD thành công! Đã trích xuất tất cả thông tin.");
       }
 
       setScannedData(combinedData);
       return combinedData;
     } catch (error) {
       message.destroy();
-      let errorMessage = "CCCD scan failed. Please try again.";
+      let errorMessage = "Quét CCCD thất bại. Vui lòng thử lại.";
       if (error.response?.status === 400) {
         errorMessage =
-          "Unable to scan CCCD. Please ensure images are clear and show complete CCCD.";
+          "Không thể quét CCCD. Vui lòng đảm bảo hình ảnh rõ ràng và hiển thị đầy đủ CCCD.";
       }
       toast.error(errorMessage);
       return null;
@@ -194,7 +194,7 @@ const ManageAccount = () => {
     };
 
     form.setFieldsValue(formValues);
-    toast.info("Form auto-filled from CCCD. You can still edit the fields.");
+    toast.info("Form đã được điền tự động từ CCCD. Bạn vẫn có thể chỉnh sửa các trường.");
   };
 
   const columns = [
@@ -392,7 +392,7 @@ const ManageAccount = () => {
       });
 
       message.destroy();
-      toast.success("Staff account created successfully!");
+      toast.success("Tạo tài khoản nhân viên thành công!");
       setIsStaffModalVisible(false);
       staffForm.resetFields();
       setStaffUploadedFiles([]);
@@ -401,7 +401,7 @@ const ManageAccount = () => {
     } catch (err) {
       message.destroy();
       console.error("Create staff error:", err);
-      const errorMessage = err.response?.data?.message || "Failed to create staff account.";
+      const errorMessage = err.response?.data?.message || "Không thể tạo tài khoản nhân viên.";
       toast.error(errorMessage);
     } finally {
       setIsStaffSubmitting(false);
@@ -457,7 +457,7 @@ const ManageAccount = () => {
       });
 
       message.destroy();
-      toast.success("Technician account created successfully!");
+      toast.success("Tạo tài khoản kỹ thuật viên thành công!");
       setIsTechnicianModalVisible(false);
       technicianForm.resetFields();
       setTechnicianUploadedFiles([]);
@@ -466,7 +466,7 @@ const ManageAccount = () => {
     } catch (err) {
       message.destroy();
       console.error("Create technician error:", err);
-      const errorMessage = err.response?.data?.message || "Failed to create technician account.";
+      const errorMessage = err.response?.data?.message || "Không thể tạo tài khoản kỹ thuật viên.";
       toast.error(errorMessage);
     } finally {
       setIsTechnicianSubmitting(false);

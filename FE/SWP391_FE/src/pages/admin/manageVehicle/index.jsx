@@ -308,7 +308,7 @@ const ManageVehicle = () => {
       console.log('Checking vehicle status before delete:', status);
       
       if (status !== 'inactive') {
-        toast.warning('Only vehicles with INACTIVE status can be deleted');
+        toast.warning('Chỉ có thể xóa các xe có trạng thái INACTIVE');
         return;
       }
       
@@ -324,7 +324,7 @@ const ManageVehicle = () => {
       if (response.data.message) {
         toast.success(response.data.message);
       } else {
-        toast.success("Vehicle deleted successfully");
+        toast.success("Xóa xe thành công");
       }
 
       fetchVehicles();

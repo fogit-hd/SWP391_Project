@@ -11,6 +11,7 @@ import {
   Space,
   Spin,
   Tag,
+  Modal,
 } from "antd";
 import api from "../../../config/axios";
 import "./manage-booking.css";
@@ -32,6 +33,10 @@ export default function ManageBooking() {
   const [damageSubmitting, setDamageSubmitting] = useState(false);
   const [tripEvents, setTripEvents] = useState([]);
   const [loadingTripEvents, setLoadingTripEvents] = useState(false);
+  const [damageModalOpen, setDamageModalOpen] = useState(false);
+  const [tripEventsModalOpen, setTripEventsModalOpen] = useState(false);
+  const [tripEventFilter, setTripEventFilter] = useState('all'); // all|checkin|checkout|damage
+  const [bookingStatusFilter, setBookingStatusFilter] = useState('all'); // all|booked|inuse|completed|overtime
   // track per-booking transient states so UI can hide/show buttons correctly
   const [checkingMap, setCheckingMap] = useState({}); // bookingId -> boolean (in-progress)
   const [checkedInMap, setCheckedInMap] = useState({}); // bookingId -> boolean (checked-in by staff)
@@ -362,12 +367,38 @@ export default function ManageBooking() {
               </div>
             </div>
           )}
-          <h4>Bookings for selected group & vehicle</h4>
+          <h4>Lịch booking</h4>
+          {selectedGroup && selectedVehicle && bookings.length > 0 && (
+            <Space style={{ marginBottom: 12 }} size="middle">
+              <span style={{ fontSize:12, color:'#555' }}>Lọc trạng thái:</span>
+              <Select
+                size="small"
+                value={bookingStatusFilter}
+                onChange={setBookingStatusFilter}
+                style={{ width: 160 }}
+              >
+                <Option value="all">Tất cả</Option>
+                <Option value="booked">Booked</Option>
+                <Option value="inuse">In Use</Option>
+                <Option value="completed">Completed</Option>
+                <Option value="overtime">Overtime</Option>
+              </Select>
+              <Button size="small" onClick={()=> setBookingStatusFilter('all')}>Clear</Button>
+            </Space>
+          )}
           {loadingBookings ? (
             <Spin />
           ) : (
               <List
-                dataSource={bookings}
+                dataSource={bookings.filter(b => {
+                  const sRaw = (b.status || '').toLowerCase();
+                  if (sRaw === 'cancelled' || sRaw === 'cancell') return false;
+                  if (bookingStatusFilter === 'all') return true;
+                  // normalize
+                  const s = sRaw.replace(/[^a-z0-9]+/g,'');
+                  if (bookingStatusFilter === 'inuse') return s === 'inuse';
+                  return s.includes(bookingStatusFilter); // booked/completed/overtime
+                })}
                 locale={{ emptyText: "No bookings" }}
                 renderItem={(b) => {
                   const normalize = (s) => (s || "").toString().toLowerCase().replace(/[^a-z0-9]+/g, "").trim();
@@ -457,67 +488,110 @@ export default function ManageBooking() {
                 }}
               />
           )}
+          {(() => {
+            // Build the same filtered list that the <List/> is showing to the user
+            const visibleBookings = bookings
+              .filter(b => {
+                const raw = (b.status || '').toLowerCase();
+                if (raw === 'cancelled' || raw === 'cancell') return false; // always exclude cancelled
+                if (bookingStatusFilter === 'all') return true;
+                const norm = raw.replace(/[^a-z0-9]+/g,'');
+                if (bookingStatusFilter === 'inuse') return norm === 'inuse';
+                return norm.includes(bookingStatusFilter);
+              });
+            if (visibleBookings.length === 0) return null; // nothing visible -> no button
+            // Determine latest among the VISIBLE list (endTime fallback startTime)
+            const latest = [...visibleBookings]
+              .sort((a,b)=> new Date(b.endTime || b.startTime) - new Date(a.endTime || a.startTime))[0];
+            if (!latest) return null;
+            const st = (latest.status || '').toLowerCase().replace(/[^a-z0-9]+/g,'');
+            const latestIsCompleted = st.includes('complete');
+            if (!latestIsCompleted) return null; // only show if the latest visible booking is completed
+            return (
+              <div style={{ marginTop: 16 }}>
+                <Button type="dashed" onClick={()=> setDamageModalOpen(true)}>
+                   báo cáo hư hỏng
+                </Button>
+              </div>
+            );
+          })()}
+        </div>
+        <Divider />
+        <div style={{ display:'flex', justifyContent:'flex-end', marginBottom: 8 }}>
+          <Button onClick={()=> setTripEventsModalOpen(true)}>lịch sử </Button>
         </div>
 
-        <Divider />
-
-        <div className="manage-booking-card">
-          <h4>Create Damage Report</h4>
-          <div style={{ maxWidth: 720 }}>
-            <div style={{ marginBottom: 8 }}>
-              <TextArea
-                rows={3}
-                placeholder="Description of damage"
-                value={damageDesc}
-                onChange={(e) => setDamageDesc(e.target.value)}
-              />
-            </div>
-            <div style={{ marginBottom: 8 }}>
-              <Input type="file" onChange={(e) => setDamageFile(e.target.files[0])} />
-            </div>
-            <div>
-              <Button type="primary" onClick={handleCreateDamageReport}>
-                Submit Damage Report
-              </Button>
-            </div>
-          </div>
-        </div>
-        <Divider />
-
-        <div className="manage-booking-card">
-          <h4>Trip Events</h4>
-          {loadingTripEvents ? (
-            <Spin />
-          ) : (
-            <List
-              className="trip-events-list"
-              dataSource={tripEvents}
-              locale={{ emptyText: "No trip events" }}
-              renderItem={(t) => (
-                <List.Item>
-                  <div style={{ display: "flex", alignItems: "center", width: "100%" }}>
-                    <div className="trip-event-media">
-                      {t.photosUrl ? (
-                        <img src={t.photosUrl} alt="event" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                      ) : (
-                        <div style={{ fontSize: 12, color: '#9aa' }}>No photo</div>
-                      )}
-                    </div>
-                    <div className="trip-event-body">
-                      <div className="trip-event-title">{t.eventType || 'EVENT'}</div>
-                      <div className="trip-event-meta">{t.description}</div>
-                      <div className="trip-event-meta">Vehicle: {t.vehicleId} {t.bookingId ? `• Booking: ${t.bookingId}` : ''}</div>
-                    </div>
-                    <div className="trip-event-right">
-                      <Tag color={t.eventType === 'DAMAGE' ? 'red' : t.eventType === 'CHECKIN' ? 'blue' : 'green'}>{t.eventType}</Tag>
-                      <div className="trip-event-meta">{new Date(t.createdAt).toLocaleString()}</div>
-                    </div>
-                  </div>
-                </List.Item>
-              )}
+        <Modal
+          title="Báo cáo hư hỏng"
+          open={damageModalOpen}
+          onCancel={() => setDamageModalOpen(false)}
+          onOk={handleCreateDamageReport}
+          okText="Gửi báo cáo"
+          confirmLoading={damageSubmitting}
+        >
+          <Space direction="vertical" style={{ width: '100%' }}>
+            <TextArea
+              rows={4}
+              placeholder="Mô tả hư hỏng"
+              value={damageDesc}
+              onChange={(e) => setDamageDesc(e.target.value)}
             />
-          )}
-        </div>
+            <Input type="file" onChange={(e) => setDamageFile(e.target.files[0])} />
+          </Space>
+        </Modal>
+
+        <Modal
+          title="Trip Events"
+          open={tripEventsModalOpen}
+          onCancel={()=> setTripEventsModalOpen(false)}
+          footer={<Button onClick={()=> setTripEventsModalOpen(false)}>Đóng</Button>}
+          width={700}
+        >
+          <Space direction="vertical" style={{ width:'100%' }} size="middle">
+            <Space>
+              <span>Filter:</span>
+              <Select size="small" value={tripEventFilter} onChange={setTripEventFilter} style={{ width:160 }}>
+                <Option value="all">Tất cả</Option>
+                <Option value="checkin">Check-in</Option>
+                <Option value="checkout">Check-out</Option>
+                <Option value="damage">Damage</Option>
+              </Select>
+              <Button size="small" onClick={()=> setTripEventFilter('all')}>Clear</Button>
+            </Space>
+            {loadingTripEvents ? <Spin /> : (
+              <List
+                className="trip-events-list"
+                dataSource={tripEvents.filter(t => {
+                  const type = (t.eventType || '').toLowerCase();
+                  return tripEventFilter === 'all' || type === tripEventFilter;
+                })}
+                locale={{ emptyText: 'No events' }}
+                renderItem={(t) => (
+                  <List.Item>
+                    <div style={{ display: 'flex', alignItems:'center', width:'100%' }}>
+                      <div className="trip-event-media">
+                        {t.photosUrl ? (
+                          <img src={t.photosUrl} alt="event" style={{ width:'100%', height:'100%', objectFit:'cover' }} />
+                        ) : (
+                          <div style={{ fontSize:12, color:'#9aa' }}>No photo</div>
+                        )}
+                      </div>
+                      <div className="trip-event-body">
+                        <div className="trip-event-title">{t.eventType || 'EVENT'}</div>
+                        <div className="trip-event-meta">{t.description}</div>
+                        <div className="trip-event-meta">Vehicle: {t.vehicleId} {t.bookingId ? `• Booking: ${t.bookingId}` : ''}</div>
+                      </div>
+                      <div className="trip-event-right">
+                        <Tag color={t.eventType === 'DAMAGE' ? 'red' : t.eventType === 'CHECKIN' ? 'blue' : 'green'}>{t.eventType}</Tag>
+                        <div className="trip-event-meta">{new Date(t.createdAt).toLocaleString()}</div>
+                      </div>
+                    </div>
+                  </List.Item>
+                )}
+              />
+            )}
+          </Space>
+        </Modal>
 
       </Space>
           </div>
