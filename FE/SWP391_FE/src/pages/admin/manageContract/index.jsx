@@ -56,10 +56,10 @@ const ManageContract = () => {
         ? response.data
         : response.data?.data || [];
       setTemplates(templatesData);
-      toast.success("Templates loaded successfully");
+      toast.success("Tải mẫu hợp đồng thành công");
     } catch (error) {
       console.error("Error loading templates:", error);
-      toast.error("Failed to load templates");
+      toast.error("Không thể tải mẫu hợp đồng");
     } finally {
       setLoading(false);
     }
@@ -86,7 +86,7 @@ const ManageContract = () => {
     } catch (error) {
       console.error("Error preparing template creation:", error);
       toast.error(
-        "An error occurred while preparing to create a new template."
+        "Đã xảy ra lỗi khi chuẩn bị tạo mẫu mới."
       );
     }
   };
@@ -120,7 +120,7 @@ const ManageContract = () => {
 
       const response = await api.post("/contract-templates", requestBody);
 
-      toast.success("Template created successfully");
+      toast.success("Tạo mẫu hợp đồng thành công");
 
       console.log("Template creation response:", response);
 
@@ -134,13 +134,13 @@ const ManageContract = () => {
 
       // Handle different types of errors
       if (error.response?.status === 400) {
-        toast.error("Invalid template data. Please check all fields.");
+        toast.error("Dữ liệu mẫu không hợp lệ. Vui lòng kiểm tra tất cả các trường.");
       } else if (error.response?.status === 500) {
-        toast.error("Server error. Please try again later.");
+        toast.error("Lỗi máy chủ. Vui lòng thử lại sau.");
       } else if (error.code === "ERR_NETWORK") {
-        toast.error("Cannot connect to server. Please check your connection.");
+        toast.error("Không thể kết nối đến máy chủ. Vui lòng kiểm tra kết nối của bạn.");
       } else {
-        toast.error(`Failed to create template: ${error.message}`);
+        toast.error(`Không thể tạo mẫu: ${error.message}`);
       }
     } finally {
       setLoading(false);
@@ -182,7 +182,7 @@ const ManageContract = () => {
       console.log("Attempting to delete template:", templateId);
       const response = await api.delete(`/contract-templates/${templateId}`);
       console.log("Delete response:", response);
-      toast.success("Template deleted successfully");
+      toast.success("Xóa mẫu hợp đồng thành công");
       loadTemplates();
     } catch (error) {
       console.error("Error deleting template:", error);
@@ -190,14 +190,14 @@ const ManageContract = () => {
       // Check if it's a CORS error
       if (error.code === "ERR_NETWORK" || error.message.includes("CORS")) {
         toast.error(
-          "Cannot connect to server. Please check your internet connection or try again later."
+          "Không thể kết nối đến máy chủ. Vui lòng kiểm tra kết nối internet hoặc thử lại sau."
         );
       } else if (error.response?.status === 500) {
-        toast.error("Server error (500). Please try again later.");
+        toast.error("Lỗi máy chủ (500). Vui lòng thử lại sau.");
       } else if (error.response?.status === 404) {
-        toast.error("Template not found or already deleted.");
+        toast.error("Không tìm thấy mẫu hoặc đã bị xóa.");
       } else {
-        toast.error(`Failed to delete template: ${error.message}`);
+        toast.error(`Không thể xóa mẫu: ${error.message}`);
       }
     }
   };
@@ -353,12 +353,12 @@ const ManageContract = () => {
           // Reload templates to ensure data consistency
           loadTemplates();
 
-          toast.success("Template updated successfully");
+          toast.success("Cập nhật mẫu hợp đồng thành công");
         }}
         onTemplateSave={handleSaveTemplate}
         onGenerateContract={(data) => {
           console.log("Generated contract data:", data);
-          toast.success("Contract generated successfully!");
+          toast.success("Tạo hợp đồng thành công!");
         }}
       />
     </Layout>

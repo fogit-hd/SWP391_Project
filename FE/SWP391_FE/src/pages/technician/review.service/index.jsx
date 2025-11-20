@@ -44,14 +44,102 @@ import api from "../../../config/axios";
 import { toast } from "react-toastify";
 import TechnicianSidebar from "../../../components/technician/TechnicianSidebar";
 import dayjs from "dayjs";
-import {
-  getMyServiceJobs,
-  getAllServiceJobs,
-  uploadServiceJobReport,
-  updateServiceJobStatus,
-  completeServiceJob,
-  cancelServiceJob,
-} from "../service.job";
+
+// Service Job API Functions
+/**
+ * Get all service jobs (Admin only)
+ * @returns {Promise} - Promise containing list of all service jobs
+ */
+const getAllServiceJobs = async () => {
+  try {
+    const response = await api.get("/service-jobs");
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching all service jobs:", error);
+    throw error;
+  }
+};
+
+/**
+ * Get my service jobs (Technician only)
+ * Returns service jobs assigned to the logged-in technician
+ * @returns {Promise} - Promise containing list of technician's service jobs
+ */
+const getMyServiceJobs = async () => {
+  try {
+    const response = await api.get("/service-jobs/my");
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching my service jobs:", error);
+    throw error;
+  }
+};
+
+/**
+ * Update service job status
+ * Status can only transition from SCHEDULED to DONE or CANCELLED
+ * @param {string} id - Service job ID
+ * @param {string} status - New status (DONE or CANCELLED)
+ * @returns {Promise} - Promise containing updated service job
+ */
+const updateServiceJobStatus = async (id, status) => {
+  try {
+    const validStatuses = ["DONE", "CANCELLED"];
+    if (!validStatuses.includes(status)) {
+      throw new Error(`Trạng thái không hợp lệ. Phải là một trong: ${validStatuses.join(", ")}`);
+    }
+    const response = await api.put(`/service-jobs/${id}/update-status`, {
+      status: status,
+    });
+    return response.data;
+  } catch (error) {
+    console.error(`Error updating service job status ${id}:`, error);
+    throw error;
+  }
+};
+
+/**
+ * Upload service job report
+ * @param {string} id - Service job ID
+ * @param {File} file - Report file to upload
+ * @returns {Promise} - Promise containing reportUrl and updated service job data
+ */
+const uploadServiceJobReport = async (id, file) => {
+  try {
+    if (!file) {
+      throw new Error("File là bắt buộc");
+    }
+    const formData = new FormData();
+    formData.append("ReportFile", file);
+    const response = await api.put(`/service-jobs/${id}/report`, formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error(`Error uploading report for service job ${id}:`, error);
+    throw error;
+  }
+};
+
+/**
+ * Complete service job
+ * @param {string} id - Service job ID
+ * @returns {Promise} - Promise containing updated service job
+ */
+const completeServiceJob = async (id) => {
+  return await updateServiceJobStatus(id, "DONE");
+};
+
+/**
+ * Cancel service job
+ * @param {string} id - Service job ID
+ * @returns {Promise} - Promise containing updated service job
+ */
+const cancelServiceJob = async (id) => {
+  return await updateServiceJobStatus(id, "CANCELLED");
+};
 
 const { Header, Content, Sider } = Layout;
 const { Title, Paragraph } = Typography;
@@ -111,14 +199,14 @@ const ReviewService = ({
 
   useEffect(() => {
     if (!isAuthenticated) {
-      toast.error("Please login");
+      toast.error("Vui lòng đăng nhập");
       navigate("/login");
       return;
     }
 
     // Allow Admin and Technician to access this page
     if (!isAdmin && !isTechnician) {
-      toast.error("You don't have permission to access this page");
+      toast.error("Bạn không có quyền truy cập trang này");
       navigate("/");
       return;
     }
@@ -127,22 +215,61 @@ const ReviewService = ({
     loadServiceJobs();
   }, [isAuthenticated, isAdmin, isTechnician, navigate]);
 
+  // Normalize status for comparison (handles various formats)
+  // API returns UPPERCASE (COMPLETED, VOTING, IN_PROGRESS) but filter uses lowercase (completed, voting, in_progress)
+  // This function converts both to lowercase for comparison
+  const normalizeStatus = (statusValue) => {
+    if (!statusValue) return null;
+    // Convert to string, lowercase, trim, and handle common variations
+    return String(statusValue)
+      .toLowerCase()
+      .trim()
+      .replace(/\s+/g, '_') // Replace spaces with underscores
+      .replace(/-/g, '_'); // Replace hyphens with underscores
+  };
+
   // Filter and sort contracts
   const filterAndSortContracts = (contractsList, status, type, order) => {
     let filtered = contractsList;
 
-    // Filter by status
+    // Filter by status (case-insensitive comparison)
     if (status !== "ALL") {
+      // Debug: Log all unique statuses before filtering
+      const uniqueStatuses = [...new Set(contractsList.map(s => s.status || s.state || s.contractStatus))];
+      console.log("🔍 All unique statuses in data:", uniqueStatuses);
+      console.log("🔍 Filtering for status:", status);
+      
+      const normalizedFilterStatus = normalizeStatus(status);
+      console.log("🔍 Normalized filter status:", normalizedFilterStatus);
+      
       filtered = filtered.filter((service) => {
         const serviceStatus =
           service.status || service.state || service.contractStatus;
-        return serviceStatus === status;
+        
+        if (!serviceStatus) {
+          return false;
+        }
+        
+        // Normalize both filter status and service status to lowercase for comparison
+        const normalizedServiceStatus = normalizeStatus(serviceStatus);
+        const matches = normalizedServiceStatus === normalizedFilterStatus;
+        
+        if (matches) {
+          console.log(`✅ Match found: "${serviceStatus}" (normalized: "${normalizedServiceStatus}") matches filter "${status}" (normalized: "${normalizedFilterStatus}")`);
+        }
+        
+        return matches;
       });
+      
+      console.log(`✅ After status filter (${status}): ${filtered.length} items`);
     }
 
-    // Filter by type
+    // Filter by type (case-insensitive comparison)
     if (type !== "ALL") {
-      filtered = filtered.filter((service) => service.type === type);
+      filtered = filtered.filter((service) => {
+        if (!service.type) return false;
+        return service.type.toUpperCase() === type.toUpperCase();
+      });
     }
 
     // Sort by date
@@ -207,18 +334,18 @@ const ReviewService = ({
 
       console.log("📊 Total services from API:", allServicesData.length);
 
-      // Debug: Log all service statuses with detailed info
-      console.log(
-        "🔍 All service statuses:",
-        allServicesData.map((c) => ({
-          id: c.id,
-          status: c.status,
-          state: c.state,
-          contractStatus: c.contractStatus,
-          title: c.title,
-          allFields: Object.keys(c),
-        }))
-      );
+      // Debug: Log all status values from API
+      const statusValues = allServicesData.map(s => ({
+        id: s.id,
+        title: s.title,
+        status: s.status,
+        state: s.state,
+        contractStatus: s.contractStatus,
+        actualStatus: s.status || s.state || s.contractStatus
+      }));
+      console.log("🔍 Sample status values from API:", statusValues.slice(0, 5));
+      const allUniqueStatuses = [...new Set(statusValues.map(s => s.actualStatus).filter(Boolean))];
+      console.log("🔍 All unique status values:", allUniqueStatuses);
 
       // Store all services
       setAllServicesData(allServicesData);
@@ -237,7 +364,7 @@ const ReviewService = ({
       );
     } catch (error) {
       console.error("❌ Error:", error);
-      message.error("Failed to load service requests.");
+      message.error("Không thể tải danh sách yêu cầu dịch vụ.");
     } finally {
       setLoading(false);
     }
@@ -280,10 +407,10 @@ const ReviewService = ({
       // Apply filter
       filterServiceJobs(jobsData, jobStatusFilter);
 
-      message.success(`Loaded ${jobsData.length} service jobs`);
+      message.success(`Đã tải ${jobsData.length} công việc dịch vụ`);
     } catch (error) {
       console.error("❌ Error loading service jobs:", error);
-      message.error("Failed to load service jobs");
+      message.error("Không thể tải danh sách công việc dịch vụ");
     } finally {
       setServiceJobsLoading(false);
     }
@@ -320,7 +447,7 @@ const ReviewService = ({
   // Handle upload report
   const handleUploadReport = async () => {
     if (!uploadFile) {
-      message.error("Please select a file to upload");
+      message.error("Vui lòng chọn file để tải lên");
       return;
     }
 
@@ -333,14 +460,14 @@ const ReviewService = ({
       console.log("✅ Upload successful:", response);
 
       const reportUrl = response.data?.reportUrl || response.reportUrl;
-      toast.success(`Report uploaded successfully! URL: ${reportUrl}`);
+      toast.success(`Tải báo cáo thành công! URL: ${reportUrl}`);
 
       setUploadModalVisible(false);
       setUploadFile(null);
       loadServiceJobs(); // Reload jobs
     } catch (error) {
       console.error("❌ Error uploading report:", error);
-      message.error(error.response?.data?.message || "Failed to upload report");
+      message.error(error.response?.data?.message || "Không thể tải báo cáo");
     } finally {
       setUploadLoading(false);
     }
@@ -390,11 +517,11 @@ const ReviewService = ({
       }
       
       await completeServiceJob(jobId);
-      toast.success("Service job marked as DONE!");
+      toast.success("Công việc dịch vụ đã được đánh dấu là HOÀN THÀNH!");
       loadServiceJobs(); // Reload jobs
     } catch (error) {
       console.error("❌ Error completing job:", error);
-      message.error(error.response?.data?.message || "Failed to complete job");
+      message.error(error.response?.data?.message || "Không thể hoàn thành công việc");
     }
   };
 
@@ -403,11 +530,11 @@ const ReviewService = ({
     try {
       console.log("❌ Cancelling job:", jobId);
       await cancelServiceJob(jobId);
-      toast.success("Service job marked as CANCELLED!");
+      toast.success("Công việc dịch vụ đã được đánh dấu là HỦY!");
       loadServiceJobs(); // Reload jobs
     } catch (error) {
       console.error("❌ Error cancelling job:", error);
-      message.error(error.response?.data?.message || "Failed to cancel job");
+      message.error(error.response?.data?.message || "Không thể hủy công việc");
     }
   };
 
@@ -472,7 +599,7 @@ const ReviewService = ({
 
       console.log("✅ Schedule updated successfully:", response.data);
       toast.success(
-        "Inspection schedule updated! Status changed to 'Pending Quote'"
+        "Cập nhật lịch kiểm tra thành công! Trạng thái đã chuyển sang 'Chờ Báo Giá'"
       );
       setScheduleModalVisible(false);
       scheduleForm.resetFields();
@@ -484,7 +611,7 @@ const ReviewService = ({
       console.error("❌ Error message:", error.response?.data?.message);
 
       toast.error(
-        error.response?.data?.message || "Failed to update inspection schedule"
+        error.response?.data?.message || "Không thể cập nhật lịch kiểm tra"
       );
     } finally {
       setScheduleLoading(false);
@@ -523,7 +650,7 @@ const ReviewService = ({
       );
 
       console.log("✅ Estimate updated successfully:", response.data);
-      toast.success("Quote submitted successfully! Status changed to 'Voting'");
+      toast.success("Gửi báo giá thành công! Trạng thái đã chuyển sang 'Đang Bỏ Phiếu'");
       setEstimateModalVisible(false);
       estimateForm.resetFields();
       loadContracts();
@@ -534,7 +661,7 @@ const ReviewService = ({
       console.error("❌ Error message:", error.response?.data?.message);
 
       toast.error(
-        error.response?.data?.message || "Failed to update cost estimate"
+        error.response?.data?.message || "Không thể cập nhật chi phí ước tính"
       );
     } finally {
       setEstimateLoading(false);
@@ -566,7 +693,7 @@ const ReviewService = ({
       setServiceRequestDetail(data);
     } catch (error) {
       console.error("❌ Failed to load service request details:", error);
-      message.error("Failed to load service request details");
+      message.error("Không thể tải chi tiết yêu cầu dịch vụ");
       setServiceRequestDetail(null);
     } finally {
       setServiceRequestDetailLoading(false);
@@ -807,11 +934,11 @@ const ReviewService = ({
               Upload
             </Button>
             <Popconfirm
-              title="Mark as Done?"
-              description="Are you sure you want to mark this job as DONE?"
+              title="Đánh dấu là Hoàn thành?"
+              description="Bạn có chắc chắn muốn đánh dấu công việc này là HOÀN THÀNH?"
               onConfirm={() => handleCompleteJob(record.id)}
-              okText="Yes"
-              cancelText="No"
+              okText="Có"
+              cancelText="Không"
               disabled={!canUpdate}
             >
               <Button
@@ -830,11 +957,11 @@ const ReviewService = ({
               </Button>
             </Popconfirm>
             <Popconfirm
-              title="Cancel Job?"
-              description="Are you sure you want to CANCEL this job?"
+              title="Hủy công việc?"
+              description="Bạn có chắc chắn muốn HỦY công việc này?"
               onConfirm={() => handleCancelJob(record.id)}
-              okText="Yes"
-              cancelText="No"
+              okText="Có"
+              cancelText="Không"
               disabled={!canUpdate}
             >
               <Button
@@ -1083,10 +1210,24 @@ const ReviewService = ({
             text: "Completed",
           },
         };
-        const statusInfo = statusMap[status] || {
-          color: "default",
-          text: status,
-        };
+        // Get status info or format status to title case
+        const statusInfo = statusMap[status];
+        if (!statusInfo) {
+          // Format unknown status to title case
+          const formatToTitleCase = (str) => {
+            if (!str) return "Unknown";
+            return str
+              .toLowerCase()
+              .split('_')
+              .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+              .join(' ');
+          };
+          return (
+            <Tag color="default" style={{ fontSize: "11px", margin: 0 }}>
+              {formatToTitleCase(status)}
+            </Tag>
+          );
+        }
         return (
           <Tag color={statusInfo.color} style={{ fontSize: "11px", margin: 0 }}>
             {statusInfo.text}
