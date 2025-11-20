@@ -8,7 +8,7 @@ const Demo = () => {
   const navigate = useNavigate();
   return (
     <div className={`demo-container theme-${state.theme}`}>
-      <h2>React Advanced: useReducer & useContext</h2>
+      <h2>React Advanced:</h2>
 
       <div className="demo-section">
         <h3>Theme Switcher</h3>

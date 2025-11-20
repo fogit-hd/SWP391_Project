@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import {
   Button,
   Layout,
@@ -60,45 +60,64 @@ const Homepage = () => {
   const [profileData, setProfileData] = useState(null);
   const [isProfileLoading, setIsProfileLoading] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
-  const [authKey, setAuthKey] = useState(0); // Force re-render key
+  const [authKey, setAuthKey] = useState(0);
   const [hasContract, setHasContract] = useState(false);
   const [isCheckingContract, setIsCheckingContract] = useState(false);
   const navigate = useNavigate();
 
-  // Notifications state
   const [notifications, setNotifications] = useState([]);
   const [isNotifLoading, setIsNotifLoading] = useState(false);
   const [isNotifDrawerOpen, setIsNotifDrawerOpen] = useState(false);
   const [selectedNotification, setSelectedNotification] = useState(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
 
+  // Refs to store AbortControllers for canceling requests on logout
+  const abortControllersRef = useRef([]);
+  // Flag to prevent API calls after logout
+  const isLoggingOutRef = useRef(false);
+
+  // Helper functions to prevent console logs during logout
+  const safeLog = (...args) => {
+    if (!isLoggingOutRef.current) {
+      console.log(...args);
+    }
+  };
+  const safeError = (...args) => {
+    if (!isLoggingOutRef.current) {
+      console.error(...args);
+    }
+  };
+  const safeWarn = (...args) => {
+    if (!isLoggingOutRef.current) {
+      console.warn(...args);
+    }
+  };
+
   const unreadCount = notifications.filter((n) => !n.isRead).length;
 
-  // Debug: Log user state changes
   useEffect(() => {
-    console.log("=== Auth State Debug ===");
-    console.log("user:", user);
-    console.log("isAuthenticated:", isAuthenticated);
-    console.log("hasContract:", hasContract);
-    console.log("isCheckingContract:", isCheckingContract);
-    console.log("authKey:", authKey);
-    console.log("=====================");
+    if (isLoggingOutRef.current) return;
+    safeLog("=== Auth State Debug ===");
+    safeLog("user:", user);
+    safeLog("isAuthenticated:", isAuthenticated);
+    safeLog("hasContract:", hasContract);
+    safeLog("isCheckingContract:", isCheckingContract);
+    safeLog("authKey:", authKey);
+    safeLog("=====================");
   }, [user, isAuthenticated, hasContract, isCheckingContract, authKey]);
 
-  // Log profileData changes for debugging (keep for important state changes)
   useEffect(() => {
+    if (isLoggingOutRef.current) return;
     if (profileData) {
-      console.log("Profile data updated:", profileData);
+      safeLog("Profile data updated:", profileData);
     }
   }, [profileData]);
 
-  // Initialize component and restore data from localStorage
   useEffect(() => {
     const token = localStorage.getItem("token")?.replaceAll('"', "");
     const userData = localStorage.getItem("userData");
     const savedProfileData = localStorage.getItem("profileData");
 
-    // Check authentication state on component mount
     console.log(
       "Component mount - Token exists:",
       !!token,
@@ -106,7 +125,6 @@ const Homepage = () => {
       !!user
     );
 
-    // Restore user data to Redux if we have token but no user in Redux
     if (token && userData && !user) {
       try {
         const parsedUserData = JSON.parse(userData);
@@ -114,11 +132,9 @@ const Homepage = () => {
         console.log("User data restored to Redux");
       } catch (error) {
         console.error("Error parsing saved user data:", error);
-        // Don't clear tokens on parse error - just log the error
       }
     }
 
-    // Load saved profile data from localStorage
     if (savedProfileData && !profileData) {
       try {
         const parsedProfileData = JSON.parse(savedProfileData);
@@ -130,66 +146,142 @@ const Homepage = () => {
       }
     }
 
-    // Mark as initialized after all restoration is done
     setIsInitialized(true);
-  }, []); // Only run on mount
+  }, []);
 
-  // Auto-fetch profile data when user is authenticated and no profile data
   useEffect(() => {
-    // Only proceed if component is initialized
     if (!isInitialized) return;
 
     const token = localStorage.getItem("token")?.replaceAll('"', "");
     const savedProfileData = localStorage.getItem("profileData");
 
-    // Auto-fetch profile data when conditions are met
-
-    // Only fetch from API if we have token, user data, and no profile data yet
     if (token && user && user.data && !profileData && !savedProfileData) {
-      console.log("User is authenticated, auto-fetching profile data...");
+      safeLog("User is authenticated, auto-fetching profile data...");
       fetchProfileData();
     }
-  }, [isInitialized, user, profileData]); // Run when initialization, user or profileData changes
+  }, [isInitialized, user, profileData]);
 
-  // Check contracts when user is authenticated
   useEffect(() => {
-    if (isInitialized && isAuthenticated && user) {
-      console.log("Checking user contracts...");
-      checkUserContracts();
+    // Don't run if logging out
+    if (isLoggingOutRef.current) {
+      return;
     }
-  }, [isInitialized, isAuthenticated, user]); // Run when authentication state changes
-
-  // Fetch notifications when user is authenticated
-  useEffect(() => {
+    
     if (isInitialized && isAuthenticated && user) {
-      console.log("Fetching notifications on mount/refresh...");
+      safeLog("Checking user contracts...");
+      const abortController = new AbortController();
+      
+      // Store AbortController in ref for logout cancellation
+      abortControllersRef.current.push(abortController);
+      
+      const checkContracts = async () => {
+        // Double check authentication and logout flag before making request
+        if (!isAuthenticated || !user || isLoggingOutRef.current) {
+          return;
+        }
+        await checkUserContracts(abortController.signal);
+      };
+      
+      checkContracts();
+      
+      // Cleanup: cancel request if component unmounts or user logs out
+      return () => {
+        abortController.abort();
+        // Remove from ref
+        abortControllersRef.current = abortControllersRef.current.filter(
+          (ac) => ac !== abortController
+        );
+        setHasContract(false);
+        setIsCheckingContract(false);
+      };
+    } else {
+      // Clear contract state when not authenticated
+      setHasContract(false);
+      setIsCheckingContract(false);
+    }
+  }, [isInitialized, isAuthenticated, user]);
+
+  useEffect(() => {
+    // Don't run if logging out
+    if (isLoggingOutRef.current) {
+      return;
+    }
+    
+    if (isInitialized && isAuthenticated && user) {
+      safeLog("Fetching notifications on mount/refresh...");
+      const abortController = new AbortController();
+      
+      // Store AbortController in ref for logout cancellation
+      abortControllersRef.current.push(abortController);
+      
       const fetchNotifs = async () => {
+        // Double check authentication and logout flag before making request
+        if (!isAuthenticated || !user || isLoggingOutRef.current) {
+          return;
+        }
+        
         setIsNotifLoading(true);
         try {
-          const res = await api.get("/notifications");
-          const list = res?.data?.data || [];
-          setNotifications(list);
+          const res = await api.get("/notifications", {
+            signal: abortController.signal,
+          });
+          // Check again after response
+          if (isAuthenticated && user && !isLoggingOutRef.current) {
+            const list = res?.data?.data || [];
+            setNotifications(list);
+          }
         } catch (error) {
-          console.error("Failed to load notifications", error);
+          // Ignore abort errors
+          if (error.name !== 'AbortError' && error.name !== 'CanceledError') {
+            safeError("Failed to load notifications", error);
+          }
         } finally {
-          setIsNotifLoading(false);
+          if (isAuthenticated && !isLoggingOutRef.current) {
+            setIsNotifLoading(false);
+          }
         }
       };
+      
       fetchNotifs();
+      
+      // Cleanup: cancel request if component unmounts or user logs out
+      return () => {
+        abortController.abort();
+        // Remove from ref
+        abortControllersRef.current = abortControllersRef.current.filter(
+          (ac) => ac !== abortController
+        );
+        setIsNotifLoading(false);
+      };
+    } else {
+      // Clear notifications when not authenticated
+      setNotifications([]);
+      setIsNotifLoading(false);
     }
-  }, [isInitialized, isAuthenticated, user]); // Run when authentication state changes
+  }, [isInitialized, isAuthenticated, user]);
 
   // Function to check user contracts
-  const checkUserContracts = async () => {
-    if (!isAuthenticated) {
+  const checkUserContracts = async (signal) => {
+    // Double check authentication and logout flag
+    if (!isAuthenticated || !user || isLoggingOutRef.current) {
       setHasContract(false);
+      setIsCheckingContract(false);
       return;
     }
 
     setIsCheckingContract(true);
     try {
-      const response = await api.get("/contracts/my");
-      console.log("Contract check response:", response.data);
+      const response = await api.get("/contracts/my", {
+        signal: signal,
+      });
+      
+      // Check authentication and logout flag again after response
+      if (!isAuthenticated || !user || isLoggingOutRef.current) {
+        setHasContract(false);
+        setIsCheckingContract(false);
+        return;
+      }
+      safeLog("Contract check response:", response.data);
 
       if (
         response.data &&
@@ -201,8 +293,8 @@ const Homepage = () => {
           (contract) => contract.status === "APPROVED"
         );
         setHasContract(hasApprovedContract);
-        console.log("User has approved contracts:", hasApprovedContract);
-        console.log(
+        safeLog("User has approved contracts:", hasApprovedContract);
+        safeLog(
           "All contracts:",
           response.data.data.map((c) => ({ id: c.id, status: c.status }))
         );
@@ -210,15 +302,35 @@ const Homepage = () => {
         setHasContract(false);
       }
     } catch (error) {
-      console.error("Error checking contracts:", error);
+      // Ignore abort errors
+      if (error.name === 'AbortError' || error.name === 'CanceledError') {
+        setHasContract(false);
+        setIsCheckingContract(false);
+        return;
+      }
+      
+      safeError("Error checking contracts:", error);
       setHasContract(false);
 
       // If 401, try to refresh token
       if (error.response?.status === 401) {
+        // Check authentication and logout flag before retry
+        if (!isAuthenticated || !user || isLoggingOutRef.current) {
+          setIsCheckingContract(false);
+          return;
+        }
+        
         try {
           await refreshToken();
+          // Check again after refresh
+          if (!isAuthenticated || !user || isLoggingOutRef.current) {
+            setIsCheckingContract(false);
+            return;
+          }
           // Retry the contract check
-          const retryResponse = await api.get("/contracts/my");
+          const retryResponse = await api.get("/contracts/my", {
+            signal: signal,
+          });
           if (
             retryResponse.data &&
             retryResponse.data.data &&
@@ -230,7 +342,7 @@ const Homepage = () => {
             setHasContract(hasApprovedContract);
           }
         } catch (refreshError) {
-          console.error(
+          safeError(
             "Failed to refresh token for contract check:",
             refreshError
           );
@@ -258,16 +370,23 @@ const Homepage = () => {
   };
 
   const fetchNotifications = useCallback(async () => {
-    if (!isAuthenticated) return;
+    if (!isAuthenticated || isLoggingOutRef.current) return;
     setIsNotifLoading(true);
     try {
       const res = await api.get("/notifications");
-      const list = res?.data?.data || [];
-      setNotifications(list);
+      // Check again before setting state
+      if (!isLoggingOutRef.current) {
+        const list = res?.data?.data || [];
+        setNotifications(list);
+      }
     } catch (error) {
-      console.error("Failed to load notifications", error);
+      if (!isLoggingOutRef.current) {
+        console.error("Failed to load notifications", error);
+      }
     } finally {
-      setIsNotifLoading(false);
+      if (!isLoggingOutRef.current) {
+        setIsNotifLoading(false);
+      }
     }
   }, [isAuthenticated]);
 
@@ -314,26 +433,88 @@ const Homepage = () => {
   };
 
   // Function to handle user logout
-  const handleLogout = () => {
-    console.log("Đang đăng xuất người dùng...");
-    navigate("/login");
-    // Clear all auth-related state
+  const handleLogout = async () => {
+    // Save original console methods
+    const originalLog = console.log;
+    const originalError = console.error;
+    const originalWarn = console.warn;
+    const originalInfo = console.info;
+    const originalDebug = console.debug;
+    
+    // Override all console methods to prevent logging during logout
+    console.log = () => {};
+    console.error = () => {};
+    console.warn = () => {};
+    console.info = () => {};
+    console.debug = () => {};
+    
+    // Set logout flag FIRST to prevent any new API calls
+    isLoggingOutRef.current = true;
+    
+    // Clear console
+    console.clear();
+    
+    // Cancel ALL pending requests immediately
+    abortControllersRef.current.forEach((controller) => {
+      controller.abort();
+    });
+    abortControllersRef.current = [];
+    
+    // Clear state immediately to stop any pending API calls
     setProfileData(null);
     setProfileImage(null);
     setIsProfileModalVisible(false);
     setHasContract(false);
     setIsCheckingContract(false);
+    setNotifications([]);
+    setIsNotifLoading(false);
+    
+    try {
+      // Get refresh token from localStorage
+      const refreshTokenValue = localStorage
+        .getItem("refreshToken")
+        ?.replaceAll('"', "");
 
-    // Dispatch logout action (this will clear all localStorage items)
+      // Only call logout API if refresh token exists
+      if (refreshTokenValue) {
+        try {
+          const response = await api.post("/auth/logout", {
+            refreshToken: refreshTokenValue,
+          });
+          // Log suppressed
+        } catch (error) {
+          // Error log suppressed
+          // Continue with logout even if API call fails
+        }
+      }
+    } catch (error) {
+      // Error log suppressed
+      // Continue with logout even if there's an error
+    }
+    
+    // Clear all local storage
+    localStorage.removeItem("token");
+    localStorage.removeItem("refreshToken");
+    localStorage.removeItem("userData");
+    localStorage.removeItem("profileData");
+    
+    // Dispatch logout action
     dispatch(logout());
-    // Force re-render by updating auth key
-    setAuthKey((prev) => prev + 1);
+    
+    // Navigate to login
+    navigate("/login");
 
-    // Show success message
+    setAuthKey((prev) => prev + 1);
     toast.success("Đăng xuất thành công!");
 
-    // Stay on homepage - no navigation
-    console.log("Đã đăng xuất, ở lại trang chủ");
+    // Restore console methods after a short delay to allow navigation
+    setTimeout(() => {
+      console.log = originalLog;
+      console.error = originalError;
+      console.warn = originalWarn;
+      console.info = originalInfo;
+      console.debug = originalDebug;
+    }, 100);
   };
 
   // Function to handle profile menu click
@@ -809,12 +990,12 @@ const Homepage = () => {
       bgColor: "#0D0716",
       textColor: "#fff",
       links: [
-        {
-          key: "service-request",
-          label: "Yêu cầu dịch vụ",
-          onClick: () => handleProtectedNavigation("/create-service-request"),
-        },
-        // Only show Booking Request if user is authenticated and has contracts
+        // {
+        //   key: "service-request",
+        //   label: "Yêu cầu dịch vụ",
+        //   onClick: () => handleProtectedNavigation("/create-service-request"),
+        // },
+
         ...(isAuthenticated && hasContract
           ? [
               {
@@ -1163,7 +1344,7 @@ const Homepage = () => {
             </Paragraph>
           </Col>
           <Col xs={24} md={7}>
-            <Title level={6} className="footer-section-title">
+            <Title level={5} className="footer-section-title">
               Công ty
             </Title>
             <Space direction="vertical" size="small" className="footer-links">

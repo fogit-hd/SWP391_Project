@@ -4,8 +4,4 @@ services:
     runtime: static
     buildCommand: cd FE/SWP391_FE && npm install && npm run build
     staticPublishPath: FE/SWP391_FE/dist
-    routes:
-      - type: rewrite
-        source: /*
-        destination: /index.html
 
