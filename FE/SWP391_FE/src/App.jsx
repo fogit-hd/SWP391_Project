@@ -149,7 +149,11 @@ function App() {
 
     {
       path: "/",
-      element: <Homepage />,
+      element: (
+        <ProtectedRoute roleId={3}>
+          <Homepage />
+        </ProtectedRoute>
+      ),
     },
     {
       path: "/login",
@@ -252,7 +256,7 @@ function App() {
     {
       path: "/sign-econtract/:contractId",
       element: (
-        <ProtectedRoute roleId={[1, 2, 3]}>
+        <ProtectedRoute roleId={3}>
           <SignEContract />
         </ProtectedRoute>
       ),
@@ -260,7 +264,7 @@ function App() {
     {
       path: "/booking",
       element: (
-        <ProtectedRoute roleId={[1, 2, 3]}>
+        <ProtectedRoute roleId={3}>
           <BookingManagement />
         </ProtectedRoute>
       ),
@@ -268,7 +272,7 @@ function App() {
     {
       path: "/my-contracts",
       element: (
-        <ProtectedRoute roleId={[1, 2, 3]}>
+        <ProtectedRoute roleId={3}>
           <SignEContract />
         </ProtectedRoute>
       ),
@@ -277,7 +281,7 @@ function App() {
     {
       path: "/create-service-request",
       element: (
-        <ProtectedRoute roleId={[1, 2, 3]}>
+        <ProtectedRoute roleId={3}>
           <CreateServiceRequest />
         </ProtectedRoute>
       ),
@@ -295,7 +299,7 @@ function App() {
     {
       path: "/Manage.Booking",
       element: (
-        <ProtectedRoute roleId={[1, 2, 3]}>
+        <ProtectedRoute roleId={[1, 2]}>
           <ManageBooking />
         </ProtectedRoute>
       ),

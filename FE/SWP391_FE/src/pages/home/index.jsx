@@ -87,11 +87,6 @@ const Homepage = () => {
       console.error(...args);
     }
   };
-  const safeWarn = (...args) => {
-    if (!isLoggingOutRef.current) {
-      console.warn(...args);
-    }
-  };
 
   const unreadCount = notifications.filter((n) => !n.isRead).length;
 
@@ -166,14 +161,14 @@ const Homepage = () => {
     if (isLoggingOutRef.current) {
       return;
     }
-    
+
     if (isInitialized && isAuthenticated && user) {
       safeLog("Checking user contracts...");
       const abortController = new AbortController();
-      
+
       // Store AbortController in ref for logout cancellation
       abortControllersRef.current.push(abortController);
-      
+
       const checkContracts = async () => {
         // Double check authentication and logout flag before making request
         if (!isAuthenticated || !user || isLoggingOutRef.current) {
@@ -181,9 +176,9 @@ const Homepage = () => {
         }
         await checkUserContracts(abortController.signal);
       };
-      
+
       checkContracts();
-      
+
       // Cleanup: cancel request if component unmounts or user logs out
       return () => {
         abortController.abort();
@@ -206,20 +201,20 @@ const Homepage = () => {
     if (isLoggingOutRef.current) {
       return;
     }
-    
+
     if (isInitialized && isAuthenticated && user) {
       safeLog("Fetching notifications on mount/refresh...");
       const abortController = new AbortController();
-      
+
       // Store AbortController in ref for logout cancellation
       abortControllersRef.current.push(abortController);
-      
+
       const fetchNotifs = async () => {
         // Double check authentication and logout flag before making request
         if (!isAuthenticated || !user || isLoggingOutRef.current) {
           return;
         }
-        
+
         setIsNotifLoading(true);
         try {
           const res = await api.get("/notifications", {
@@ -232,7 +227,7 @@ const Homepage = () => {
           }
         } catch (error) {
           // Ignore abort errors
-          if (error.name !== 'AbortError' && error.name !== 'CanceledError') {
+          if (error.name !== "AbortError" && error.name !== "CanceledError") {
             safeError("Failed to load notifications", error);
           }
         } finally {
@@ -241,9 +236,9 @@ const Homepage = () => {
           }
         }
       };
-      
+
       fetchNotifs();
-      
+
       // Cleanup: cancel request if component unmounts or user logs out
       return () => {
         abortController.abort();
@@ -274,7 +269,7 @@ const Homepage = () => {
       const response = await api.get("/contracts/my", {
         signal: signal,
       });
-      
+
       // Check authentication and logout flag again after response
       if (!isAuthenticated || !user || isLoggingOutRef.current) {
         setHasContract(false);
@@ -303,12 +298,12 @@ const Homepage = () => {
       }
     } catch (error) {
       // Ignore abort errors
-      if (error.name === 'AbortError' || error.name === 'CanceledError') {
+      if (error.name === "AbortError" || error.name === "CanceledError") {
         setHasContract(false);
         setIsCheckingContract(false);
         return;
       }
-      
+
       safeError("Error checking contracts:", error);
       setHasContract(false);
 
@@ -319,7 +314,7 @@ const Homepage = () => {
           setIsCheckingContract(false);
           return;
         }
-        
+
         try {
           await refreshToken();
           // Check again after refresh
@@ -440,26 +435,26 @@ const Homepage = () => {
     const originalWarn = console.warn;
     const originalInfo = console.info;
     const originalDebug = console.debug;
-    
+
     // Override all console methods to prevent logging during logout
     console.log = () => {};
     console.error = () => {};
     console.warn = () => {};
     console.info = () => {};
     console.debug = () => {};
-    
+
     // Set logout flag FIRST to prevent any new API calls
     isLoggingOutRef.current = true;
-    
+
     // Clear console
     console.clear();
-    
+
     // Cancel ALL pending requests immediately
     abortControllersRef.current.forEach((controller) => {
       controller.abort();
     });
     abortControllersRef.current = [];
-    
+
     // Clear state immediately to stop any pending API calls
     setProfileData(null);
     setProfileImage(null);
@@ -468,7 +463,7 @@ const Homepage = () => {
     setIsCheckingContract(false);
     setNotifications([]);
     setIsNotifLoading(false);
-    
+
     try {
       // Get refresh token from localStorage
       const refreshTokenValue = localStorage
@@ -491,16 +486,16 @@ const Homepage = () => {
       // Error log suppressed
       // Continue with logout even if there's an error
     }
-    
+
     // Clear all local storage
     localStorage.removeItem("token");
     localStorage.removeItem("refreshToken");
     localStorage.removeItem("userData");
     localStorage.removeItem("profileData");
-    
+
     // Dispatch logout action
     dispatch(logout());
-    
+
     // Navigate to login
     navigate("/login");
 

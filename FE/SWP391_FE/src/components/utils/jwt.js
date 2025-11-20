@@ -164,9 +164,12 @@ export const getRoleName = (roleId) => {
  * 
  * ROLE HIERARCHY & PERMISSIONS:
  * - Admin (1): Can access EVERYTHING
- * - Staff (2): Can access Staff (2) pages and CoOwner (3) pages
- * - CoOwner (3): Can access CoOwner (3) pages only
- * - Technician (4): Can access Technician (4) pages and CoOwner (3) pages
+ * - Staff (2): Can access Staff (2) pages only
+ * - CoOwner (3): Can access CoOwner (3) pages only (EXCLUSIVE - only CoOwner can access)
+ * - Technician (4): Can access Technician (4) pages only
+ * 
+ * IMPORTANT: CoOwner pages (roleId = 3) are EXCLUSIVE - only CoOwner (3) and Admin (1) can access them.
+ * Staff and Technician CANNOT access CoOwner pages.
  * 
  * @param {number} userRoleId - User's role ID
  * @param {number} requiredRoleId - Required role ID
@@ -195,23 +198,30 @@ export const hasRole = (userRoleId, requiredRoleId) => {
         return true;
     }
 
-    // Staff (2) has access to Staff (2) and CoOwner (3) pages
+    // CoOwner pages (3) are EXCLUSIVE - only CoOwner (3) and Admin (1) can access
+    if (numRequiredRoleId === 3) {
+        const hasAccess = numUserRoleId === 3;
+        console.log('[RBAC]', hasAccess ? '✓' : '✗', `CoOwner pages (3) are EXCLUSIVE - only CoOwner can access. User role: ${numUserRoleId}`);
+        return hasAccess;
+    }
+
+    // Staff (2) can only access Staff (2) pages
     if (numUserRoleId === 2) {
-        const hasAccess = numRequiredRoleId === 2 || numRequiredRoleId === 3;
+        const hasAccess = numRequiredRoleId === 2;
         console.log('[RBAC]', hasAccess ? '✓' : '✗', `Staff (2) ${hasAccess ? 'can' : 'cannot'} access role ${numRequiredRoleId}`);
         return hasAccess;
     }
 
-    // CoOwner (3) only has access to CoOwner (3) pages
+    // CoOwner (3) can only access CoOwner (3) pages
     if (numUserRoleId === 3) {
         const hasAccess = numRequiredRoleId === 3;
         console.log('[RBAC]', hasAccess ? '✓' : '✗', `CoOwner (3) ${hasAccess ? 'can' : 'cannot'} access role ${numRequiredRoleId}`);
         return hasAccess;
     }
 
-    // Technician (4) has access to Technician (4) and CoOwner (3) pages
+    // Technician (4) can only access Technician (4) pages
     if (numUserRoleId === 4) {
-        const hasAccess = numRequiredRoleId === 4 || numRequiredRoleId === 3;
+        const hasAccess = numRequiredRoleId === 4;
         console.log('[RBAC]', hasAccess ? '✓' : '✗', `Technician (4) ${hasAccess ? 'can' : 'cannot'} access role ${numRequiredRoleId}`);
         return hasAccess;
     }
