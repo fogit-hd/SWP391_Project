@@ -1,0 +1,18 @@
+.contact-us-page {
+  min-height: 100vh;
+  background: #f0f2f5;
+}
+
+.contact-us-content {
+  padding: 24px;
+}
+
+.team-member-card {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.team-member-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15) !important;
+}
+
