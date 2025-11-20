@@ -12,6 +12,7 @@ import {
   SettingOutlined,
   ToolOutlined,
   EyeOutlined,
+  BarChartOutlined,
 } from "@ant-design/icons";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
@@ -126,6 +127,11 @@ const getMenuItems = (navigate, auth) => [
         label: <Link to="/technician/service-jobs">Service Jobs</Link>,
       },
     ],
+  },
+  {
+    key: "statistics",
+    icon: <BarChartOutlined />,
+    label: <Link to="/admin/manage-statistic">Statistics</Link>,
   },
 ];
 

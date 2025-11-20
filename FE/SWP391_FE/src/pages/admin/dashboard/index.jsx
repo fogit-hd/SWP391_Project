@@ -9,6 +9,7 @@ import {
   CarOutlined,
   SettingOutlined,
   EyeOutlined,
+  BarChartOutlined,
 } from "@ant-design/icons";
 import {
   Breadcrumb,
@@ -119,6 +120,10 @@ const Dashboard = () => {
 
   const handleManageService = () => {
     navigate("/admin/manage-service");
+  };
+
+  const handleStatistics = () => {
+    navigate("/admin/manage-statistic");
   };
 
   return (
@@ -252,7 +257,7 @@ const Dashboard = () => {
             </Card>
 
             {/* Service Management Section */}
-            <Card title="Service Management">
+            <Card title="Service Management" style={{ marginBottom: 24 }}>
               <Row gutter={[16, 16]}>
                 <Col xs={24} sm={12} lg={8}>
                   <Button
@@ -275,6 +280,24 @@ const Dashboard = () => {
                     style={{ height: 60 }}
                   >
                     View Service Centers
+                  </Button>
+                </Col>
+              </Row>
+            </Card>
+
+            {/* Statistics Section */}
+            <Card title="Statistics">
+              <Row gutter={[16, 16]}>
+                <Col xs={24} sm={12} lg={8}>
+                  <Button
+                    type="primary"
+                    size="large"
+                    icon={<BarChartOutlined />}
+                    onClick={handleStatistics}
+                    block
+                    style={{ height: 60 }}
+                  >
+                    Revenue Statistics
                   </Button>
                 </Col>
               </Row>
