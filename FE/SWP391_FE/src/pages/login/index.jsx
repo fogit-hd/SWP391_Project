@@ -18,25 +18,23 @@ const validationSchema = Yup.object().shape({
   rememberMe: Yup.boolean(),
 });
 
-const getInitialValues = () => {
-  const rememberedEmail = localStorage.getItem("rememberedEmail");
-  return {
-    email: rememberedEmail || "",
-    password: "",
-
-    rememberMe: false,
-  };
-};
-
 const LoginPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [emailFocused, setEmailFocused] = useState(false);
   const [passwordFocused, setPasswordFocused] = useState(false);
-  const [emailValue, setEmailValue] = useState("");
-  const [passwordValue, setPasswordValue] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
   const dispatch = useDispatch();
+
+  // Memoize initial values to prevent re-creation on every render
+  const initialValues = React.useMemo(() => {
+    const rememberedEmail = localStorage.getItem("rememberedEmail");
+    return {
+      email: rememberedEmail || "",
+      password: "",
+      rememberMe: false,
+    };
+  }, []);
 
   useEffect(() => {
     localStorage.removeItem("token");
@@ -251,9 +249,10 @@ const LoginPage = () => {
           </div>
 
           <Formik
-            initialValues={getInitialValues()}
+            initialValues={initialValues}
             validationSchema={validationSchema}
             onSubmit={onSubmit}
+            enableReinitialize={false}
           >
             {({ values, errors, touched, setFieldValue, isSubmitting }) => {
               return (
@@ -296,14 +295,9 @@ const LoginPage = () => {
                             outline: "none",
                           }}
                           onFocus={() => setEmailFocused(true)}
-                          onBlur={(e) => {
-                            setEmailFocused(false);
-                            setEmailValue(e.target.value);
-                          }}
+                          onBlur={() => setEmailFocused(false)}
                           onChange={(e) => {
-                            const value = e.target.value;
-                            setFieldValue("email", value);
-                            setEmailValue(value);
+                            setFieldValue("email", e.target.value);
                           }}
                         />
                         <label className="floating-label">Email</label>
@@ -364,14 +358,9 @@ const LoginPage = () => {
                             MozAppearance: "textfield",
                           }}
                           onFocus={() => setPasswordFocused(true)}
-                          onBlur={(e) => {
-                            setPasswordFocused(false);
-                            setPasswordValue(e.target.value);
-                          }}
+                          onBlur={() => setPasswordFocused(false)}
                           onChange={(e) => {
-                            const value = e.target.value;
-                            setFieldValue("password", value);
-                            setPasswordValue(value);
+                            setFieldValue("password", e.target.value);
                           }}
                         />
                         <button
