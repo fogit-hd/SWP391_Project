@@ -32,16 +32,11 @@ const CreateBookingModal = ({
   const [validationError, setValidationError] = useState(null);
   const [quotaInfo, setQuotaInfo] = useState(null);
   const [quotaLoading, setQuotaLoading] = useState(false);
-  const [completedBookings, setCompletedBookings] = useState([]);
-  const [bookingsLoading, setBookingsLoading] = useState(false);
-  // State để lưu tạm raw bookings data
-  const [rawBookings, setRawBookings] = useState([]);
 
-  // Fetch quota information and completed bookings when modal opens
+  // Fetch quota information when modal opens
   React.useEffect(() => {
     if (visible && groupId && vehicleId) {
       fetchQuotaInfo();
-      fetchCompletedBookings();
     }
   }, [visible, groupId, vehicleId]);
 
@@ -60,95 +55,6 @@ const CreateBookingModal = ({
     }
   };
 
-  const fetchCompletedBookings = async () => {
-    if (!groupId || !vehicleId) return;
-
-    setBookingsLoading(true);
-    try {
-      const response = await api.get(
-        `/booking/Get-Booking-by-group-and-vehicle/${groupId}/${vehicleId}`
-      );
-      const allBookings = response.data.data || [];
-
-      console.log("Fetched raw bookings:", allBookings);
-      // Lưu raw bookings để filter sau khi có quotaInfo
-      setRawBookings(allBookings);
-
-      // Nếu đã có quotaInfo thì filter ngay
-      if (quotaInfo?.data?.weekStartDate) {
-        filterCurrentWeekBookings(allBookings);
-      }
-    } catch (error) {
-      console.error("Failed to fetch bookings:", error);
-      message.error("Không thể tải danh sách đặt lịch đã hoàn thành");
-    } finally {
-      setBookingsLoading(false);
-    }
-  };
-
-  const filterCurrentWeekBookings = (allBookings) => {
-    console.log("=== DEBUG filterCurrentWeekBookings ===");
-    console.log("All bookings:", allBookings);
-    console.log("Current quotaInfo:", quotaInfo);
-
-    // Chỉ filter khi đã có thông tin quota với weekStartDate
-    if (!quotaInfo?.data?.weekStartDate) {
-      console.log("No quota weekStartDate available yet, skipping filter");
-      return;
-    }
-
-    const weekStartDate = dayjs(quotaInfo.data.weekStartDate);
-    console.log(
-      "Using quota weekStartDate:",
-      weekStartDate.format("YYYY-MM-DD")
-    );
-
-    const weekEndDate = weekStartDate.add(7, "day");
-    console.log(
-      "Week range:",
-      weekStartDate.format("YYYY-MM-DD"),
-      "to",
-      weekEndDate.format("YYYY-MM-DD")
-    );
-
-    const currentWeekCompleted = allBookings.filter((booking) => {
-      console.log(
-        "Checking booking:",
-        booking.id,
-        booking.status,
-        booking.startTime
-      );
-      if (booking.status !== "COMPLETE") {
-        console.log("Skipping - status is not COMPLETE:", booking.status);
-        return false;
-      }
-
-      const startTime = dayjs(booking.startTime);
-      // Sử dụng isSame hoặc isAfter thay vì isSameOrAfter
-      const isInRange =
-        (startTime.isAfter(weekStartDate) || startTime.isSame(weekStartDate)) &&
-        startTime.isBefore(weekEndDate);
-      console.log(
-        "Booking startTime:",
-        startTime.format("YYYY-MM-DD HH:mm"),
-        "isInRange:",
-        isInRange
-      );
-      return isInRange;
-    });
-
-    console.log("Filtered completed bookings:", currentWeekCompleted);
-    setCompletedBookings(currentWeekCompleted);
-  };
-
-  // Cập nhật lại completed bookings khi quotaInfo thay đổi
-  React.useEffect(() => {
-    if (quotaInfo?.data?.weekStartDate && rawBookings.length > 0) {
-      // Filter lại bookings với thông tin tuần chính xác từ quota
-      console.log("Re-filtering bookings with quota info");
-      filterCurrentWeekBookings(rawBookings);
-    }
-  }, [quotaInfo, rawBookings]);
 
   const handleTimeChange = (dates) => {
     // Clear previous validation error when user changes time
@@ -643,8 +549,6 @@ const CreateBookingModal = ({
     setEstimatedDuration(null);
     setValidationError(null);
     setQuotaInfo(null);
-    setCompletedBookings([]);
-    setRawBookings([]);
     onCancel();
   };
 
@@ -789,76 +693,6 @@ const CreateBookingModal = ({
             style={{ marginBottom: 16 }}
           />
         )
-      )}
-
-      {/* Completed Bookings This Week */}
-      {bookingsLoading ? (
-        <Alert
-          message="Đang tải danh sách đặt lịch đã hoàn thành..."
-          type="info"
-          showIcon
-          style={{ marginBottom: 16 }}
-        />
-      ) : (
-        <Alert
-          message="Đặt lịch đã hoàn thành tuần này"
-          description={
-            <div>
-              {completedBookings.length > 0 ? (
-                <>
-                  <div style={{ marginBottom: 8 }}>
-                    {completedBookings.length} đặt lịch đã hoàn thành tuần này:
-                  </div>
-                  <div style={{ maxHeight: "120px", overflowY: "auto" }}>
-                    {completedBookings.map((booking, index) => {
-                      const startTime = dayjs(booking.startTime);
-                      const endTime = dayjs(booking.endTime);
-                      const duration = endTime.diff(startTime, "hour", true);
-
-                      return (
-                        <div
-                          key={booking.id}
-                          style={{
-                            padding: "8px 12px",
-                            margin: "4px 0",
-                            backgroundColor: "#f6ffed",
-                            border: "1px solid #b7eb8f",
-                            borderRadius: "4px",
-                            fontSize: "13px",
-                          }}
-                        >
-                          <div style={{ fontWeight: "bold", color: "#389e0d" }}>
-                            {startTime.format("DD/MM/YYYY HH:mm")} -{" "}
-                            {endTime.format("HH:mm")}
-                          </div>
-                          <div style={{ color: "#666" }}>
-                            Thời lượng: {duration.toFixed(1)} giờ • Trạng thái:
-                            HOÀN THÀNH
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </>
-              ) : (
-                <div style={{ color: "#666", fontStyle: "italic" }}>
-                  Chưa có đặt lịch hoàn thành nào trong tuần này.
-                </div>
-              )}
-              {quotaInfo?.data && (
-                <div
-                  style={{ marginTop: 8, fontSize: "12px", color: "#8c8c8c" }}
-                >
-                  Tuần bắt đầu:{" "}
-                  {dayjs(quotaInfo.data.weekStartDate).format("DD/MM/YYYY")}
-                </div>
-              )}
-            </div>
-          }
-          type={completedBookings.length > 0 ? "success" : "warning"}
-          showIcon
-          style={{ marginBottom: 16 }}
-        />
       )}
 
       {/* Validation Error Alert */}
