@@ -1008,26 +1008,9 @@ const Homepage = () => {
       textColor: "#fff",
       links: [
         {
-          key: "FERAD",
-          label: "React advances",
-          onClick: () => navigate("/react-advances"),
-        },
-        {
-          key: "email",
-          label: "Email",
+          key: "contact",
+          label: "Liên hệ chúng tôi",
           onClick: () => navigate("/contact-us"),
-        },
-      ],
-    },
-    {
-      label: "Demo",
-      bgColor: "#0D0716",
-      textColor: "#fff",
-      links: [
-        {
-          key: "react-examples",
-          label: "React Examples",
-          onClick: () => navigate("/react-advances"),
         },
       ],
     },
