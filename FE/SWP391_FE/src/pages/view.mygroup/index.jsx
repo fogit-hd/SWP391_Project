@@ -28,6 +28,7 @@ import {
   TeamOutlined,
   ArrowLeftOutlined,
   EyeOutlined,
+  DownloadOutlined,
 } from "@ant-design/icons";
 import { useNavigate, Link, useLocation } from "react-router-dom";
 import api from "../../config/axios";
@@ -467,6 +468,73 @@ const MyGroup = () => {
       setServiceRequestDetail(null);
     } finally {
       setServiceRequestDetailLoading(false);
+    }
+  };
+
+  // Download report file
+  const handleDownloadReport = async (reportUrl) => {
+    if (!reportUrl) {
+      toast.warning("Không có báo cáo để tải về");
+      return;
+    }
+
+    try {
+      // Extract filename from URL
+      const urlParts = reportUrl.split("/");
+      let filename = urlParts[urlParts.length - 1] || "report.txt";
+      // Clean filename (remove query params if any)
+      filename = filename.split("?")[0];
+
+      // Try to fetch the file
+      const response = await fetch(reportUrl, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/octet-stream",
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      // Get the blob data
+      const blob = await response.blob();
+
+      // Create a temporary link and trigger download
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = filename;
+      link.style.display = "none";
+      document.body.appendChild(link);
+      link.click();
+
+      // Clean up
+      setTimeout(() => {
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+      }, 100);
+
+      toast.success("Đã tải báo cáo thành công");
+    } catch (error) {
+      console.error("Lỗi khi tải báo cáo:", error);
+      
+      // Fallback: use direct download link (browser will handle it)
+      try {
+        const link = document.createElement("a");
+        link.href = reportUrl;
+        link.download = reportUrl.split("/").pop().split("?")[0] || "report.txt";
+        link.style.display = "none";
+        document.body.appendChild(link);
+        link.click();
+        setTimeout(() => {
+          document.body.removeChild(link);
+        }, 100);
+        toast.info("Đang tải báo cáo...");
+      } catch (fallbackError) {
+        console.error("Lỗi fallback:", fallbackError);
+        toast.error("Không thể tải báo cáo. Vui lòng thử lại hoặc mở link trực tiếp.");
+      }
     }
   };
 
@@ -999,6 +1067,24 @@ const MyGroup = () => {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.search, location.pathname, groups.length]);
+
+  // Auto-open group modal when navigating from create contract page
+  useEffect(() => {
+    const groupIdFromState = location.state?.groupId;
+    const shouldOpenModal = location.state?.openGroupModal;
+
+    if (shouldOpenModal && groupIdFromState && groups.length > 0 && !membersVisible) {
+      // Find the group by ID
+      const targetGroup = groups.find((g) => g.id === groupIdFromState);
+      if (targetGroup) {
+        // Open the modal with the target group
+        openMembers(targetGroup);
+        // Clear the state to prevent reopening on re-render
+        navigate(location.pathname, { replace: true, state: {} });
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [groups.length, location.state, membersVisible]);
 
   const getCurrentUserId = () => {
     // Try localStorage userData first
@@ -3567,6 +3653,22 @@ const MyGroup = () => {
                                 ).toFixed(0)}K VNĐ`}
                               </Descriptions.Item>
                             )}
+                          {serviceRequestDetail.reportUrl && (
+                            <Descriptions.Item label="Báo cáo">
+                              <Button
+                                type="link"
+                                icon={<DownloadOutlined />}
+                                onClick={() =>
+                                  handleDownloadReport(
+                                    serviceRequestDetail.reportUrl
+                                  )
+                                }
+                                style={{ padding: 0 }}
+                              >
+                                Tải báo cáo
+                              </Button>
+                            </Descriptions.Item>
+                          )}
                         </Descriptions>
                       </Card>
 

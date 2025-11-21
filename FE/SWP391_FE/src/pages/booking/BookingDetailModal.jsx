@@ -200,6 +200,14 @@ const BookingDetailModal = ({ visible, onCancel, booking, onUpdate, groupId, veh
     if (!current) return false;
     
     const now = dayjs();
+    const isInUse = booking?.status === 'INUSE';
+    
+    // Nếu đang INUSE, cho phép chọn ngày hiện tại và các ngày trong tương lai (không giới hạn)
+    if (isInUse) {
+      // Disable các ngày quá khứ (trước ngày hiện tại)
+      return current < now.startOf('day');
+    }
+    
     const maxDate = dayjs().add(BOOKING_CONSTRAINTS.MAX_ADVANCE_DAYS, 'day');
     return current < now.startOf('day') || current > maxDate.endOf('day');
   };
@@ -213,9 +221,37 @@ const BookingDetailModal = ({ visible, onCancel, booking, onUpdate, groupId, veh
     }
 
     const selectedDate = dayjs(current);
+    const isInUse = booking?.status === 'INUSE';
 
     // Xử lý cho start time
     if (type === 'start') {
+      // Nếu đang INUSE, disable tất cả start time
+      if (isInUse) {
+        return {
+          disabledHours: () => {
+            const hours = [];
+            for (let i = 0; i < 24; i++) {
+              hours.push(i);
+            }
+            return hours;
+          },
+          disabledMinutes: () => {
+            const minutes = [];
+            for (let i = 0; i < 60; i++) {
+              minutes.push(i);
+            }
+            return minutes;
+          },
+          disabledSeconds: () => {
+            const seconds = [];
+            for (let i = 0; i < 60; i++) {
+              seconds.push(i);
+            }
+            return seconds;
+          },
+        };
+      }
+
       if (selectedDate.isSame(now, 'day')) {
         const minHour = minAllowedTime.hour();
         const minMinute = minAllowedTime.minute();
@@ -247,6 +283,91 @@ const BookingDetailModal = ({ visible, onCancel, booking, onUpdate, groupId, veh
     if (type === 'end') {
       const timeRange = updateForm.getFieldValue('timeRange');
       const startTime = timeRange && timeRange[0] ? dayjs(timeRange[0]) : null;
+      
+      // Nếu đang INUSE, end time có thể tăng, nhưng không được lùi về trước thời gian hiện tại + 15 phút
+      if (isInUse) {
+        const minEndTime = now.add(15, 'minute'); // Tối thiểu: hiện tại + 15 phút (không được lùi về trước)
+        const timeRange = updateForm.getFieldValue('timeRange');
+        const startTime = timeRange && timeRange[0] ? dayjs(timeRange[0]) : dayjs(booking.startTime);
+        
+        if (selectedDate.isSame(now, 'day')) {
+          const minHour = minEndTime.hour();
+          const minMinute = minEndTime.minute();
+          const startHour = startTime.hour();
+          const startMinute = startTime.minute();
+          
+          // Tính toán giờ/phút tối thiểu thực sự (lấy max giữa minEndTime và startTime)
+          const actualMinTime = minEndTime.isAfter(startTime) ? minEndTime : startTime;
+          const actualMinHour = actualMinTime.hour();
+          const actualMinMinute = actualMinTime.minute();
+          
+          return {
+            disabledHours: () => {
+              const hours = [];
+              // Disable các giờ trước actualMinHour
+              for (let i = 0; i < actualMinHour; i++) {
+                hours.push(i);
+              }
+              // Không disable các giờ sau (cho phép tăng không giới hạn)
+              return hours;
+            },
+            disabledMinutes: (selectedHour) => {
+              const minutes = [];
+              
+              // Nếu chọn giờ là actualMinHour, disable các phút trước actualMinMinute
+              if (selectedHour === actualMinHour) {
+                for (let i = 0; i < actualMinMinute; i++) {
+                  minutes.push(i);
+                }
+              }
+              
+              // Nếu chọn cùng giờ với startHour, phải đảm bảo phút >= startMinute
+              if (selectedDate.isSame(startTime, 'day') && selectedHour === startHour) {
+                for (let i = 0; i <= startMinute; i++) {
+                  if (!minutes.includes(i)) {
+                    minutes.push(i);
+                  }
+                }
+              }
+              
+              return minutes;
+            },
+            disabledSeconds: () => [],
+          };
+        }
+        // Nếu chọn ngày trong tương lai, cho phép tất cả (không giới hạn tăng)
+        if (selectedDate.isAfter(now, 'day')) {
+          return {
+            disabledHours: () => [],
+            disabledMinutes: () => [],
+            disabledSeconds: () => [],
+          };
+        }
+        // Nếu chọn ngày quá khứ (trước ngày hiện tại), disable tất cả
+        return {
+          disabledHours: () => {
+            const hours = [];
+            for (let i = 0; i < 24; i++) {
+              hours.push(i);
+            }
+            return hours;
+          },
+          disabledMinutes: () => {
+            const minutes = [];
+            for (let i = 0; i < 60; i++) {
+              minutes.push(i);
+            }
+            return minutes;
+          },
+          disabledSeconds: () => {
+            const seconds = [];
+            for (let i = 0; i < 60; i++) {
+              seconds.push(i);
+            }
+            return seconds;
+          },
+        };
+      }
       
       if (!startTime) {
         if (selectedDate.isSame(now, 'day')) {
@@ -318,30 +439,57 @@ const BookingDetailModal = ({ visible, onCancel, booking, onUpdate, groupId, veh
     const now = dayjs();
     const start = dates[0];
     const end = dates[1];
+    const isInUse = booking?.status === 'INUSE';
 
-    // Check minimum advance booking (phải đặt trước ít nhất 15 phút)
-    const minAllowedTime = now.add(BOOKING_CONSTRAINTS.MIN_ADVANCE_MINUTES, 'minute');
-    
-    if (start.isBefore(minAllowedTime)) {
-      return { 
-        valid: false, 
-        error: `Thời gian bắt đầu phải cách thời gian hiện tại ít nhất ${BOOKING_CONSTRAINTS.MIN_ADVANCE_MINUTES} phút` 
-      };
+    // Nếu đang INUSE, không validate start time (vì không cho chỉnh sửa)
+    if (!isInUse) {
+      // Check minimum advance booking (phải đặt trước ít nhất 15 phút)
+      const minAllowedTime = now.add(BOOKING_CONSTRAINTS.MIN_ADVANCE_MINUTES, 'minute');
+      
+      if (start.isBefore(minAllowedTime)) {
+        return { 
+          valid: false, 
+          error: `Thời gian bắt đầu phải cách thời gian hiện tại ít nhất ${BOOKING_CONSTRAINTS.MIN_ADVANCE_MINUTES} phút` 
+        };
+      }
+
+      // Check maximum advance booking (14 ngày)
+      const daysUntilStart = start.diff(now, 'day', true);
+      if (daysUntilStart > BOOKING_CONSTRAINTS.MAX_ADVANCE_DAYS) {
+        return { 
+          valid: false, 
+          error: `Chỉ có thể đặt trong tuần này và tuần sau (không quá ${BOOKING_CONSTRAINTS.MAX_ADVANCE_DAYS} ngày)` 
+        };
+      }
     }
 
-    // Check maximum advance booking (14 ngày)
-    const daysUntilStart = start.diff(now, 'day', true);
-    if (daysUntilStart > BOOKING_CONSTRAINTS.MAX_ADVANCE_DAYS) {
-      return { 
-        valid: false, 
-        error: `Chỉ có thể đặt trong tuần này và tuần sau (không quá ${BOOKING_CONSTRAINTS.MAX_ADVANCE_DAYS} ngày)` 
-      };
-    }
-
-    // Check basic duration validity
-    const duration = end.diff(start, 'hour', true);
-    if (duration <= 0) {
-      return { valid: false, error: "Thời gian kết thúc phải sau thời gian bắt đầu" };
+    // Nếu đang INUSE, end time có thể tăng, nhưng không được lùi về trước thời gian hiện tại + 15 phút
+    if (isInUse) {
+      const minEndTime = now.add(15, 'minute'); // Tối thiểu: hiện tại + 15 phút (không được lùi về trước)
+      
+      // Kiểm tra không được chọn thời gian trước hiện tại + 15 phút
+      if (end.isBefore(minEndTime)) {
+        return { 
+          valid: false, 
+          error: "Thời gian kết thúc phải sau thời gian hiện tại ít nhất 15 phút" 
+        };
+      }
+      
+      // Vẫn phải đảm bảo end time sau start time
+      if (end.isBefore(start) || end.isSame(start)) {
+        return { 
+          valid: false, 
+          error: "Thời gian kết thúc phải sau thời gian bắt đầu" 
+        };
+      }
+      
+      // Không giới hạn về phía sau (có thể tăng không giới hạn)
+    } else {
+      // Check basic duration validity cho trường hợp không phải INUSE
+      const duration = end.diff(start, 'hour', true);
+      if (duration <= 0) {
+        return { valid: false, error: "Thời gian kết thúc phải sau thời gian bắt đầu" };
+      }
     }
 
     // Check for overlapping bookings (exclude current booking being updated)
@@ -759,8 +907,20 @@ const BookingDetailModal = ({ visible, onCancel, booking, onUpdate, groupId, veh
               minuteStep={1}
               disabledDate={disabledDate}
               disabledTime={disabledTime}
+              disabled={booking?.status === 'INUSE' ? [true, false] : [false, false]}
               onChange={(dates) => {
                 setValidationError(null);
+                // Nếu đang INUSE, đảm bảo start date luôn là giá trị ban đầu
+                if (booking?.status === 'INUSE' && dates && dates[0] && dates[1]) {
+                  const originalStart = dayjs(booking.startTime);
+                  // Nếu start date bị thay đổi, giữ nguyên giá trị ban đầu
+                  if (!dates[0].isSame(originalStart, 'minute')) {
+                    updateForm.setFieldsValue({
+                      timeRange: [originalStart, dates[1]]
+                    });
+                    return;
+                  }
+                }
                 if (dates && dates[0] && dates[1]) {
                   const validation = validateUpdateTime(dates);
                   if (!validation.valid) {
