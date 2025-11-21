@@ -115,7 +115,9 @@ export default function ManageBooking() {
       if (endpoint === "check-in") setCheckedInMap(m => ({ ...m, [bookingId]: true }));
       else if (endpoint === "check-out") setCheckedInMap(m => { const copy = { ...m }; delete copy[bookingId]; return copy; });
       setCheckingMap(m => ({ ...m, [bookingId]: false }));
-      message.success(r.data?.message || `Booking marked ${newStatus}`);
+      const successMsg = r.data?.message || (endpoint === 'check-in' ? 'Check-in thành công' : 'Check-out thành công');
+      message.success(successMsg);
+      toast.success(successMsg);
       setFileMap(m => ({ ...m, [bookingId]: [] })); setDescriptionMap(m => ({ ...m, [bookingId]: '' }));
       if (selectedGroup?.id && selectedVehicle?.id) setTimeout(() => fetchBookings(selectedGroup.id, selectedVehicle.id), 500);
     } catch (err) {
@@ -283,7 +285,14 @@ export default function ManageBooking() {
                         </div>
                         <div style={{ marginBottom:8 }}><Tag color={tagColor} className={`status-tag ${st}`}>{tagText}</Tag></div>
                         <Button onClick={() => doCheck(b.id, "check-in")} type={isBooked && !checking && !justCheckedIn ? "primary" : undefined} disabled={!isBooked || checking || justCheckedIn}>{checking ? "Checking in..." : "Check-in"}</Button>
-                        {!checking && (<Button onClick={() => doCheck(b.id, "check-out")} danger disabled={!(isInUse || isOvertime) || !(fileMap[b.id] && fileMap[b.id].length > 0)}>Check-out</Button>)}
+                        <Button
+                          onClick={() => doCheck(b.id, "check-out")}
+                          danger
+                          type={(isInUse || isOvertime) && !checking ? "primary" : undefined}
+                          disabled={!(isInUse || isOvertime) || checking}
+                        >
+                          {checking ? "Checking out..." : "Check-out"}
+                        </Button>
                       </div>
                     </List.Item>
                   );
@@ -311,9 +320,14 @@ export default function ManageBooking() {
         )}
 
         <div className="history-oval staff-oval">
-          <div className="section-header" style={{ justifyContent:'space-between', marginBottom:0 }}>
+          <div className="section-header" style={{ justifyContent:'flex-start', marginBottom:12 }}>
             <h4 style={{ margin:0 }}>Lịch sử sự kiện chuyến đi</h4>
-            <Button size="small" onClick={()=> setTripEventsModalOpen(true)}>Xem chi tiết</Button>
+          </div>
+          <div style={{ display:'flex', justifyContent:'center' }}>
+            <button type="button" className="history-detail-btn" onClick={()=> setTripEventsModalOpen(true)}>
+              <span className="history-detail-btn__icon">📋</span>
+              <span>Xem chi tiết</span>
+            </button>
           </div>
         </div>
 

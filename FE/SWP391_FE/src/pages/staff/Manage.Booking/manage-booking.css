@@ -616,3 +616,51 @@
   .bookings-oval .ant-list-item { padding:18px 18px 18px 30px; }
   .bookings-oval .time-col { min-width:160px; }
 }
+
+/* === Overrides & Enhancements (equal heights + improved vehicle & history styling) === */
+.detached-row { align-items: stretch; }
+.detached-row .selector-oval.staff-oval,
+.detached-row .vehicle-info-oval.staff-oval { flex:1; }
+.selector-oval.staff-oval { display:flex; flex-direction:column; }
+.vehicle-info-oval.staff-oval { display:flex; flex-direction:column; padding:32px 38px 38px 38px; }
+.vehicle-title { font-size:20px; font-weight:600; letter-spacing:.3px; margin-bottom:8px; }
+.vehicle-line { font-size:14px; color:#374151; line-height:1.5; }
+
+.history-oval.staff-oval {
+  max-width:520px;
+  margin:48px auto 40px auto;
+  padding:28px 34px 30px 34px;
+  border-radius:42px;
+  position:relative;
+  box-shadow:0 14px 34px rgba(11,26,40,0.06);
+  border:1px solid rgba(0,0,0,0.05);
+}
+.history-oval.staff-oval::before {
+  display:none;
+}
+.history-oval.staff-oval h4 { font-size:20px; font-weight:600; letter-spacing:.3px; }
+.history-oval.staff-oval .section-header { padding-left:12px; }
+.history-oval.staff-oval .section-header button { box-shadow:0 4px 12px rgba(24,144,255,0.18); }
+.history-oval.staff-oval .section-header button:hover { filter:brightness(0.97); }
+
+/* Custom pill button inside history oval */
+.history-detail-btn {
+  background: linear-gradient(135deg,#3b82f6 0%, #2563eb 55%, #1d4ed8 100%);
+  color:#fff;
+  font-weight:600;
+  font-size:14px;
+  letter-spacing:.2px;
+  padding:12px 24px;
+  border:none;
+  border-radius:999px;
+  display:inline-flex;
+  align-items:center;
+  gap:10px;
+  cursor:pointer;
+  box-shadow:0 10px 26px -6px rgba(37,99,235,0.35), 0 4px 12px rgba(29,78,216,0.28);
+  transition:box-shadow .25s ease, transform .25s ease, filter .25s ease;
+}
+.history-detail-btn__icon { font-size:16px; line-height:1; }
+.history-detail-btn:hover { transform:translateY(-3px); box-shadow:0 16px 34px -8px rgba(37,99,235,0.45), 0 6px 16px rgba(29,78,216,0.32); filter:brightness(1.04); }
+.history-detail-btn:active { transform:translateY(0); box-shadow:0 8px 20px -4px rgba(37,99,235,0.38), 0 4px 10px rgba(29,78,216,0.30); filter:brightness(.95); }
+.history-detail-btn:focus-visible { outline:3px solid #93c5fd; outline-offset:2px; }
