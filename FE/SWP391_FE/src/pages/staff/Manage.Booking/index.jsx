@@ -35,10 +35,8 @@ export default function ManageBooking() {
   const [checkedInMap, setCheckedInMap] = useState({});
   const [vehicleDetails, setVehicleDetails] = useState(null);
   const [loadingVehicleDetails, setLoadingVehicleDetails] = useState(false);
-  const [damageReports, setDamageReports] = useState([]);
-  const [loadingDamageReports, setLoadingDamageReports] = useState(false);
-  const [damageReportsModalOpen, setDamageReportsModalOpen] = useState(false);
-  const [selectedBookingForDamage, setSelectedBookingForDamage] = useState(null);
+  const [vehicleDetailModalOpen, setVehicleDetailModalOpen] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => { fetchGroups(); }, []);
   const fetchGroups = async () => {
@@ -79,31 +77,9 @@ export default function ManageBooking() {
     setLoadingTripEvents(true);
     try {
       const r = await api.get(`/trip-events/History/staff`);
-      const data = Array.isArray(r.data) ? r.data : r.data?.data || [];
-      setTripEvents(data);
-    } catch (err) {
-      console.error(err);
-      message.error("Failed to load trip events");
-      setTripEvents([]);
-    } finally {
-      setLoadingTripEvents(false);
-    }
-  };
-
-  const fetchDamageReportsByVehicle = async (vehicleId) => {
-    if (!vehicleId) return;
-    setLoadingDamageReports(true);
-    try {
-      const r = await api.get(`/trip-events/Get-damage-report-by-vehicleId`, { params: { vehicleId } });
-      const data = Array.isArray(r.data) ? r.data : r.data?.data || [];
-      setDamageReports(data);
-    } catch (err) {
-      console.error(err);
-      message.error("Failed to load damage reports");
-      setDamageReports([]);
-    } finally {
-      setLoadingDamageReports(false);
-    }
+      setTripEvents(Array.isArray(r.data) ? r.data : r.data?.data || []);
+    } catch (err) { console.error(err); message.error("Failed to load trip events"); setTripEvents([]); }
+    finally { setLoadingTripEvents(false); }
   };
 
   const fetchVehicleDetails = async (id) => {
@@ -153,27 +129,15 @@ export default function ManageBooking() {
   };
 
   const handleCreateDamageReport = async () => {
-    if (!selectedBookingForDamage) return message.warning("Vui lòng chọn booking để báo cáo");
-    const fd = new FormData();
-    fd.append("Id", selectedBookingForDamage.id);
-    if (damageDesc) fd.append("Description", damageDesc);
-    if (damageFile) fd.append("Photo", damageFile);
+    if (!selectedVehicle && !bookings.length) return message.warning("Choose vehicle or booking first");
+    if (!damageFiles || damageFiles.length === 0) { toast.warning("Thêm ảnh là bắt buộc !!"); return; }
+    const fd = new FormData(); const firstBooking = bookings[0]; if (firstBooking && firstBooking.id) fd.append("Id", firstBooking.id); else if (selectedVehicle?.id) fd.append("Id", selectedVehicle.id);
+    if (damageDesc) fd.append("Description", damageDesc); if (damageFiles && damageFiles.length > 0) damageFiles.forEach(f => fd.append("Photo", f));
     try {
-      setDamageSubmitting(true);
-      const r = await api.post(`/trip-events/create-damage-report/staff`, fd);
-      const msg = r.data?.message || "Damage report submitted";
-      toast.success(msg);
-      setDamageDesc("");
-      setDamageFile(null);
-      setSelectedBookingForDamage(null);
-      setDamageModalOpen(false);
-      fetchTripEvents();
+      setDamageSubmitting(true); await api.post(`/trip-events/create-damage-report/staff`, fd); toast.success("tạo báo hư hỏng thành công"); setDamageDesc(""); setDamageFiles([]); fetchTripEvents();
     } catch (err) {
-      console.error(err);
-      toast.error(err?.response?.data?.message || "Failed to submit report");
-    } finally {
-      setDamageSubmitting(false);
-    }
+      console.error(err); message.error(err?.response?.data?.message || "Failed to submit report"); notification.error({ message: "Submission failed", description: err?.response?.data?.message || "Failed to submit report" });
+    } finally { setDamageSubmitting(false); }
   };
 
   return (
@@ -184,8 +148,8 @@ export default function ManageBooking() {
             <StaffBackButton inline />
             <div style={{ display: "flex", gap: 12, alignItems: "center", flex:1, justifyContent:'center' }}>
               <div style={{ width: 40, height: 40, borderRadius: 8, background: "#eaf4ff", display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#1890ff', fontWeight: 700 }}>✎</div>
-              <div>
-                <h1 style={{ margin: 0, fontSize: 20 }}>Quản lý đặt lịch xe</h1>
+              <div style={{ textAlign:'center' }}>
+                <h1 style={{ margin: 0, fontSize: 20 }}>Quản lý đặt chỗ xe</h1>
                 <div style={{ color: '#6b7280', fontSize: 13 }}>Quản lý Checkin-Checkout , tạo báo cáo hư hỏng</div>
               </div>
             </div>
@@ -376,49 +340,22 @@ export default function ManageBooking() {
           <Button onClick={()=> setTripEventsModalOpen(true)}>lịch sử </Button>
         </div>
 
-        <Modal
-          title="Báo cáo hư hỏng"
-          open={damageModalOpen}
-          onCancel={() => {
-            setDamageModalOpen(false);
-            setSelectedBookingForDamage(null);
-          }}
-          onOk={handleCreateDamageReport}
-          okText="Gửi báo cáo"
-          confirmLoading={damageSubmitting}
-        >
+        <Modal title="Báo cáo hư hỏng" open={damageModalOpen} onCancel={() => setDamageModalOpen(false)} onOk={handleCreateDamageReport} okText="Gửi báo cáo" confirmLoading={damageSubmitting}>
           <Space direction="vertical" style={{ width: '100%' }}>
-            <div>
-              <div style={{ marginBottom: 8 }}>Chọn booking:</div>
-              <Select
-                style={{ width: '100%' }}
-                placeholder="Chọn booking để báo cáo"
-                value={selectedBookingForDamage?.id}
-                onChange={(val) => {
-                  const booking = bookings.find(b => b.id === val);
-                  setSelectedBookingForDamage(booking);
-                }}
-              >
-                {bookings.filter(b => {
-                  const st = (b.status || '').toLowerCase();
-                  return st !== 'cancelled' && st !== 'cancell';
-                }).map(b => (
-                  <Option key={b.id} value={b.id}>
-                    {b.userName || 'Booking'} - {new Date(b.startTime).toLocaleDateString()} ({b.status})
-                  </Option>
+            <TextArea rows={4} placeholder="Mô tả hư hỏng" value={damageDesc} onChange={(e) => setDamageDesc(e.target.value)} />
+            <div style={{display:'flex',flexDirection:'column',gap:6}}>
+              <div style={{display:'flex',flexWrap:'wrap',gap:6}}>
+                {(damageFiles || []).map((f, idx) => (
+                  <div key={idx} style={{position:'relative',padding:'4px 8px',background:'#f5f5f5',borderRadius:4,fontSize:12}}>
+                    <span style={{maxWidth:120,display:'inline-block',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{f.name}</span>
+                    <Button size="small" danger style={{marginLeft:6}} onClick={()=>{ const copy = [...damageFiles]; copy.splice(idx,1); setDamageFiles(copy); }}>X</Button>
+                  </div>
                 ))}
-              </Select>
+                {!(damageFiles && damageFiles.length) && (<span style={{fontSize:12,color:'#999'}}>Chưa có ảnh</span>)}
+              </div>
+              <input type="file" multiple style={{display:'none'}} id="damage-file-input" onChange={(e)=> { const newFiles = Array.from(e.target.files || []); if (newFiles.length) setDamageFiles(prev => [...(prev||[]), ...newFiles]); e.target.value=''; }} />
+              <Button size="small" onClick={()=> document.getElementById('damage-file-input')?.click()}>Thêm ảnh</Button>
             </div>
-            <TextArea
-              rows={4}
-              placeholder="Mô tả hư hỏng"
-              value={damageDesc}
-              onChange={(e) => setDamageDesc(e.target.value)}
-            />
-            <Input type="file" onChange={(e) => {
-              console.log('damageFile:', e.target.files[0]);
-              setDamageFile(e.target.files[0]);
-            }} />
           </Space>
         </Modal>
 
