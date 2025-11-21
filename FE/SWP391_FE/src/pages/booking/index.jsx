@@ -178,7 +178,7 @@ const BookingManagement = () => {
             </Button>
             <UnorderedListOutlined className="booking-header-icon" />
             <div>
-              <h1 className="booking-header-title">Quản lý đặt lịch xe</h1>
+              <h1 className="booking-header-title">Quản lý đặt lịch sử dụng xe</h1>
               <p className="booking-header-subtitle">Quản lý việc đặt lịch xe của bạn với chế độ xem chi tiết</p>
             </div>
           </div>
