@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import { Select, Button, Input, List, message, notification, Space, Spin, Tag, Modal, Descriptions, Image } from "antd";
+import { Select, Button, Input, List, message, notification, Space, Spin, Tag, Modal, Descriptions, Image, Divider } from "antd";
 import { EyeOutlined } from '@ant-design/icons';
 import { StaffBackButton } from '../staffComponents/button.jsx';
 import api from "../../../config/axios";
@@ -22,8 +22,9 @@ export default function ManageBooking() {
   const fileInputRefs = useRef({});
   const [descriptionMap, setDescriptionMap] = useState({});
   const [damageDesc, setDamageDesc] = useState("");
-  const [damageFiles, setDamageFiles] = useState([]);
+  const [damageFile, setDamageFile] = useState(null);
   const [damageSubmitting, setDamageSubmitting] = useState(false);
+  const [vehicleDetailModalOpen, setVehicleDetailModalOpen] = useState(false);
   const [tripEvents, setTripEvents] = useState([]);
   const [loadingTripEvents, setLoadingTripEvents] = useState(false);
   const [damageModalOpen, setDamageModalOpen] = useState(false);
@@ -308,27 +309,34 @@ export default function ManageBooking() {
                 if (bookingStatusFilter === 'inuse') return norm === 'inuse';
                 return norm.includes(bookingStatusFilter);
               });
-              if (visibleBookings.length === 0) return null;
-              const latest = [...visibleBookings].sort((a,b)=> new Date(b.endTime || b.startTime) - new Date(a.endTime || a.startTime))[0];
-              if (!latest) return null;
-              const stLatest = (latest.status || '').toLowerCase().replace(/[^a-z0-9]+/g,'');
-              const latestIsCompleted = stLatest.includes('complete');
-              if (!latestIsCompleted) return null;
-              return (<div style={{ marginTop:16 }}><Button type="dashed" onClick={()=> setDamageModalOpen(true)}>báo cáo hư hỏng</Button></div>);
-            })()}
-          </div>
-        )}
-
-        <div className="history-oval staff-oval">
-          <div className="section-header" style={{ justifyContent:'flex-start', marginBottom:12 }}>
-            <h4 style={{ margin:0 }}>Lịch sử sự kiện chuyến đi</h4>
-          </div>
-          <div style={{ display:'flex', justifyContent:'center' }}>
-            <button type="button" className="history-detail-btn" onClick={()=> setTripEventsModalOpen(true)}>
-              <span className="history-detail-btn__icon">📋</span>
-              <span>Xem chi tiết</span>
-            </button>
-          </div>
+            if (visibleBookings.length === 0) return null; // nothing visible -> no button
+            // Determine latest among the VISIBLE list (endTime fallback startTime)
+            const latest = [...visibleBookings]
+              .sort((a,b)=> new Date(b.endTime || b.startTime) - new Date(a.endTime || a.startTime))[0];
+            if (!latest) return null;
+            const st = (latest.status || '').toLowerCase().replace(/[^a-z0-9]+/g,'');
+            const latestIsCompleted = st.includes('complete');
+            if (!latestIsCompleted) return null; // only show if the latest visible booking is completed
+            return (
+              <div style={{ marginTop: 16 }}>
+                <Button type="dashed" onClick={()=> setDamageModalOpen(true)}>
+                   báo cáo hư hỏng
+                </Button>
+              </div>
+            );
+          })()}
+        </div>
+        <Divider />
+        <div style={{ display:'flex', justifyContent:'flex-end', gap: 8, marginBottom: 8 }}>
+          <Button onClick={() => {
+            if (selectedVehicle?.id) {
+              fetchDamageReportsByVehicle(selectedVehicle.id);
+              setDamageReportsModalOpen(true);
+            } else {
+              message.warning('Vui lòng chọn xe trước');
+            }
+          }}>Báo cáo hư hỏng xe</Button>
+          <Button onClick={()=> setTripEventsModalOpen(true)}>lịch sử </Button>
         </div>
 
         <Modal title="Báo cáo hư hỏng" open={damageModalOpen} onCancel={() => setDamageModalOpen(false)} onOk={handleCreateDamageReport} okText="Gửi báo cáo" confirmLoading={damageSubmitting}>
@@ -445,7 +453,46 @@ export default function ManageBooking() {
           </Space>
         </Modal>
 
-        {/* Floating back button removed; now inline in header */}
+        <Modal
+          title="Báo cáo hư hỏng xe"
+          open={damageReportsModalOpen}
+          onCancel={() => setDamageReportsModalOpen(false)}
+          footer={<Button onClick={() => setDamageReportsModalOpen(false)}>Đóng</Button>}
+          width={700}
+        >
+          {loadingDamageReports ? <Spin /> : (
+            <List
+              dataSource={damageReports}
+              renderItem={(item) => (
+                <List.Item>
+                  <div style={{ display: 'flex', gap: 12, width: '100%' }}>
+                    <div style={{ width: 80, height: 80, flexShrink: 0, border: '1px solid #ddd', borderRadius: 4, overflow: 'hidden' }}>
+                      {item.photosUrl ? (
+                        <img src={item.photosUrl} alt="damage" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      ) : (
+                        <div style={{ fontSize: 12, color: '#999', padding: 8 }}>No photo</div>
+                      )}
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontWeight: 600, marginBottom: 4 }}>
+                        {item.vehicleName} - {item.vehiclePlate}
+                      </div>
+                      <div style={{ color: '#666', marginBottom: 4 }}>{item.description}</div>
+                      <div style={{ fontSize: 12, color: '#999' }}>
+                        Nhân viên: {item.staffName} • {new Date(item.createdAt).toLocaleString()}
+                      </div>
+                    </div>
+                  </div>
+                </List.Item>
+              )}
+              locale={{ emptyText: 'Không có báo cáo hư hỏng nào' }}
+            />
+          )}
+        </Modal>
+
+      </Space>
+          </div>
+        </Card>
       </div>
     </>
   );
