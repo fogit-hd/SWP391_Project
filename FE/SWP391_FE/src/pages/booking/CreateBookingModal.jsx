@@ -67,7 +67,6 @@ const CreateBookingModal = ({
     }
   };
 
-
   const handleTimeChange = (dates) => {
     // Clear previous validation error when user changes time
     setValidationError(null);
@@ -654,14 +653,11 @@ const CreateBookingModal = ({
                         const totalHours =
                           quotaInfo.data.hoursLimit /
                           ((quotaInfo.data.ownershipRate || 100) / 100);
-                        return formatHoursToLabel(totalHours);
+                        const hours = Math.floor(totalHours);
+                        const minutes = Math.round((totalHours - hours) * 60);
+                        return `${hours} phút ${minutes} giây`;
                       })()}
                     </span>
-                    <div style={{ color: "#8c8c8c", fontSize: "11px" }}>
-                      (Cách tính: {quotaInfo.data.hoursLimit.toFixed(2)} /{" "}
-                      {((quotaInfo.data.ownershipRate || 100) / 100).toFixed(2)}
-                      )
-                    </div>
                   </div>
                 </div>
                 <div

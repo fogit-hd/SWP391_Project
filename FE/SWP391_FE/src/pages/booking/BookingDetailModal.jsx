@@ -553,7 +553,7 @@ const BookingDetailModal = ({ visible, onCancel, booking, onUpdate, groupId, veh
           isMyBooking() ? (
             <Space>
               <Button onClick={onCancel}>Đóng</Button>
-              {booking.status === 'BOOKED' && (
+              {(booking.status === 'BOOKED' || booking.status === 'INUSE') && (
                 <Button 
                   icon={<EditOutlined />}
                   onClick={handleOpenUpdateModal}
