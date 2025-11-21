@@ -322,7 +322,7 @@ const SignEContract = () => {
               {/* Security Notice */}
               <Alert
                 message="Lưu ý bảo mật"
-                description="Mã OTP có hiệu lực trong 5 phút. Không chia sẻ mã OTP với bất kỳ ai. Hợp đồng sau khi ký sẽ có hiệu lực pháp lý."
+                description="Mã OTP có hiệu lực trong 15 phút. Không chia sẻ mã OTP với bất kỳ ai. Hợp đồng sau khi ký sẽ có hiệu lực pháp lý."
                 type="warning"
                 showIcon
               />

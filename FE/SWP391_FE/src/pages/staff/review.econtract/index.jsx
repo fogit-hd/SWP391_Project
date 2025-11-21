@@ -53,6 +53,8 @@ const ReviewEContract = () => {
     isAdmin ? "ALL" : "PENDING_REVIEW"
   ); // Filter status - Admin sees all, Staff sees only PENDING_REVIEW
   const [form] = Form.useForm();
+  const [selectedDecision, setSelectedDecision] = useState(null); // Track selected button
+  const [buttonAnimation, setButtonAnimation] = useState({ approve: false, reject: false });
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -212,6 +214,8 @@ const ReviewEContract = () => {
 
       setReviewModalVisible(false);
       form.resetFields();
+      setSelectedDecision(null);
+      setButtonAnimation({ approve: false, reject: false });
       loadContracts();
     } catch (error) {
       console.error("Error:", error);
@@ -219,6 +223,26 @@ const ReviewEContract = () => {
     } finally {
       setReviewLoading(false);
     }
+  };
+
+  const handleApproveClick = () => {
+    setSelectedDecision(true);
+    setButtonAnimation({ approve: true, reject: false });
+    form.setFieldsValue({ approve: true });
+    // Reset animation after a short delay
+    setTimeout(() => {
+      setButtonAnimation((prev) => ({ ...prev, approve: false }));
+    }, 300);
+  };
+
+  const handleRejectClick = () => {
+    setSelectedDecision(false);
+    setButtonAnimation({ approve: false, reject: true });
+    form.setFieldsValue({ approve: false });
+    // Reset animation after a short delay
+    setTimeout(() => {
+      setButtonAnimation((prev) => ({ ...prev, reject: false }));
+    }, 300);
   };
 
   const columns = [
@@ -307,6 +331,9 @@ const ReviewEContract = () => {
             size="small"
             onClick={() => {
               setSelectedContractId(record.id);
+              setSelectedDecision(null);
+              setButtonAnimation({ approve: false, reject: false });
+              form.resetFields();
               setReviewModalVisible(true);
             }}
           >
@@ -318,12 +345,54 @@ const ReviewEContract = () => {
   ];
 
   return (
-    <Layout style={{ minHeight: "100vh" }}>
-      <StaffSidebar
-        collapsed={collapsed}
-        onCollapse={setCollapsed}
-        selectedKey="review-contracts"
-      />
+    <>
+      <style>
+        {`
+          @keyframes buttonPulse {
+            0% {
+              transform: scale(1);
+              box-shadow: 0 0 0 0 rgba(24, 144, 255, 0.7);
+            }
+            50% {
+              transform: scale(0.95);
+              box-shadow: 0 0 0 10px rgba(24, 144, 255, 0);
+            }
+            100% {
+              transform: scale(1);
+              box-shadow: 0 0 0 0 rgba(24, 144, 255, 0);
+            }
+          }
+          
+          @keyframes buttonPulseReject {
+            0% {
+              transform: scale(1);
+              box-shadow: 0 0 0 0 rgba(255, 77, 79, 0.7);
+            }
+            50% {
+              transform: scale(0.95);
+              box-shadow: 0 0 0 10px rgba(255, 77, 79, 0);
+            }
+            100% {
+              transform: scale(1);
+              box-shadow: 0 0 0 0 rgba(255, 77, 79, 0);
+            }
+          }
+          
+          .button-pulse-approve {
+            animation: buttonPulse 0.3s ease-in-out;
+          }
+          
+          .button-pulse-reject {
+            animation: buttonPulseReject 0.3s ease-in-out;
+          }
+        `}
+      </style>
+      <Layout style={{ minHeight: "100vh" }}>
+        <StaffSidebar
+          collapsed={collapsed}
+          onCollapse={setCollapsed}
+          selectedKey="review-contracts"
+        />
 
       <Layout style={{ marginLeft: collapsed ? 80 : 280 }}>
         <Header
@@ -430,6 +499,8 @@ const ReviewEContract = () => {
         onCancel={() => {
           setReviewModalVisible(false);
           form.resetFields();
+          setSelectedDecision(null);
+          setButtonAnimation({ approve: false, reject: false });
         }}
         footer={null}
         width={600}
@@ -443,22 +514,37 @@ const ReviewEContract = () => {
             <Row gutter={16}>
               <Col span={12}>
                 <Button
-                  type="primary"
+                  type={selectedDecision === true ? "primary" : "default"}
                   icon={<CheckOutlined />}
                   block
-                  onClick={() => form.setFieldsValue({ approve: true })}
-                  style={{ height: "40px" }}
+                  onClick={handleApproveClick}
+                  style={{
+                    height: "40px",
+                    transition: "all 0.3s ease",
+                    boxShadow: selectedDecision === true ? "0 4px 12px rgba(24, 144, 255, 0.4)" : "none",
+                    borderWidth: selectedDecision === true ? "2px" : "1px",
+                    fontWeight: selectedDecision === true ? "600" : "normal",
+                  }}
+                  className={buttonAnimation.approve ? "button-pulse-approve" : ""}
                 >
                   Duyệt
                 </Button>
               </Col>
               <Col span={12}>
                 <Button
-                  danger
+                  danger={selectedDecision === false}
+                  type={selectedDecision === false ? "primary" : "default"}
                   icon={<CloseOutlined />}
                   block
-                  onClick={() => form.setFieldsValue({ approve: false })}
-                  style={{ height: "40px" }}
+                  onClick={handleRejectClick}
+                  style={{
+                    height: "40px",
+                    transition: "all 0.3s ease",
+                    boxShadow: selectedDecision === false ? "0 4px 12px rgba(255, 77, 79, 0.4)" : "none",
+                    borderWidth: selectedDecision === false ? "2px" : "1px",
+                    fontWeight: selectedDecision === false ? "600" : "normal",
+                  }}
+                  className={buttonAnimation.reject ? "button-pulse-reject" : ""}
                 >
                   Từ chối
                 </Button>
@@ -476,6 +562,8 @@ const ReviewEContract = () => {
                 onClick={() => {
                   setReviewModalVisible(false);
                   form.resetFields();
+                  setSelectedDecision(null);
+                  setButtonAnimation({ approve: false, reject: false });
                 }}
               >
                 Hủy
@@ -487,7 +575,8 @@ const ReviewEContract = () => {
           </Form.Item>
         </Form>
       </Modal>
-    </Layout>
+      </Layout>
+    </>
   );
 };
 
