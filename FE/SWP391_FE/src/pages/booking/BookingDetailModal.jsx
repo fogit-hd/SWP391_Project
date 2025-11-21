@@ -17,6 +17,8 @@ import { useAuth } from "../../components/hooks/useAuth";
 import { getUserIdFromToken } from "../../components/utils/jwt";
 // All role and user checks rely on useAuth (which is backed by JWT utils)
 
+const ACTIVE_BOOKING_STATUSES = ["BOOKED", "INUSE", "IN USE", "OVERTIME"];
+
 const BookingDetailModal = ({ visible, onCancel, booking, onUpdate, groupId, vehicleId, existingBookings = [] }) => {
   const { isCoOwner, user } = useAuth();
   const [loading, setLoading] = useState(false);
@@ -347,8 +349,11 @@ const BookingDetailModal = ({ visible, onCancel, booking, onUpdate, groupId, veh
     // Check for overlapping bookings (exclude current booking being updated)
     const minGapMinutes = BOOKING_CONSTRAINTS.MIN_GAP_MINUTES;
     const conflictBooking = existingBookings.find(existingBooking => {
-      // Skip cancelled bookings and the current booking being edited
-      if (existingBooking.status === 'CANCELLED' || existingBooking.id === booking.id) {
+      const normalizedStatus = (existingBooking.status || "")
+        .toString()
+        .toUpperCase();
+      // Skip inactive bookings and the current booking being edited
+      if (!ACTIVE_BOOKING_STATUSES.includes(normalizedStatus) || existingBooking.id === booking.id) {
         return false;
       }
       

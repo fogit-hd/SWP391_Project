@@ -36,6 +36,52 @@ import "./my-vehicle.css";
 
 const { Header, Content, Footer } = Layout;
 
+const normalizeImageList = (value) => {
+  if (!value) return [];
+  if (Array.isArray(value)) {
+    return value
+      .map((item) => {
+        if (typeof item === "string") return item;
+        if (item?.url) return item.url;
+        if (item?.imageUrl) return item.imageUrl;
+        if (item?.vehicleImageUrl) return item.vehicleImageUrl;
+        return "";
+      })
+      .filter(Boolean);
+  }
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    if (!trimmed) return [];
+    try {
+      const parsed = JSON.parse(trimmed);
+      if (Array.isArray(parsed)) {
+        return normalizeImageList(parsed);
+      }
+    } catch (_) {
+      // not JSON, fallback to delimiter split
+    }
+    return trimmed
+      .split(/[,;|]/)
+      .map((item) => item.trim())
+      .filter(Boolean);
+  }
+  return [];
+};
+
+const getVehicleImagesFromRequest = (request) => {
+  if (!request) return [];
+  const possibleSources = [
+    request.vehicleImageUrls,
+    request.vehicleImages,
+    request.vehicleImageUrl,
+  ];
+  for (const source of possibleSources) {
+    const list = normalizeImageList(source);
+    if (list.length) return list;
+  }
+  return [];
+};
+
 const MyVehicleRequests = () => {
   const navigate = useNavigate();
   const {
@@ -74,6 +120,7 @@ const MyVehicleRequests = () => {
   const [registrationPaperFileList, setRegistrationPaperFileList] = useState(
     []
   );
+  const MAX_VEHICLE_IMAGES = 4;
 
   // Filter data when searchText changes
   useEffect(() => {
@@ -348,13 +395,28 @@ const MyVehicleRequests = () => {
     setUpdateModalVisible(true);
   };
 
+  const handleVehicleImagesChange = ({ fileList }) => {
+    if (fileList.length > MAX_VEHICLE_IMAGES) {
+      message.warning(
+        `Chỉ được chọn tối đa ${MAX_VEHICLE_IMAGES} hình ảnh xe`
+      );
+      fileList = fileList.slice(-MAX_VEHICLE_IMAGES);
+    }
+    setVehicleImageFileList(fileList);
+  };
+
   const handleCreateSubmit = async (values) => {
     try {
       setLoading(true);
 
       // Validate required files
       if (vehicleImageFileList.length === 0) {
-        message.error("Vui lòng tải lên hình ảnh xe");
+        message.error("Vui lòng tải lên ít nhất 1 hình ảnh xe");
+        setLoading(false);
+        return;
+      }
+      if (vehicleImageFileList.length > MAX_VEHICLE_IMAGES) {
+        message.error(`Chỉ được chọn tối đa ${MAX_VEHICLE_IMAGES} hình ảnh xe`);
         setLoading(false);
         return;
       }
@@ -372,7 +434,13 @@ const MyVehicleRequests = () => {
       formData.append("batteryCapacityKwh", values.batteryCapacityKwh);
       formData.append("rangeKm", values.rangeKm);
       formData.append("plateNumber", values.plateNumber);
-      formData.append("vehicleImage", vehicleImageFileList[0].originFileObj);
+      vehicleImageFileList.forEach((file) =>
+        formData.append("vehicleImages", file.originFileObj)
+      );
+      // Backward compatibility for older API expecting single file
+      if (vehicleImageFileList[0]) {
+        formData.append("vehicleImage", vehicleImageFileList[0].originFileObj);
+      }
       formData.append(
         "registrationPaperUrl",
         registrationPaperFileList[0].originFileObj
@@ -432,7 +500,12 @@ const MyVehicleRequests = () => {
 
       // Validate required files
       if (vehicleImageFileList.length === 0) {
-        message.error("Vui lòng tải lên hình ảnh xe");
+        message.error("Vui lòng tải lên ít nhất 1 hình ảnh xe");
+        setLoading(false);
+        return;
+      }
+      if (vehicleImageFileList.length > MAX_VEHICLE_IMAGES) {
+        message.error(`Chỉ được chọn tối đa ${MAX_VEHICLE_IMAGES} hình ảnh xe`);
         setLoading(false);
         return;
       }
@@ -451,7 +524,12 @@ const MyVehicleRequests = () => {
       formData.append("batteryCapacityKwh", values.batteryCapacityKwh);
       formData.append("rangeKm", values.rangeKm);
       formData.append("plateNumber", values.plateNumber);
-      formData.append("vehicleImage", vehicleImageFileList[0].originFileObj);
+      vehicleImageFileList.forEach((file) =>
+        formData.append("vehicleImages", file.originFileObj)
+      );
+      if (vehicleImageFileList[0]) {
+        formData.append("vehicleImage", vehicleImageFileList[0].originFileObj);
+      }
       formData.append(
         "registrationPaperUrl",
         registrationPaperFileList[0].originFileObj
@@ -611,10 +689,20 @@ const MyVehicleRequests = () => {
     fetchMyVehicleRequests();
   }, []);
 
-  const uploadProps = {
+  const baseUploadProps = {
     beforeUpload: () => false, // Prevent auto upload
-    maxCount: 1,
     accept: "image/*",
+  };
+
+  const vehicleImageUploadProps = {
+    ...baseUploadProps,
+    multiple: true,
+    maxCount: MAX_VEHICLE_IMAGES,
+  };
+
+  const singleImageUploadProps = {
+    ...baseUploadProps,
+    maxCount: 1,
   };
 
   return (
@@ -814,13 +902,14 @@ const MyVehicleRequests = () => {
             label="Biển số xe"
             rules={[
               { required: true, message: "Vui lòng nhập biển số xe" },
-              { 
-                pattern: /^[0-9]{2}[A-Z]{1,2}-[0-9]{4,5}$/,
-                message: "Biển số xe không đúng định dạng (VD: 51F-12345, 30A-99999)"
-              }
+              {
+                pattern: /^[0-9]{2}[A-Z]{1,2}-[0-9]{3}\.[0-9]{2}$/,
+                message:
+                  "Biển số xe phải có dạng 51F-123.45 (2 số + 1-2 chữ + dấu '-' + 3 số + '.' + 2 số)",
+              },
             ]}
           >
-            <Input placeholder="VD: 51F-12345" />
+            <Input placeholder="VD: 51F-123.45" />
           </Form.Item>
 
           <Form.Item
@@ -829,11 +918,12 @@ const MyVehicleRequests = () => {
             rules={[
               { required: true, message: "Vui lòng tải lên hình ảnh xe" },
             ]}
+            extra={`Chọn tối thiểu 1 và tối đa ${MAX_VEHICLE_IMAGES} hình ảnh (ít nhất 1 hình ảnh chứa biển số xe)`}
           >
             <Upload
-              {...uploadProps}
+              {...vehicleImageUploadProps}
               fileList={vehicleImageFileList}
-              onChange={({ fileList }) => setVehicleImageFileList(fileList)}
+              onChange={handleVehicleImagesChange}
               listType="picture"
             >
               <Button icon={<UploadOutlined />}>Chọn hình ảnh</Button>
@@ -848,7 +938,7 @@ const MyVehicleRequests = () => {
             ]}
           >
             <Upload
-              {...uploadProps}
+              {...singleImageUploadProps}
               fileList={registrationPaperFileList}
               onChange={({ fileList }) =>
                 setRegistrationPaperFileList(fileList)
@@ -993,9 +1083,16 @@ const MyVehicleRequests = () => {
             <Form.Item
               name="plateNumber"
               label="Biển số xe"
-              rules={[{ required: true, message: "Vui lòng nhập biển số xe" }]}
+              rules={[
+                { required: true, message: "Vui lòng nhập biển số xe" },
+                {
+                  pattern: /^[0-9]{2}[A-Z]{1,2}-[0-9]{3}\.[0-9]{2}$/,
+                  message:
+                    "Biển số xe phải có dạng 51F-123.45 (2 số + 1-2 chữ + '-' + 3 số + '.' + 2 số)",
+                },
+              ]}
             >
-              <Input placeholder="VD: 51F-12345" disabled />
+              <Input placeholder="VD: 51F-123.45" />
             </Form.Item>
 
             <Form.Item
@@ -1004,11 +1101,12 @@ const MyVehicleRequests = () => {
               rules={[
                 { required: true, message: "Vui lòng tải lên hình ảnh xe" },
               ]}
+              extra={`Chọn tối thiểu 1 và tối đa ${MAX_VEHICLE_IMAGES} hình ảnh (ít nhất 1 hình ảnh chứa biển số xe)`}
             >
               <Upload
-                {...uploadProps}
+                {...vehicleImageUploadProps}
                 fileList={vehicleImageFileList}
-                onChange={({ fileList }) => setVehicleImageFileList(fileList)}
+                onChange={handleVehicleImagesChange}
                 listType="picture"
               >
                 <Button icon={<UploadOutlined />}>Chọn hình ảnh mới</Button>
@@ -1023,7 +1121,7 @@ const MyVehicleRequests = () => {
               ]}
             >
               <Upload
-                {...uploadProps}
+                {...singleImageUploadProps}
                 fileList={registrationPaperFileList}
                 onChange={({ fileList }) =>
                   setRegistrationPaperFileList(fileList)
@@ -1159,19 +1257,35 @@ const MyVehicleRequests = () => {
                 size="middle"
                 style={{ width: "100%" }}
               >
-                {selectedRequest.vehicleImageUrl && (
-                  <div>
-                    <div style={{ fontWeight: "bold", marginBottom: 8 }}>
-                      Hình ảnh xe:
+                {(() => {
+                  const vehicleImages = getVehicleImagesFromRequest(
+                    selectedRequest
+                  );
+                  if (!vehicleImages.length) return null;
+                  return (
+                    <div>
+                      <div style={{ fontWeight: "bold", marginBottom: 8 }}>
+                        Hình ảnh xe:
+                      </div>
+                      <Space wrap size="middle">
+                        {vehicleImages.map((img, index) => (
+                          <Image
+                            key={`${img}-${index}`}
+                            src={img}
+                            alt={`Vehicle ${index + 1}`}
+                            style={{
+                              width: 180,
+                              height: 150,
+                              objectFit: "cover",
+                              borderRadius: 8,
+                            }}
+                            preview
+                          />
+                        ))}
+                      </Space>
                     </div>
-                    <Image
-                      src={selectedRequest.vehicleImageUrl}
-                      alt="Vehicle"
-                      style={{ maxWidth: "100%", maxHeight: 300 }}
-                      preview
-                    />
-                  </div>
-                )}
+                  );
+                })()}
                 {selectedRequest.registrationPaperUrl && (
                   <div>
                     <div style={{ fontWeight: "bold", marginBottom: 8 }}>

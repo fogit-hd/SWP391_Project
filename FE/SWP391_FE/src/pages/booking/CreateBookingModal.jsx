@@ -17,6 +17,18 @@ import { toast } from "react-toastify";
 
 const { TextArea } = Input;
 const { RangePicker } = DatePicker;
+const formatHoursToLabel = (value) => {
+  if (value === null || value === undefined || isNaN(Number(value))) {
+    return "0 giờ 0 phút";
+  }
+  const totalMinutes = Math.round(Number(value) * 60);
+  const sign = totalMinutes < 0 ? "-" : "";
+  const absMinutes = Math.abs(totalMinutes);
+  const hours = Math.floor(absMinutes / 60);
+  const minutes = absMinutes % 60;
+  return `${sign}${hours} giờ ${minutes} phút`;
+};
+const ACTIVE_BOOKING_STATUSES = ["BOOKED", "INUSE", "IN USE", "OVERTIME"];
 
 const CreateBookingModal = ({
   visible,
@@ -136,7 +148,10 @@ const CreateBookingModal = ({
     // Check for overlapping bookings and minimum gap (30 phút)
     const minGapMinutes = BOOKING_CONSTRAINTS.MIN_GAP_MINUTES;
     const conflictBooking = existingBookings.find((booking) => {
-      if (booking.status === "CANCELLED") {
+      const normalizedStatus = (booking.status || "")
+        .toString()
+        .toUpperCase();
+      if (!ACTIVE_BOOKING_STATUSES.includes(normalizedStatus)) {
         return false;
       }
       const bookingStart = dayjs(booking.startTime);
@@ -218,15 +233,15 @@ const CreateBookingModal = ({
         if (totalUsedCurrentWeek > quota.hoursLimit) {
           return {
             valid: false,
-            error: `Không thể đặt cho tuần này. Bạn cần ${hoursCurrentWeek.toFixed(
-              1
-            )} giờ nhưng chỉ còn ${quota.remainingHours.toFixed(
-              1
-            )} giờ (Đã dùng: ${quota.hoursUsed.toFixed(
-              1
-            )}h, Nợ: ${quota.hoursDebt.toFixed(1)}h, Giới hạn: ${
-              quota.hoursLimit
-            }h)`,
+            error: `Không thể đặt cho tuần này. Bạn cần ${formatHoursToLabel(
+              hoursCurrentWeek
+            )} nhưng chỉ còn ${formatHoursToLabel(
+              quota.remainingHours
+            )} (Đã dùng: ${formatHoursToLabel(
+              quota.hoursUsed
+            )}, Nợ: ${formatHoursToLabel(
+              quota.hoursDebt
+            )}, Giới hạn: ${formatHoursToLabel(quota.hoursLimit)})`,
           };
         }
       }
@@ -242,15 +257,15 @@ const CreateBookingModal = ({
         if (totalUsedNextWeek > quota.hoursLimit) {
           return {
             valid: false,
-            error: `Không thể đặt cho tuần sau. Bạn cần ${hoursNextWeek.toFixed(
-              1
-            )} giờ nhưng chỉ còn ${quota.remainingHoursNextWeek.toFixed(
-              1
-            )} giờ (Nợ dư: ${excessDebt.toFixed(
-              1
-            )}h, Trước: ${quota.hoursAdvance.toFixed(1)}h, Giới hạn: ${
-              quota.hoursLimit
-            }h)`,
+            error: `Không thể đặt cho tuần sau. Bạn cần ${formatHoursToLabel(
+              hoursNextWeek
+            )} nhưng chỉ còn ${formatHoursToLabel(
+              quota.remainingHoursNextWeek
+            )} (Nợ dư: ${formatHoursToLabel(
+              excessDebt
+            )}, Trước: ${formatHoursToLabel(
+              quota.hoursAdvance
+            )}, Giới hạn: ${formatHoursToLabel(quota.hoursLimit)})`,
           };
         }
       }
@@ -270,13 +285,13 @@ const CreateBookingModal = ({
         if (!currentWeekCheck || !nextWeekCheck) {
           return {
             valid: false,
-            error: `Không thể đặt trải dài qua 2 tuần. Tuần này cần ${hoursCurrentWeek.toFixed(
-              1
-            )}h (còn ${quota.remainingHours.toFixed(
-              1
-            )}h), tuần sau cần ${hoursNextWeek.toFixed(
-              1
-            )}h (còn ${quota.remainingHoursNextWeek.toFixed(1)}h)`,
+            error: `Không thể đặt trải dài qua 2 tuần. Tuần này cần ${formatHoursToLabel(
+              hoursCurrentWeek
+            )} (còn ${formatHoursToLabel(
+              quota.remainingHours
+            )}), tuần sau cần ${formatHoursToLabel(
+              hoursNextWeek
+            )} (còn ${formatHoursToLabel(quota.remainingHoursNextWeek)})`,
           };
         }
       }
@@ -598,17 +613,11 @@ const CreateBookingModal = ({
             description={
               <div>
                 <div style={{ marginBottom: 12 }}>
-                  Bạn còn {Math.floor(quotaInfo.data.remainingHours)} giờ{" "}
-                  {Math.round((quotaInfo.data.remainingHours % 1) * 60)} phút để
+                  Bạn còn {formatHoursToLabel(quotaInfo.data.remainingHours)} để
                   đặt trong tuần này, và{" "}
-                  {Math.floor(quotaInfo.data.remainingHoursNextWeek)} giờ
-                  {Math.round(
-                    (quotaInfo.data.remainingHoursNextWeek % 1) * 60
-                  ) > 0
-                    ? ` ${Math.round(
-                        (quotaInfo.data.remainingHoursNextWeek % 1) * 60
-                      )} phút`
-                    : ""}{" "}
+                  {formatHoursToLabel(
+                    quotaInfo.data.remainingHoursNextWeek
+                  )}{" "}
                   để đặt trước cho tuần sau.
                 </div>
                 <div
@@ -622,13 +631,13 @@ const CreateBookingModal = ({
                   <div>
                     <strong>Giờ đã dùng:</strong>{" "}
                     <span style={{ color: "#1890ff", fontWeight: 600 }}>
-                      {quotaInfo.data.hoursUsed.toFixed(2)}h
+                      {formatHoursToLabel(quotaInfo.data.hoursUsed)}
                     </span>
                   </div>
                   <div>
                     <strong>Giờ phạt:</strong>{" "}
                     <span style={{ color: "#ff4d4f", fontWeight: 600 }}>
-                      {quotaInfo.data.hoursDebt.toFixed(2)}h
+                      {formatHoursToLabel(quotaInfo.data.hoursDebt)}
                     </span>
                   </div>
                   <div>
@@ -646,7 +655,7 @@ const CreateBookingModal = ({
                           ((quotaInfo.data.ownershipRate || 100) / 100);
                         const hours = Math.floor(totalHours);
                         const minutes = Math.round((totalHours - hours) * 60);
-                        return `${hours}h ${minutes}m`;
+                        return `${hours} phút ${minutes} giây`;
                       })()}
                     </span>
                   </div>
@@ -668,12 +677,7 @@ const CreateBookingModal = ({
                       fontSize: "15px",
                     }}
                   >
-                    {(() => {
-                      const totalHours = quotaInfo.data.hoursLimit;
-                      const hours = Math.floor(totalHours);
-                      const minutes = Math.round((totalHours - hours) * 60);
-                      return `${hours}h ${minutes}m`;
-                    })()}
+                    {formatHoursToLabel(quotaInfo.data.hoursLimit)}
                   </span>
                 </div>
                 <div
@@ -725,11 +729,7 @@ const CreateBookingModal = ({
 
         {estimatedDuration !== null && (
           <Alert
-            message={
-              estimatedDuration < 1
-                ? `Thời lượng: ${Math.round(estimatedDuration * 60)} phút`
-                : `Thời lượng: ${estimatedDuration.toFixed(1)} giờ`
-            }
+            message={`Thời lượng: ${formatHoursToLabel(estimatedDuration)}`}
             type="success"
             showIcon
             icon={<ClockCircleOutlined />}
