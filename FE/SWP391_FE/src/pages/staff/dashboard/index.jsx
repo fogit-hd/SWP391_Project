@@ -107,7 +107,7 @@ const StaffDashboard = () => {
             <div style={{ marginBottom: 24 }}>
               <Title level={2}>Staff Dashboard</Title>
               <Paragraph>
-                Review and manage contracts from here.
+                Review và quản lý hợp đồng điện tử của khách hàng một cách hiệu quả.
               </Paragraph>
             </div>
 
