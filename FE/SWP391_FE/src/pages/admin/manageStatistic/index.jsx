@@ -20,7 +20,14 @@ import {
   CarOutlined,
   ReloadOutlined,
 } from "@ant-design/icons";
-import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from "recharts";
+import {
+  PieChart,
+  Pie,
+  Cell,
+  ResponsiveContainer,
+  Legend,
+  Tooltip,
+} from "recharts";
 import dayjs from "dayjs";
 import AdminSidebar from "../../../components/admin/AdminSidebar";
 import api from "../../../config/axios";
@@ -30,7 +37,14 @@ const { Content } = Layout;
 const { Title } = Typography;
 const { RangePicker } = DatePicker;
 
-const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884d8", "#82ca9d"];
+const COLORS = [
+  "#0088FE",
+  "#00C49F",
+  "#FFBB28",
+  "#FF8042",
+  "#8884d8",
+  "#82ca9d",
+];
 
 const ManageStatistic = () => {
   const [collapsed, setCollapsed] = useState(false);
@@ -72,23 +86,26 @@ const ManageStatistic = () => {
       // Backend expects "Unspecified" format (no timezone info) or UTC
       // Form input is "specified", backend will use helper to convert to UTC
       // Format: YYYY-MM-DDTHH:mm:ss.SSS (Unspecified - no timezone)
-      const startDate = dayjs(dateRange[0]).format('YYYY-MM-DDTHH:mm:ss.SSS');
-      const endDate = dayjs(dateRange[1]).format('YYYY-MM-DDTHH:mm:ss.SSS');
+      const startDate = dayjs(dateRange[0]).format("YYYY-MM-DDTHH:mm:ss.SSS");
+      const endDate = dayjs(dateRange[1]).format("YYYY-MM-DDTHH:mm:ss.SSS");
 
       console.log("Formatted dates:", {
         start: startDate,
-        end: endDate
+        end: endDate,
       });
 
       console.log("Sending API request to /Statistic/Revenue-statistic/admin");
       console.log("Query parameters:", { Start: startDate, End: endDate });
 
-      const response = await api.get("/Statistic/Revenue-statistic/admin", {
-        params: {
-          Start: startDate,
-          End: endDate,
-        },
-      });
+      const response = await api.get(
+        "/Statistic/Revenue-statistic-range/admin",
+        {
+          params: {
+            Start: startDate,
+            End: endDate,
+          },
+        }
+      );
 
       console.log("API Response received:", response);
       console.log("Response data:", response.data);
@@ -111,26 +128,28 @@ const ManageStatistic = () => {
       console.error("Error response data:", error.response?.data);
       console.error("Error response status:", error.response?.status);
       console.error("Error config:", error.config);
-      
+
       // Show detailed error message
       let errorMessage = "Có lỗi xảy ra khi lấy thống kê";
-      
+
       if (error.response) {
         // Server responded with error
-        errorMessage = error.response.data?.message || 
-                      error.response.data?.error || 
-                      `Lỗi từ server: ${error.response.status} ${error.response.statusText}`;
+        errorMessage =
+          error.response.data?.message ||
+          error.response.data?.error ||
+          `Lỗi từ server: ${error.response.status} ${error.response.statusText}`;
         console.error("Server error:", errorMessage);
       } else if (error.request) {
         // Request was made but no response received
-        errorMessage = "Không nhận được phản hồi từ server. Vui lòng kiểm tra kết nối mạng.";
+        errorMessage =
+          "Không nhận được phản hồi từ server. Vui lòng kiểm tra kết nối mạng.";
         console.error("Network error - no response received");
       } else {
         // Something else happened
         errorMessage = error.message || "Có lỗi xảy ra khi lấy thống kê";
         console.error("Unknown error:", errorMessage);
       }
-      
+
       toast.error(errorMessage);
     } finally {
       setLoading(false);
@@ -142,7 +161,10 @@ const ManageStatistic = () => {
    * Prepare data for pie chart
    */
   const preparePieChartData = () => {
-    if (!statistics?.technicianRevenue || statistics.technicianRevenue.length === 0) {
+    if (
+      !statistics?.technicianRevenue ||
+      statistics.technicianRevenue.length === 0
+    ) {
       return [];
     }
     return statistics.technicianRevenue.map((item) => ({
@@ -204,7 +226,11 @@ const ManageStatistic = () => {
 
             {/* Date Range Picker */}
             <Card style={{ marginBottom: 24 }}>
-              <Space direction="vertical" size="large" style={{ width: "100%" }}>
+              <Space
+                direction="vertical"
+                size="large"
+                style={{ width: "100%" }}
+              >
                 <div>
                   <Typography.Text strong style={{ marginRight: 8 }}>
                     Chọn khoảng thời gian:
@@ -348,4 +374,3 @@ const ManageStatistic = () => {
 };
 
 export default ManageStatistic;
-
