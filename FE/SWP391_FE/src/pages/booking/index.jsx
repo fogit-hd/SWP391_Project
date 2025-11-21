@@ -12,6 +12,8 @@ import {
   Modal,
   List,
   Alert,
+  Image,
+  Empty,
 } from "antd";
 import {
   CalendarOutlined,
@@ -22,6 +24,7 @@ import {
   HomeOutlined,
   UnorderedListOutlined,
   CheckCircleOutlined,
+  WarningOutlined,
 } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import dayjs from "dayjs";
@@ -56,6 +59,10 @@ const BookingManagement = () => {
   const [loadingCompletedBookings, setLoadingCompletedBookings] =
     useState(false);
   const [quotaInfo, setQuotaInfo] = useState(null);
+  const [damageReportsModalVisible, setDamageReportsModalVisible] =
+    useState(false);
+  const [damageReports, setDamageReports] = useState([]);
+  const [loadingDamageReports, setLoadingDamageReports] = useState(false);
 
   useEffect(() => {
     if (!isAuthenticated || !isCoOwner) {
@@ -250,6 +257,61 @@ const BookingManagement = () => {
     fetchCompletedBookings();
   };
 
+  const fetchDamageReports = async () => {
+    if (!selectedVehicleId) {
+      message.warning("Vui lòng chọn xe trước");
+      return;
+    }
+
+    setLoadingDamageReports(true);
+    try {
+      const res = await api.get(`/trip-events/Get-damage-report-by-vehicleId`, {
+        params: { vehicleId: selectedVehicleId }
+      });
+      const data = Array.isArray(res.data) ? res.data : res.data?.data || [];
+      // Sort newest first
+      data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      setDamageReports(data);
+    } catch (error) {
+      console.error("Failed to fetch damage reports:", error);
+      console.error("Error response:", error.response);
+      message.error(
+        error.response?.data?.message || 
+        "Không thể tải danh sách báo cáo thiệt hại"
+      );
+      setDamageReports([]);
+    } finally {
+      setLoadingDamageReports(false);
+    }
+  };
+
+  const handleOpenDamageReportsModal = () => {
+    setDamageReportsModalVisible(true);
+    fetchDamageReports();
+  };
+
+  // Parse photosUrl - có thể là JSON string hoặc string đơn
+  const parsePhotosUrl = (photosUrl) => {
+    if (!photosUrl) return [];
+    try {
+      // Thử parse JSON nếu là string
+      if (typeof photosUrl === 'string') {
+        // Kiểm tra xem có phải là JSON string không
+        if (photosUrl.startsWith('[') || photosUrl.startsWith('"')) {
+          const parsed = JSON.parse(photosUrl);
+          return Array.isArray(parsed) ? parsed : [parsed];
+        }
+        // Nếu không phải JSON, trả về như một string đơn
+        return [photosUrl];
+      }
+      // Nếu đã là array
+      return Array.isArray(photosUrl) ? photosUrl : [photosUrl];
+    } catch (e) {
+      // Nếu parse thất bại, trả về như một string đơn
+      return [photosUrl];
+    }
+  };
+
   const selectedGroup = myGroups.find((g) => g.id === selectedGroupId);
   const selectedVehicle = groupVehicles.find(
     (v) => (v.id || v.vehicleId) === selectedVehicleId
@@ -292,6 +354,13 @@ const BookingManagement = () => {
               disabled={!selectedGroupId || !selectedVehicleId}
             >
               lịch đã hoàn thành
+            </Button>
+            <Button
+              icon={<WarningOutlined />}
+              onClick={handleOpenDamageReportsModal}
+              disabled={!selectedVehicleId}
+            >
+              Báo cáo thiệt hại
             </Button>
             <Button
               icon={<ReloadOutlined />}
@@ -495,6 +564,136 @@ const BookingManagement = () => {
                 type="warning"
                 showIcon
                 description="Các đặt lịch đã hoàn thành sẽ được hiển thị ở đây"
+              />
+            )}
+          </div>
+        )}
+      </Modal>
+
+      <Modal
+        title="Báo cáo thiệt hại"
+        open={damageReportsModalVisible}
+        onCancel={() => setDamageReportsModalVisible(false)}
+        footer={
+          <Button onClick={() => setDamageReportsModalVisible(false)}>
+            Đóng
+          </Button>
+        }
+        width={800}
+      >
+        {loadingDamageReports ? (
+          <div style={{ textAlign: "center", padding: "40px" }}>
+            <Spin size="large" />
+            <div style={{ marginTop: 16 }}>
+              Đang tải danh sách báo cáo thiệt hại...
+            </div>
+          </div>
+        ) : (
+          <div>
+            {damageReports.length > 0 ? (
+              <>
+                <div style={{ marginBottom: 16, fontSize: 14, color: "#666" }}>
+                  Tổng cộng: <strong>{damageReports.length}</strong> báo cáo thiệt hại
+                </div>
+                <List
+                  dataSource={damageReports}
+                  renderItem={(report) => {
+                    const photos = parsePhotosUrl(report.photosUrl);
+                    const createdAt = dayjs(report.createdAt);
+
+                    return (
+                      <List.Item>
+                        <div style={{ width: "100%" }}>
+                          <div
+                            style={{
+                              padding: "16px",
+                              backgroundColor: "#fff7e6",
+                              border: "1px solid #ffd591",
+                              borderRadius: "6px",
+                              marginBottom: 12,
+                            }}
+                          >
+                            <div
+                              style={{
+                                display: "flex",
+                                justifyContent: "space-between",
+                                alignItems: "flex-start",
+                                marginBottom: 12,
+                              }}
+                            >
+                              <div style={{ flex: 1 }}>
+                                <div
+                                  style={{
+                                    fontWeight: "bold",
+                                    color: "#d46b08",
+                                    fontSize: 16,
+                                    marginBottom: 8,
+                                  }}
+                                >
+                                  {report.vehicleName} - {report.vehiclePlate}
+                                </div>
+                                <div style={{ color: "#666", fontSize: 14, marginBottom: 8 }}>
+                                  <strong>Mô tả:</strong> {report.description}
+                                </div>
+                                <div style={{ color: "#999", fontSize: 12 }}>
+                                  <Space>
+                                    <span>
+                                      <strong>Nhân viên:</strong> {report.staffName}
+                                    </span>
+                                    <span>•</span>
+                                    <span>
+                                      <strong>Thời gian:</strong>{" "}
+                                      {createdAt.format("DD/MM/YYYY HH:mm")}
+                                    </span>
+                                  </Space>
+                                </div>
+                              </div>
+                            </div>
+                            {photos.length > 0 && (
+                              <div style={{ marginTop: 12 }}>
+                                <div
+                                  style={{
+                                    fontWeight: "bold",
+                                    fontSize: 13,
+                                    color: "#666",
+                                    marginBottom: 8,
+                                  }}
+                                >
+                                  Hình ảnh:
+                                </div>
+                                <Image.PreviewGroup>
+                                  <Space wrap>
+                                    {photos.map((photo, index) => (
+                                      <Image
+                                        key={index}
+                                        src={photo}
+                                        alt={`Damage report ${index + 1}`}
+                                        width={120}
+                                        height={120}
+                                        style={{
+                                          objectFit: "cover",
+                                          borderRadius: "4px",
+                                          border: "1px solid #d9d9d9",
+                                        }}
+                                        fallback="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Crect width='120' height='120' fill='%23f0f0f0'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dy='.3em' fill='%23999'%3EKhông tải được%3C/text%3E%3C/svg%3E"
+                                      />
+                                    ))}
+                                  </Space>
+                                </Image.PreviewGroup>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </List.Item>
+                    );
+                  }}
+                  locale={{ emptyText: "Không có báo cáo thiệt hại nào" }}
+                />
+              </>
+            ) : (
+              <Empty
+                description="Chưa có báo cáo thiệt hại nào cho xe này"
+                image={Empty.PRESENTED_IMAGE_SIMPLE}
               />
             )}
           </div>
