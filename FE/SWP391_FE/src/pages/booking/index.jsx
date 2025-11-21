@@ -312,19 +312,6 @@ const BookingManagement = () => {
     }
   };
 
-  const selectedGroup = myGroups.find((g) => g.id === selectedGroupId);
-  const selectedVehicle = groupVehicles.find(
-    (v) => (v.id || v.vehicleId) === selectedVehicleId
-  );
-
-  const vehicleNameById = (id) => {
-    const v = groupVehicles.find((x) => (x.id || x.vehicleId) === id);
-    if (!v) return id;
-    return `${v.make || v.model || ""} ${v.model || ""} ${
-      v.plateNumber || v.plate || ""
-    }`.trim();
-  };
-
   return (
     <div className="booking-management-page">
       <div className="booking-management-content">

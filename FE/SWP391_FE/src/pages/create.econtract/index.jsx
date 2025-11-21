@@ -15,6 +15,7 @@ import {
   Space,
   Tag,
 } from "antd";
+import { ArrowLeftOutlined } from "@ant-design/icons";
 import api from "../../config/axios";
 // import { useSelector } from "react-redux";
 import { toast } from "react-toastify";
@@ -66,7 +67,7 @@ const CreateEContract = () => {
       setTemplates(response.data || []);
     } catch (error) {
       console.error("Error loading templates:", error);
-      message.error("Failed to load contract templates");
+      message.error("Không thể tải mẫu hợp đồng");
     }
   };
 
@@ -77,7 +78,7 @@ const CreateEContract = () => {
       setVehicles(response.data || []);
     } catch (error) {
       console.error("Error loading vehicles:", error);
-      message.error("Failed to load vehicles");
+      message.error("Không thể tải danh sách xe");
     }
   };
 
@@ -87,13 +88,22 @@ const CreateEContract = () => {
       const response = await api.get(
         `/GroupMember/get-all-members-in-group/${groupId}`
       );
-      setGroupMembers(response.data || []);
-      console.log("Loaded group members:", response.data);
-      setSelectedMembers([]);
-      // Don't reset ownership shares to preserve user input
+      const members = response.data || [];
+      setGroupMembers(members);
+      console.log("Loaded group members:", members);
+      
+      // Auto-select all members and initialize ownership shares
+      setSelectedMembers(members);
+      setOwnershipShares(
+        members.map((member) => ({
+          userId: member.userId || member.id,
+          rate: 0,
+          userName: member.fullName || member.email || "Unknown",
+        }))
+      );
     } catch (error) {
       console.error("Error loading group members:", error);
-      message.error("Failed to load group members");
+      message.error("Không thể tải thành viên nhóm");
     }
   };
 
@@ -136,7 +146,9 @@ const CreateEContract = () => {
           share.userId === userId ? { ...share, rate } : share
         );
       } else {
-        const member = groupMembers.find((m) => m.userId === userId);
+        const member = groupMembers.find(
+          (m) => (m.userId || m.id) === userId
+        );
         return [
           ...prev,
           {
@@ -177,7 +189,7 @@ const CreateEContract = () => {
     // Validate ownership shares
     if (totalOwnership !== 100) {
       message.error(
-        `Total ownership must be 100%. Current total: ${totalOwnership}%`
+        `Tổng tỷ lệ sở hữu phải là 100%. Hiện tại: ${totalOwnership}%`
       );
       return;
     }
@@ -199,17 +211,23 @@ const CreateEContract = () => {
       };
 
       const response = await api.post("/contracts", payload);
-      toast.success("Contract created successfully!");
+      toast.success("Tạo hợp đồng thành công!");
       setIsModalVisible(true);
       form.resetFields();
       setOwnershipShares([]);
       navigate("/view-mycontract");
     } catch (error) {
       console.error(error);
-      message.error("Failed to create contract. Please try again.");
+      message.error("Không thể tạo hợp đồng. Vui lòng thử lại.");
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleBack = () => {
+    navigate("/view-mygroup", {
+      state: { groupId: groupId, openGroupModal: true },
+    });
   };
 
   return (
@@ -217,13 +235,22 @@ const CreateEContract = () => {
       <div className="create-econtract-content">
         <div className="econ-wrapper-center">
           <Card className="econ-card animate-fade-up">
+            <Space style={{ marginBottom: 16 }}>
+              <Button
+                type="text"
+                icon={<ArrowLeftOutlined />}
+                onClick={handleBack}
+              >
+                Quay lại
+              </Button>
+            </Space>
             <Title level={3} className="econ-main-title">
               Co-ownership Contract — EVCars
             </Title>
 
             <Paragraph className="econ-intro">
-              Join the green revolution! Fill in the details below to create
-              your co-ownership contract.
+              Tham gia cuộc cách mạng xanh! Điền thông tin bên dưới để tạo
+              hợp đồng đồng sở hữu của bạn.
             </Paragraph>
 
             <Divider />
@@ -239,13 +266,13 @@ const CreateEContract = () => {
               }}
             >
               <Form.Item
-                label="Contract Template"
+                label="Mẫu hợp đồng"
                 name="templateId"
                 rules={[
-                  { required: true, message: "Please select a template" },
+                  { required: true, message: "Vui lòng chọn mẫu hợp đồng" },
                 ]}
               >
-                <Select placeholder="Select contract template">
+                <Select placeholder="Chọn mẫu hợp đồng">
                   {templates.map((template) => (
                     <Option key={template.id} value={template.id}>
                       {template.name} (v{template.version})
@@ -255,34 +282,51 @@ const CreateEContract = () => {
               </Form.Item>
 
               <Form.Item
-                label="Vehicle"
+                label="Xe"
                 name="vehicleId"
-                rules={[{ required: true, message: "Please select a vehicle" }]}
+                rules={[{ required: true, message: "Vui lòng chọn xe" }]}
               >
-                <Select placeholder="Select vehicle">
-                  {vehicles.map((vehicle) => (
-                    <Option key={vehicle.id} value={vehicle.id}>
-                      {vehicle.model} - {vehicle.licensePlate}
-                    </Option>
-                  ))}
+                <Select placeholder="Chọn xe">
+                  {vehicles.map((vehicle) => {
+                    const make = vehicle.make || vehicle.brand || "";
+                    const model = vehicle.model || "";
+                    const plate = vehicle.plateNumber || vehicle.licensePlate || "";
+                    
+                    let displayText = "";
+                    if (make && model && plate) {
+                      displayText = `${make} ${model} - ${plate}`;
+                    } else if (make && model) {
+                      displayText = `${make} ${model}`;
+                    } else if (plate) {
+                      displayText = plate;
+                    } else {
+                      displayText = vehicle.vehicleName || vehicle.name || vehicle.id || "Xe không xác định";
+                    }
+                    
+                    return (
+                      <Option key={vehicle.id} value={vehicle.id}>
+                        {displayText}
+                      </Option>
+                    );
+                  })}
                 </Select>
               </Form.Item>
 
               <Form.Item
-                label="Contract Title"
+                label="Tiêu đề hợp đồng"
                 name="title"
                 rules={[
-                  { required: true, message: "Please enter contract title" },
+                  { required: true, message: "Vui lòng nhập tiêu đề hợp đồng" },
                 ]}
               >
-                <Input placeholder="Enter contract title" />
+                <Input placeholder="Nhập tiêu đề hợp đồng" />
               </Form.Item>
 
               <Form.Item
-                label="Effective From"
+                label="Có hiệu lực từ"
                 name="effectiveFrom"
                 rules={[
-                  { required: true, message: "Please select effective date" },
+                  { required: true, message: "Vui lòng chọn ngày có hiệu lực" },
                 ]}
               >
                 <DatePicker
@@ -295,102 +339,38 @@ const CreateEContract = () => {
               </Form.Item>
 
               <Form.Item
-                label="Contract Duration (months)"
+                label="Thời hạn hợp đồng (tháng)"
                 name="duration"
                 rules={[
                   {
                     required: true,
-                    message: "Please select contract duration",
+                    message: "Vui lòng chọn thời hạn hợp đồng",
                   },
                 ]}
               >
                 <Select onChange={handleDurationChange}>
-                  <Option value={6}>6 months</Option>
-                  <Option value={12}>12 months (1 year)</Option>
-                  <Option value={24}>24 months (2 years)</Option>
-                  <Option value={36}>36 months (3 years)</Option>
+                  <Option value={6}>6 tháng</Option>
+                  <Option value={12}>12 tháng (1 năm)</Option>
+                  <Option value={24}>24 tháng (2 năm)</Option>
+                  <Option value={36}>36 tháng (3 năm)</Option>
                 </Select>
               </Form.Item>
 
-              <Form.Item label="Expires At" name="expiresAt">
+              <Form.Item label="Hết hạn vào" name="expiresAt">
                 <DatePicker style={{ width: "100%" }} disabled />
               </Form.Item>
 
-              {/* Select Members Section */}
-              <Divider>Select Members to Sign Contract</Divider>
+              {/* Members Section */}
+              <Divider>Thành viên tham gia hợp đồng</Divider>
 
               <Table
                 dataSource={groupMembers}
                 pagination={false}
                 size="small"
                 rowKey="userId"
-                rowSelection={{
-                  type: "checkbox",
-                  selectedRowKeys: selectedMembers.map((m) => m.userId),
-                  onChange: (selectedRowKeys, selectedRows) => {
-                    // Get current selected IDs
-                    const currentSelectedIds = selectedMembers.map(
-                      (m) => m.userId
-                    );
-
-                    // Find what changed
-                    const newlySelected = selectedRowKeys.filter(
-                      (id) => !currentSelectedIds.includes(id)
-                    );
-                    const newlyDeselected = currentSelectedIds.filter(
-                      (id) => !selectedRowKeys.includes(id)
-                    );
-
-                    // Add newly selected members
-                    newlySelected.forEach((memberId) => {
-                      const member = groupMembers.find(
-                        (m) => m.userId === memberId
-                      );
-                      if (member) {
-                        setSelectedMembers((prev) => {
-                          const newSelected = [...prev, member];
-                          return newSelected;
-                        });
-                        setOwnershipShares((prev) => {
-                          const existing = prev.find(
-                            (s) => s.userId === memberId
-                          );
-                          if (!existing) {
-                            const newShares = [
-                              ...prev,
-                              {
-                                userId: memberId,
-                                rate: 0,
-                                userName:
-                                  member.fullName || member.email || "Unknown",
-                              },
-                            ];
-                            return newShares;
-                          }
-                          // If existing, keep the current rate value
-                          return prev;
-                        });
-                      }
-                    });
-
-                    // Remove newly deselected members
-                    newlyDeselected.forEach((memberId) => {
-                      setSelectedMembers((prev) => {
-                        const newSelected = prev.filter(
-                          (m) => m.userId !== memberId
-                        );
-                        return newSelected;
-                      });
-                      // Don't remove ownership shares, just keep them for when user re-selects
-                    });
-                  },
-                  getCheckboxProps: (record) => ({
-                    // All members can be selected/deselected
-                  }),
-                }}
                 columns={[
                   {
-                    title: "Member",
+                    title: "Thành viên",
                     dataIndex: "fullName",
                     key: "fullName",
                     render: (text, record) => (
@@ -398,12 +378,13 @@ const CreateEContract = () => {
                     ),
                   },
                   {
-                    title: "Ownership %",
+                    title: "Tỷ lệ sở hữu %",
                     key: "ownership",
                     width: 200,
                     render: (_, record) => {
+                      const userId = record.userId || record.id;
                       const share = ownershipShares.find(
-                        (s) => s.userId === record.userId
+                        (s) => s.userId === userId
                       );
                       return (
                         <InputNumber
@@ -412,7 +393,7 @@ const CreateEContract = () => {
                           value={share?.rate || 0}
                           onChange={(value) =>
                             handleOwnershipShareChange(
-                              record.userId,
+                              userId,
                               value || 0
                             )
                           }
@@ -428,13 +409,13 @@ const CreateEContract = () => {
               {/* Total Ownership Display */}
               <div style={{ marginTop: 16, marginBottom: 16 }}>
                 <Typography.Text strong>
-                  Total Ownership: {totalOwnership}%
+                  Tổng tỷ lệ sở hữu: {totalOwnership}%
                   {totalOwnership !== 100 && (
                     <Tag
                       color={totalOwnership > 100 ? "red" : "orange"}
                       style={{ marginLeft: 8 }}
                     >
-                      {totalOwnership > 100 ? "Exceeds 100%" : "Must be 100%"}
+                      {totalOwnership > 100 ? "Vượt quá 100%" : "Phải là 100%"}
                     </Tag>
                   )}
                 </Typography.Text>
@@ -448,20 +429,20 @@ const CreateEContract = () => {
                   loading={isLoading}
                   size="large"
                 >
-                  {isLoading ? "Creating..." : "Create Contract"}
+                  {isLoading ? "Đang tạo..." : "Tạo hợp đồng"}
                 </Button>
               </Form.Item>
             </Form>
           </Card>
 
           <Modal
-            title="Contract Created"
+            title="Đã tạo hợp đồng"
             open={isModalVisible}
             onOk={() => setIsModalVisible(false)}
             onCancel={() => setIsModalVisible(false)}
-            okText="OK"
+            okText="Đồng ý"
           >
-            <p>Your contract has been successfully created and recorded.</p>
+            <p>Hợp đồng của bạn đã được tạo và ghi nhận thành công.</p>
           </Modal>
         </div>
       </div>
