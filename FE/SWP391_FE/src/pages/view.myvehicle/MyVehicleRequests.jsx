@@ -36,6 +36,52 @@ import "./my-vehicle.css";
 
 const { Header, Content, Footer } = Layout;
 
+const normalizeImageList = (value) => {
+  if (!value) return [];
+  if (Array.isArray(value)) {
+    return value
+      .map((item) => {
+        if (typeof item === "string") return item;
+        if (item?.url) return item.url;
+        if (item?.imageUrl) return item.imageUrl;
+        if (item?.vehicleImageUrl) return item.vehicleImageUrl;
+        return "";
+      })
+      .filter(Boolean);
+  }
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    if (!trimmed) return [];
+    try {
+      const parsed = JSON.parse(trimmed);
+      if (Array.isArray(parsed)) {
+        return normalizeImageList(parsed);
+      }
+    } catch (_) {
+      // not JSON, fallback to delimiter split
+    }
+    return trimmed
+      .split(/[,;|]/)
+      .map((item) => item.trim())
+      .filter(Boolean);
+  }
+  return [];
+};
+
+const getVehicleImagesFromRequest = (request) => {
+  if (!request) return [];
+  const possibleSources = [
+    request.vehicleImageUrls,
+    request.vehicleImages,
+    request.vehicleImageUrl,
+  ];
+  for (const source of possibleSources) {
+    const list = normalizeImageList(source);
+    if (list.length) return list;
+  }
+  return [];
+};
+
 const MyVehicleRequests = () => {
   const navigate = useNavigate();
   const {
@@ -1211,19 +1257,35 @@ const MyVehicleRequests = () => {
                 size="middle"
                 style={{ width: "100%" }}
               >
-                {selectedRequest.vehicleImageUrl && (
-                  <div>
-                    <div style={{ fontWeight: "bold", marginBottom: 8 }}>
-                      Hình ảnh xe:
+                {(() => {
+                  const vehicleImages = getVehicleImagesFromRequest(
+                    selectedRequest
+                  );
+                  if (!vehicleImages.length) return null;
+                  return (
+                    <div>
+                      <div style={{ fontWeight: "bold", marginBottom: 8 }}>
+                        Hình ảnh xe:
+                      </div>
+                      <Space wrap size="middle">
+                        {vehicleImages.map((img, index) => (
+                          <Image
+                            key={`${img}-${index}`}
+                            src={img}
+                            alt={`Vehicle ${index + 1}`}
+                            style={{
+                              width: 180,
+                              height: 150,
+                              objectFit: "cover",
+                              borderRadius: 8,
+                            }}
+                            preview
+                          />
+                        ))}
+                      </Space>
                     </div>
-                    <Image
-                      src={selectedRequest.vehicleImageUrl}
-                      alt="Vehicle"
-                      style={{ maxWidth: "100%", maxHeight: 300 }}
-                      preview
-                    />
-                  </div>
-                )}
+                  );
+                })()}
                 {selectedRequest.registrationPaperUrl && (
                   <div>
                     <div style={{ fontWeight: "bold", marginBottom: 8 }}>
