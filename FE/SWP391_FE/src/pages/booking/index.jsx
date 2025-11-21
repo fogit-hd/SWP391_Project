@@ -1,6 +1,28 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { Card, Button, Select, Space, Spin, message, Tag, Badge, Tooltip, Modal, List, Alert } from "antd";
-import { CalendarOutlined, PlusOutlined, ReloadOutlined, CarOutlined, ArrowLeftOutlined, HomeOutlined, UnorderedListOutlined, CheckCircleOutlined } from "@ant-design/icons";
+import {
+  Card,
+  Button,
+  Select,
+  Space,
+  Spin,
+  message,
+  Tag,
+  Badge,
+  Tooltip,
+  Modal,
+  List,
+  Alert,
+} from "antd";
+import {
+  CalendarOutlined,
+  PlusOutlined,
+  ReloadOutlined,
+  CarOutlined,
+  ArrowLeftOutlined,
+  HomeOutlined,
+  UnorderedListOutlined,
+  CheckCircleOutlined,
+} from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import dayjs from "dayjs";
 import api from "../../config/axios";
@@ -11,11 +33,10 @@ import BookingListView from "../../components/BookingListView/BookingListView";
 import { BOOKING_STATUS_COLORS, BOOKING_STATUS_LABELS } from "./booking.types";
 import "./booking.css";
 
-
 const BookingManagement = () => {
   const { isAuthenticated, isCoOwner } = useAuth();
   const navigate = useNavigate();
-  
+
   const [loading, setLoading] = useState(false);
   const [myGroups, setMyGroups] = useState([]);
   const [selectedGroupId, setSelectedGroupId] = useState(null);
@@ -24,14 +45,16 @@ const BookingManagement = () => {
   const [bookings, setBookings] = useState([]);
   const [tripHistory, setTripHistory] = useState([]);
   const [loadingTripHistory, setLoadingTripHistory] = useState(false);
-  
+
   const [createModalVisible, setCreateModalVisible] = useState(false);
   const [detailModalVisible, setDetailModalVisible] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState(null);
-  const [activeTab, setActiveTab] = useState('all');
-  const [completedBookingsModalVisible, setCompletedBookingsModalVisible] = useState(false);
+  const [activeTab, setActiveTab] = useState("all");
+  const [completedBookingsModalVisible, setCompletedBookingsModalVisible] =
+    useState(false);
   const [completedBookings, setCompletedBookings] = useState([]);
-  const [loadingCompletedBookings, setLoadingCompletedBookings] = useState(false);
+  const [loadingCompletedBookings, setLoadingCompletedBookings] =
+    useState(false);
   const [quotaInfo, setQuotaInfo] = useState(null);
 
   useEffect(() => {
@@ -90,8 +113,13 @@ const BookingManagement = () => {
       const res = await api.get(`/trip-events/History`);
       const data = Array.isArray(res.data) ? res.data : res.data?.data || [];
       // If we have group vehicles, narrow down to those vehicles belonging to the selected group
-      const vehicleIds = (groupVehicles || []).map((v) => v.id || v.vehicleId).filter(Boolean);
-      const filtered = vehicleIds.length > 0 ? data.filter((e) => vehicleIds.includes(e.vehicleId)) : data;
+      const vehicleIds = (groupVehicles || [])
+        .map((v) => v.id || v.vehicleId)
+        .filter(Boolean);
+      const filtered =
+        vehicleIds.length > 0
+          ? data.filter((e) => vehicleIds.includes(e.vehicleId))
+          : data;
       // sort newest first
       filtered.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
       setTripHistory(filtered.slice(0, 50)); // keep a reasonable number
@@ -125,12 +153,14 @@ const BookingManagement = () => {
 
   const fetchBookings = async () => {
     if (!selectedGroupId || !selectedVehicleId) return;
-    
+
     setLoading(true);
     try {
-      const res = await api.get(`/booking/Get-Booking-by-group-and-vehicle/${selectedGroupId}/${selectedVehicleId}`);
+      const res = await api.get(
+        `/booking/Get-Booking-by-group-and-vehicle/${selectedGroupId}/${selectedVehicleId}`
+      );
       const data = res.data?.data || res.data || [];
-      
+
       setBookings(data);
     } catch (error) {
       console.error("Failed to fetch bookings:", error);
@@ -149,7 +179,7 @@ const BookingManagement = () => {
   const handleCreateSuccess = () => {
     setCreateModalVisible(false);
     fetchBookings();
-    setActiveTab('BOOKED'); // Chuyển sang tab BOOKED khi tạo booking mới
+    setActiveTab("BOOKED"); // Chuyển sang tab BOOKED khi tạo booking mới
     message.success("Tạo đặt lịch thành công!");
   };
 
@@ -167,7 +197,9 @@ const BookingManagement = () => {
     setLoadingCompletedBookings(true);
     try {
       // Fetch quota info để lấy weekStartDate
-      const quotaResponse = await api.get(`/quota/check/${selectedGroupId}/${selectedVehicleId}`);
+      const quotaResponse = await api.get(
+        `/quota/check/${selectedGroupId}/${selectedVehicleId}`
+      );
       const quota = quotaResponse.data;
       setQuotaInfo(quota);
 
@@ -189,7 +221,8 @@ const BookingManagement = () => {
 
           const startTime = dayjs(booking.startTime);
           const isInRange =
-            (startTime.isAfter(weekStartDate) || startTime.isSame(weekStartDate)) &&
+            (startTime.isAfter(weekStartDate) ||
+              startTime.isSame(weekStartDate)) &&
             startTime.isBefore(weekEndDate);
           return isInRange;
         });
@@ -198,7 +231,8 @@ const BookingManagement = () => {
       } else {
         // Fallback: show all completed bookings if no quota info
         const allCompleted = allBookings.filter(
-          (booking) => booking.status === "COMPLETE" || booking.status === "completed"
+          (booking) =>
+            booking.status === "COMPLETE" || booking.status === "completed"
         );
         setCompletedBookings(allCompleted);
       }
@@ -216,13 +250,17 @@ const BookingManagement = () => {
     fetchCompletedBookings();
   };
 
-  const selectedGroup = myGroups.find(g => g.id === selectedGroupId);
-  const selectedVehicle = groupVehicles.find(v => (v.id || v.vehicleId) === selectedVehicleId);
+  const selectedGroup = myGroups.find((g) => g.id === selectedGroupId);
+  const selectedVehicle = groupVehicles.find(
+    (v) => (v.id || v.vehicleId) === selectedVehicleId
+  );
 
   const vehicleNameById = (id) => {
     const v = groupVehicles.find((x) => (x.id || x.vehicleId) === id);
     if (!v) return id;
-    return `${v.make || v.model || ''} ${v.model || ''} ${v.plateNumber || v.plate || ''}`.trim();
+    return `${v.make || v.model || ""} ${v.model || ""} ${
+      v.plateNumber || v.plate || ""
+    }`.trim();
   };
 
   return (
@@ -230,37 +268,40 @@ const BookingManagement = () => {
       <div className="booking-management-content">
         <div className="booking-management-header">
           <div className="booking-header-left">
-            <Button 
-              type="text" 
+            <Button
+              type="text"
               icon={<HomeOutlined />}
               onClick={() => navigate("/")}
               style={{ marginRight: 16 }}
             >
               Về trang chủ
             </Button>
-            <UnorderedListOutlined className="booking-header-icon" />
             <div>
-              <h1 className="booking-header-title">Quản lý đặt lịch sử dụng xe</h1>
-              <p className="booking-header-subtitle">Quản lý việc đặt lịch xe của bạn với chế độ xem chi tiết</p>
+              <h1 className="booking-header-title">
+                Quản lý đặt lịch sử dụng xe
+              </h1>
+              <p className="booking-header-subtitle">
+                Quản lý việc đặt lịch xe của bạn với chế độ xem chi tiết
+              </p>
             </div>
           </div>
           <Space>
-            <Button 
+            <Button
               icon={<CheckCircleOutlined />}
               onClick={handleOpenCompletedBookingsModal}
               disabled={!selectedGroupId || !selectedVehicleId}
             >
               lịch đã hoàn thành
             </Button>
-            <Button 
-              icon={<ReloadOutlined />} 
+            <Button
+              icon={<ReloadOutlined />}
               onClick={() => fetchBookings()}
               loading={loading}
             >
               Làm mới
             </Button>
-            <Button 
-              type="primary" 
+            <Button
+              type="primary"
               icon={<PlusOutlined />}
               onClick={() => setCreateModalVisible(true)}
               disabled={!selectedGroupId || !selectedVehicleId}
@@ -280,7 +321,7 @@ const BookingManagement = () => {
                 onChange={setSelectedGroupId}
                 placeholder="Chọn nhóm"
               >
-                {myGroups.map(group => (
+                {myGroups.map((group) => (
                   <Select.Option key={group.id} value={group.id}>
                     {group.name}
                   </Select.Option>
@@ -296,8 +337,11 @@ const BookingManagement = () => {
                 placeholder="Chọn xe"
                 disabled={!selectedGroupId || groupVehicles.length === 0}
               >
-                {groupVehicles.map(vehicle => (
-                  <Select.Option key={vehicle.id || vehicle.vehicleId} value={vehicle.id || vehicle.vehicleId}>
+                {groupVehicles.map((vehicle) => (
+                  <Select.Option
+                    key={vehicle.id || vehicle.vehicleId}
+                    value={vehicle.id || vehicle.vehicleId}
+                  >
                     <Space>
                       <CarOutlined />
                       {vehicle.make} {vehicle.model} - {vehicle.plateNumber}
@@ -341,29 +385,38 @@ const BookingManagement = () => {
         title="Đặt lịch đã hoàn thành tuần này"
         open={completedBookingsModalVisible}
         onCancel={() => setCompletedBookingsModalVisible(false)}
-        footer={<Button onClick={() => setCompletedBookingsModalVisible(false)}>Đóng</Button>}
+        footer={
+          <Button onClick={() => setCompletedBookingsModalVisible(false)}>
+            Đóng
+          </Button>
+        }
         width={700}
       >
         {loadingCompletedBookings ? (
-          <div style={{ textAlign: 'center', padding: '40px' }}>
+          <div style={{ textAlign: "center", padding: "40px" }}>
             <Spin size="large" />
-            <div style={{ marginTop: 16 }}>Đang tải danh sách đặt lịch đã hoàn thành...</div>
+            <div style={{ marginTop: 16 }}>
+              Đang tải danh sách đặt lịch đã hoàn thành...
+            </div>
           </div>
         ) : (
           <div>
             {quotaInfo?.data && (
               <Alert
-                message={`Tuần bắt đầu: ${dayjs(quotaInfo.data.weekStartDate).format("DD/MM/YYYY")}`}
+                message={`Tuần bắt đầu: ${dayjs(
+                  quotaInfo.data.weekStartDate
+                ).format("DD/MM/YYYY")}`}
                 type="info"
                 showIcon
                 style={{ marginBottom: 16 }}
               />
             )}
-            
+
             {completedBookings.length > 0 ? (
               <>
-                <div style={{ marginBottom: 16, fontSize: 14, color: '#666' }}>
-                  Tổng cộng: <strong>{completedBookings.length}</strong> lịch đã hoàn thành trong tuần này
+                <div style={{ marginBottom: 16, fontSize: 14, color: "#666" }}>
+                  Tổng cộng: <strong>{completedBookings.length}</strong> lịch đã
+                  hoàn thành trong tuần này
                 </div>
                 <List
                   dataSource={completedBookings}
@@ -374,7 +427,7 @@ const BookingManagement = () => {
 
                     return (
                       <List.Item>
-                        <div style={{ width: '100%' }}>
+                        <div style={{ width: "100%" }}>
                           <div
                             style={{
                               padding: "12px 16px",
@@ -383,22 +436,48 @@ const BookingManagement = () => {
                               borderRadius: "6px",
                             }}
                           >
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                              <div style={{ fontWeight: "bold", color: "#389e0d", fontSize: 15 }}>
-                                {startTime.format("DD/MM/YYYY HH:mm")} - {endTime.format("HH:mm")}
+                            <div
+                              style={{
+                                display: "flex",
+                                justifyContent: "space-between",
+                                alignItems: "center",
+                                marginBottom: 8,
+                              }}
+                            >
+                              <div
+                                style={{
+                                  fontWeight: "bold",
+                                  color: "#389e0d",
+                                  fontSize: 15,
+                                }}
+                              >
+                                {startTime.format("DD/MM/YYYY HH:mm")} -{" "}
+                                {endTime.format("HH:mm")}
                               </div>
                               <Tag color="green">HOÀN THÀNH</Tag>
                             </div>
                             <div style={{ color: "#666", fontSize: 13 }}>
                               <Space>
-                                <span>Thời lượng: <strong>{duration.toFixed(1)} giờ</strong></span>
+                                <span>
+                                  Thời lượng:{" "}
+                                  <strong>{duration.toFixed(1)} giờ</strong>
+                                </span>
                                 {booking.userName && (
-                                  <span>• Người đặt: <strong>{booking.userName}</strong></span>
+                                  <span>
+                                    • Người đặt:{" "}
+                                    <strong>{booking.userName}</strong>
+                                  </span>
                                 )}
                               </Space>
                             </div>
                             {booking.id && (
-                              <div style={{ marginTop: 4, fontSize: 12, color: "#999" }}>
+                              <div
+                                style={{
+                                  marginTop: 4,
+                                  fontSize: 12,
+                                  color: "#999",
+                                }}
+                              >
                                 Mã đặt lịch: {booking.id}
                               </div>
                             )}
@@ -407,7 +486,7 @@ const BookingManagement = () => {
                       </List.Item>
                     );
                   }}
-                  locale={{ emptyText: 'Không có đặt lịch hoàn thành nào' }}
+                  locale={{ emptyText: "Không có đặt lịch hoàn thành nào" }}
                 />
               </>
             ) : (
