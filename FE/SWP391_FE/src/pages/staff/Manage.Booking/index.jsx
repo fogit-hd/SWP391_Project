@@ -1,12 +1,11 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import { Select, Button, Input, List, message, notification, Space, Spin, Tag, Modal, Descriptions, Image } from "antd";
+import { Select, Button, Input, List, message, notification, Space, Spin, Tag, Modal, Descriptions, Image, Divider } from "antd";
 import { EyeOutlined } from '@ant-design/icons';
 import { StaffBackButton } from '../staffComponents/button.jsx';
 import api from "../../../config/axios";
 import "./manage-booking.css";
-import { toast } from "react-toastify";
 
 const { Option } = Select;
 const { TextArea } = Input;
@@ -23,8 +22,9 @@ export default function ManageBooking() {
   const fileInputRefs = useRef({});
   const [descriptionMap, setDescriptionMap] = useState({});
   const [damageDesc, setDamageDesc] = useState("");
-  const [damageFiles, setDamageFiles] = useState([]);
+  const [damageFile, setDamageFile] = useState(null);
   const [damageSubmitting, setDamageSubmitting] = useState(false);
+  const [vehicleDetailModalOpen, setVehicleDetailModalOpen] = useState(false);
   const [tripEvents, setTripEvents] = useState([]);
   const [loadingTripEvents, setLoadingTripEvents] = useState(false);
   const [damageModalOpen, setDamageModalOpen] = useState(false);
@@ -362,6 +362,7 @@ export default function ManageBooking() {
             );
           })()}
         </div>
+        )}
         <Divider />
         <div style={{ display:'flex', justifyContent:'flex-end', gap: 8, marginBottom: 8 }}>
           <Button onClick={() => {
@@ -553,9 +554,6 @@ export default function ManageBooking() {
           )}
         </Modal>
 
-      </Space>
-          </div>
-        </Card>
       </div>
     </>
   );
