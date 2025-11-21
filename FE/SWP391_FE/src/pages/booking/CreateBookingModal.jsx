@@ -17,6 +17,7 @@ import { toast } from "react-toastify";
 
 const { TextArea } = Input;
 const { RangePicker } = DatePicker;
+const ACTIVE_BOOKING_STATUSES = ["BOOKED", "INUSE", "IN USE", "OVERTIME"];
 
 const CreateBookingModal = ({
   visible,
@@ -137,7 +138,10 @@ const CreateBookingModal = ({
     // Check for overlapping bookings and minimum gap (30 phút)
     const minGapMinutes = BOOKING_CONSTRAINTS.MIN_GAP_MINUTES;
     const conflictBooking = existingBookings.find((booking) => {
-      if (booking.status === "CANCELLED") {
+      const normalizedStatus = (booking.status || "")
+        .toString()
+        .toUpperCase();
+      if (!ACTIVE_BOOKING_STATUSES.includes(normalizedStatus)) {
         return false;
       }
       const bookingStart = dayjs(booking.startTime);
