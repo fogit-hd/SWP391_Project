@@ -15,7 +15,6 @@ import {
   Row,
   Col,
   Select,
-  Statistic,
 } from "antd";
 import { useAuth } from "../../../components/hooks/useAuth";
 import {
@@ -54,31 +53,6 @@ const ReviewEContract = () => {
     isAdmin ? "ALL" : "PENDING_REVIEW"
   ); // Filter status - Admin sees all, Staff sees only PENDING_REVIEW
   const [form] = Form.useForm();
-  const [contractStatistics, setContractStatistics] = useState(null);
-  const [statisticsLoading, setStatisticsLoading] = useState(false);
-  const [sortOrder, setSortOrder] = useState("DESC"); // DESC = newest first, ASC = oldest first
-
-  // Fetch Contract Statistics (Admin only)
-  const fetchContractStatistics = async () => {
-    if (!isAdmin) return; // Only fetch for admin
-
-    setStatisticsLoading(true);
-    try {
-      const response = await api.get("/Statistic/contract-statistics");
-      if (response.data?.isSuccess) {
-        setContractStatistics(response.data.data);
-      } else {
-        console.error(
-          "Failed to fetch contract statistics:",
-          response.data?.message
-        );
-      }
-    } catch (err) {
-      console.error("Error fetching contract statistics:", err);
-    } finally {
-      setStatisticsLoading(false);
-    }
-  };
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -88,64 +62,47 @@ const ReviewEContract = () => {
     }
 
     loadContracts();
-    if (isAdmin) {
-      fetchContractStatistics();
-    }
-  }, [isAuthenticated, navigate, isAdmin]);
+  }, [isAuthenticated, navigate]);
 
-  // Filter and sort contracts by status and date
-  const filterAndSortContracts = (contractsList, status, sortOrder) => {
-    let filtered = [];
-
+  // Filter contracts by status
+  const filterContractsByStatus = (contractsList, status) => {
     // Staff can only see PENDING_REVIEW contracts
     if (isStaff) {
       const pendingStatuses = ["PENDING_REVIEW", "pending_review"];
 
-      filtered = contractsList.filter((contract) => {
+      const filtered = contractsList.filter((contract) => {
         const contractStatus =
           contract.status || contract.state || contract.contractStatus;
         return pendingStatuses.includes(contractStatus);
       });
 
+      setContracts(filtered);
       console.log(
         "📋 Staff - Showing only PENDING_REVIEW contracts:",
         filtered.length
       );
-    } else {
-      // Admin (roleId = 1) can see all or filter by status
-      if (status === "ALL") {
-        filtered = [...contractsList];
-        console.log("📋 Admin - Showing ALL contracts:", filtered.length);
-      } else {
-        filtered = contractsList.filter((contract) => {
-          const contractStatus =
-            contract.status || contract.state || contract.contractStatus;
-          return contractStatus === status;
-        });
-        console.log(`📋 Admin - Filtered by ${status}:`, filtered.length);
-      }
+      return;
     }
 
-    // Sort by createdAt
-    filtered.sort((a, b) => {
-      const dateA = new Date(a.createdAt || a.created_at || 0);
-      const dateB = new Date(b.createdAt || b.created_at || 0);
-      return sortOrder === "DESC" ? dateB - dateA : dateA - dateB;
-    });
-
-    setContracts(filtered);
+    // Admin (roleId = 1) can see all or filter by status
+    if (status === "ALL") {
+      setContracts(contractsList);
+      console.log("📋 Admin - Showing ALL contracts:", contractsList.length);
+    } else {
+      const filtered = contractsList.filter((contract) => {
+        const contractStatus =
+          contract.status || contract.state || contract.contractStatus;
+        return contractStatus === status;
+      });
+      setContracts(filtered);
+      console.log(`📋 Admin - Filtered by ${status}:`, filtered.length);
+    }
   };
 
   // Handle status filter change
   const handleStatusChange = (status) => {
     setSelectedStatus(status);
-    filterAndSortContracts(allContracts, status, sortOrder);
-  };
-
-  // Handle sort order change
-  const handleSortOrderChange = (order) => {
-    setSortOrder(order);
-    filterAndSortContracts(allContracts, selectedStatus, order);
+    filterContractsByStatus(allContracts, status);
   };
 
   const loadContracts = async () => {
@@ -209,14 +166,6 @@ const ReviewEContract = () => {
           pendingContracts.length
         );
         console.log("🔍 PENDING_REVIEW contracts:", pendingContracts);
-
-        // Sort by createdAt
-        pendingContracts.sort((a, b) => {
-          const dateA = new Date(a.createdAt || a.created_at || 0);
-          const dateB = new Date(b.createdAt || b.created_at || 0);
-          return sortOrder === "DESC" ? dateB - dateA : dateA - dateB;
-        });
-
         setContracts(pendingContracts);
       } else {
         // Admin can see all or filter by selected status
@@ -224,7 +173,7 @@ const ReviewEContract = () => {
           "👑 Admin role detected - applying selected filter:",
           selectedStatus
         );
-        filterAndSortContracts(allContractsData, selectedStatus, sortOrder);
+        filterContractsByStatus(allContractsData, selectedStatus);
       }
     } catch (error) {
       console.error("❌ Error:", error);
@@ -264,9 +213,6 @@ const ReviewEContract = () => {
       setReviewModalVisible(false);
       form.resetFields();
       loadContracts();
-      if (isAdmin) {
-        fetchContractStatistics();
-      }
     } catch (error) {
       console.error("Error:", error);
       message.error("Không thể gửi đánh giá");
@@ -393,72 +339,6 @@ const ReviewEContract = () => {
         </Header>
 
         <Content style={{ margin: "24px 16px" }}>
-          {/* Contract Statistics Section (Admin only) */}
-          {isAdmin && (
-            <Card
-              title="Thống Kê Hợp Đồng"
-              style={{ marginBottom: 24 }}
-              loading={statisticsLoading}
-            >
-              <Row
-                gutter={[12, 12]}
-                style={{ display: "flex", flexWrap: "nowrap" }}
-              >
-                <Col flex="1" style={{ minWidth: 0 }}>
-                  <Card size="small">
-                    <Statistic
-                      title="Tổng Số Hợp Đồng"
-                      value={contractStatistics?.totalContracts || 0}
-                      prefix={<FileTextOutlined />}
-                      valueStyle={{ color: "#1890ff", fontSize: "20px" }}
-                    />
-                  </Card>
-                </Col>
-                {(() => {
-                  // Define all statuses that should always be displayed
-                  const allStatuses = [
-                    {
-                      status: "PENDING_REVIEW",
-                      label: "Chờ Duyệt",
-                      color: "#1890ff",
-                    },
-                    { status: "APPROVED", label: "Đã Duyệt", color: "#52c41a" },
-                    { status: "REJECTED", label: "Từ Chối", color: "#ff4d4f" },
-                  ];
-
-                  // Create a map from API response
-                  const statusMap = new Map();
-                  contractStatistics?.byStatus?.forEach((statusStat) => {
-                    statusMap.set(statusStat.status, statusStat.count || 0);
-                  });
-
-                  // Render all statuses, using count from API or 0 if not present
-                  return allStatuses.map((statusInfo, index) => {
-                    const count = statusMap.get(statusInfo.status) || 0;
-                    return (
-                      <Col
-                        flex="1"
-                        key={statusInfo.status}
-                        style={{ minWidth: 0 }}
-                      >
-                        <Card size="small">
-                          <Statistic
-                            title={statusInfo.label}
-                            value={count}
-                            valueStyle={{
-                              color: statusInfo.color,
-                              fontSize: "20px",
-                            }}
-                          />
-                        </Card>
-                      </Col>
-                    );
-                  });
-                })()}
-              </Row>
-            </Card>
-          )}
-
           <Card>
             <div
               style={{
@@ -485,34 +365,12 @@ const ReviewEContract = () => {
                       { value: "REJECTED", label: "Từ chối" },
                     ]}
                   />
-                  <span>Sắp xếp:</span>
-                  <Select
-                    value={sortOrder}
-                    onChange={handleSortOrderChange}
-                    style={{ width: 180 }}
-                    options={[
-                      { value: "DESC", label: "Mới nhất trước" },
-                      { value: "ASC", label: "Cũ nhất trước" },
-                    ]}
-                  />
                 </Space>
               )}
               {isStaff && (
-                <Space>
-                  <Tag color="orange" icon={<ClockCircleOutlined />}>
-                    Danh sách hợp đồng đang duyệt hoặc chờ duyệt
-                  </Tag>
-                  <span>Sắp xếp:</span>
-                  <Select
-                    value={sortOrder}
-                    onChange={handleSortOrderChange}
-                    style={{ width: 180 }}
-                    options={[
-                      { value: "DESC", label: "Mới nhất trước" },
-                      { value: "ASC", label: "Cũ nhất trước" },
-                    ]}
-                  />
-                </Space>
+                <Tag color="orange" icon={<ClockCircleOutlined />}>
+                  Danh sách hợp đồng đang duyệt hoặc chờ duyệt
+                </Tag>
               )}
             </div>
             <Spin spinning={loading}>
