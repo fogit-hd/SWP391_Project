@@ -28,10 +28,11 @@ const BookingManagement = () => {
   const [createModalVisible, setCreateModalVisible] = useState(false);
   const [detailModalVisible, setDetailModalVisible] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState(null);
+  const [activeTab, setActiveTab] = useState('all');
 
   useEffect(() => {
     if (!isAuthenticated || !isCoOwner) {
-      message.error("Bạn phải là Đồng sở hữu để truy cập tính năng đặt chỗ");
+      message.error("Bạn phải là Đồng sở hữu để truy cập tính năng đặt lịch");
       navigate("/login");
       return;
     }
@@ -126,13 +127,10 @@ const BookingManagement = () => {
       const res = await api.get(`/booking/Get-Booking-by-group-and-vehicle/${selectedGroupId}/${selectedVehicleId}`);
       const data = res.data?.data || res.data || [];
       
-      // Filter out CANCELLED bookings to avoid UI overlap
-      const activeBookings = data.filter(booking => booking.status !== 'CANCELLED');
-      
-      setBookings(activeBookings);
+      setBookings(data);
     } catch (error) {
       console.error("Failed to fetch bookings:", error);
-      message.error("Không thể tải danh sách đặt chỗ");
+      message.error("Không thể tải danh sách đặt lịch");
       setBookings([]);
     } finally {
       setLoading(false);
@@ -147,7 +145,8 @@ const BookingManagement = () => {
   const handleCreateSuccess = () => {
     setCreateModalVisible(false);
     fetchBookings();
-    message.success("Tạo đặt chỗ thành công!");
+    setActiveTab('BOOKED'); // Chuyển sang tab BOOKED khi tạo booking mới
+    message.success("Tạo đặt lịch thành công!");
   };
 
   const handleBookingUpdate = () => {
@@ -179,8 +178,8 @@ const BookingManagement = () => {
             </Button>
             <UnorderedListOutlined className="booking-header-icon" />
             <div>
-              <h1 className="booking-header-title">Quản lý đặt chỗ xe</h1>
-              <p className="booking-header-subtitle">Quản lý việc đặt chỗ xe của bạn với chế độ xem chi tiết</p>
+              <h1 className="booking-header-title">Quản lý đặt lịch xe</h1>
+              <p className="booking-header-subtitle">Quản lý việc đặt lịch xe của bạn với chế độ xem chi tiết</p>
             </div>
           </div>
           <Space>
@@ -197,7 +196,7 @@ const BookingManagement = () => {
               onClick={() => setCreateModalVisible(true)}
               disabled={!selectedGroupId || !selectedVehicleId}
             >
-              Đặt chỗ mới
+              Đặt lịch mới
             </Button>
           </Space>
         </div>
@@ -246,6 +245,8 @@ const BookingManagement = () => {
           bookings={bookings}
           onBookingClick={handleBookingClick}
           loading={loading}
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
         />
       </div>
 

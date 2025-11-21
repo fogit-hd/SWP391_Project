@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Card, List, Tag, Avatar, Space, Button, Select, Input, DatePicker } from 'antd';
+import React, { useState, useEffect } from 'react';
+import { Card, List, Tag, Avatar, Space, Button, Select, Input, DatePicker, Tabs } from 'antd';
 import { UserOutlined, CalendarOutlined, ClockCircleOutlined, SearchOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import { BOOKING_STATUS_COLORS, BOOKING_STATUS_LABELS } from '../../pages/booking/booking.types';
@@ -7,14 +7,19 @@ import './BookingListView.css';
 
 const { RangePicker } = DatePicker;
 
-const BookingListView = ({ bookings = [], onBookingClick, loading = false }) => {
+const BookingListView = ({ bookings = [], onBookingClick, loading = false, activeTab = 'all', onTabChange }) => {
   const [filteredBookings, setFilteredBookings] = useState(bookings);
-  const [statusFilter, setStatusFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState(activeTab);
   const [searchText, setSearchText] = useState('');
   const [dateRange, setDateRange] = useState(null);
   const [sortBy, setSortBy] = useState('startTime');
 
-  React.useEffect(() => {
+  // Sync internal state with prop
+  useEffect(() => {
+    setStatusFilter(activeTab);
+  }, [activeTab]);
+
+  useEffect(() => {
     filterAndSortBookings();
   }, [bookings, statusFilter, searchText, dateRange, sortBy]);
 
@@ -48,7 +53,17 @@ const BookingListView = ({ bookings = [], onBookingClick, loading = false }) => 
     filtered.sort((a, b) => {
       switch (sortBy) {
         case 'startTime':
-          return dayjs(a.startTime).unix() - dayjs(b.startTime).unix();
+          const statusPriority = { 'BOOKED': 1, 'INUSE': 2, 'OVERTIME': 3, 'COMPLETE': 4, 'CANCELLED': 5 };
+          const priorityA = statusPriority[a.status] || 6;
+          const priorityB = statusPriority[b.status] || 6;
+          
+          if (statusFilter === 'all') {
+            if (priorityA !== priorityB) {
+              return priorityA - priorityB;
+            }
+          }
+          
+          return dayjs(b.startTime).unix() - dayjs(a.startTime).unix();
         case 'duration':
           const durationA = dayjs(a.endTime).diff(dayjs(a.startTime), 'hour');
           const durationB = dayjs(b.endTime).diff(dayjs(b.startTime), 'hour');
@@ -63,6 +78,36 @@ const BookingListView = ({ bookings = [], onBookingClick, loading = false }) => 
     });
 
     setFilteredBookings(filtered);
+  };
+
+  const handleTabChange = (key) => {
+    setStatusFilter(key);
+    onTabChange?.(key);
+  };
+
+  const getTabItems = () => {
+    const statusCounts = bookings.reduce((acc, booking) => {
+      acc[booking.status] = (acc[booking.status] || 0) + 1;
+      return acc;
+    }, {});
+
+    const allCount = bookings.length;
+
+    // Định nghĩa thứ tự hiển thị tab, CANCELLED ở cuối
+    const statusOrder = ['BOOKED', 'INUSE', 'OVERTIME', 'COMPLETE', 'CANCELLED'];
+
+    return [
+      {
+        key: 'all',
+        label: `Tất cả (${allCount})`,
+      },
+      ...statusOrder
+        .filter(status => BOOKING_STATUS_LABELS[status]) // Chỉ lấy status có trong BOOKING_STATUS_LABELS
+        .map(status => ({
+          key: status,
+          label: `${getStatusIcon(status)} ${BOOKING_STATUS_LABELS[status]} (${statusCounts[status] || 0})`,
+        }))
+    ];
   };
 
   const calculateDuration = (startTime, endTime) => {
@@ -163,24 +208,16 @@ const BookingListView = ({ bookings = [], onBookingClick, loading = false }) => 
 
   return (
     <div className="booking-list-view">
-      <div className="list-filters">
-        <Select
-          value={statusFilter}
-          onChange={setStatusFilter}
-          style={{ width: 150 }}
-        >
-          <Select.Option value="all">Tất cả trạng thái</Select.Option>
-          {Object.keys(BOOKING_STATUS_LABELS).map(status => (
-            <Select.Option key={status} value={status}>
-              {BOOKING_STATUS_LABELS[status]}
-            </Select.Option>
-          ))}
-        </Select>
-      </div>
+      <Tabs
+        activeKey={statusFilter}
+        onChange={handleTabChange}
+        items={getTabItems()}
+        style={{ marginBottom: 16 }}
+      />
 
       <div className="list-summary">
         <Space>
-          <span>Tổng: {filteredBookings.length} đặt chỗ</span>
+          <span>Hiển thị: {filteredBookings.length} đặt lịch</span>
           <span>•</span>
           <span>Dài hạn (1+ ngày): {filteredBookings.filter(b => 
             dayjs(b.endTime).diff(dayjs(b.startTime), 'day') >= 1
@@ -192,7 +229,7 @@ const BookingListView = ({ bookings = [], onBookingClick, loading = false }) => 
         loading={loading}
         dataSource={filteredBookings}
         renderItem={renderBookingCard}
-        locale={{ emptyText: 'Không tìm thấy đặt chỗ nào' }}
+        locale={{ emptyText: 'Không tìm thấy đặt lịch nào' }}
       />
     </div>
   );

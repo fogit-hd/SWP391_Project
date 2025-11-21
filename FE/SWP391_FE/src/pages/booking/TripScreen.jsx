@@ -154,7 +154,12 @@ const TripScreen = ({ visible, onCancel, booking, onComplete }) => {
           <div>
             <p><strong>Bắt đầu:</strong> {dayjs(booking.startTime).format('YYYY-MM-DD HH:mm')}</p>
             <p><strong>Kết thúc:</strong> {dayjs(booking.endTime).format('YYYY-MM-DD HH:mm')}</p>
-            <p><strong>Thời lượng:</strong> {dayjs(booking.endTime).diff(dayjs(booking.startTime), 'hour', true).toFixed(1)} giờ</p>
+            <p><strong>Thời lượng:</strong> {(() => {
+              const totalMinutes = dayjs(booking.endTime).diff(dayjs(booking.startTime), 'minute');
+              const hours = Math.floor(totalMinutes / 60);
+              const minutes = totalMinutes % 60;
+              return `${hours}h ${minutes}m`;
+            })()}</p>
           </div>
         }
         type="info"
