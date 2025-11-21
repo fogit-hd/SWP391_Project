@@ -34,7 +34,9 @@ export default function ManageBooking() {
   const [checkedInMap, setCheckedInMap] = useState({});
   const [vehicleDetails, setVehicleDetails] = useState(null);
   const [loadingVehicleDetails, setLoadingVehicleDetails] = useState(false);
-  const [vehicleDetailModalOpen, setVehicleDetailModalOpen] = useState(false);
+  const [damageReports, setDamageReports] = useState([]);
+  const [loadingDamageReports, setLoadingDamageReports] = useState(false);
+  const [damageReportsModalOpen, setDamageReportsModalOpen] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => { fetchGroups(); }, []);
@@ -79,6 +81,22 @@ export default function ManageBooking() {
       setTripEvents(Array.isArray(r.data) ? r.data : r.data?.data || []);
     } catch (err) { console.error(err); message.error("Failed to load trip events"); setTripEvents([]); }
     finally { setLoadingTripEvents(false); }
+  };
+
+  const fetchDamageReportsByVehicle = async (vehicleId) => {
+    if (!vehicleId) return;
+    setLoadingDamageReports(true);
+    try {
+      const r = await api.get(`/trip-events/Get-damage-report-by-vehicleId`, { params: { vehicleId } });
+      const data = Array.isArray(r.data) ? r.data : r.data?.data || [];
+      setDamageReports(data);
+    } catch (err) {
+      console.error(err);
+      message.error("Failed to load damage reports");
+      setDamageReports([]);
+    } finally {
+      setLoadingDamageReports(false);
+    }
   };
 
   const fetchVehicleDetails = async (id) => {
