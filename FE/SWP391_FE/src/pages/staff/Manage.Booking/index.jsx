@@ -6,9 +6,34 @@ import { EyeOutlined } from '@ant-design/icons';
 import { StaffBackButton } from '../staffComponents/button.jsx';
 import api from "../../../config/axios";
 import "./manage-booking.css";
+import { FaUser } from "react-icons/fa";
 
 const { Option } = Select;
 const { TextArea } = Input;
+
+const TripEventGallery = ({ photos }) => {
+  const [visible, setVisible] = useState(false);
+  if (!photos || photos.length === 0) return <div style={{ fontSize:12, color:'#9aa' }}>No photo</div>;
+
+  return (
+    <>
+      <Button 
+        icon={<EyeOutlined />} 
+        size="small" 
+        onClick={() => setVisible(true)}
+      >
+        Xem {photos.length} ảnh
+      </Button>
+      <div style={{ display: 'none' }}>
+        <Image.PreviewGroup preview={{ visible, onVisibleChange: (vis) => setVisible(vis) }}>
+          {photos.map((p, idx) => (
+            <Image key={idx} src={p} />
+          ))}
+        </Image.PreviewGroup>
+      </div>
+    </>
+  );
+};
 
 export default function ManageBooking() {
   const [groups, setGroups] = useState([]);
@@ -34,9 +59,7 @@ export default function ManageBooking() {
   const [checkedInMap, setCheckedInMap] = useState({});
   const [vehicleDetails, setVehicleDetails] = useState(null);
   const [loadingVehicleDetails, setLoadingVehicleDetails] = useState(false);
-  const [damageReports, setDamageReports] = useState([]);
-  const [loadingDamageReports, setLoadingDamageReports] = useState(false);
-  const [damageReportsModalOpen, setDamageReportsModalOpen] = useState(false);
+  const [vehicleDetailModalOpen, setVehicleDetailModalOpen] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => { fetchGroups(); }, []);
@@ -83,22 +106,6 @@ export default function ManageBooking() {
     finally { setLoadingTripEvents(false); }
   };
 
-  const fetchDamageReportsByVehicle = async (vehicleId) => {
-    if (!vehicleId) return;
-    setLoadingDamageReports(true);
-    try {
-      const r = await api.get(`/trip-events/Get-damage-report-by-vehicleId`, { params: { vehicleId } });
-      const data = Array.isArray(r.data) ? r.data : r.data?.data || [];
-      setDamageReports(data);
-    } catch (err) {
-      console.error(err);
-      message.error("Failed to load damage reports");
-      setDamageReports([]);
-    } finally {
-      setLoadingDamageReports(false);
-    }
-  };
-
   const fetchVehicleDetails = async (id) => {
     if (!id) return; setLoadingVehicleDetails(true);
     try {
@@ -137,6 +144,7 @@ export default function ManageBooking() {
       message.success(successMsg);
       toast.success(successMsg);
       setFileMap(m => ({ ...m, [bookingId]: [] })); setDescriptionMap(m => ({ ...m, [bookingId]: '' }));
+      fetchTripEvents(); // Refresh trip events immediately
       if (selectedGroup?.id && selectedVehicle?.id) setTimeout(() => fetchBookings(selectedGroup.id, selectedVehicle.id), 500);
     } catch (err) {
       console.error(err); const backendMsg = err?.response?.data?.message;
@@ -235,6 +243,10 @@ export default function ManageBooking() {
             </div>
             {loadingBookings ? <Spin /> : (
               <List
+                pagination={{
+                  pageSize: 5,
+                  showSizeChanger: false,
+                }}
                 dataSource={bookings.filter(b => {
                   const sRaw = (b.status || '').toLowerCase();
                   if (sRaw === 'cancelled' || sRaw === 'cancell') return false;
@@ -261,7 +273,9 @@ export default function ManageBooking() {
                       <div className="list-item-main" style={{ flex:1 }}>
                         <div className="meta-row" style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
                           <div style={{ minWidth:0 }}>
-                            <div style={{ fontWeight:700, marginBottom:4 }}>{b.userName || 'Người đặt: (không rõ)'}</div>
+                            <div style={{ fontWeight:700, marginBottom:4 }}>
+                              Người đặt lịch: <br/>
+                             <FaUser /> {b.userName || '(không rõ)'}</div>
                             {b.userName && (<div style={{ fontSize:12, color:'#94a3b8', marginBottom:4 }}>Mã đặt: {b.id}</div>)}
                             <div className="time-panel">
                               <div className="time-col">
@@ -437,14 +451,9 @@ export default function ManageBooking() {
                   if (!Array.isArray(photos)) photos = [photos];
                   return (
                     <List.Item>
-                      <div style={{ display:'flex', alignItems:'center', width:'100%' }}>
+                      <div style={{ display:'flex', alignItems:'flex-start', width:'100%' }}>
                         <div className="trip-event-media">
-                          {photos.length > 0 ? (
-                            <Image.PreviewGroup>
-                              <Image src={photos[0]} alt="event" style={{ width:'100%', height:'100%', objectFit:'cover' }} />
-                              {photos.slice(1).map((p, idx) => (<Image key={idx} src={p} style={{ display:'none' }} />))}
-                            </Image.PreviewGroup>
-                          ) : (<div style={{ fontSize:12, color:'#9aa' }}>No photo</div>)}
+                          <TripEventGallery photos={photos} />
                         </div>
                         <div className="trip-event-body">
                           <div className="trip-event-title">{t.eventType || 'EVENT'}</div>

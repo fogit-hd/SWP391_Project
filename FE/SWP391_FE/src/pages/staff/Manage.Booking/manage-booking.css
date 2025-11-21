@@ -359,15 +359,10 @@
 }
 
 .trip-event-media {
-  width: 72px;
-  height: 72px;
-  border-radius: 8px;
-  overflow: hidden;
-  flex: 0 0 72px;
-  background: #f0f2f5;
+  flex: 0 0 auto;
+  margin-right: 12px;
   display: flex;
   align-items: center;
-  justify-content: center;
 }
 
 .trip-event-body {
