@@ -88,12 +88,10 @@ const MyGroup = () => {
   const [attachOpen, setAttachOpen] = useState(false);
   const [attachVehicleId, setAttachVehicleId] = useState("");
   const [attachSubmitting, setAttachSubmitting] = useState(false);
-  const [togglingVehicleIds, setTogglingVehicleIds] = useState(new Set());
   const [searchText, setSearchText] = useState("");
   const [statusFilter, setStatusFilter] = useState("all"); // all | active | inactive
   const [myVehicles, setMyVehicles] = useState([]);
   const [myVehiclesLoading, setMyVehiclesLoading] = useState(false);
-  const [vehicleContractFilter, setVehicleContractFilter] = useState("all"); // all | with_contract | without_contract
   const [createServiceOpen, setCreateServiceOpen] = useState(false);
   const [createServiceSubmitting, setCreateServiceSubmitting] = useState(false);
   const [serviceForm, setServiceForm] = useState({
@@ -130,6 +128,9 @@ const MyGroup = () => {
   const [activeTabKey, setActiveTabKey] = useState("members");
   const navigate = useNavigate();
   const location = useLocation();
+
+  const [attachedVehicleIds, setAttachedVehicleIds] = useState(new Set());
+  const [checkingAttached, setCheckingAttached] = useState(false);
 
   const reloadGroups = async () => {
     setLoading(true);
@@ -1366,6 +1367,37 @@ const MyGroup = () => {
   };
 
   // Load my vehicles for attach modal
+  const loadAllGroupVehicles = async () => {
+    if (!groups || groups.length === 0) {
+      setAttachedVehicleIds(new Set());
+      return;
+    }
+    setCheckingAttached(true);
+    try {
+      // Fetch vehicles for all groups to ensure we know which ones are attached
+      const promises = groups.map((g) =>
+        api.get(`/CoOwnership/${g.id}/vehicles`)
+      );
+      const results = await Promise.all(promises);
+      const ids = new Set();
+      results.forEach((res) => {
+        const list = Array.isArray(res.data)
+          ? res.data
+          : Array.isArray(res.data?.data)
+          ? res.data.data
+          : [];
+        list.forEach((v) => {
+          if (v && v.id) ids.add(v.id);
+        });
+      });
+      setAttachedVehicleIds(ids);
+    } catch (e) {
+      console.error("Failed to check attached vehicles", e);
+    } finally {
+      setCheckingAttached(false);
+    }
+  };
+
   const loadMyVehicles = async () => {
     setMyVehiclesLoading(true);
     try {
@@ -1427,7 +1459,7 @@ const MyGroup = () => {
 
   const openAttachModal = async () => {
     setAttachOpen(true);
-    await loadMyVehicles();
+    await Promise.all([loadMyVehicles(), loadAllGroupVehicles()]);
   };
 
   const detachVehicle = async (vehicleId) => {
@@ -1451,64 +1483,7 @@ const MyGroup = () => {
     }
   };
 
-  const toggleVehicleStatus = async (vehicle) => {
-    if (!vehicle?.id) return;
-    const id = vehicle.id;
-    const targetActive = !vehicle.isActive;
-    // disable actions for this row
-    setTogglingVehicleIds((prev) => {
-      const s = new Set(prev);
-      s.add(id);
-      return s;
-    });
-    try {
-      if (targetActive) {
-        await api.put(`/CoOwnership/vehicle/${id}/activate`);
-        message.success("Đã kích hoạt xe");
-      } else {
-        await api.put(`/CoOwnership/vehicle/${id}/deactivate`);
-        message.success("Đã vô hiệu hóa xe");
-      }
-      // Optimistically update UI
-      setVehicles((prev) =>
-        prev.map((v) => (v.id === id ? { ...v, isActive: targetActive } : v))
-      );
-      // Re-sync in background with small retry to handle eventual consistency
-      const gid = selectedGroup?.id;
-      if (gid) {
-        const retry = async (times, delay) => {
-          for (let i = 0; i < times; i++) {
-            try {
-              // eslint-disable-next-line no-await-in-loop
-              await new Promise((r) =>
-                setTimeout(r, i === 0 ? delay : delay * 2)
-              );
-              // eslint-disable-next-line no-await-in-loop
-              await loadVehicles(gid);
-              // After reload, verify current vehicle state matches target
-              const now = (vs) => vs.find((x) => x.id === id)?.isActive;
-              // eslint-disable-next-line no-loop-func
-              if (now(vehicles) === targetActive) break;
-            } catch {
-              // continue retry
-            }
-          }
-        };
-        retry(3, 300);
-      }
-    } catch (err) {
-      console.error("Thay đổi trạng thái xe thất bại", err);
-      message.error(
-        err?.response?.data?.message || "Không thể cập nhật trạng thái xe"
-      );
-    } finally {
-      setTogglingVehicleIds((prev) => {
-        const s = new Set(prev);
-        s.delete(id);
-        return s;
-      });
-    }
-  };
+
 
   // Handle back navigation based on role
   const handleBack = () => {
@@ -2028,9 +2003,6 @@ const MyGroup = () => {
                                         .toString()
                                         .slice(0, 1)
                                         .toUpperCase();
-                                      const disabled = togglingVehicleIds.has(
-                                        v.id
-                                      );
                                       return (
                                         <>
                                           <List.Item.Meta
@@ -2121,17 +2093,6 @@ const MyGroup = () => {
                                                   </Tag>
                                                   {iAmOwner ? (
                                                     <>
-                                                      <Button
-                                                        type="link"
-                                                        disabled={disabled}
-                                                        onClick={() =>
-                                                          toggleVehicleStatus(v)
-                                                        }
-                                                      >
-                                                        {v.isActive
-                                                          ? "Vô hiệu hóa"
-                                                          : "Kích hoạt"}
-                                                      </Button>
                                                       {!v.isActive ? (
                                                         <Popconfirm
                                                           key="detach"
@@ -2143,7 +2104,6 @@ const MyGroup = () => {
                                                           <Button
                                                             danger
                                                             type="link"
-                                                            disabled={disabled}
                                                           >
                                                             Tháo gỡ
                                                           </Button>
@@ -2874,9 +2834,9 @@ const MyGroup = () => {
                                             type="primary"
                                             size="small"
                                             loading={paymentLoading}
-                                            onClick={() =>
-                                              handlePayment(invoice.id)
-                                            }
+                                            onClick={() => {
+                                              handlePayment(invoice.id);
+                                            }}
                                           >
                                             Pay
                                           </Button>
@@ -2941,27 +2901,17 @@ const MyGroup = () => {
             footer={null}
             width={800}
           >
-            <Space style={{ marginBottom: 12 }}>
-              <Text>Lọc theo trạng thái hợp đồng:</Text>
-              <select
-                value={vehicleContractFilter}
-                onChange={(e) => setVehicleContractFilter(e.target.value)}
-                style={{
-                  padding: 6,
-                  borderRadius: 6,
-                  border: "1px solid #d9d9d9",
-                }}
-              >
-                <option value="all">Tất cả xe</option>
-                <option value="with_contract">Có hợp đồng</option>
-                <option value="without_contract">Không có hợp đồng</option>
-              </select>
-            </Space>
             <List
               loading={myVehiclesLoading}
               itemLayout="horizontal"
               dataSource={myVehicles.filter((v) => {
+                // Filter out active vehicles (already in a group/active)
+                const status = (v.status || "").toUpperCase();
+                if (status === "ACTIVE") return false;
+
                 const hasContract = v.hasContract || v.contractId || false;
+                if (hasContract) return false; // Only show vehicles without contract
+
                 // Consider a vehicle "attached" if it reports any group/co-ownership id
                 const isAttached = Boolean(
                   v.groupId ||
@@ -2973,14 +2923,11 @@ const MyGroup = () => {
                 );
                 // Exclude vehicles that are already attached to a group
                 if (isAttached) return false;
-                if (vehicleContractFilter === "with_contract")
-                  return hasContract;
-                if (vehicleContractFilter === "without_contract")
-                  return !hasContract;
+
                 return true;
               })}
               locale={{
-                emptyText: "Không có xe nào",
+                emptyText: "Không có xe nào khả dụng",
               }}
               renderItem={(v) => {
                 const hasContract = v.hasContract || v.contractId || false;
@@ -2994,27 +2941,19 @@ const MyGroup = () => {
                 return (
                   <List.Item
                     actions={[
-                      hasContract ? (
-                        <Tag color="green" key="contract">
-                          Có hợp đồng
-                        </Tag>
-                      ) : (
-                        <Tag color="red" key="no-contract">
-                          Không có hợp đồng
-                        </Tag>
-                      ),
-                      !hasContract ? (
-                        <Button
-                          key="attach"
-                          type="primary"
-                          size="small"
-                          loading={attachSubmitting}
-                          onClick={() => attachVehicle(v.id)}
-                        >
-                          Gắn
-                        </Button>
-                      ) : null,
-                    ].filter(Boolean)}
+                      <Tag color="red" key="no-contract">
+                        Không có hợp đồng
+                      </Tag>,
+                      <Button
+                        key="attach"
+                        type="primary"
+                        size="small"
+                        loading={attachSubmitting}
+                        onClick={() => attachVehicle(v.id)}
+                      >
+                        Gắn
+                      </Button>,
+                    ]}
                   >
                     <List.Item.Meta
                       avatar={
@@ -3028,7 +2967,9 @@ const MyGroup = () => {
                       title={displayName}
                       description={
                         <div>
-                          {v.licensePlate && <div>Biển số: {v.licensePlate}</div>}
+                          {v.licensePlate && (
+                            <div>Biển số: {v.licensePlate}</div>
+                          )}
                           {v.id && (
                             <div style={{ fontSize: "12px", color: "#999" }}>
                               ID: {v.id.substring(0, 8)}...

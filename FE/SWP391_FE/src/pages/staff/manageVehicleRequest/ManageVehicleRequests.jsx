@@ -401,6 +401,56 @@ const ManageVehicleRequests = () => {
     setSearchText("");
   };
 
+  const renderImageSection = (title, urlData) => {
+    if (!urlData) return null;
+
+    let urls = [];
+    try {
+      // Check if it looks like a JSON array
+      if (
+        typeof urlData === "string" &&
+        urlData.trim().startsWith("[") &&
+        urlData.trim().endsWith("]")
+      ) {
+        const parsed = JSON.parse(urlData);
+        if (Array.isArray(parsed)) {
+          urls = parsed;
+        } else {
+          urls = [urlData];
+        }
+      } else {
+        urls = [urlData];
+      }
+    } catch (e) {
+      urls = [urlData];
+    }
+
+    if (urls.length === 0) return null;
+
+    return (
+      <div style={{ marginBottom: 16 }}>
+        <div style={{ fontWeight: "bold", marginBottom: 8 }}>{title}:</div>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          <Image.PreviewGroup>
+            {urls.map((url, index) => (
+              <Image
+                key={index}
+                src={url}
+                alt={`${title} ${index + 1}`}
+                style={{
+                  maxWidth: "100%",
+                  maxHeight: 300,
+                  objectFit: "contain",
+                }}
+                width={200}
+              />
+            ))}
+          </Image.PreviewGroup>
+        </div>
+      </div>
+    );
+  };
+
   // Load data on component mount
   useEffect(() => {
     fetchVehicleRequests();
@@ -574,32 +624,8 @@ const ManageVehicleRequests = () => {
 
             <div style={{ marginTop: 16 }}>
               <Space direction="vertical" size="middle" style={{ width: "100%" }}>
-                {selectedRequest.vehicleImageUrl && (
-                  <div>
-                    <div style={{ fontWeight: "bold", marginBottom: 8 }}>
-                      Vehicle Image:
-                    </div>
-                    <Image
-                      src={selectedRequest.vehicleImageUrl}
-                      alt="Vehicle"
-                      style={{ maxWidth: "100%", maxHeight: 300 }}
-                      preview
-                    />
-                  </div>
-                )}
-                {selectedRequest.registrationPaperUrl && (
-                  <div>
-                    <div style={{ fontWeight: "bold", marginBottom: 8 }}>
-                      Registration Paper:
-                    </div>
-                    <Image
-                      src={selectedRequest.registrationPaperUrl}
-                      alt="Registration"
-                      style={{ maxWidth: "100%", maxHeight: 300 }}
-                      preview
-                    />
-                  </div>
-                )}
+                {renderImageSection("Vehicle Image", selectedRequest.vehicleImageUrl)}
+                {renderImageSection("Registration Paper", selectedRequest.registrationPaperUrl)}
               </Space>
             </div>
 
