@@ -44,40 +44,40 @@ const ForgotPassword = () => {
 
       console.log("Changing password with data:", requestData);
 
-      message.loading("Changing password...", 0);
+      message.loading("Đang đổi mật khẩu...", 0);
 
       const response = await api.post("/auth/reset-password", requestData, {
         headers: { "Content-Type": "application/json" },
       });
 
       message.destroy();
-      toast.success("Change password successfully!");
+      toast.success("Đổi mật khẩu thành công!");
 
       localStorage.removeItem("email");
 
       navigate("/login");
-      toast.success("Use your new password to sign in!");
+      toast.success("Sử dụng mật khẩu mới để đăng nhập!");
 
       console.log("Forgotpassword System response:", response.data);
     } catch (error) {
       message.destroy();
       console.error("Change error:", error);
 
-      let errorMessage = "Password reset failed. Please try again.";
+      let errorMessage = "Đặt lại mật khẩu thất bại. Vui lòng thử lại.";
 
       if (error.response?.status === 400) {
         errorMessage =
           error.response.data?.message ||
-          "Invalid Activation Code. Please check and try again.";
+          "Mã kích hoạt không hợp lệ. Vui lòng kiểm tra và thử lại.";
       } else if (
         error.response?.status === 403 ||
         error.response?.data?.message?.includes("not activated") ||
         error.response?.data?.message?.includes("inactive")
       ) {
         errorMessage =
-          "Your account is not activated yet. Please verify your account first before resetting password.";
+          "Tài khoản của bạn chưa được kích hoạt. Vui lòng xác minh tài khoản trước khi đặt lại mật khẩu.";
       } else if (error.response?.status === 404) {
-        errorMessage = "Email not found. Please double check again.";
+        errorMessage = "Không tìm thấy email. Vui lòng kiểm tra lại.";
       } else {
         errorMessage = error.response?.data?.message || errorMessage;
       }
@@ -105,13 +105,14 @@ const ForgotPassword = () => {
   };
 
   const sendActivationCode = async () => {
-    const currentEmail = localStorage.getItem("email");
+    const currentEmail =
+      localStorage.getItem("email") || location.state?.email || "";
     if (!currentEmail) {
-      message.error("Email not found. Please enter first");
+      message.error("Không tìm thấy email. Vui lòng nhập email trước.");
       return;
     }
     try {
-      message.loading("Sending Activation Code...", 0);
+      message.loading("Đang gửi mã kích hoạt...", 0);
 
       await api.post(
         "/auth/forgot-password",
@@ -122,7 +123,7 @@ const ForgotPassword = () => {
       );
 
       message.destroy();
-      toast.success("Activation Code has been resent to your email!");
+      toast.success("Mã kích hoạt đã được gửi lại đến email của bạn!");
 
       // Bắt đầu countdown 60s
       startCountdown();
@@ -130,7 +131,7 @@ const ForgotPassword = () => {
       message.destroy();
       console.error("Send Activation Code error:", error);
 
-      let errorMessage = "Failed to send Activation Code. Please try again.";
+      let errorMessage = "Gửi mã kích hoạt thất bại. Vui lòng thử lại.";
 
       // Check if account is not activated
       if (
@@ -139,7 +140,7 @@ const ForgotPassword = () => {
         error.response?.data?.message?.includes("inactive")
       ) {
         errorMessage =
-          "Your account is not activated yet. Please verify your account first before resetting password.";
+          "Tài khoản của bạn chưa được kích hoạt. Vui lòng xác minh tài khoản trước khi đặt lại mật khẩu.";
         toast.error(errorMessage);
       } else {
         errorMessage = error.response?.data?.message || errorMessage;
@@ -149,35 +150,19 @@ const ForgotPassword = () => {
   };
 
   return (
-    <>
-      <div
-        className="verify-container"
-        style={{
-          minHeight: "calc(100vh - 64px - 200px)",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        {/* Background */}
-        <div className="verify-background"></div>
-
-        <div className="verify-card-container">
+    <div className="forgot-password-page">
+      <div className="forgot-password-content">
+        <div className="forgot-password-container">
           <Card className="verify-card">
             <div className="verify-header">
-              <h2 className="verify-title">Setting Your Account</h2>
+              <h2 className="verify-title">Đặt lại mật khẩu</h2>
               <p className="verify-subtitle">
-                Please enter the Activation Code.
+                Vui lòng nhập mã kích hoạt được gửi đến email của bạn.
                 <br />
                 <MailOutlined />{" "}
-                <strong>{localStorage.getItem("email")}</strong>
+                <strong>{localStorage.getItem("email") || location.state?.email}</strong>
               </p>
             </div>
-            {/* {console.log("Rendering with email:", email)}
-          {console.log(
-            "Rendering with localstrorage email:",
-            localStorage.getItem("email")
-          )} */}
 
             <Row>
               <Form
@@ -190,19 +175,19 @@ const ForgotPassword = () => {
                 {/* Password */}
                 <Col xs={24} md={24}>
                   <Form.Item
-                    label="New Password"
+                    label="Mật khẩu mới"
                     name="password"
                     rules={[
-                      { required: true, message: "Password is required" },
+                      { required: true, message: "Vui lòng nhập mật khẩu" },
                       {
                         min: 8,
-                        message: "Password must be at least 8 characters",
+                        message: "Mật khẩu phải có ít nhất 8 ký tự",
                       },
                     ]}
                     hasFeedback
                   >
                     <Input.Password
-                      placeholder="Create a password (min 8 chars)"
+                      placeholder="Tạo mật khẩu (tối thiểu 8 ký tự)"
                       prefix={<LockOutlined />}
                     />
                   </Form.Item>
@@ -211,14 +196,14 @@ const ForgotPassword = () => {
                 {/* Confirm Password */}
                 <Col xs={24} md={24}>
                   <Form.Item
-                    label="Confirm Password"
+                    label="Xác nhận mật khẩu"
                     name="confirmPassword"
                     dependencies={["password"]}
                     hasFeedback
                     rules={[
                       {
                         required: true,
-                        message: "Please confirm your password",
+                        message: "Vui lòng xác nhận mật khẩu",
                       },
                       ({ getFieldValue }) => ({
                         validator(_, value) {
@@ -226,14 +211,14 @@ const ForgotPassword = () => {
                             return Promise.resolve();
                           }
                           return Promise.reject(
-                            new Error("Passwords do not match")
+                            new Error("Mật khẩu không khớp")
                           );
                         },
                       }),
                     ]}
                   >
                     <Input.Password
-                      placeholder="Confirm your password"
+                      placeholder="Xác nhận mật khẩu của bạn"
                       prefix={<LockOutlined />}
                     />
                   </Form.Item>
@@ -241,26 +226,26 @@ const ForgotPassword = () => {
 
                 {/* Activation Code */}
                 <Form.Item
-                  label="Activation Code"
+                  label="Mã kích hoạt"
                   name="activation-code"
                   rules={[
-                    { required: true, message: "Activation Code is required" },
+                    { required: true, message: "Vui lòng nhập mã kích hoạt" },
                     {
                       min: 6,
-                      message: "Activation Code must be at least 6 characters",
+                      message: "Mã kích hoạt phải có ít nhất 6 ký tự",
                     },
                     {
                       max: 6,
-                      message: "Activation Code must be exactly 6 characters",
+                      message: "Mã kích hoạt phải có đúng 6 ký tự",
                     },
                     {
                       pattern: /^[0-9]+$/,
-                      message: "Activation Code must contain only numbers",
+                      message: "Mã kích hoạt chỉ được chứa số",
                     },
                   ]}
                 >
                   <Input
-                    placeholder="Enter 6-digit Activation Code"
+                    placeholder="Nhập mã kích hoạt 6 chữ số"
                     type="text"
                     prefix={<SafetyOutlined />}
                     allowClear
@@ -271,7 +256,7 @@ const ForgotPassword = () => {
                 {/* Resend Activation Code Link */}
                 <div className="send-activation-code-container">
                   <p>
-                    Didn't receive the code?{" "}
+                    Không nhận được mã?{" "}
                     <Button
                       type="link"
                       onClick={sendActivationCode}
@@ -279,10 +264,10 @@ const ForgotPassword = () => {
                       className="send-activation-code-link"
                     >
                       {isResendDisabled
-                        ? `Send Activation Code (${countdown}s)`
+                        ? `Gửi lại mã (${countdown}s)`
                         : hasRequestedResend
-                        ? "Send Activation Code"
-                        : "Send Activation Code"}
+                        ? "Gửi lại mã kích hoạt"
+                        : "Gửi lại mã kích hoạt"}
                     </Button>
                   </p>
                 </div>
@@ -296,19 +281,19 @@ const ForgotPassword = () => {
                     size="large"
                     className="verify-submit-button"
                   >
-                    {isLoading ? "Activating..." : "Activate your Account"}
+                    {isLoading ? "Đang xử lý..." : "Đặt lại mật khẩu"}
                   </Button>
                 </Form.Item>
 
                 <div className="verify-login-link">
-                  <Link to="/login">Back</Link>
+                  <Link to="/login">Quay lại</Link>
                 </div>
               </Form>
             </Row>
           </Card>
         </div>
       </div>
-    </>
+    </div>
   );
 };
 
