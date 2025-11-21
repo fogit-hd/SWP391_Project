@@ -55,6 +55,13 @@ const ManageVehicle = () => {
 
   // Modal states
   const [isAddModalVisible, setIsAddModalVisible] = useState(false);
+  const [tripEventsModalVisible, setTripEventsModalVisible] = useState(false);
+  const [damageReportsModalVisible, setDamageReportsModalVisible] = useState(false);
+  const [tripEvents, setTripEvents] = useState([]);
+  const [damageReports, setDamageReports] = useState([]);
+  const [loadingTripEvents, setLoadingTripEvents] = useState(false);
+  const [loadingDamageReports, setLoadingDamageReports] = useState(false);
+  const [selectedVehicleForReports, setSelectedVehicleForReports] = useState(null);
 
   // Form instances
   const [addForm] = Form.useForm();
@@ -161,24 +168,39 @@ const ManageVehicle = () => {
     {
       title: "Action",
       key: "action",
-      width: 80,
+      width: 150,
       fixed: "right",
       align: "center",
       render: (_, record) => {
         return (
-          <Tooltip title="Delete vehicle">
-            <Button
-              type="link"
-              icon={<DeleteOutlined />}
-              danger
-              style={{ padding: 0 }}
-              onClick={() => {
-                console.log("Delete button clicked for vehicle:", record.id);
-                setVehicleToDelete(record);
-                setDeleteModalVisible(true);
-              }}
-            />
-          </Tooltip>
+          <Space>
+            <Tooltip title="View damage reports">
+              <Button
+                type="link"
+                size="small"
+                onClick={() => {
+                  setSelectedVehicleForReports(record);
+                  fetchDamageReportsByVehicle(record.id);
+                  setDamageReportsModalVisible(true);
+                }}
+              >
+                Hư hỏng
+              </Button>
+            </Tooltip>
+            <Tooltip title="Delete vehicle">
+              <Button
+                type="link"
+                icon={<DeleteOutlined />}
+                danger
+                style={{ padding: 0 }}
+                onClick={() => {
+                  console.log("Delete button clicked for vehicle:", record.id);
+                  setVehicleToDelete(record);
+                  setDeleteModalVisible(true);
+                }}
+              />
+            </Tooltip>
+          </Space>
         );
       },
     },
@@ -245,6 +267,37 @@ const ManageVehicle = () => {
       message.error(`Failed to fetch vehicles: ${err.message}`);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchAllTripEvents = async () => {
+    setLoadingTripEvents(true);
+    try {
+      const response = await api.get('/trip-events/All-trip-events/admin');
+      const data = Array.isArray(response.data) ? response.data : response.data?.data || [];
+      setTripEvents(data);
+    } catch (err) {
+      console.error(err);
+      message.error('Failed to load trip events');
+      setTripEvents([]);
+    } finally {
+      setLoadingTripEvents(false);
+    }
+  };
+
+  const fetchDamageReportsByVehicle = async (vehicleId) => {
+    if (!vehicleId) return;
+    setLoadingDamageReports(true);
+    try {
+      const response = await api.get('/trip-events/Get-damage-report-by-vehicleId', { params: { vehicleId } });
+      const data = Array.isArray(response.data) ? response.data : response.data?.data || [];
+      setDamageReports(data);
+    } catch (err) {
+      console.error(err);
+      message.error('Failed to load damage reports');
+      setDamageReports([]);
+    } finally {
+      setLoadingDamageReports(false);
     }
   };
 
@@ -421,6 +474,14 @@ const ManageVehicle = () => {
                   >
                     Refresh
                   </Button>
+                  <Button
+                    onClick={() => {
+                      fetchAllTripEvents();
+                      setTripEventsModalVisible(true);
+                    }}
+                  >
+                    Xem lịch sử
+                  </Button>
                 </Space>
               }
             >
@@ -493,6 +554,129 @@ const ManageVehicle = () => {
             type="warning"
             showIcon
             style={{ marginTop: 16 }}
+          />
+        )}
+      </Modal>
+
+      <Modal
+        title="Lịch sử sự kiện"
+        open={tripEventsModalVisible}
+        onCancel={() => setTripEventsModalVisible(false)}
+        footer={<Button onClick={() => setTripEventsModalVisible(false)}>Đóng</Button>}
+        width={800}
+      >
+        {loadingTripEvents ? (
+          <Spin />
+        ) : (
+          <Table
+            dataSource={tripEvents}
+            rowKey="createdAt"
+            pagination={{ pageSize: 10 }}
+            columns={[
+              {
+                title: 'Xe',
+                dataIndex: 'vehicleName',
+                key: 'vehicleName',
+                render: (name, record) => `${name} - ${record.vehiclePlate}`,
+              },
+              {
+                title: 'Loại',
+                dataIndex: 'eventType',
+                key: 'eventType',
+                render: (type) => (
+                  <Tag color={type === 'DAMAGE' ? 'red' : type === 'CHECKIN' ? 'blue' : 'green'}>
+                    {type}
+                  </Tag>
+                ),
+              },
+              {
+                title: 'Mô tả',
+                dataIndex: 'description',
+                key: 'description',
+                ellipsis: true,
+              },
+              {
+                title: 'Nhân viên',
+                dataIndex: 'staffName',
+                key: 'staffName',
+              },
+              {
+                title: 'Thời gian',
+                dataIndex: 'createdAt',
+                key: 'createdAt',
+                render: (date) => new Date(date).toLocaleString(),
+              },
+              {
+                title: 'Ảnh',
+                dataIndex: 'photosUrl',
+                key: 'photosUrl',
+                render: (url) =>
+                  url ? (
+                    <a href={url} target="_blank" rel="noopener noreferrer">
+                      Xem
+                    </a>
+                  ) : (
+                    '-'
+                  ),
+              },
+            ]}
+          />
+        )}
+      </Modal>
+
+      <Modal
+        title={`Báo cáo hư hỏng - ${selectedVehicleForReports?.make} ${selectedVehicleForReports?.model}`}
+        open={damageReportsModalVisible}
+        onCancel={() => setDamageReportsModalVisible(false)}
+        footer={<Button onClick={() => setDamageReportsModalVisible(false)}>Đóng</Button>}
+        width={700}
+      >
+        {loadingDamageReports ? (
+          <Spin />
+        ) : (
+          <Table
+            dataSource={damageReports}
+            rowKey="createdAt"
+            pagination={{ pageSize: 10 }}
+            columns={[
+              {
+                title: 'Xe',
+                dataIndex: 'vehicleName',
+                key: 'vehicleName',
+                render: (name, record) => `${name} - ${record.vehiclePlate}`,
+              },
+              {
+                title: 'Mô tả',
+                dataIndex: 'description',
+                key: 'description',
+                ellipsis: true,
+              },
+              {
+                title: 'Nhân viên',
+                dataIndex: 'staffName',
+                key: 'staffName',
+              },
+              {
+                title: 'Thời gian',
+                dataIndex: 'createdAt',
+                key: 'createdAt',
+                render: (date) => new Date(date).toLocaleString(),
+              },
+              {
+                title: 'Ảnh',
+                dataIndex: 'photosUrl',
+                key: 'photosUrl',
+                render: (url) =>
+                  url ? (
+                    <a href={url} target="_blank" rel="noopener noreferrer">
+                      Xem
+                    </a>
+                  ) : (
+                    '-'
+                  ),
+              },
+            ]}
+            locale={{ emptyText: 'Không có báo cáo hư hỏng nào' }}
           />
         )}
       </Modal>

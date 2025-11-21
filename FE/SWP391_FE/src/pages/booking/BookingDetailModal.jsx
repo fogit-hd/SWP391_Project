@@ -413,7 +413,7 @@ const BookingDetailModal = ({ visible, onCancel, booking, onUpdate, groupId, veh
 
       const response = await api.put('/booking/update', payload);
       
-      const successMessage = response.data?.message || "Cập nhật đặt chỗ thành công!";
+      const successMessage = response.data?.message || "Cập nhật đặt lịch thành công!";
       toast.success(successMessage);
       
       setUpdateModalVisible(false);
@@ -423,7 +423,7 @@ const BookingDetailModal = ({ visible, onCancel, booking, onUpdate, groupId, veh
       console.error("Update booking failed:", error);
       console.error("Error response:", error.response?.data);
       
-      let errorMessage = "Không thể cập nhật đặt chỗ";
+      let errorMessage = "Không thể cập nhật đặt lịch";
       
       if (error.response?.data) {
         const errorData = error.response.data;
@@ -459,7 +459,7 @@ const BookingDetailModal = ({ visible, onCancel, booking, onUpdate, groupId, veh
       const response = await api.put(`/booking/cancel/${booking.id}`);
       
       // Hiển thị message từ backend (có thể có thông tin về phạt)
-      const successMessage = response.data?.message || "Hủy đặt chỗ thành công";
+      const successMessage = response.data?.message || "Hủy đặt lịch thành công";
       
       // Kiểm tra nếu có thông tin phạt thì hiển thị warning thay vì success
       if (successMessage.includes("phạt") || successMessage.includes("trễ")) {
@@ -473,7 +473,7 @@ const BookingDetailModal = ({ visible, onCancel, booking, onUpdate, groupId, veh
       console.error("Cancel failed:", error);
       console.error("Error response:", error.response?.data);
       
-      let errorMessage = "Không thể hủy đặt chỗ";
+      let errorMessage = "Không thể hủy đặt lịch";
       
       if (error.response?.data) {
         const errorData = error.response.data;
@@ -538,7 +538,7 @@ const BookingDetailModal = ({ visible, onCancel, booking, onUpdate, groupId, veh
         title={
           <Space>
             <CarOutlined />
-            Chi tiết đặt chỗ
+            Chi tiết đặt lịch
           </Space>
         }
         open={visible && !tripScreenVisible}
@@ -559,14 +559,14 @@ const BookingDetailModal = ({ visible, onCancel, booking, onUpdate, groupId, veh
               )}
               {canCancel && (
                 <Popconfirm
-                  title="Hủy đặt chỗ"
-                  description="Bạn có chắc chắn muốn hủy đặt chỗ này không?"
+                  title="Hủy đặt lịch"
+                  description="Bạn có chắc chắn muốn hủy đặt lịch này không?"
                   onConfirm={handleCancel}
                   okText="Có"
                   cancelText="Không"
                 >
                   <Button danger icon={<DeleteOutlined />} loading={loading}>
-                    Hủy đặt chỗ
+                    Hủy đặt lịch
                   </Button>
                 </Popconfirm>
               )}
@@ -673,7 +673,12 @@ const BookingDetailModal = ({ visible, onCancel, booking, onUpdate, groupId, veh
               {dayjs(booking.endTime).format('YYYY-MM-DD HH:mm')}
             </Descriptions.Item>
             <Descriptions.Item label="Thời lượng">
-              {dayjs(booking.endTime).diff(dayjs(booking.startTime), 'hour', true).toFixed(1)} giờ
+              {(() => {
+                const totalMinutes = dayjs(booking.endTime).diff(dayjs(booking.startTime), 'minute');
+                const hours = Math.floor(totalMinutes / 60);
+                const minutes = totalMinutes % 60;
+                return `${hours}h ${minutes}m`;
+              })()}
             </Descriptions.Item>
             {booking.notes && (
               <Descriptions.Item label="Ghi chú">
@@ -700,7 +705,7 @@ const BookingDetailModal = ({ visible, onCancel, booking, onUpdate, groupId, veh
       </Modal>
 
       <Modal
-        title="Chỉnh sửa đặt chỗ"
+        title="Chỉnh sửa đặt lịch"
         open={updateModalVisible}
         onCancel={() => {
           setUpdateModalVisible(false);
@@ -711,13 +716,13 @@ const BookingDetailModal = ({ visible, onCancel, booking, onUpdate, groupId, veh
         width={600}
       >
         <Alert
-          message="Quy tắc cập nhật đặt chỗ"
+          message="Quy tắc cập nhật đặt lịch"
           description={
             <ul style={{ margin: '8px 0', paddingLeft: '20px' }}>
               <li>Đặt trước thời gian hiện tại ít nhất {BOOKING_CONSTRAINTS.MIN_ADVANCE_MINUTES} phút</li>
               <li>Chỉ có thể đặt trong tuần này và tuần sau (không quá {BOOKING_CONSTRAINTS.MAX_ADVANCE_DAYS} ngày)</li>
               <li>Phải cách các booking khác ít nhất {BOOKING_CONSTRAINTS.MIN_GAP_MINUTES} phút</li>
-              <li>Không được trùng với các đặt chỗ hiện có</li>
+              <li>Không được trùng với các đặt lịch hiện có</li>
             </ul>
           }
           type="info"
@@ -744,8 +749,8 @@ const BookingDetailModal = ({ visible, onCancel, booking, onUpdate, groupId, veh
         >
           <Form.Item
             name="timeRange"
-            label="Thời gian đặt chỗ"
-            rules={[{ required: true, message: "Vui lòng chọn thời gian đặt chỗ" }]}
+            label="Thời gian đặt lịch"
+            rules={[{ required: true, message: "Vui lòng chọn thời gian đặt lịch" }]}
           >
             <RangePicker
               showTime={{ format: 'HH:mm' }}

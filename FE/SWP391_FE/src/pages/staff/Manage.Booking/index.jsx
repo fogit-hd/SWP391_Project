@@ -15,6 +15,7 @@ import {
 } from "antd";
 import api from "../../../config/axios";
 import "./manage-booking.css";
+import { toast } from "react-toastify";
 
 const { Option } = Select;
 const { TextArea } = Input;
@@ -43,6 +44,10 @@ export default function ManageBooking() {
   // vehicle detail info (image, specs)
   const [vehicleDetails, setVehicleDetails] = useState(null);
   const [loadingVehicleDetails, setLoadingVehicleDetails] = useState(false);
+  const [damageReports, setDamageReports] = useState([]);
+  const [loadingDamageReports, setLoadingDamageReports] = useState(false);
+  const [damageReportsModalOpen, setDamageReportsModalOpen] = useState(false);
+  const [selectedBookingForDamage, setSelectedBookingForDamage] = useState(null);
 
   useEffect(() => {
     fetchGroups();
@@ -115,7 +120,7 @@ export default function ManageBooking() {
   const fetchTripEvents = async () => {
     setLoadingTripEvents(true);
     try {
-      const r = await api.get(`/trip-events/All-trip-events/staff`);
+      const r = await api.get(`/trip-events/History/staff`);
       const data = Array.isArray(r.data) ? r.data : r.data?.data || [];
       setTripEvents(data);
     } catch (err) {
@@ -124,6 +129,22 @@ export default function ManageBooking() {
       setTripEvents([]);
     } finally {
       setLoadingTripEvents(false);
+    }
+  };
+
+  const fetchDamageReportsByVehicle = async (vehicleId) => {
+    if (!vehicleId) return;
+    setLoadingDamageReports(true);
+    try {
+      const r = await api.get(`/trip-events/Get-damage-report-by-vehicleId`, { params: { vehicleId } });
+      const data = Array.isArray(r.data) ? r.data : r.data?.data || [];
+      setDamageReports(data);
+    } catch (err) {
+      console.error(err);
+      message.error("Failed to load damage reports");
+      setDamageReports([]);
+    } finally {
+      setLoadingDamageReports(false);
     }
   };
 
@@ -229,36 +250,24 @@ export default function ManageBooking() {
   };
 
   const handleCreateDamageReport = async () => {
-    if (!selectedVehicle && !bookings.length) return message.warning("Choose vehicle or booking first");
+    if (!selectedBookingForDamage) return message.warning("Vui lòng chọn booking để báo cáo");
     const fd = new FormData();
-    const firstBooking = bookings[0];
-    // Backend expects the identifier in the field named "Id" (booking or vehicle id)
-    if (firstBooking && firstBooking.id) fd.append("Id", firstBooking.id);
-    else if (selectedVehicle?.id) fd.append("Id", selectedVehicle.id);
+    fd.append("Id", selectedBookingForDamage.id);
     if (damageDesc) fd.append("Description", damageDesc);
     if (damageFile) fd.append("Photo", damageFile);
     try {
       setDamageSubmitting(true);
-      // Let the browser set the multipart Content-Type (with boundary).
       const r = await api.post(`/trip-events/create-damage-report/staff`, fd);
       const msg = r.data?.message || "Damage report submitted";
-      // toast + Ant notification for clearer feedback
-      message.success(msg);
-      notification.success({
-        message: "Damage report submitted",
-        description: msg,
-      });
+      toast.success(msg);
       setDamageDesc("");
       setDamageFile(null);
-      // refresh trip events so the new report appears in the list
+      setSelectedBookingForDamage(null);
+      setDamageModalOpen(false);
       fetchTripEvents();
     } catch (err) {
       console.error(err);
-      message.error(err?.response?.data?.message || "Failed to submit report");
-      notification.error({
-        message: "Submission failed",
-        description: err?.response?.data?.message || "Failed to submit report",
-      });
+      toast.error(err?.response?.data?.message || "Failed to submit report");
     } finally {
       setDamageSubmitting(false);
     }
@@ -272,7 +281,7 @@ export default function ManageBooking() {
             <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
               <div style={{ width: 40, height: 40, borderRadius: 8, background: "#eaf4ff", display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#1890ff', fontWeight: 700 }}>✎</div>
               <div>
-                <h1 style={{ margin: 0, fontSize: 20 }}>Quản lý đặt chỗ xe</h1>
+                <h1 style={{ margin: 0, fontSize: 20 }}>Quản lý đặt lịch xe</h1>
                 <div style={{ color: '#6b7280', fontSize: 13 }}>Quản lý Checkin-Checkout , tạo báo cáo hư hỏng</div>
               </div>
             </div>
@@ -517,26 +526,61 @@ export default function ManageBooking() {
           })()}
         </div>
         <Divider />
-        <div style={{ display:'flex', justifyContent:'flex-end', marginBottom: 8 }}>
+        <div style={{ display:'flex', justifyContent:'flex-end', gap: 8, marginBottom: 8 }}>
+          <Button onClick={() => {
+            if (selectedVehicle?.id) {
+              fetchDamageReportsByVehicle(selectedVehicle.id);
+              setDamageReportsModalOpen(true);
+            } else {
+              message.warning('Vui lòng chọn xe trước');
+            }
+          }}>Báo cáo hư hỏng xe</Button>
           <Button onClick={()=> setTripEventsModalOpen(true)}>lịch sử </Button>
         </div>
 
         <Modal
           title="Báo cáo hư hỏng"
           open={damageModalOpen}
-          onCancel={() => setDamageModalOpen(false)}
+          onCancel={() => {
+            setDamageModalOpen(false);
+            setSelectedBookingForDamage(null);
+          }}
           onOk={handleCreateDamageReport}
           okText="Gửi báo cáo"
           confirmLoading={damageSubmitting}
         >
           <Space direction="vertical" style={{ width: '100%' }}>
+            <div>
+              <div style={{ marginBottom: 8 }}>Chọn booking:</div>
+              <Select
+                style={{ width: '100%' }}
+                placeholder="Chọn booking để báo cáo"
+                value={selectedBookingForDamage?.id}
+                onChange={(val) => {
+                  const booking = bookings.find(b => b.id === val);
+                  setSelectedBookingForDamage(booking);
+                }}
+              >
+                {bookings.filter(b => {
+                  const st = (b.status || '').toLowerCase();
+                  return st !== 'cancelled' && st !== 'cancell';
+                }).map(b => (
+                  <Option key={b.id} value={b.id}>
+                    {b.userName || 'Booking'} - {new Date(b.startTime).toLocaleDateString()} ({b.status})
+                  </Option>
+                ))}
+              </Select>
+            </div>
             <TextArea
               rows={4}
               placeholder="Mô tả hư hỏng"
               value={damageDesc}
               onChange={(e) => setDamageDesc(e.target.value)}
             />
-            <Input type="file" onChange={(e) => setDamageFile(e.target.files[0])} />
+            <Input type="file" onChange={(e) => {
+              console.log('damageFile:', e.target.files[0]);
+              setDamageFile(e.target.files[0]);
+            }} />
           </Space>
         </Modal>
 
@@ -591,6 +635,43 @@ export default function ManageBooking() {
               />
             )}
           </Space>
+        </Modal>
+
+        <Modal
+          title="Báo cáo hư hỏng xe"
+          open={damageReportsModalOpen}
+          onCancel={() => setDamageReportsModalOpen(false)}
+          footer={<Button onClick={() => setDamageReportsModalOpen(false)}>Đóng</Button>}
+          width={700}
+        >
+          {loadingDamageReports ? <Spin /> : (
+            <List
+              dataSource={damageReports}
+              renderItem={(item) => (
+                <List.Item>
+                  <div style={{ display: 'flex', gap: 12, width: '100%' }}>
+                    <div style={{ width: 80, height: 80, flexShrink: 0, border: '1px solid #ddd', borderRadius: 4, overflow: 'hidden' }}>
+                      {item.photosUrl ? (
+                        <img src={item.photosUrl} alt="damage" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      ) : (
+                        <div style={{ fontSize: 12, color: '#999', padding: 8 }}>No photo</div>
+                      )}
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontWeight: 600, marginBottom: 4 }}>
+                        {item.vehicleName} - {item.vehiclePlate}
+                      </div>
+                      <div style={{ color: '#666', marginBottom: 4 }}>{item.description}</div>
+                      <div style={{ fontSize: 12, color: '#999' }}>
+                        Nhân viên: {item.staffName} • {new Date(item.createdAt).toLocaleString()}
+                      </div>
+                    </div>
+                  </div>
+                </List.Item>
+              )}
+              locale={{ emptyText: 'Không có báo cáo hư hỏng nào' }}
+            />
+          )}
         </Modal>
 
       </Space>
