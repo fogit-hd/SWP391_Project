@@ -17,6 +17,7 @@ import {
   Col,
   Select,
   Tooltip,
+  Statistic,
 } from "antd";
 import {
   ReloadOutlined,
@@ -51,6 +52,8 @@ const ManageAccount = () => {
     pageSize: 10,
     total: 0,
   });
+  const [userStatistics, setUserStatistics] = useState(null);
+  const [statisticsLoading, setStatisticsLoading] = useState(false);
 
   // Modal states
   const [isStaffModalVisible, setIsStaffModalVisible] = useState(false);
@@ -242,27 +245,44 @@ const ManageAccount = () => {
       dataIndex: "roleName",
       key: "roleName",
       sorter: false,
+      filterMultiple: false,
       filters: [
         { text: "Admin", value: "Admin" },
         { text: "Staff", value: "Staff" },
         { text: "Technician", value: "Technician" },
         { text: "CoOwner", value: "CoOwner" },
       ],
+      onFilter: (value, record) => {
+        // Compare roleName exactly (case-sensitive)
+        return record.roleName === value;
+      },
     },
     {
       title: "Status",
       dataIndex: "status",
       key: "status",
       sorter: true,
+      filterMultiple: false,
       filters: [
         { text: "Active", value: "active" },
         { text: "Inactive", value: "inactive" },
       ],
-      render: (status) => (
-        <span style={{ color: status === "active" ? "green" : "red" }}>
-          {status ? status.charAt(0).toUpperCase() + status.slice(1) : "N/A"}
-        </span>
-      ),
+      onFilter: (value, record) => {
+        // Normalize both filter value and record status to lowercase for comparison
+        const recordStatus = record.status ? record.status.toLowerCase() : "";
+        const filterValue = value ? value.toLowerCase() : "";
+        return recordStatus === filterValue;
+      },
+      render: (status) => {
+        // Normalize status for display
+        const normalizedStatus = status ? status.toLowerCase() : "";
+        const displayStatus = normalizedStatus === "active" ? "Active" : normalizedStatus === "inactive" ? "Inactive" : status || "N/A";
+        return (
+          <span style={{ color: normalizedStatus === "active" ? "green" : "red" }}>
+            {displayStatus}
+          </span>
+        );
+      },
     },
     {
       title: "Created At",
@@ -272,6 +292,24 @@ const ManageAccount = () => {
       render: (date) => (date ? formatDate(date) : "N/A"),
     },
   ];
+
+  // Fetch User Statistics
+  const fetchUserStatistics = async () => {
+    setStatisticsLoading(true);
+    try {
+      const response = await api.get("/Statistic/user-statistics");
+      if (response.data?.isSuccess) {
+        setUserStatistics(response.data.data);
+      } else {
+        console.error("Failed to fetch user statistics:", response.data?.message);
+      }
+    } catch (err) {
+      console.error("Error fetching user statistics:", err);
+      // Don't show error toast for statistics, just log it
+    } finally {
+      setStatisticsLoading(false);
+    }
+  };
 
   // API Functions
   const fetchUsers = async (
@@ -295,11 +333,22 @@ const ManageAccount = () => {
         params.sortOrder = sortOrder === "ascend" ? "asc" : "desc";
       }
 
+      // Map filter keys to API parameter names
       Object.keys(filters).forEach((key) => {
         if (filters[key] && filters[key].length > 0) {
-          params[key] = filters[key].join(",");
+          // Map roleName to role for API
+          if (key === "roleName") {
+            params.role = filters[key].join(",");
+          } else if (key === "status") {
+            // Ensure status values are lowercase
+            params.status = filters[key].map(s => s.toLowerCase()).join(",");
+          } else {
+            params[key] = filters[key].join(",");
+          }
         }
       });
+
+      console.log("API Request params:", params);
 
       const response = await api.get("/accounts", { params });
 
@@ -403,6 +452,7 @@ const ManageAccount = () => {
       setStaffUploadedFiles([]);
       setStaffScannedData(null);
       fetchUsers(pagination.current, pagination.pageSize);
+      fetchUserStatistics();
     } catch (err) {
       message.destroy();
       console.error("Create staff error:", err);
@@ -499,6 +549,7 @@ const ManageAccount = () => {
       setTechnicianUploadedFiles([]);
       setTechnicianScannedData(null);
       fetchUsers(pagination.current, pagination.pageSize);
+      fetchUserStatistics();
     } catch (err) {
       message.destroy();
       console.error("Create technician error:", err);
@@ -512,6 +563,7 @@ const ManageAccount = () => {
 
   const handleRefresh = () => {
     fetchUsers(pagination.current, pagination.pageSize);
+    fetchUserStatistics();
   };
 
   const handleTableChange = (paginationConfig, filters, sorter) => {
@@ -523,6 +575,7 @@ const ManageAccount = () => {
   // Load data on component mount
   useEffect(() => {
     fetchUsers();
+    fetchUserStatistics();
   }, []);
 
   // Auto-fill forms when scanned data changes
@@ -848,6 +901,55 @@ const ManageAccount = () => {
               borderRadius: borderRadiusLG,
             }}
           >
+            {/* User Statistics Section */}
+            <Card
+              title="Thống Kê Người Dùng"
+              style={{ marginBottom: 24 }}
+              loading={statisticsLoading}
+            >
+              <Row gutter={[12, 12]} style={{ display: "flex", flexWrap: "nowrap" }}>
+                <Col flex="1" style={{ minWidth: 0 }}>
+                  <Card size="small">
+                    <Statistic
+                      title="Tổng Số Người Dùng"
+                      value={userStatistics?.totalUsers || 0}
+                      prefix={<UserOutlined />}
+                      valueStyle={{ color: "#1890ff", fontSize: "20px" }}
+                    />
+                  </Card>
+                </Col>
+                {userStatistics?.byRole?.map((roleStat, index) => {
+                  const roleColors = {
+                    Admin: "#ff4d4f",
+                    CoOwner: "#52c41a",
+                    Staff: "#1890ff",
+                    Technician: "#722ed1",
+                  };
+                  const roleIcons = {
+                    Admin: <UserOutlined />,
+                    CoOwner: <TeamOutlined />,
+                    Staff: <UserOutlined />,
+                    Technician: <TeamOutlined />,
+                  };
+                  return (
+                    <Col flex="1" key={index} style={{ minWidth: 0 }}>
+                      <Card size="small">
+                        <Statistic
+                          title={roleStat.role}
+                          value={roleStat.count || 0}
+                          prefix={roleIcons[roleStat.role] || <UserOutlined />}
+                          valueStyle={{
+                            color: roleColors[roleStat.role] || "#1890ff",
+                            fontSize: "20px",
+                          }}
+                        />
+                      </Card>
+                    </Col>
+                  );
+                })}
+              </Row>
+            </Card>
+
             <Card
               title="User Management"
               extra={

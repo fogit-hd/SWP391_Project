@@ -16,6 +16,9 @@ import {
   InputNumber,
   Tag,
   Tooltip,
+  Row,
+  Col,
+  Statistic,
 } from "antd";
 import "./vehicle-management.css";
 import {
@@ -23,6 +26,8 @@ import {
   PlusOutlined,
   ReloadOutlined,
   SearchOutlined,
+  CarOutlined,
+  TeamOutlined,
 } from "@ant-design/icons";
 import { Link } from "react-router-dom";
 import { toast } from "react-toastify";
@@ -52,6 +57,8 @@ const ManageVehicle = () => {
     pageSize: 10,
     total: 0,
   });
+  const [vehicleStatistics, setVehicleStatistics] = useState(null);
+  const [statisticsLoading, setStatisticsLoading] = useState(false);
 
   // Modal states
   const [isAddModalVisible, setIsAddModalVisible] = useState(false);
@@ -206,6 +213,23 @@ const ManageVehicle = () => {
     },
   ];
 
+  // Fetch Vehicle Statistics
+  const fetchVehicleStatistics = async () => {
+    setStatisticsLoading(true);
+    try {
+      const response = await api.get("/Statistic/group-and-statistics");
+      if (response.data?.isSuccess) {
+        setVehicleStatistics(response.data.data);
+      } else {
+        console.error("Failed to fetch vehicle statistics:", response.data?.message);
+      }
+    } catch (err) {
+      console.error("Error fetching vehicle statistics:", err);
+    } finally {
+      setStatisticsLoading(false);
+    }
+  };
+
   // API Functions
   const fetchVehicles = async (
     page = 1,
@@ -332,6 +356,7 @@ const ManageVehicle = () => {
       setIsAddModalVisible(false);
       addForm.resetFields();
       fetchVehicles(pagination.current, pagination.pageSize);
+      fetchVehicleStatistics();
     } catch (err) {
       console.error("Create error:", err);
       console.error("Error response:", err.response);
@@ -381,6 +406,7 @@ const ManageVehicle = () => {
       }
 
       fetchVehicles();
+      fetchVehicleStatistics();
     } catch (err) {
       console.error('Delete error:', err);
       console.error('Error response:', err.response);
@@ -411,6 +437,7 @@ const ManageVehicle = () => {
 
   const handleRefresh = () => {
     fetchVehicles(pagination.current, pagination.pageSize);
+    fetchVehicleStatistics();
   };
 
   const handleAddVehicle = () => {
@@ -434,6 +461,7 @@ const ManageVehicle = () => {
   // Load data on component mount
   useEffect(() => {
     fetchVehicles();
+    fetchVehicleStatistics();
   }, []);
 
   return (
@@ -454,6 +482,46 @@ const ManageVehicle = () => {
               borderRadius: borderRadiusLG,
             }}
           >
+            {/* Vehicle Statistics Section */}
+            <Card
+              title="Thống Kê Xe"
+              style={{ marginBottom: 24 }}
+              loading={statisticsLoading}
+            >
+              <Row gutter={[12, 12]} style={{ display: "flex", flexWrap: "nowrap" }}>
+                <Col flex="1" style={{ minWidth: 0 }}>
+                  <Card size="small">
+                    <Statistic
+                      title="Tổng Số Xe"
+                      value={vehicleStatistics?.totalVehicles || 0}
+                      prefix={<CarOutlined />}
+                      valueStyle={{ color: "#1890ff", fontSize: "20px" }}
+                    />
+                  </Card>
+                </Col>
+                <Col flex="1" style={{ minWidth: 0 }}>
+                  <Card size="small">
+                    <Statistic
+                      title="Xe Có Nhóm"
+                      value={vehicleStatistics?.vehiclesWithGroup || 0}
+                      prefix={<TeamOutlined />}
+                      valueStyle={{ color: "#52c41a", fontSize: "20px" }}
+                    />
+                  </Card>
+                </Col>
+                <Col flex="1" style={{ minWidth: 0 }}>
+                  <Card size="small">
+                    <Statistic
+                      title="Xe Không Có Nhóm"
+                      value={vehicleStatistics?.vehiclesWithoutGroup || 0}
+                      prefix={<CarOutlined />}
+                      valueStyle={{ color: "#ff4d4f", fontSize: "20px" }}
+                    />
+                  </Card>
+                </Col>
+              </Row>
+            </Card>
+
             <Card
               title="Manage Vehicles"
               extra={
