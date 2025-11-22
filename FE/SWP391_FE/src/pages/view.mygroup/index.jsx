@@ -145,6 +145,7 @@ const MyGroup = () => {
       else list = [];
 
       // filter out locally hidden groups per-user
+      /*
       const hiddenKey = (() => {
         const userDataStr = localStorage.getItem("userData");
         try {
@@ -165,6 +166,7 @@ const MyGroup = () => {
         }
       })();
       list = list.filter((g) => !hiddenIds.has(g.id));
+      */
 
       // helpers for API-driven flags
       // Determine if group has any contract (treat as Active when there is
@@ -1441,13 +1443,16 @@ const MyGroup = () => {
       await api.post(`/GroupInvite/join-by-invite`, null, {
         params: { inviteCode: code },
       });
-      alert("Tham gia nhóm thành công");
+      toast.success("Tham gia nhóm thành công");
       setJoinOpen(false);
       setJoinValue("");
       await reloadGroups();
     } catch (err) {
       console.error("Join by code failed", err);
-      alert(err?.response?.data?.message || "tham gia nhóm thất bại");
+      toast.error(
+        err?.response?.data?.message ||
+          "Tham gia nhóm thất bại, mã mời đã hết hạn"
+      );
     } finally {
       setJoinSubmitting(false);
     }
