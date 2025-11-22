@@ -177,7 +177,12 @@ const ManageVehicleRequests = () => {
       fixed: "right",
       align: "center",
       render: (_, record) => {
-        console.log("Rendering actions for record:", record.id, "status:", record.status);
+        console.log(
+          "Rendering actions for record:",
+          record.id,
+          "status:",
+          record.status
+        );
         return (
           <Space size="small">
             <Tooltip title="View Details">
@@ -198,7 +203,12 @@ const ManageVehicleRequests = () => {
                     icon={<CheckOutlined />}
                     style={{ color: "green" }}
                     onClick={() => {
-                      console.log("Approve button clicked for:", record.id, "Type:", record.type);
+                      console.log(
+                        "Approve button clicked for:",
+                        record.id,
+                        "Type:",
+                        record.type
+                      );
                       handleApproveClick(record);
                     }}
                   />
@@ -278,48 +288,55 @@ const ManageVehicleRequests = () => {
       setLoading(true);
       const requestType = selectedRequest.type;
       const requestId = selectedRequest.id;
-      
+
       console.log("Approving request - Type:", requestType, "ID:", requestId);
-      
+
       let response;
       if (requestType === "CREATE") {
         // Use PUT for CREATE type
         console.log("Calling approve-create API");
-        response = await api.put(`/vehicle-requests/approve-create/${requestId}`);
+        response = await api.put(
+          `/vehicle-requests/approve-create/${requestId}`
+        );
       } else if (requestType === "UPDATE") {
         // Use POST for UPDATE type
         console.log("Calling approve-update API");
-        response = await api.post(`/vehicle-requests/approve-update/${requestId}`);
+        response = await api.post(
+          `/vehicle-requests/approve-update/${requestId}`
+        );
       } else {
         throw new Error(`Unknown request type: ${requestType}`);
       }
-      
+
       console.log("Approve response:", response);
-      
+
       // Hiển thị message từ backend
-      const successMessage = response.data?.message || `Phê duyệt yêu cầu ${requestType} thành công`;
+      const successMessage =
+        response.data?.message || `Phê duyệt yêu cầu ${requestType} thành công`;
       toast.success(successMessage);
-      
+
       setApproveModalVisible(false);
       setSelectedRequest(null);
       await fetchVehicleRequests();
     } catch (err) {
       console.error("Approve error:", err);
       console.error("Error response:", err.response);
-      
+
       // Xử lý lỗi từ backend
       const errorData = err.response?.data;
-      const errorMessage = 
+      const errorMessage =
         errorData?.message ||
-        (errorData?.errors && Object.entries(errorData.errors)
-          .map(([field, messages]) => `${field}: ${messages.join(", ")}`)
-          .join("\n")) ||
-        (errorData?.title?.includes("Validation") && "Thông tin không hợp lệ") ||
+        (errorData?.errors &&
+          Object.entries(errorData.errors)
+            .map(([field, messages]) => `${field}: ${messages.join(", ")}`)
+            .join("\n")) ||
+        (errorData?.title?.includes("Validation") &&
+          "Thông tin không hợp lệ") ||
         (typeof errorData === "string" && errorData) ||
         errorData?.error ||
         err.message ||
         "Không thể phê duyệt yêu cầu";
-      
+
       toast.error(errorMessage, { duration: 5000 });
     } finally {
       setLoading(false);
@@ -337,18 +354,28 @@ const ManageVehicleRequests = () => {
       const values = await rejectForm.validateFields();
       setLoading(true);
 
-      console.log("Sending reject request for ID:", selectedRequest.id, "with reason:", values.reason);
-      const response = await api.put(`/vehicle-requests/reject/${selectedRequest.id}`, null, {
-        params: {
-          reason: values.reason,
-        },
-      });
+      console.log(
+        "Sending reject request for ID:",
+        selectedRequest.id,
+        "with reason:",
+        values.reason
+      );
+      const response = await api.put(
+        `/vehicle-requests/reject/${selectedRequest.id}`,
+        null,
+        {
+          params: {
+            reason: values.reason,
+          },
+        }
+      );
       console.log("Reject response:", response);
 
       // Hiển thị message từ backend
-      const successMessage = response.data?.message || "Đã từ chối yêu cầu thành công";
+      const successMessage =
+        response.data?.message || "Đã từ chối yêu cầu thành công";
       toast.success(successMessage);
-      
+
       setRejectModalVisible(false);
       rejectForm.resetFields();
       fetchVehicleRequests();
@@ -357,23 +384,25 @@ const ManageVehicleRequests = () => {
         // Validation error từ form
         return;
       }
-      
+
       console.error("Reject error:", err);
       console.error("Error response:", err.response);
-      
+
       // Xử lý lỗi từ backend
       const errorData = err.response?.data;
-      const errorMessage = 
+      const errorMessage =
         errorData?.message ||
-        (errorData?.errors && Object.entries(errorData.errors)
-          .map(([field, messages]) => `${field}: ${messages.join(", ")}`)
-          .join("\n")) ||
-        (errorData?.title?.includes("Validation") && "Thông tin không hợp lệ") ||
+        (errorData?.errors &&
+          Object.entries(errorData.errors)
+            .map(([field, messages]) => `${field}: ${messages.join(", ")}`)
+            .join("\n")) ||
+        (errorData?.title?.includes("Validation") &&
+          "Thông tin không hợp lệ") ||
         (typeof errorData === "string" && errorData) ||
         errorData?.error ||
         err.message ||
         "Không thể từ chối yêu cầu";
-      
+
       toast.error(errorMessage, { duration: 5000 });
     } finally {
       setLoading(false);
@@ -557,14 +586,10 @@ const ManageVehicleRequests = () => {
         {selectedRequest && (
           <div>
             <Descriptions bordered column={2} size="small">
-              <Descriptions.Item label="Request ID" span={2}>
-                {selectedRequest.id}
-              </Descriptions.Item>
-              <Descriptions.Item label="Vehicle ID" span={2}>
-                {selectedRequest.vehicleId}
-              </Descriptions.Item>
               <Descriptions.Item label="Type">
-                <Tag color={selectedRequest.type === "CREATE" ? "blue" : "orange"}>
+                <Tag
+                  color={selectedRequest.type === "CREATE" ? "blue" : "orange"}
+                >
                   {selectedRequest.type}
                 </Tag>
               </Descriptions.Item>
@@ -623,9 +648,19 @@ const ManageVehicleRequests = () => {
             </Descriptions>
 
             <div style={{ marginTop: 16 }}>
-              <Space direction="vertical" size="middle" style={{ width: "100%" }}>
-                {renderImageSection("Vehicle Image", selectedRequest.vehicleImageUrl)}
-                {renderImageSection("Registration Paper", selectedRequest.registrationPaperUrl)}
+              <Space
+                direction="vertical"
+                size="middle"
+                style={{ width: "100%" }}
+              >
+                {renderImageSection(
+                  "Vehicle Image",
+                  selectedRequest.vehicleImageUrl
+                )}
+                {renderImageSection(
+                  "Registration Paper",
+                  selectedRequest.registrationPaperUrl
+                )}
               </Space>
             </div>
 
@@ -661,7 +696,7 @@ const ManageVehicleRequests = () => {
 
       {/* Approve Modal */}
       <Modal
-        title={`Approve Vehicle Request - ${selectedRequest?.type || ''}`}
+        title={`Approve Vehicle Request - ${selectedRequest?.type || ""}`}
         open={approveModalVisible}
         onOk={handleApprove}
         onCancel={() => {
@@ -698,7 +733,9 @@ const ManageVehicleRequests = () => {
                 {selectedRequest.model}
               </Descriptions.Item>
               <Descriptions.Item label="Request Type">
-                <Tag color={selectedRequest.type === "CREATE" ? "blue" : "orange"}>
+                <Tag
+                  color={selectedRequest.type === "CREATE" ? "blue" : "orange"}
+                >
                   {selectedRequest.type}
                 </Tag>
               </Descriptions.Item>
