@@ -20,7 +20,6 @@ import {
   Row,
   Col,
   Descriptions,
-  Image,
 } from "antd";
 import {
   CheckCircleTwoTone,
@@ -145,7 +144,6 @@ const MyGroup = () => {
       else list = [];
 
       // filter out locally hidden groups per-user
-      /*
       const hiddenKey = (() => {
         const userDataStr = localStorage.getItem("userData");
         try {
@@ -166,7 +164,6 @@ const MyGroup = () => {
         }
       })();
       list = list.filter((g) => !hiddenIds.has(g.id));
-      */
 
       // helpers for API-driven flags
       // Determine if group has any contract (treat as Active when there is
@@ -190,10 +187,9 @@ const MyGroup = () => {
         }
         // 2) Try explicit statuses that should count as "has contract"
         const statuses = [
-          
           "APPROVE", // some backends use APPROVE
-          
-           // safety: often used between DRAFT and APPROVED
+
+          // safety: often used between DRAFT and APPROVED
         ];
         try {
           const results = await Promise.all(
@@ -522,12 +518,13 @@ const MyGroup = () => {
       toast.success("Đã tải báo cáo thành công");
     } catch (error) {
       console.error("Lỗi khi tải báo cáo:", error);
-      
+
       // Fallback: use direct download link (browser will handle it)
       try {
         const link = document.createElement("a");
         link.href = reportUrl;
-        link.download = reportUrl.split("/").pop().split("?")[0] || "report.txt";
+        link.download =
+          reportUrl.split("/").pop().split("?")[0] || "report.txt";
         link.style.display = "none";
         document.body.appendChild(link);
         link.click();
@@ -537,7 +534,9 @@ const MyGroup = () => {
         toast.info("Đang tải báo cáo...");
       } catch (fallbackError) {
         console.error("Lỗi fallback:", fallbackError);
-        toast.error("Không thể tải báo cáo. Vui lòng thử lại hoặc mở link trực tiếp.");
+        toast.error(
+          "Không thể tải báo cáo. Vui lòng thử lại hoặc mở link trực tiếp."
+        );
       }
     }
   };
@@ -605,10 +604,7 @@ const MyGroup = () => {
 
     setExpensesLoading(true);
     try {
-      console.log(
-        "[LOAD-GROUP-EXPENSES] Đang tải chi phí cho nhóm:",
-        groupId
-      );
+      console.log("[LOAD-GROUP-EXPENSES] Đang tải chi phí cho nhóm:", groupId);
 
       const endpoint = `/group-expenses/group/${groupId}`;
       console.log("[LOAD-GROUP-EXPENSES] Sử dụng endpoint:", endpoint);
@@ -630,10 +626,7 @@ const MyGroup = () => {
       setGroupExpenses(expenseList);
     } catch (err) {
       console.error("[LOAD-GROUP-EXPENSES] Lỗi:", err);
-      console.error(
-        "[LOAD-GROUP-EXPENSES] Phản hồi lỗi:",
-        err.response?.data
-      );
+      console.error("[LOAD-GROUP-EXPENSES] Phản hồi lỗi:", err.response?.data);
       toast.error("Không thể tải chi phí nhóm");
       setGroupExpenses([]);
     } finally {
@@ -658,11 +651,7 @@ const MyGroup = () => {
         invoiceList = response.data.data;
       }
 
-      console.log(
-        "[LOAD-MY-INVOICES] Đã tải",
-        invoiceList.length,
-        "hóa đơn"
-      );
+      console.log("[LOAD-MY-INVOICES] Đã tải", invoiceList.length, "hóa đơn");
       setMyInvoices(invoiceList);
     } catch (err) {
       console.error("[LOAD-MY-INVOICES] Lỗi:", err);
@@ -679,7 +668,10 @@ const MyGroup = () => {
 
     setInvoiceDetailLoading(true);
     try {
-      console.log("[LOAD-INVOICE-DETAIL] Đang tải chi tiết hóa đơn:", invoiceId);
+      console.log(
+        "[LOAD-INVOICE-DETAIL] Đang tải chi tiết hóa đơn:",
+        invoiceId
+      );
 
       const endpoint = `/member-invoices/${invoiceId}`;
       console.log("[LOAD-INVOICE-DETAIL] Sử dụng endpoint:", endpoint);
@@ -691,10 +683,7 @@ const MyGroup = () => {
       setInvoiceDetailOpen(true);
     } catch (err) {
       console.error("[LOAD-INVOICE-DETAIL] Lỗi:", err);
-      console.error(
-        "[LOAD-INVOICE-DETAIL] Phản hồi lỗi:",
-        err.response?.data
-      );
+      console.error("[LOAD-INVOICE-DETAIL] Phản hồi lỗi:", err.response?.data);
       toast.error("Không thể tải chi tiết hóa đơn");
     } finally {
       setInvoiceDetailLoading(false);
@@ -749,7 +738,9 @@ const MyGroup = () => {
           window.location.href = paymentUrl;
         }, 500);
       } else {
-        console.warn("[PAYMENT] ⚠️ Không tìm thấy URL thanh toán trong phản hồi");
+        console.warn(
+          "[PAYMENT] ⚠️ Không tìm thấy URL thanh toán trong phản hồi"
+        );
         console.log(
           "[PAYMENT] Các khóa có sẵn trong response.data:",
           Object.keys(response.data || {})
@@ -765,7 +756,9 @@ const MyGroup = () => {
       console.error("[PAYMENT] Lỗi:", err);
       console.error("[PAYMENT] Phản hồi lỗi:", err.response);
       console.error("[PAYMENT] Dữ liệu lỗi:", err.response?.data);
-      toast.error(err?.response?.data?.message || "Không thể khởi tạo thanh toán");
+      toast.error(
+        err?.response?.data?.message || "Không thể khởi tạo thanh toán"
+      );
     } finally {
       setPaymentLoading(false);
     }
@@ -908,7 +901,9 @@ const MyGroup = () => {
         // Retry 3 times with increasing delays
         for (let i = 0; i < 3; i++) {
           await new Promise((resolve) => setTimeout(resolve, (i + 1) * 1000));
-          console.log(`[VOTE] Đang tải lại trạng thái bỏ phiếu (lần thử ${i + 1}/3)`);
+          console.log(
+            `[VOTE] Đang tải lại trạng thái bỏ phiếu (lần thử ${i + 1}/3)`
+          );
           await fetchVotingStatus(requestId, true);
         }
       }
@@ -918,9 +913,7 @@ const MyGroup = () => {
         "[CONFIRM-SERVICE-REQUEST] Phản hồi lỗi:",
         err.response?.data
       );
-      toast.error(
-        err?.response?.data?.message || "Không thể gửi xác nhận"
-      );
+      toast.error(err?.response?.data?.message || "Không thể gửi xác nhận");
     } finally {
       setConfirmSubmitting(false);
     }
@@ -982,7 +975,7 @@ const MyGroup = () => {
     const vnpResponseCode = searchParams.get("vnp_ResponseCode");
     const vnpTransactionStatus = searchParams.get("vnp_TransactionStatus");
     const vnpTxnRef = searchParams.get("vnp_TxnRef");
-    
+
     // Determine payment status from various sources
     let finalPaymentStatus = paymentStatus;
     let finalInvoiceId = invoiceId;
@@ -1010,7 +1003,9 @@ const MyGroup = () => {
       }
     }
 
-    console.log("[PAYMENT-RETURN] ========== PHÁT HIỆN TRẢ VỀ TỪ THANH TOÁN ==========");
+    console.log(
+      "[PAYMENT-RETURN] ========== PHÁT HIỆN TRẢ VỀ TỪ THANH TOÁN =========="
+    );
     console.log("[PAYMENT-RETURN] URL đầy đủ:", window.location.href);
     console.log("[PAYMENT-RETURN] Tìm kiếm vị trí:", location.search);
     console.log("[PAYMENT-RETURN] Trạng thái thanh toán:", finalPaymentStatus);
@@ -1051,7 +1046,7 @@ const MyGroup = () => {
       if (groups.length === 0) {
         console.log("[PAYMENT-RETURN] Nhóm chưa được tải, đang chờ...");
         reloadGroups().then(() => {
-      handlePaymentReturn();
+          handlePaymentReturn();
         });
       } else {
         handlePaymentReturn();
@@ -1059,15 +1054,21 @@ const MyGroup = () => {
 
       // Clean up URL after processing
       setTimeout(() => {
-      navigate("/view-mygroup", { replace: true });
+        navigate("/view-mygroup", { replace: true });
       }, 100);
-    } else if (location.search.includes("payment") || location.search.includes("vnp_")) {
+    } else if (
+      location.search.includes("payment") ||
+      location.search.includes("vnp_")
+    ) {
       // If we detect payment-related params but can't parse them, log for debugging
-      console.warn("[PAYMENT-RETURN] Phát hiện tham số thanh toán nhưng không thể phân tích:", {
-        search: location.search,
-        paymentStatus: finalPaymentStatus,
-        invoiceId: finalInvoiceId,
-      });
+      console.warn(
+        "[PAYMENT-RETURN] Phát hiện tham số thanh toán nhưng không thể phân tích:",
+        {
+          search: location.search,
+          paymentStatus: finalPaymentStatus,
+          invoiceId: finalInvoiceId,
+        }
+      );
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.search, location.pathname, groups.length]);
@@ -1077,7 +1078,12 @@ const MyGroup = () => {
     const groupIdFromState = location.state?.groupId;
     const shouldOpenModal = location.state?.openGroupModal;
 
-    if (shouldOpenModal && groupIdFromState && groups.length > 0 && !membersVisible) {
+    if (
+      shouldOpenModal &&
+      groupIdFromState &&
+      groups.length > 0 &&
+      !membersVisible
+    ) {
       // Find the group by ID
       const targetGroup = groups.find((g) => g.id === groupIdFromState);
       if (targetGroup) {
@@ -1369,8 +1375,10 @@ const MyGroup = () => {
         // ttl = expires_at - created_at, then set local expiry = Date.now() + ttl.
         // Otherwise, fall back to direct expiresAt if present, or a short client-side fallback.
         const raw = res?.data || res?.data?.data || {};
-        const expiresAtRaw = raw.expiresAt || raw.expires_at || raw.expires || null;
-        const createdAtRaw = raw.createdAt || raw.created_at || raw.created || null;
+        const expiresAtRaw =
+          raw.expiresAt || raw.expires_at || raw.expires || null;
+        const createdAtRaw =
+          raw.createdAt || raw.created_at || raw.created || null;
 
         let expiresAtVal = null;
         if (expiresAtRaw && createdAtRaw) {
@@ -1443,16 +1451,13 @@ const MyGroup = () => {
       await api.post(`/GroupInvite/join-by-invite`, null, {
         params: { inviteCode: code },
       });
-      toast.success("Tham gia nhóm thành công");
+      alert("Tham gia nhóm thành công");
       setJoinOpen(false);
       setJoinValue("");
       await reloadGroups();
     } catch (err) {
       console.error("Join by code failed", err);
-      toast.error(
-        err?.response?.data?.message ||
-          "Tham gia nhóm thất bại, mã mời đã hết hạn"
-      );
+      alert(err?.response?.data?.message || "tham gia nhóm thất bại");
     } finally {
       setJoinSubmitting(false);
     }
@@ -1575,8 +1580,6 @@ const MyGroup = () => {
     }
   };
 
-
-
   // Handle back navigation based on role
   const handleBack = () => {
     if (isStaff) {
@@ -1658,7 +1661,9 @@ const MyGroup = () => {
                 >
                   Xóa bộ lọc
                 </Button>
-                <Button onClick={() => setJoinOpen(true)}>Tham gia bằng mã</Button>
+                <Button onClick={() => setJoinOpen(true)}>
+                  Tham gia bằng mã
+                </Button>
                 <Button
                   type="primary"
                   icon={<PlusOutlined />}
@@ -1685,38 +1690,9 @@ const MyGroup = () => {
                 itemLayout="horizontal"
                 dataSource={filteredGroups}
                 renderItem={(item) => {
-                  const activeByContract = isActiveByContract(item);
-                  const currentUserId = getCurrentUserId();
-                  const ownerIdFromGroup = getOwnerIdFromGroup(item);
-                  const ownerIdFromMembers = item._ownerUserId;
-                  const iAmOwnerRow =
-                    !!currentUserId &&
-                    ((ownerIdFromGroup && currentUserId === ownerIdFromGroup) ||
-                      (ownerIdFromMembers &&
-                        currentUserId === ownerIdFromMembers));
-                  const singleOwnerOnly =
-                    item._singleOwnerOnly !== null &&
-                    item._singleOwnerOnly !== undefined
-                      ? item._singleOwnerOnly
-                      : false;
                   return (
                     <List.Item
                       actions={[
-                        activeByContract ? (
-                          <Tag
-                            color="green"
-                            icon={<CheckCircleTwoTone twoToneColor="#52c41a" />}
-                          >
-                            Đang hoạt động
-                          </Tag>
-                        ) : (
-                          <Tag
-                            color="red"
-                            icon={<CloseCircleTwoTone twoToneColor="#ff4d4f" />}
-                          >
-                            Không hoạt động
-                          </Tag>
-                        ),
                         <Button
                           key="members"
                           type="link"
@@ -1894,9 +1870,7 @@ const MyGroup = () => {
                   ) : null}
                 </div>
                 <div>
-                  <Button onClick={() => setMembersVisible(false)}>
-                    Đóng
-                  </Button>
+                  <Button onClick={() => setMembersVisible(false)}>Đóng</Button>
                 </div>
               </div>
             }
@@ -1941,14 +1915,12 @@ const MyGroup = () => {
                                         ? "Tạo lại mã mời"
                                         : "Tạo mã mời"}
                                     </Button>
-                                    {!selectedGroup?._hasContract ? (
-                                      <Link
-                                        to="/create-econtract"
-                                        state={{ groupId: selectedGroup?.id }}
-                                      >
-                                        <Button>Tạo hợp đồng</Button>
-                                      </Link>
-                                    ) : null}
+                                    <Link
+                                      to="/create-econtract"
+                                      state={{ groupId: selectedGroup?.id }}
+                                    >
+                                      <Button>Tạo hợp đồng</Button>
+                                    </Link>
                                     {inviteCode ? (
                                       <Space>
                                         <Tag color="purple">
@@ -2247,7 +2219,10 @@ const MyGroup = () => {
                                       color: "blue",
                                       text: "Chờ báo giá",
                                     },
-                                    VOTING: { color: "orange", text: "Đang bỏ phiếu" },
+                                    VOTING: {
+                                      color: "orange",
+                                      text: "Đang bỏ phiếu",
+                                    },
                                     APPROVED: {
                                       color: "green",
                                       text: "Đã phê duyệt",
@@ -2270,7 +2245,10 @@ const MyGroup = () => {
                                       color: "blue",
                                       text: "Bảo dưỡng",
                                     },
-                                    REPAIR: { color: "orange", text: "Sửa chữa" },
+                                    REPAIR: {
+                                      color: "orange",
+                                      text: "Sửa chữa",
+                                    },
                                     INSPECTION: {
                                       color: "green",
                                       text: "Kiểm tra",
@@ -2431,8 +2409,8 @@ const MyGroup = () => {
                                               fontWeight: 600,
                                             }}
                                           >
-                                            {votedCount} / {totalMembers} đã
-                                            bỏ phiếu
+                                            {votedCount} / {totalMembers} đã bỏ
+                                            phiếu
                                           </div>
 
                                           {confirmedUsers.length > 0 && (
@@ -2584,8 +2562,8 @@ const MyGroup = () => {
                                                 type="secondary"
                                                 style={{ color: "#52c41a" }}
                                               >
-                                                ✓ Tất cả đã bỏ phiếu và không có ai
-                                                từ chối
+                                                ✓ Tất cả đã bỏ phiếu và không có
+                                                ai từ chối
                                               </Text>
                                             )}
                                           {votingData.length === 0 && (
@@ -2855,9 +2833,15 @@ const MyGroup = () => {
                                 renderItem={(invoice) => {
                                   const statusMap = {
                                     DUE: { color: "orange", text: "Đến hạn" },
-                                    PAID: { color: "green", text: "Đã thanh toán" },
+                                    PAID: {
+                                      color: "green",
+                                      text: "Đã thanh toán",
+                                    },
                                     OVERDUE: { color: "red", text: "Quá hạn" },
-                                    PENDING: { color: "blue", text: "Chờ xử lý" },
+                                    PENDING: {
+                                      color: "blue",
+                                      text: "Chờ xử lý",
+                                    },
                                   };
                                   const statusInfo = statusMap[
                                     invoice.status
@@ -3030,27 +3014,12 @@ const MyGroup = () => {
                   v.model ||
                   v.licensePlate ||
                   "Vehicle";
-
-                // Parse images
-                let images = [];
-                try {
-                  if (v.vehicleImageUrl) {
-                    if (
-                      typeof v.vehicleImageUrl === "string" &&
-                      v.vehicleImageUrl.trim().startsWith("[")
-                    ) {
-                      images = JSON.parse(v.vehicleImageUrl);
-                    } else {
-                      images = [v.vehicleImageUrl];
-                    }
-                  }
-                } catch (e) {
-                  images = v.vehicleImageUrl ? [v.vehicleImageUrl] : [];
-                }
-
                 return (
                   <List.Item
                     actions={[
+                      <Tag color="red" key="no-contract">
+                        Không có hợp đồng
+                      </Tag>,
                       <Button
                         key="attach"
                         type="primary"
@@ -3074,74 +3043,12 @@ const MyGroup = () => {
                       title={displayName}
                       description={
                         <div>
-                          <div
-                            style={{
-                              display: "grid",
-                              gridTemplateColumns: "repeat(2, 1fr)",
-                              gap: "4px 16px",
-                              marginBottom: "8px",
-                              fontSize: "13px",
-                            }}
-                          >
-                            <div>
-                              <span style={{ color: "#888" }}>Biển số:</span>{" "}
-                              {v.plateNumber || v.licensePlate || "-"}
-                            </div>
-                            <div>
-                              <span style={{ color: "#888" }}>Hãng:</span>{" "}
-                              {v.make || v.brand || "-"}
-                            </div>
-                            <div>
-                              <span style={{ color: "#888" }}>Màu:</span>{" "}
-                              {v.color || "-"}
-                            </div>
-                            <div>
-                              <span style={{ color: "#888" }}>Năm:</span>{" "}
-                              {v.modelYear || v.year || "-"}
-                            </div>
-                            <div>
-                              <span style={{ color: "#888" }}>Pin:</span>{" "}
-                              {v.batteryCapacityKwh || v.batteryKwh || "-"} kWh
-                            </div>
-                            <div>
-                              <span style={{ color: "#888" }}>
-                                Tầm hoạt động:
-                              </span>{" "}
-                              {v.rangeKm || v.range || "-"} km
-                            </div>
-                          </div>
-
-                          {v.id && (
-                            <div
-                              style={{
-                                fontSize: "12px",
-                                color: "#999",
-                                marginBottom: 8,
-                              }}
-                            >
-                              ID: {v.id.substring(0, 8)}...
-                            </div>
+                          {v.licensePlate && (
+                            <div>Biển số: {v.licensePlate}</div>
                           )}
-
-                          {images.length > 0 && (
-                            <div style={{ marginTop: 8 }}>
-                              <Image.PreviewGroup>
-                                <Space size={8} wrap>
-                                  {images.map((url, idx) => (
-                                    <Image
-                                      key={idx}
-                                      src={url}
-                                      width={100}
-                                      height={75}
-                                      style={{
-                                        objectFit: "cover",
-                                        borderRadius: 4,
-                                        border: "1px solid #f0f0f0",
-                                      }}
-                                    />
-                                  ))}
-                                </Space>
-                              </Image.PreviewGroup>
+                          {v.id && (
+                            <div style={{ fontSize: "12px", color: "#999" }}>
+                              ID: {v.id.substring(0, 8)}...
                             </div>
                           )}
                         </div>
@@ -3217,7 +3124,10 @@ const MyGroup = () => {
                         displayText = plate;
                       } else {
                         displayText =
-                          v.vehicleName || v.name || v.id || "Xe không xác định";
+                          v.vehicleName ||
+                          v.name ||
+                          v.id ||
+                          "Xe không xác định";
                       }
 
                       return (
