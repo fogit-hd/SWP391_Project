@@ -233,18 +233,6 @@ const MyContracts = () => {
     if (typeof status === "string") {
       const statusLower = status.toLowerCase();
       switch (statusLower) {
-        case "signed":
-        case "completed":
-          return <Tag color="green">SIGNED</Tag>;
-        case "pending":
-        case "waiting":
-          return <Tag color="orange">WAITING</Tag>;
-        case "signing":
-          return <Tag color="blue">SIGNING</Tag>;
-        case "unsigned":
-          return <Tag color="red">UNSIGNED</Tag>;
-        case "expired":
-          return <Tag color="gray">EXPIRED</Tag>;
         default:
           return <Tag color="blue">{status}</Tag>;
       }

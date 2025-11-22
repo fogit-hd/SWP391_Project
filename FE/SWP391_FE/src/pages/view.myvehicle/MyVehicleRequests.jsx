@@ -347,12 +347,14 @@ const MyVehicleRequests = () => {
     try {
       console.log("Deleting request with ID:", requestToDelete.id);
       setLoading(true);
-      const response = await api.delete(`/vehicle-requests/delete/${requestToDelete.id}`);
-      
+      const response = await api.delete(
+        `/vehicle-requests/delete/${requestToDelete.id}`
+      );
+
       // Hiển thị message từ backend hoặc message mặc định
       const successMessage = response.data?.message || "Xóa yêu cầu thành công";
       toast.success(successMessage);
-      
+
       setDeleteModalVisible(false);
       setRequestToDelete(null);
       fetchMyVehicleRequests();
@@ -367,14 +369,14 @@ const MyVehicleRequests = () => {
           errorMessage = errorData.message;
         }
         // Plain string error
-        else if (typeof errorData === 'string') {
+        else if (typeof errorData === "string") {
           errorMessage = errorData;
         }
       } else if (err.message) {
         errorMessage = err.message;
       }
 
-      toast.error(errorMessage, { duration: 5000 });
+      toast.error(errorMessage, { duration: 3000 });
     } finally {
       setLoading(false);
     }
@@ -397,9 +399,7 @@ const MyVehicleRequests = () => {
 
   const handleVehicleImagesChange = ({ fileList }) => {
     if (fileList.length > MAX_VEHICLE_IMAGES) {
-      message.warning(
-        `Chỉ được chọn tối đa ${MAX_VEHICLE_IMAGES} hình ảnh xe`
-      );
+      message.warning(`Chỉ được chọn tối đa ${MAX_VEHICLE_IMAGES} hình ảnh xe`);
       fileList = fileList.slice(-MAX_VEHICLE_IMAGES);
     }
     setVehicleImageFileList(fileList);
@@ -430,9 +430,13 @@ const MyVehicleRequests = () => {
       formData.append("make", values.make);
       formData.append("model", values.model);
       formData.append("modelYear", values.modelYear);
-      formData.append("color", values.color);
-      formData.append("batteryCapacityKwh", values.batteryCapacityKwh);
-      formData.append("rangeKm", values.rangeKm);
+      // Color không required, nếu bỏ trống thì gửi empty string
+      formData.append("color", values.color || "");
+      // Battery capacity không required, nếu bỏ trống thì gửi 0
+      formData.append("batteryCapacityKwh", values.batteryCapacityKwh ?? 0);
+      // Range không required, nếu bỏ trống thì gửi 0
+      formData.append("rangeKm", values.rangeKm ?? 0);
+      // Plate number là required, không có fallback
       formData.append("plateNumber", values.plateNumber);
       vehicleImageFileList.forEach((file) =>
         formData.append("vehicleImages", file.originFileObj)
@@ -457,10 +461,55 @@ const MyVehicleRequests = () => {
         },
       });
 
+      // Kiểm tra response data để xử lý trường hợp backend trả về 200 OK nhưng có lỗi
+      const responseData = response.data;
+
+      console.log("=== CREATE REQUEST RESPONSE ===");
+      console.log("Status:", response.status);
+      console.log("Response data:", responseData);
+      console.log("Response data keys:", Object.keys(responseData || {}));
+      console.log("Response data.data:", responseData?.data);
+      console.log(
+        "Response data.data keys:",
+        Object.keys(responseData?.data || {})
+      );
+      console.log("Full response:", JSON.stringify(responseData, null, 2));
+
+      // Kiểm tra các trường hợp backend trả về lỗi dù status code là 200
+      // Kiểm tra trong responseData và responseData.data
+      const hasError =
+        responseData?.success === false ||
+        responseData?.isSuccess === false ||
+        responseData?.httpStatus === "BAD_REQUEST" ||
+        responseData?.httpStatus === "CONFLICT" ||
+        (responseData?.status && responseData.status >= 400) ||
+        responseData?.data?.success === false ||
+        responseData?.data?.isSuccess === false ||
+        responseData?.data?.httpStatus === "BAD_REQUEST" ||
+        responseData?.data?.httpStatus === "CONFLICT" ||
+        (responseData?.data?.status && responseData.data.status >= 400) ||
+        responseData?.data?.error ||
+        responseData?.error;
+
+      if (hasError) {
+        // Xử lý như lỗi
+        console.log("=== ERROR DETECTED IN 200 RESPONSE ===");
+        console.log("Response data:", responseData);
+        const errorMessage =
+          responseData?.data?.message ||
+          responseData?.message ||
+          "Biển số xe đã tồn tại trong hệ thống. Vui lòng kiểm tra lại!";
+        toast.error(errorMessage, { duration: 3000 });
+        setLoading(false);
+        return;
+      }
+
       // Hiển thị message từ backend hoặc message mặc định
-      const successMessage = response.data?.message || "Tạo yêu cầu xe mới thành công! Vui lòng chờ duyệt.";
+      const successMessage =
+        responseData?.message ||
+        "Tạo yêu cầu xe mới thành công! Vui lòng chờ duyệt.";
       toast.success(successMessage);
-      
+
       setCreateModalVisible(false);
       createForm.resetFields();
       setVehicleImageFileList([]);
@@ -475,20 +524,21 @@ const MyVehicleRequests = () => {
       console.error("Has title?", err.response?.data?.title);
       console.error("Has message?", err.response?.data?.message);
       console.error("Full error object:", err);
-      
+
       const errorData = err.response?.data;
-      let errorMessage = "Biển số xe đã tồn tại trong hệ thống. Vui lòng kiểm tra lại!";
+      let errorMessage =
+        "Biển số xe đã tồn tại trong hệ thống. Vui lòng kiểm tra lại!";
 
       // Nếu backend trả về message cụ thể thì dùng message đó
       if (errorData?.message) {
         errorMessage = errorData.message;
       }
       // Nếu có lỗi khác, mặc định vẫn là lỗi trùng biển số
-      else if (typeof errorData === 'string' && errorData) {
+      else if (typeof errorData === "string" && errorData) {
         errorMessage = errorData;
       }
 
-      toast.error(errorMessage, { duration: 5000 });
+      toast.error(errorMessage, { duration: 3000 });
     } finally {
       setLoading(false);
     }
@@ -520,9 +570,13 @@ const MyVehicleRequests = () => {
       formData.append("make", values.make);
       formData.append("model", values.model);
       formData.append("modelYear", values.modelYear);
-      formData.append("color", values.color);
-      formData.append("batteryCapacityKwh", values.batteryCapacityKwh);
-      formData.append("rangeKm", values.rangeKm);
+      // Color không required, nếu bỏ trống thì gửi empty string
+      formData.append("color", values.color || "");
+      // Battery capacity không required, nếu bỏ trống thì gửi 0
+      formData.append("batteryCapacityKwh", values.batteryCapacityKwh ?? 0.0);
+      // Range không required, nếu bỏ trống thì gửi 0
+      formData.append("rangeKm", values.rangeKm ?? 0.0);
+      // Plate number là required
       formData.append("plateNumber", values.plateNumber);
       vehicleImageFileList.forEach((file) =>
         formData.append("vehicleImages", file.originFileObj)
@@ -547,9 +601,11 @@ const MyVehicleRequests = () => {
       });
 
       // Hiển thị message từ backend hoặc message mặc định
-      const successMessage = response.data?.message || "Tạo yêu cầu cập nhật xe thành công! Vui lòng chờ staff duyệt.";
+      const successMessage =
+        response.data?.message ||
+        "Tạo yêu cầu cập nhật xe thành công! Vui lòng chờ staff duyệt.";
       toast.success(successMessage);
-      
+
       setUpdateModalVisible(false);
       updateForm.resetFields();
       setVehicleImageFileList([]);
@@ -568,23 +624,25 @@ const MyVehicleRequests = () => {
           errorMessage = errorData.message;
         }
         // 2. Xử lý validation errors (format từ ASP.NET)
-        else if (errorData.errors && typeof errorData.errors === 'object') {
+        else if (errorData.errors && typeof errorData.errors === "object") {
           const fieldNames = {
-            'PlateNumber': 'Biển số xe',
-            'Make': 'Hãng xe',
-            'Model': 'Model',
-            'ModelYear': 'Năm sản xuất',
-            'Color': 'Màu sắc',
-            'BatteryCapacityKwh': 'Dung lượng pin',
-            'RangeKm': 'Quãng đường',
-            'VehicleImage': 'Hình ảnh xe',
-            'RegistrationPaperUrl': 'Giấy đăng ký',
-            'VehicleId': 'Xe'
+            PlateNumber: "Biển số xe",
+            Make: "Hãng xe",
+            Model: "Model",
+            ModelYear: "Năm sản xuất",
+            Color: "Màu sắc",
+            BatteryCapacityKwh: "Dung lượng pin",
+            RangeKm: "Quãng đường",
+            VehicleImage: "Hình ảnh xe",
+            RegistrationPaperUrl: "Giấy đăng ký",
+            VehicleId: "Xe",
           };
-          
+
           const errorMessages = Object.entries(errorData.errors)
             .map(([field, messages]) => {
-              const messageArray = Array.isArray(messages) ? messages : [messages];
+              const messageArray = Array.isArray(messages)
+                ? messages
+                : [messages];
               const fieldName = fieldNames[field] || field;
               return `${fieldName}: ${messageArray.join(", ")}`;
             })
@@ -596,14 +654,14 @@ const MyVehicleRequests = () => {
           errorMessage = "Lỗi validation: Vui lòng kiểm tra lại thông tin";
         }
         // 4. Plain string error
-        else if (typeof errorData === 'string') {
+        else if (typeof errorData === "string") {
           errorMessage = errorData;
         }
       } else if (err.message) {
         errorMessage = err.message;
       }
 
-      toast.error(errorMessage, { duration: 5000 });
+      toast.error(errorMessage, { duration: 3000 });
     } finally {
       setLoading(false);
     }
@@ -652,8 +710,8 @@ const MyVehicleRequests = () => {
             model: vehicle.model,
             modelYear: vehicle.modelYear,
             color: vehicle.color,
-            batteryCapacityKwh: vehicle.batteryCapacityKwh,
-            rangeKm: vehicle.rangeKm,
+            batteryCapacityKwh: vehicle.batteryCapacityKwh || 0.0,
+            rangeKm: vehicle.rangeKm || 0,
           });
           setUpdateModalVisible(true);
         } else {
@@ -828,7 +886,7 @@ const MyVehicleRequests = () => {
             rules={[
               { required: true, message: "Vui lòng nhập hãng xe" },
               { min: 2, message: "Hãng xe phải có ít nhất 2 ký tự" },
-              { max: 50, message: "Hãng xe không được quá 50 ký tự" }
+              { max: 50, message: "Hãng xe không được quá 50 ký tự" },
             ]}
           >
             <Input placeholder="VD: Toyota, Honda, Vinfast..." />
@@ -840,7 +898,7 @@ const MyVehicleRequests = () => {
             rules={[
               { required: true, message: "Vui lòng nhập model" },
               { min: 1, message: "Model phải có ít nhất 1 ký tự" },
-              { max: 50, message: "Model không được quá 50 ký tự" }
+              { max: 50, message: "Model không được quá 50 ký tự" },
             ]}
           >
             <Input placeholder="VD: Vios, City, VF5..." />
@@ -859,13 +917,14 @@ const MyVehicleRequests = () => {
               },
             ]}
           >
-            <InputNumber min={1900} max={new Date().getFullYear()} style={{ width: "100%" }} />
+            <InputNumber
+              min={1900}
+              max={new Date().getFullYear()}
+              style={{ width: "100%" }}
+            />
           </Form.Item>
 
-          <Form.Item
-            name="color"
-            label="Màu sắc"
-          >
+          <Form.Item name="color" label="Màu sắc">
             <Input placeholder="VD: Trắng, Đen, Xanh..." />
           </Form.Item>
 
@@ -873,28 +932,37 @@ const MyVehicleRequests = () => {
             name="batteryCapacityKwh"
             label="Dung lượng pin (kWh)"
             rules={[
-              { 
-                type: 'number',
+              {
+                type: "number",
                 min: 0,
-                message: "Dung lượng pin không được là số âm"
-              }
+                message: "Dung lượng pin không được là số âm",
+              },
             ]}
           >
-            <InputNumber min={0} step={0.1} style={{ width: "100%" }} placeholder="VD: 50.5" />
+            <InputNumber
+              min={0}
+              step={0.1}
+              style={{ width: "100%" }}
+              placeholder="VD: 50.5"
+            />
           </Form.Item>
 
           <Form.Item
             name="rangeKm"
             label="Quãng đường (km)"
             rules={[
-              { 
-                type: 'number',
+              {
+                type: "number",
                 min: 0,
-                message: "Quãng đường không được là số âm"
-              }
+                message: "Quãng đường không được là số âm",
+              },
             ]}
           >
-            <InputNumber min={0} style={{ width: "100%" }} placeholder="VD: 300" />
+            <InputNumber
+              min={0}
+              style={{ width: "100%" }}
+              placeholder="VD: 300"
+            />
           </Form.Item>
 
           <Form.Item
@@ -1042,25 +1110,27 @@ const MyVehicleRequests = () => {
                 },
               ]}
             >
-              <InputNumber min={1900} max={new Date().getFullYear()} style={{ width: "100%" }} />
+              <InputNumber
+                min={1900}
+                max={new Date().getFullYear()}
+                style={{ width: "100%" }}
+              />
             </Form.Item>
 
-            <Form.Item
-              name="color"
-              label="Màu sắc"
-            >
+            <Form.Item name="color" label="Màu sắc">
               <Input placeholder="VD: Trắng, Đen, Xanh..." />
             </Form.Item>
 
             <Form.Item
               name="batteryCapacityKwh"
               label="Dung lượng pin (kWh)"
+              value={0.0}
               rules={[
-                { 
-                  type: 'number',
+                {
+                  type: "number",
                   min: 0,
-                  message: "Dung lượng pin không được là số âm"
-                }
+                  message: "Dung lượng pin không được là số âm",
+                },
               ]}
             >
               <InputNumber min={0} style={{ width: "100%" }} />
@@ -1069,12 +1139,13 @@ const MyVehicleRequests = () => {
             <Form.Item
               name="rangeKm"
               label="Quãng đường (km)"
+              value={0}
               rules={[
-                { 
-                  type: 'number',
+                {
+                  type: "number",
                   min: 0,
-                  message: "Quãng đường không được là số âm"
-                }
+                  message: "Quãng đường không được là số âm",
+                },
               ]}
             >
               <InputNumber min={0} style={{ width: "100%" }} />
@@ -1178,9 +1249,6 @@ const MyVehicleRequests = () => {
         {selectedRequest && (
           <div>
             <Descriptions bordered column={2} size="small">
-              <Descriptions.Item label="ID yêu cầu" span={2}>
-                {selectedRequest.id}
-              </Descriptions.Item>
               {selectedRequest.vehicleId && (
                 <Descriptions.Item label="ID xe" span={2}>
                   {selectedRequest.vehicleId}
@@ -1223,13 +1291,19 @@ const MyVehicleRequests = () => {
                 {selectedRequest.modelYear}
               </Descriptions.Item>
               <Descriptions.Item label="Màu">
-                {selectedRequest.color}
+                {selectedRequest.color || (
+                  <Tag color={"gray"}>CHƯA CẬP NHẬT</Tag>
+                )}
               </Descriptions.Item>
               <Descriptions.Item label="Pin (kWh)">
-                {selectedRequest.batteryCapacityKwh}
+                {selectedRequest.batteryCapacityKwh || (
+                  <Tag color={"gray"}>CHƯA CẬP NHẬT</Tag>
+                )}
               </Descriptions.Item>
               <Descriptions.Item label="Quãng đường (km)">
-                {selectedRequest.rangeKm}
+                {selectedRequest.rangeKm || (
+                  <Tag color={"gray"}>CHƯA CẬP NHẬT</Tag>
+                )}
               </Descriptions.Item>
               <Descriptions.Item label="Người tạo">
                 {selectedRequest.createdByName}
@@ -1258,9 +1332,8 @@ const MyVehicleRequests = () => {
                 style={{ width: "100%" }}
               >
                 {(() => {
-                  const vehicleImages = getVehicleImagesFromRequest(
-                    selectedRequest
-                  );
+                  const vehicleImages =
+                    getVehicleImagesFromRequest(selectedRequest);
                   if (!vehicleImages.length) return null;
                   return (
                     <div>
@@ -1294,7 +1367,12 @@ const MyVehicleRequests = () => {
                     <Image
                       src={selectedRequest.registrationPaperUrl}
                       alt="Registration"
-                      style={{ maxWidth: "100%", maxHeight: 300 }}
+                      style={{
+                        width: 180,
+                        height: 150,
+                        objectFit: "cover",
+                        borderRadius: 8,
+                      }}
                       preview
                     />
                   </div>

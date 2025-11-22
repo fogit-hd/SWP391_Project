@@ -54,7 +54,10 @@ const ReviewEContract = () => {
   ); // Filter status - Admin sees all, Staff sees only PENDING_REVIEW
   const [form] = Form.useForm();
   const [selectedDecision, setSelectedDecision] = useState(null); // Track selected button
-  const [buttonAnimation, setButtonAnimation] = useState({ approve: false, reject: false });
+  const [buttonAnimation, setButtonAnimation] = useState({
+    approve: false,
+    reject: false,
+  });
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -272,7 +275,11 @@ const ReviewEContract = () => {
             day: "2-digit",
           });
         } catch (error) {
-          return "Invalid Date";
+          return (
+            <>
+              <Tag>CHƯA CẬP NHẬT</Tag>
+            </>
+          );
         }
       },
     },
@@ -394,187 +401,201 @@ const ReviewEContract = () => {
           selectedKey="review-contracts"
         />
 
-      <Layout style={{ marginLeft: collapsed ? 80 : 280 }}>
-        <Header
-          style={{
-            padding: 0,
-            background: "#fff",
-            borderBottom: "1px solid #f0f0f0",
-          }}
-        >
-          <Title level={3} style={{ margin: "16px 24px" }}>
-            Review E-Contracts
-          </Title>
-        </Header>
-
-        <Content style={{ margin: "24px 16px" }}>
-          <Card>
-            <div
-              style={{
-                marginBottom: "16px",
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-              }}
-            >
-              <Title level={5} style={{ margin: 0 }}>
-                Danh sách hợp đồng
-              </Title>
-              {isAdmin && (
-                <Space>
-                  <span>Lọc theo trạng thái:</span>
-                  <Select
-                    value={selectedStatus}
-                    onChange={handleStatusChange}
-                    style={{ width: 200 }}
-                    options={[
-                      { value: "ALL", label: "Tất cả" },
-                      { value: "PENDING_REVIEW", label: "Chờ duyệt" },
-                      { value: "APPROVED", label: "Đã duyệt" },
-                      { value: "REJECTED", label: "Từ chối" },
-                    ]}
-                  />
-                </Space>
-              )}
-              {isStaff && (
-                <Tag color="orange" icon={<ClockCircleOutlined />}>
-                  Danh sách hợp đồng đang duyệt hoặc chờ duyệt
-                </Tag>
-              )}
-            </div>
-            <Spin spinning={loading}>
-              <Table
-                columns={columns}
-                dataSource={contracts}
-                rowKey="id"
-                pagination={{
-                  pageSize: 10,
-                  showTotal: (total) => `Tổng: ${total} hợp đồng`,
-                }}
-                locale={{
-                  emptyText: "Không có hợp đồng nào",
-                }}
-              />
-            </Spin>
-          </Card>
-        </Content>
-      </Layout>
-
-      <Modal
-        title="Xem trước hợp đồng"
-        open={previewModalVisible}
-        onCancel={() => setPreviewModalVisible(false)}
-        footer={[
-          <Button key="close" onClick={() => setPreviewModalVisible(false)}>
-            Đóng
-          </Button>,
-        ]}
-        width={1000}
-      >
-        <Spin spinning={previewLoading}>
-          {selectedContractContent ? (
-            <div
-              className="ant-typography"
-              style={{
-                border: "1px solid #d9d9d9",
-                padding: "24px",
-                borderRadius: "6px",
-                backgroundColor: "#fafafa",
-                maxHeight: "600px",
-                overflowY: "auto",
-              }}
-              dangerouslySetInnerHTML={{ __html: selectedContractContent }}
-            />
-          ) : (
-            <div style={{ textAlign: "center", padding: "50px" }}>
-              <Paragraph>Không có nội dung</Paragraph>
-            </div>
-          )}
-        </Spin>
-      </Modal>
-
-      <Modal
-        title="Review Contract"
-        open={reviewModalVisible}
-        onCancel={() => {
-          setReviewModalVisible(false);
-          form.resetFields();
-          setSelectedDecision(null);
-          setButtonAnimation({ approve: false, reject: false });
-        }}
-        footer={null}
-        width={600}
-      >
-        <Form form={form} layout="vertical" onFinish={handleReviewSubmit}>
-          <Form.Item
-            name="approve"
-            label="Quyết định"
-            rules={[{ required: true, message: "Vui lòng chọn quyết định" }]}
+        <Layout style={{ marginLeft: collapsed ? 80 : 280 }}>
+          <Header
+            style={{
+              padding: 0,
+              background: "#fff",
+              borderBottom: "1px solid #f0f0f0",
+            }}
           >
-            <Row gutter={16}>
-              <Col span={12}>
-                <Button
-                  type={selectedDecision === true ? "primary" : "default"}
-                  icon={<CheckOutlined />}
-                  block
-                  onClick={handleApproveClick}
-                  style={{
-                    height: "40px",
-                    transition: "all 0.3s ease",
-                    boxShadow: selectedDecision === true ? "0 4px 12px rgba(24, 144, 255, 0.4)" : "none",
-                    borderWidth: selectedDecision === true ? "2px" : "1px",
-                    fontWeight: selectedDecision === true ? "600" : "normal",
-                  }}
-                  className={buttonAnimation.approve ? "button-pulse-approve" : ""}
-                >
-                  Duyệt
-                </Button>
-              </Col>
-              <Col span={12}>
-                <Button
-                  danger={selectedDecision === false}
-                  type={selectedDecision === false ? "primary" : "default"}
-                  icon={<CloseOutlined />}
-                  block
-                  onClick={handleRejectClick}
-                  style={{
-                    height: "40px",
-                    transition: "all 0.3s ease",
-                    boxShadow: selectedDecision === false ? "0 4px 12px rgba(255, 77, 79, 0.4)" : "none",
-                    borderWidth: selectedDecision === false ? "2px" : "1px",
-                    fontWeight: selectedDecision === false ? "600" : "normal",
-                  }}
-                  className={buttonAnimation.reject ? "button-pulse-reject" : ""}
-                >
-                  Từ chối
-                </Button>
-              </Col>
-            </Row>
-          </Form.Item>
+            <Title level={3} style={{ margin: "16px 24px" }}>
+              Review E-Contracts
+            </Title>
+          </Header>
 
-          <Form.Item name="note" label="Ghi chú (tùy chọn)">
-            <TextArea rows={4} placeholder="Nhập ghi chú về quyết định..." />
-          </Form.Item>
-
-          <Form.Item style={{ marginBottom: 0, textAlign: "right" }}>
-            <Space>
-              <Button
-                onClick={() => {
-                  setReviewModalVisible(false);
-                  form.resetFields();
-                  setSelectedDecision(null);
-                  setButtonAnimation({ approve: false, reject: false });
+          <Content style={{ margin: "24px 16px" }}>
+            <Card>
+              <div
+                style={{
+                  marginBottom: "16px",
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
                 }}
               >
-                Hủy
-              </Button>
-              <Button type="primary" htmlType="submit" loading={reviewLoading}>
-                Gửi Review
-              </Button>
-            </Space>
-          </Form.Item>
-        </Form>
-      </Modal>
+                <Title level={5} style={{ margin: 0 }}>
+                  Danh sách hợp đồng
+                </Title>
+                {isAdmin && (
+                  <Space>
+                    <span>Lọc theo trạng thái:</span>
+                    <Select
+                      value={selectedStatus}
+                      onChange={handleStatusChange}
+                      style={{ width: 200 }}
+                      options={[
+                        { value: "ALL", label: "Tất cả" },
+                        { value: "PENDING_REVIEW", label: "Chờ duyệt" },
+                        { value: "APPROVED", label: "Đã duyệt" },
+                        { value: "REJECTED", label: "Từ chối" },
+                      ]}
+                    />
+                  </Space>
+                )}
+                {isStaff && (
+                  <Tag color="orange" icon={<ClockCircleOutlined />}>
+                    Danh sách hợp đồng đang duyệt hoặc chờ duyệt
+                  </Tag>
+                )}
+              </div>
+              <Spin spinning={loading}>
+                <Table
+                  columns={columns}
+                  dataSource={contracts}
+                  rowKey="id"
+                  pagination={{
+                    pageSize: 10,
+                    showTotal: (total) => `Tổng: ${total} hợp đồng`,
+                  }}
+                  locale={{
+                    emptyText: "Không có hợp đồng nào",
+                  }}
+                />
+              </Spin>
+            </Card>
+          </Content>
+        </Layout>
+
+        <Modal
+          title="Xem trước hợp đồng"
+          open={previewModalVisible}
+          onCancel={() => setPreviewModalVisible(false)}
+          footer={[
+            <Button key="close" onClick={() => setPreviewModalVisible(false)}>
+              Đóng
+            </Button>,
+          ]}
+          width={1000}
+        >
+          <Spin spinning={previewLoading}>
+            {selectedContractContent ? (
+              <div
+                className="ant-typography"
+                style={{
+                  border: "1px solid #d9d9d9",
+                  padding: "24px",
+                  borderRadius: "6px",
+                  backgroundColor: "#fafafa",
+                  maxHeight: "600px",
+                  overflowY: "auto",
+                }}
+                dangerouslySetInnerHTML={{ __html: selectedContractContent }}
+              />
+            ) : (
+              <div style={{ textAlign: "center", padding: "50px" }}>
+                <Paragraph>Không có nội dung</Paragraph>
+              </div>
+            )}
+          </Spin>
+        </Modal>
+
+        <Modal
+          title="Review Contract"
+          open={reviewModalVisible}
+          onCancel={() => {
+            setReviewModalVisible(false);
+            form.resetFields();
+            setSelectedDecision(null);
+            setButtonAnimation({ approve: false, reject: false });
+          }}
+          footer={null}
+          width={600}
+        >
+          <Form form={form} layout="vertical" onFinish={handleReviewSubmit}>
+            <Form.Item
+              name="approve"
+              label="Quyết định"
+              rules={[{ required: true, message: "Vui lòng chọn quyết định" }]}
+            >
+              <Row gutter={16}>
+                <Col span={12}>
+                  <Button
+                    type={selectedDecision === true ? "primary" : "default"}
+                    icon={<CheckOutlined />}
+                    block
+                    onClick={handleApproveClick}
+                    style={{
+                      height: "40px",
+                      transition: "all 0.3s ease",
+                      boxShadow:
+                        selectedDecision === true
+                          ? "0 4px 12px rgba(24, 144, 255, 0.4)"
+                          : "none",
+                      borderWidth: selectedDecision === true ? "2px" : "1px",
+                      fontWeight: selectedDecision === true ? "600" : "normal",
+                    }}
+                    className={
+                      buttonAnimation.approve ? "button-pulse-approve" : ""
+                    }
+                  >
+                    Duyệt
+                  </Button>
+                </Col>
+                <Col span={12}>
+                  <Button
+                    danger={selectedDecision === false}
+                    type={selectedDecision === false ? "primary" : "default"}
+                    icon={<CloseOutlined />}
+                    block
+                    onClick={handleRejectClick}
+                    style={{
+                      height: "40px",
+                      transition: "all 0.3s ease",
+                      boxShadow:
+                        selectedDecision === false
+                          ? "0 4px 12px rgba(255, 77, 79, 0.4)"
+                          : "none",
+                      borderWidth: selectedDecision === false ? "2px" : "1px",
+                      fontWeight: selectedDecision === false ? "600" : "normal",
+                    }}
+                    className={
+                      buttonAnimation.reject ? "button-pulse-reject" : ""
+                    }
+                  >
+                    Từ chối
+                  </Button>
+                </Col>
+              </Row>
+            </Form.Item>
+
+            <Form.Item name="note" label="Ghi chú (tùy chọn)">
+              <TextArea rows={4} placeholder="Nhập ghi chú về quyết định..." />
+            </Form.Item>
+
+            <Form.Item style={{ marginBottom: 0, textAlign: "right" }}>
+              <Space>
+                <Button
+                  onClick={() => {
+                    setReviewModalVisible(false);
+                    form.resetFields();
+                    setSelectedDecision(null);
+                    setButtonAnimation({ approve: false, reject: false });
+                  }}
+                >
+                  Hủy
+                </Button>
+                <Button
+                  type="primary"
+                  htmlType="submit"
+                  loading={reviewLoading}
+                >
+                  Gửi Review
+                </Button>
+              </Space>
+            </Form.Item>
+          </Form>
+        </Modal>
       </Layout>
     </>
   );
