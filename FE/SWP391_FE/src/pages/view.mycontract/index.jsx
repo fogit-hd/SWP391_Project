@@ -16,6 +16,7 @@ import {
   EyeOutlined,
   EditOutlined,
   ArrowLeftOutlined,
+  ReloadOutlined,
 } from "@ant-design/icons";
 import api from "../../config/axios";
 // import { useSelector } from "react-redux";
@@ -330,25 +331,36 @@ const MyContracts = () => {
               style={{
                 display: "flex",
                 alignItems: "center",
+                justifyContent: "space-between",
                 marginBottom: "16px",
               }}
             >
-              <Button
-                type="text"
-                icon={<ArrowLeftOutlined />}
-                onClick={handleBack}
-                style={{ marginRight: "12px" }}
-              >
-                Quay lại
-              </Button>
-              <div>
-                <Title level={2} style={{ margin: 0 }}>
-                  Hợp đồng của tôi
-                </Title>
-                <Paragraph style={{ margin: 0 }}>
-                  Danh sách tất cả các hợp đồng mà bạn tham gia
-                </Paragraph>
+              <div style={{ display: "flex", alignItems: "center" }}>
+                <Button
+                  type="text"
+                  icon={<ArrowLeftOutlined />}
+                  onClick={handleBack}
+                  style={{ marginRight: "12px" }}
+                >
+                  Quay lại
+                </Button>
+                <div>
+                  <Title level={2} style={{ margin: 0 }}>
+                    Hợp đồng của tôi
+                  </Title>
+                  <Paragraph style={{ margin: 0 }}>
+                    Danh sách tất cả các hợp đồng mà bạn tham gia
+                  </Paragraph>
+                </div>
               </div>
+              <Button
+                type="default"
+                icon={<ReloadOutlined />}
+                onClick={() => loadContracts()}
+                loading={loading}
+              >
+                Làm mới
+              </Button>
             </div>
 
             <Table
