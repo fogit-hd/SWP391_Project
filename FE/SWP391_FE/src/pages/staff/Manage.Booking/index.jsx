@@ -276,7 +276,7 @@ export default function ManageBooking() {
                             <div style={{ fontWeight:700, marginBottom:4 }}>
                               Người đặt lịch: <br/>
                              <FaUser /> {b.userName || '(không rõ)'}</div>
-                            {b.userName && (<div style={{ fontSize:12, color:'#94a3b8', marginBottom:4 }}>Mã đặt: {b.id}</div>)}
+                            {b.userName && (<div style={{ fontSize:12, color:'#94a3b8', marginBottom:4 }}></div>)}
                             <div className="time-panel">
                               <div className="time-col">
                                 <div className="time-label">Bắt đầu</div>
@@ -386,7 +386,7 @@ export default function ManageBooking() {
           {vehicleDetails ? (
             <div>
               <Descriptions bordered column={2} size="small">
-                
+
                 <Descriptions.Item label="Biển số">{vehicleDetails.plateNumber}</Descriptions.Item>
                 <Descriptions.Item label="Trạng thái"><Tag color="green">Đã duyệt</Tag></Descriptions.Item>
                 <Descriptions.Item label="Hãng xe">{vehicleDetails.make}</Descriptions.Item>
@@ -457,7 +457,9 @@ export default function ManageBooking() {
                         </div>
                         <div className="trip-event-body">
                           <div className="trip-event-title">{t.eventType || 'EVENT'}</div>
-                          <div className="trip-event-meta">Xe: {t.vehicleName || 'N/A'} <br/> Biển số: {t.vehiclePlate || 'N/A'}<br/>{ <>Mô tả : {t.description}<br/></>}Nhân viên đã tạo: {t.staffName || 'N/A'}</div>
+                          <div className="trip-event-meta">Xe: {t.vehicleName || 'N/A'} <br/> 
+                          Biển số: {t.vehiclePlate || 'N/A'}<br/>{ <>Mô tả hư hỏng : {t.description}<br/>
+                          </>}Nhân viên đã tạo: {t.staffName || 'N/A'}</div>
                         </div>
                         <div className="trip-event-right">
                           <Tag color={t.eventType === 'DAMAGE' ? 'red' : t.eventType === 'CHECKIN' ? 'blue' : 'green'}>{t.eventType}</Tag>
