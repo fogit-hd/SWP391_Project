@@ -20,6 +20,7 @@ import {
   Row,
   Col,
   Descriptions,
+  Image,
 } from "antd";
 import {
   CheckCircleTwoTone,
@@ -3024,12 +3025,27 @@ const MyGroup = () => {
                   v.model ||
                   v.licensePlate ||
                   "Vehicle";
+
+                // Parse images
+                let images = [];
+                try {
+                  if (v.vehicleImageUrl) {
+                    if (
+                      typeof v.vehicleImageUrl === "string" &&
+                      v.vehicleImageUrl.trim().startsWith("[")
+                    ) {
+                      images = JSON.parse(v.vehicleImageUrl);
+                    } else {
+                      images = [v.vehicleImageUrl];
+                    }
+                  }
+                } catch (e) {
+                  images = v.vehicleImageUrl ? [v.vehicleImageUrl] : [];
+                }
+
                 return (
                   <List.Item
                     actions={[
-                      <Tag color="red" key="no-contract">
-                        Không có hợp đồng
-                      </Tag>,
                       <Button
                         key="attach"
                         type="primary"
@@ -3053,12 +3069,74 @@ const MyGroup = () => {
                       title={displayName}
                       description={
                         <div>
-                          {v.licensePlate && (
-                            <div>Biển số: {v.licensePlate}</div>
-                          )}
+                          <div
+                            style={{
+                              display: "grid",
+                              gridTemplateColumns: "repeat(2, 1fr)",
+                              gap: "4px 16px",
+                              marginBottom: "8px",
+                              fontSize: "13px",
+                            }}
+                          >
+                            <div>
+                              <span style={{ color: "#888" }}>Biển số:</span>{" "}
+                              {v.plateNumber || v.licensePlate || "-"}
+                            </div>
+                            <div>
+                              <span style={{ color: "#888" }}>Hãng:</span>{" "}
+                              {v.make || v.brand || "-"}
+                            </div>
+                            <div>
+                              <span style={{ color: "#888" }}>Màu:</span>{" "}
+                              {v.color || "-"}
+                            </div>
+                            <div>
+                              <span style={{ color: "#888" }}>Năm:</span>{" "}
+                              {v.modelYear || v.year || "-"}
+                            </div>
+                            <div>
+                              <span style={{ color: "#888" }}>Pin:</span>{" "}
+                              {v.batteryCapacityKwh || v.batteryKwh || "-"} kWh
+                            </div>
+                            <div>
+                              <span style={{ color: "#888" }}>
+                                Tầm hoạt động:
+                              </span>{" "}
+                              {v.rangeKm || v.range || "-"} km
+                            </div>
+                          </div>
+
                           {v.id && (
-                            <div style={{ fontSize: "12px", color: "#999" }}>
+                            <div
+                              style={{
+                                fontSize: "12px",
+                                color: "#999",
+                                marginBottom: 8,
+                              }}
+                            >
                               ID: {v.id.substring(0, 8)}...
+                            </div>
+                          )}
+
+                          {images.length > 0 && (
+                            <div style={{ marginTop: 8 }}>
+                              <Image.PreviewGroup>
+                                <Space size={8} wrap>
+                                  {images.map((url, idx) => (
+                                    <Image
+                                      key={idx}
+                                      src={url}
+                                      width={100}
+                                      height={75}
+                                      style={{
+                                        objectFit: "cover",
+                                        borderRadius: 4,
+                                        border: "1px solid #f0f0f0",
+                                      }}
+                                    />
+                                  ))}
+                                </Space>
+                              </Image.PreviewGroup>
                             </div>
                           )}
                         </div>
