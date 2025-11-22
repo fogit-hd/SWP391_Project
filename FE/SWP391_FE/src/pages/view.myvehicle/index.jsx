@@ -42,6 +42,61 @@ const { Header, Content, Footer, Sider } = Layout;
 const { Option } = Select;
 const { Title } = Typography;
 
+// Helper function to normalize image list (same as in MyVehicleRequests.jsx)
+const normalizeImageList = (value) => {
+  if (!value) return [];
+  if (Array.isArray(value)) {
+    return value
+      .map((item) => {
+        if (typeof item === "string") return item;
+        if (item?.vehicleImageUrl) return item.vehicleImageUrl;
+        return "";
+      })
+      .filter(Boolean);
+  }
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    if (!trimmed) return [];
+    try {
+      const parsed = JSON.parse(trimmed);
+      if (Array.isArray(parsed)) {
+        return normalizeImageList(parsed);
+      }
+    } catch (_) {
+      // not JSON, fallback to delimiter split
+    }
+    return trimmed
+      .split(/[,;|]/)
+      .map((item) => item.trim())
+      .filter(Boolean);
+  }
+  return [];
+};
+
+// Helper function to get vehicle images from vehicle object
+const getVehicleImages = (vehicle) => {
+  if (!vehicle) return [];
+  
+  // Kiểm tra tất cả các field có thể chứa ảnh
+  const possibleSources = [
+    vehicle.vehicleImageUrl,
+    vehicle.vehicleImageUrlList,
+  ];
+  
+  // Lấy tất cả ảnh từ tất cả các nguồn
+  const allImages = [];
+  for (const source of possibleSources) {
+    if (!source) continue;
+    const list = normalizeImageList(source);
+    if (list.length) {
+      allImages.push(...list);
+    }
+  }
+  
+  // Loại bỏ duplicate và trả về
+  return [...new Set(allImages)];
+};
+
 const MyVehicle = () => {
   const navigate = useNavigate();
   const { isAuthenticated, isCoOwner, isAdmin, isStaff } = useAuth();
@@ -115,15 +170,6 @@ const MyVehicle = () => {
 
   // Table columns definition
   const columns = [
-    {
-      title: "ID",
-      dataIndex: "id",
-      key: "id",
-      width: 100,
-      ellipsis: true,
-      fixed: "left",
-      render: (id) => <Tooltip title={id}>{id.substring(0, 8)}...</Tooltip>,
-    },
     {
       title: "Biển số",
       dataIndex: "plateNumber",
@@ -265,7 +311,10 @@ const MyVehicle = () => {
                 className="vehicle-action-button"
                 onClick={(e) => {
                   e.stopPropagation();
-                  console.log("Dropdown button clicked for vehicle:", record.id);
+                  console.log(
+                    "Dropdown button clicked for vehicle:",
+                    record.id
+                  );
                 }}
               />
             </Dropdown>
@@ -495,12 +544,6 @@ const MyVehicle = () => {
     deleteVehicle(vehicleRecord);
   };
 
-  const handleDeleteClick = (record) => {
-    console.log("handleDeleteClick called with record:", record);
-    setVehicleToDelete(record);
-    setDeleteModalVisible(true);
-  };
-
   const handleCopyId = async (vehicleId) => {
     try {
       await navigator.clipboard.writeText(vehicleId);
@@ -524,23 +567,27 @@ const MyVehicle = () => {
 
   const handleViewDetail = async (vehicle) => {
     console.log("View detail clicked for:", vehicle.id);
-    
+
     try {
       setLoading(true);
       // Call API to get full vehicle details
-      const response = await api.get(`/Vehicle/get-vehicle-by-id?id=${vehicle.id}`);
+      const response = await api.get(
+        `/Vehicle/get-vehicle-by-id?id=${vehicle.id}`
+      );
       console.log("Vehicle detail response:", response.data);
-      
+
       setSelectedVehicle(response.data);
       setDetailModalVisible(true);
     } catch (err) {
       console.error("Error fetching vehicle detail:", err);
-      
+
       // Nếu API lỗi, vẫn hiển thị thông tin có sẵn
       setSelectedVehicle(vehicle);
       setDetailModalVisible(true);
-      
-      message.warning("Không thể tải chi tiết đầy đủ, hiển thị thông tin cơ bản");
+
+      message.warning(
+        "Không thể tải chi tiết đầy đủ, hiển thị thông tin cơ bản"
+      );
     } finally {
       setLoading(false);
     }
@@ -579,13 +626,21 @@ const MyVehicle = () => {
     <>
       <Layout style={{ minHeight: "calc(100vh - 64px - 200px)" }}>
         <Content style={{ margin: "24px 16px 0" }}>
-          <div style={{ marginBottom: 16 }}>
+          <div style={{ marginBottom: 16, display: "flex", gap: "8px" }}>
             <Button
               type="default"
               icon={<HomeOutlined />}
               onClick={() => navigate("/")}
             >
               Về trang chủ
+            </Button>
+            <Button
+              type="default"
+              icon={<ReloadOutlined />}
+              onClick={() => fetchVehicles()}
+              loading={loading}
+            >
+              Làm mới
             </Button>
           </div>
 
@@ -659,9 +714,7 @@ const MyVehicle = () => {
           </div>
         </Content>
 
-        <Footer style={{ textAlign: "center" }}>
-          Quản lý xe ©2024
-        </Footer>
+        <Footer style={{ textAlign: "center" }}>Quản lý xe ©2024</Footer>
 
         {/* Add Vehicle Modal */}
         <Modal
@@ -935,9 +988,6 @@ const MyVehicle = () => {
           {selectedVehicle && (
             <div>
               <Descriptions bordered column={2} size="small">
-                <Descriptions.Item label="ID xe" span={2}>
-                  {selectedVehicle.id}
-                </Descriptions.Item>
                 <Descriptions.Item label="Biển số">
                   {selectedVehicle.plateNumber}
                 </Descriptions.Item>
@@ -965,33 +1015,75 @@ const MyVehicle = () => {
               </Descriptions>
 
               <div style={{ marginTop: 16 }}>
-                <Space direction="vertical" size="middle" style={{ width: "100%" }}>
-                  <div>
-                    <div style={{ fontWeight: "bold", marginBottom: 8 }}>
-                      Hình ảnh xe:
-                    </div>
-                    {selectedVehicle.vehicleImageUrl ? (
-                      <Image
-                        src={selectedVehicle.vehicleImageUrl}
-                        alt="Vehicle"
-                        style={{ maxWidth: "100%", maxHeight: 300, objectFit: "cover" }}
-                        preview
-                      />
-                    ) : (
-                      <div style={{ 
-                        width: "100%", 
-                        height: 200, 
-                        display: "flex", 
-                        alignItems: "center", 
-                        justifyContent: "center",
-                        backgroundColor: "#f0f0f0",
-                        border: "1px dashed #d9d9d9",
-                        borderRadius: 8
-                      }}>
-                        <span style={{ color: "#999" }}>Chưa có hình ảnh xe</span>
+                <Space
+                  direction="vertical"
+                  size="middle"
+                  style={{ width: "100%" }}
+                >
+                  {(() => {
+                    const vehicleImages = getVehicleImages(selectedVehicle);
+                    console.log("Vehicle images to display:", vehicleImages);
+                    if (!vehicleImages.length) {
+                      return (
+                        <div>
+                          <div style={{ fontWeight: "bold", marginBottom: 8 }}>
+                            Hình ảnh xe:
+                          </div>
+                          <div
+                            style={{
+                              width: "100%",
+                              height: 200,
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              backgroundColor: "#f0f0f0",
+                              border: "1px dashed #d9d9d9",
+                              borderRadius: 8,
+                            }}
+                          >
+                            <span style={{ color: "#999" }}>
+                              Chưa có hình ảnh xe
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    }
+                    return (
+                      <div>
+                        <div style={{ fontWeight: "bold", marginBottom: 8 }}>
+                          Hình ảnh xe:
+                        </div>
+                        <Space wrap size="middle">
+                          {vehicleImages.map((img, index) => {
+                            // Đảm bảo URL là string hợp lệ
+                            const imageUrl = typeof img === 'string' ? img : (img?.url || img?.imageUrl || '');
+                            if (!imageUrl) {
+                              console.warn(`Invalid image URL at index ${index}:`, img);
+                              return null;
+                            }
+                            return (
+                              <Image
+                                key={`${imageUrl}-${index}`}
+                                src={imageUrl}
+                                alt={`Vehicle ${index + 1}`}
+                                style={{
+                                  width: 180,
+                                  height: 150,
+                                  objectFit: "cover",
+                                  borderRadius: 8,
+                                }}
+                                preview
+                                onError={(e) => {
+                                  console.error(`Failed to load image at index ${index}:`, imageUrl);
+                                  e.target.style.display = 'none';
+                                }}
+                              />
+                            );
+                          })}
+                        </Space>
                       </div>
-                    )}
-                  </div>
+                    );
+                  })()}
                   <div>
                     <div style={{ fontWeight: "bold", marginBottom: 8 }}>
                       Giấy đăng ký xe:
@@ -1000,21 +1092,29 @@ const MyVehicle = () => {
                       <Image
                         src={selectedVehicle.registrationPaperUrl}
                         alt="Registration"
-                        style={{ maxWidth: "100%", maxHeight: 300, objectFit: "cover" }}
+                        style={{
+                          maxWidth: "100%",
+                          maxHeight: 300,
+                          objectFit: "cover",
+                        }}
                         preview
                       />
                     ) : (
-                      <div style={{ 
-                        width: "100%", 
-                        height: 200, 
-                        display: "flex", 
-                        alignItems: "center", 
-                        justifyContent: "center",
-                        backgroundColor: "#f0f0f0",
-                        border: "1px dashed #d9d9d9",
-                        borderRadius: 8
-                      }}>
-                        <span style={{ color: "#999" }}>Chưa có giấy đăng ký xe</span>
+                      <div
+                        style={{
+                          width: "100%",
+                          height: 200,
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          backgroundColor: "#f0f0f0",
+                          border: "1px dashed #d9d9d9",
+                          borderRadius: 8,
+                        }}
+                      >
+                        <span style={{ color: "#999" }}>
+                          Chưa có giấy đăng ký xe
+                        </span>
                       </div>
                     )}
                   </div>

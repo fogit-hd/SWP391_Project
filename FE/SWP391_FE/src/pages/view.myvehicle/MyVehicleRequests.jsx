@@ -37,17 +37,40 @@ import "./my-vehicle.css";
 const { Header, Content, Footer } = Layout;
 
 const normalizeImageList = (value) => {
-  if (!value) return [];
+  if (!value) {
+    console.log("normalizeImageList: value is empty/null");
+    return [];
+  }
+  
+  console.log("normalizeImageList input:", value, "type:", typeof value, "isArray:", Array.isArray(value));
+  
   if (Array.isArray(value)) {
-    return value
-      .map((item) => {
-        if (typeof item === "string") return item;
-        if (item?.url) return item.url;
-        if (item?.imageUrl) return item.imageUrl;
-        if (item?.vehicleImageUrl) return item.vehicleImageUrl;
+    console.log("normalizeImageList: Processing array with", value.length, "items");
+    const result = value
+      .map((item, index) => {
+        console.log(`  Item ${index}:`, item, "type:", typeof item);
+        if (typeof item === "string") {
+          console.log(`    -> String URL: ${item}`);
+          return item;
+        }
+        if (item?.url) {
+          console.log(`    -> Object with url: ${item.url}`);
+          return item.url;
+        }
+        if (item?.imageUrl) {
+          console.log(`    -> Object with imageUrl: ${item.imageUrl}`);
+          return item.imageUrl;
+        }
+        if (item?.vehicleImageUrl) {
+          console.log(`    -> Object with vehicleImageUrl: ${item.vehicleImageUrl}`);
+          return item.vehicleImageUrl;
+        }
+        console.log(`    -> Unknown format, skipping`);
         return "";
       })
       .filter(Boolean);
+    console.log("✅ normalizeImageList array result:", result, "length:", result.length);
+    return result;
   }
   if (typeof value === "string") {
     const trimmed = value.trim();
@@ -55,31 +78,98 @@ const normalizeImageList = (value) => {
     try {
       const parsed = JSON.parse(trimmed);
       if (Array.isArray(parsed)) {
+        console.log("normalizeImageList: Parsed JSON string to array");
         return normalizeImageList(parsed);
       }
     } catch (_) {
       // not JSON, fallback to delimiter split
     }
-    return trimmed
+    const result = trimmed
       .split(/[,;|]/)
       .map((item) => item.trim())
       .filter(Boolean);
+    console.log("normalizeImageList string result:", result);
+    return result;
   }
+  console.log("normalizeImageList: no match, returning empty array");
   return [];
 };
 
 const getVehicleImagesFromRequest = (request) => {
   if (!request) return [];
+  
+  // Debug: Log để kiểm tra
+  console.log("=== GET VEHICLE IMAGES ===");
+  console.log("Request object:", request);
+  console.log("All request keys:", Object.keys(request || {}));
+  
+  // Đặc biệt xử lý vehicleImageUrl nếu là array
+  let vehicleImageUrlArray = null;
+  if (Array.isArray(request.vehicleImageUrl)) {
+    vehicleImageUrlArray = request.vehicleImageUrl;
+    console.log("✅ vehicleImageUrl is ARRAY with", vehicleImageUrlArray.length, "items:", vehicleImageUrlArray);
+  } else if (request.vehicleImageUrl) {
+    console.log("⚠️ vehicleImageUrl is NOT array, type:", typeof request.vehicleImageUrl, "value:", request.vehicleImageUrl);
+  }
+  
+  // Kiểm tra tất cả các field có thể chứa ảnh
   const possibleSources = [
+    vehicleImageUrlArray || request.vehicleImageUrl,  // Ưu tiên array nếu có
     request.vehicleImageUrls,
     request.vehicleImages,
-    request.vehicleImageUrl,
+    request.vehicleImageUrlList,
+    request.imageUrls,
+    request.images,
+    request.imageUrl,
   ];
-  for (const source of possibleSources) {
-    const list = normalizeImageList(source);
-    if (list.length) return list;
+  
+  console.log("vehicleImageUrl:", request.vehicleImageUrl);
+  console.log("vehicleImageUrl type:", typeof request.vehicleImageUrl);
+  console.log("vehicleImageUrl isArray:", Array.isArray(request.vehicleImageUrl));
+  if (Array.isArray(request.vehicleImageUrl)) {
+    console.log("vehicleImageUrl array length:", request.vehicleImageUrl.length);
+    console.log("vehicleImageUrl array items:", request.vehicleImageUrl);
   }
-  return [];
+  console.log("vehicleImageUrls:", request.vehicleImageUrls);
+  console.log("vehicleImages:", request.vehicleImages);
+  console.log("vehicleImageUrlList:", request.vehicleImageUrlList);
+  console.log("imageUrls:", request.imageUrls);
+  console.log("images:", request.images);
+  console.log("imageUrl:", request.imageUrl);
+  
+  // Lấy tất cả ảnh từ tất cả các nguồn (không chỉ field đầu tiên)
+  const allImages = [];
+  for (let i = 0; i < possibleSources.length; i++) {
+    const source = possibleSources[i];
+    if (!source) {
+      console.log(`Source ${i} is empty/null, skipping`);
+      continue;
+    }
+    console.log(`Processing source ${i}:`, source, "type:", typeof source, "isArray:", Array.isArray(source));
+    const list = normalizeImageList(source);
+    if (list.length) {
+      console.log(`✅ Found ${list.length} images from source ${i}:`, list);
+      allImages.push(...list);
+    } else {
+      console.log(`❌ No images found in source ${i}`);
+    }
+  }
+  
+  // Loại bỏ duplicate và trả về tất cả ảnh
+  const uniqueImages = [...new Set(allImages)];
+  console.log("📸 All unique images:", uniqueImages);
+  console.log("📊 Total images found:", uniqueImages.length);
+  
+  // Nếu không tìm thấy ảnh nào, log cảnh báo
+  if (uniqueImages.length === 0) {
+    console.warn("⚠️ No images found in request! Check the response structure.");
+  } else if (uniqueImages.length === 1 && Array.isArray(request.vehicleImageUrl) && request.vehicleImageUrl.length > 1) {
+    console.error("🚨 ERROR: Backend returned array with", request.vehicleImageUrl.length, "items but only", uniqueImages.length, "image was extracted!");
+    console.error("Original array:", request.vehicleImageUrl);
+    console.error("Extracted images:", uniqueImages);
+  }
+  
+  return uniqueImages;
 };
 
 const MyVehicleRequests = () => {
@@ -305,6 +395,24 @@ const MyVehicleRequests = () => {
 
       // API có thể trả về data trực tiếp hoặc wrapped trong response
       const detail = response.data?.data || response.data;
+      
+      // Debug: Log để kiểm tra cấu trúc response
+      console.log("=== FETCH REQUEST DETAIL ===");
+      console.log("Full response:", response.data);
+      console.log("Detail object:", detail);
+      console.log("Detail keys:", Object.keys(detail || {}));
+      console.log("vehicleImageUrls:", detail?.vehicleImageUrls, "type:", typeof detail?.vehicleImageUrls, "isArray:", Array.isArray(detail?.vehicleImageUrls));
+      console.log("vehicleImages:", detail?.vehicleImages, "type:", typeof detail?.vehicleImages, "isArray:", Array.isArray(detail?.vehicleImages));
+      console.log("vehicleImageUrl:", detail?.vehicleImageUrl, "type:", typeof detail?.vehicleImageUrl, "isArray:", Array.isArray(detail?.vehicleImageUrl));
+      console.log("vehicleImageUrlList:", detail?.vehicleImageUrlList, "type:", typeof detail?.vehicleImageUrlList, "isArray:", Array.isArray(detail?.vehicleImageUrlList));
+      console.log("registrationPaperUrl:", detail?.registrationPaperUrl);
+      
+      // Log chi tiết nếu vehicleImageUrl là array
+      if (Array.isArray(detail?.vehicleImageUrl)) {
+        console.log("vehicleImageUrl is ARRAY with length:", detail.vehicleImageUrl.length);
+        console.log("vehicleImageUrl array items:", detail.vehicleImageUrl);
+      }
+      
       return detail;
     } catch (err) {
       setLoading(false);
@@ -438,22 +546,40 @@ const MyVehicleRequests = () => {
       formData.append("rangeKm", values.rangeKm ?? 0);
       // Plate number là required, không có fallback
       formData.append("plateNumber", values.plateNumber);
-      vehicleImageFileList.forEach((file) =>
-        formData.append("vehicleImages", file.originFileObj)
-      );
+      
+      // Log số lượng ảnh trước khi gửi
+      console.log("=== CREATING REQUEST ===");
+      console.log("Number of vehicle images to upload:", vehicleImageFileList.length);
+      console.log("Vehicle image files:", vehicleImageFileList.map(f => ({ name: f.name, size: f.size })));
+      
+      // Gửi tất cả ảnh với key "vehicleImages" (số nhiều)
+      vehicleImageFileList.forEach((file, index) => {
+        console.log(`Appending vehicleImages[${index}]:`, file.name, file.originFileObj);
+        formData.append("vehicleImages", file.originFileObj);
+      });
+      
       // Backward compatibility for older API expecting single file
       if (vehicleImageFileList[0]) {
+        console.log("Appending vehicleImage (single, backward compat):", vehicleImageFileList[0].name);
         formData.append("vehicleImage", vehicleImageFileList[0].originFileObj);
       }
+      
       formData.append(
         "registrationPaperUrl",
         registrationPaperFileList[0].originFileObj
       );
 
-      console.log("Create FormData entries:");
+      console.log("=== FormData entries ===");
+      let vehicleImagesCount = 0;
       for (let pair of formData.entries()) {
-        console.log(pair[0], pair[1]);
+        if (pair[0] === "vehicleImages") {
+          vehicleImagesCount++;
+          console.log(`${pair[0]}[${vehicleImagesCount}]:`, pair[1]?.name || pair[1]);
+        } else {
+          console.log(pair[0], pair[1]?.name || pair[1]);
+        }
       }
+      console.log(`Total vehicleImages entries: ${vehicleImagesCount}`);
 
       const response = await api.post("/vehicle-requests/create", formData, {
         headers: {
@@ -473,6 +599,22 @@ const MyVehicleRequests = () => {
         "Response data.data keys:",
         Object.keys(responseData?.data || {})
       );
+      
+      // Kiểm tra chi tiết về ảnh trong response
+      const detail = responseData?.data || responseData;
+      console.log("=== IMAGES IN RESPONSE ===");
+      console.log("vehicleImageUrl:", detail?.vehicleImageUrl, "type:", typeof detail?.vehicleImageUrl, "isArray:", Array.isArray(detail?.vehicleImageUrl));
+      if (Array.isArray(detail?.vehicleImageUrl)) {
+        console.log("✅ vehicleImageUrl is ARRAY with", detail.vehicleImageUrl.length, "items");
+        detail.vehicleImageUrl.forEach((url, idx) => {
+          console.log(`  [${idx}]:`, url);
+        });
+      } else if (detail?.vehicleImageUrl) {
+        console.log("⚠️ vehicleImageUrl is NOT array:", detail.vehicleImageUrl);
+      }
+      console.log("vehicleImageUrls:", detail?.vehicleImageUrls);
+      console.log("vehicleImages:", detail?.vehicleImages);
+      
       console.log("Full response:", JSON.stringify(responseData, null, 2));
 
       // Kiểm tra các trường hợp backend trả về lỗi dù status code là 200
@@ -1332,29 +1474,74 @@ const MyVehicleRequests = () => {
                 style={{ width: "100%" }}
               >
                 {(() => {
+                  console.log("=== RENDERING VEHICLE IMAGES ===");
+                  console.log("selectedRequest:", selectedRequest);
                   const vehicleImages =
                     getVehicleImagesFromRequest(selectedRequest);
-                  if (!vehicleImages.length) return null;
+                  console.log("Vehicle images to display:", vehicleImages);
+                  console.log("Number of images:", vehicleImages.length);
+                  
+                  if (!vehicleImages.length) {
+                    console.log("No vehicle images to display");
+                    return (
+                      <div>
+                        <div style={{ fontWeight: "bold", marginBottom: 8 }}>
+                          Hình ảnh xe:
+                        </div>
+                        <div
+                          style={{
+                            width: "100%",
+                            height: 200,
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            backgroundColor: "#f0f0f0",
+                            border: "1px dashed #d9d9d9",
+                            borderRadius: 8,
+                          }}
+                        >
+                          <span style={{ color: "#999" }}>
+                            Chưa có hình ảnh xe
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  }
+                  
+                  console.log("Rendering", vehicleImages.length, "images");
                   return (
                     <div>
                       <div style={{ fontWeight: "bold", marginBottom: 8 }}>
-                        Hình ảnh xe:
+                        Hình ảnh xe ({vehicleImages.length} ảnh):
                       </div>
                       <Space wrap size="middle">
-                        {vehicleImages.map((img, index) => (
-                          <Image
-                            key={`${img}-${index}`}
-                            src={img}
-                            alt={`Vehicle ${index + 1}`}
-                            style={{
-                              width: 180,
-                              height: 150,
-                              objectFit: "cover",
-                              borderRadius: 8,
-                            }}
-                            preview
-                          />
-                        ))}
+                        {vehicleImages.map((img, index) => {
+                          // Đảm bảo URL là string hợp lệ
+                          const imageUrl = typeof img === 'string' ? img : (img?.url || img?.imageUrl || '');
+                          if (!imageUrl) {
+                            console.warn(`Invalid image URL at index ${index}:`, img);
+                            return null;
+                          }
+                          console.log(`Rendering image ${index + 1}:`, imageUrl);
+                          return (
+                            <Image
+                              key={`${imageUrl}-${index}`}
+                              src={imageUrl}
+                              alt={`Vehicle ${index + 1}`}
+                              style={{
+                                width: 180,
+                                height: 150,
+                                objectFit: "cover",
+                                borderRadius: 8,
+                              }}
+                              preview
+                              onError={(e) => {
+                                console.error(`Failed to load image at index ${index}:`, imageUrl);
+                                e.target.style.display = 'none';
+                              }}
+                            />
+                          );
+                        })}
                       </Space>
                     </div>
                   );
@@ -1374,6 +1561,10 @@ const MyVehicleRequests = () => {
                         borderRadius: 8,
                       }}
                       preview
+                      onError={(e) => {
+                        console.error("Failed to load registration paper:", selectedRequest.registrationPaperUrl);
+                        e.target.style.display = 'none';
+                      }}
                     />
                   </div>
                 )}
