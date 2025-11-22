@@ -655,7 +655,7 @@ const CreateBookingModal = ({
                           ((quotaInfo.data.ownershipRate || 100) / 100);
                         const hours = Math.floor(totalHours);
                         const minutes = Math.round((totalHours - hours) * 60);
-                        return `${hours} phút ${minutes} giây`;
+                        return `${hours} giờ ${minutes} phút`;
                       })()}
                     </span>
                   </div>
