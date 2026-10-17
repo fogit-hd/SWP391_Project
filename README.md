@@ -1,88 +1,65 @@
-# EV Co-ownership Platform
+# EV Co-ownership and Cost-sharing System
 
-## 🚗 Electric Vehicle Co-ownership and Cost-sharing System
+A web front end for managing electric vehicle (EV) co-ownership. Several people can jointly own one vehicle, sign a shared contract, book usage time, and keep track of costs and services. It was built as a university project for the SWP391 course at FPT University, and it was my first larger React project.
 
-### 📋 Project Description
-A web-based platform for managing electric vehicle co-ownership agreements, allowing multiple people to jointly own and share the costs of electric vehicles in a transparent and efficient way.
+> This repository contains the **front end only**. The REST API it talks to is not part of this repo.
 
-> **Note**: This is my first major project, so I'm still learning and improving the codebase. Any feedback or suggestions are greatly appreciated! 🙏
+## Key features
 
-### 🚀 Key Features
+- **Accounts**: register, OTP verification, login, forgot/change password, profile update.
+- **Co-ownership groups and vehicles**: create a group, view your groups, submit and track vehicle requests.
+- **E-contracts**: create, review, sign and view contracts. A rich-text editor (Quill) is used to write templates, with variables and clauses managed separately and previewed as HTML.
+- **Booking**: create bookings and see them in a calendar/list view (FullCalendar).
+- **Payments and services**: payment history, and service requests handled by technicians.
+- **Role-based areas**: separate dashboards and sidebars for admin, staff and technician users. The admin area covers accounts, contracts, groups, services, vehicles and statistics.
+- **Notifications** panel.
 
-* **Contract Management**: Create, edit, and manage co-ownership contracts
-* **Dynamic Templates**: Template system with dynamic variables for different contract types
-* **Rich Text Editor**: Powerful editor using Quill.js for contract drafting
-* **Variable Management**: System for managing dynamic variables in templates
-* **Clause Management**: Create and manage contract clauses
-* **Contract Preview**: Preview and generate contracts from templates
-* **Admin Dashboard**: Comprehensive admin interface for system management
+## Tech stack
 
-### 🛠️ Tech Stack
+- React 19, Vite, React Router
+- Ant Design, React Bootstrap, Tailwind CSS
+- Redux Toolkit with redux-persist
+- Axios for API calls, Formik + Yup for forms
+- Quill (contract editor), Mustache (template variables), FullCalendar, Recharts, GSAP
 
-* **Frontend**: React.js, Ant Design, Quill.js
-* **Backend**: Spring Boot, Java
-* **Database**: MySQL/PostgreSQL
-* **Authentication**: JWT, Spring Security
-* **API**: RESTful APIs
-
-### 📁 Project Structure
+## Project structure
 
 ```
-FE/
-├── SWP391_FE/           # Frontend React Application
-│   ├── src/
-│   │   ├── components/  # React Components
-│   │   ├── pages/       # Page Components
-│   │   └── utils/       # Utility Functions
-│   └── public/          # Static Assets
-└── README.md
-
-BE/
-├── src/main/java/       # Java Source Code
-├── src/test/java/       # Unit Tests
-└── pom.xml             # Maven Configuration
+FE/SWP391_FE/
+├── src/
+│   ├── components/   # shared UI, contract editor, auth provider, redux store
+│   ├── pages/        # admin, staff, technician, booking, contracts, groups, auth...
+│   ├── config/       # axios setup
+│   ├── App.jsx
+│   └── main.jsx
+└── public/
+render.yaml           # static-site deploy config for Render
 ```
 
-### 🚀 Getting Started
+## Getting started
 
-#### Prerequisites
-- Node.js (v14 or higher)
-- Java 8 or higher
-- Maven 3.6 or higher
-- MySQL/PostgreSQL
+Prerequisites: Node.js (a current LTS release) and npm. You also need a running back-end API that this front end can reach; see `FE/SWP391_FE/src/config/axios.js` for how the API address is set.
 
-#### Frontend Setup
 ```bash
 cd FE/SWP391_FE
 npm install
-npm start
+npm run dev        # start the dev server
 ```
 
-#### Backend Setup
-```bash
-cd BE
-mvn clean install
-mvn spring-boot:run
-```
+Other scripts: `npm run build` (production build into `dist/`), `npm run lint`, `npm run preview`.
 
-### 🤝 Contributing
-Since this is my first project, I'm open to any suggestions, improvements, or contributions! Feel free to:
-- Report bugs
-- Suggest new features
-- Submit pull requests
-- Share your feedback
+## Usage
 
-### 📚 Learning Journey
-This project has been a great learning experience for me in:
-- React.js and modern frontend development
-- Spring Boot and backend development
-- Database design and management
-- API development and integration
-- UI/UX design principles
+After registering and logging in, a regular user can create or join a co-ownership group, register a vehicle, review and sign the contract, and make bookings. Staff review contracts and vehicle requests, technicians handle service jobs, and admins manage everything from the dashboard.
 
-### 👥 Contact
-**Email**: huynhdungphong2005@gmail.com
-**GitHub**: [@fogit-hd](https://github.com/fogit-hd)
+## Deployment
 
-### 📄 License
-© 2025 EV Co-ownership Platform. All rights reserved. 
+`render.yaml` defines a Render static site that runs `npm install && npm run build` in `FE/SWP391_FE` and publishes `dist/`.
+
+## Credits
+
+Built by a student team at FPT University for SWP391. Maintained by [@fogit-hd](https://github.com/fogit-hd).
+
+## License
+
+No license file is included; all rights reserved by the authors.
