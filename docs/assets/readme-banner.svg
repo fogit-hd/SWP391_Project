@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="300" viewBox="0 0 1200 300" role="img" aria-labelledby="title desc">
+  <title id="title">SWP391 — EV Co-ownership and Cost-sharing front end</title>
+  <desc id="desc">Co-ownership, e-contracts, booking and cost sharing.</desc>
+  <defs>
+    <linearGradient id="bg" x2="1" y2="1"><stop stop-color="#07140f"/><stop offset="1" stop-color="#10302a"/></linearGradient>
+    <linearGradient id="accent"><stop stop-color="#34d399"/><stop offset="1" stop-color="#fbbf24"/></linearGradient>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M40 0H0V40" fill="none" stroke="#6ee7b7" stroke-opacity=".07"/></pattern>
+  </defs>
+  <rect width="1200" height="300" rx="24" fill="url(#bg)"/>
+  <rect width="1200" height="300" rx="24" fill="url(#grid)"/>
+  <path d="M0 280H1200" stroke="url(#accent)" stroke-width="4"/>
+  <g font-family="Segoe UI,Arial,sans-serif">
+    <text x="64" y="64" fill="#34d399" font-size="14" letter-spacing="4">FPT UNIVERSITY  /  SWP391</text>
+    <text x="60" y="140" fill="#f8fafc" font-size="64" font-weight="800">EV CO-OWNERSHIP</text>
+    <text x="64" y="186" fill="#fbbf24" font-size="30" font-weight="600" letter-spacing="4">FRONT END</text>
+    <text x="65" y="224" fill="#94a3b8" font-size="18">Co-ownership, e-contracts, booking and cost sharing.</text>
+    <g font-size="13" font-weight="600" fill="#e2e8f0">
+      <rect x="64" y="244" width="96" height="26" rx="13" fill="#253049"/><text x="80" y="262">REACT 19</text>
+      <rect x="176" y="244" width="86" height="26" rx="13" fill="#253049"/><text x="192" y="262">VITE 7</text>
+      <rect x="278" y="244" width="140" height="26" rx="13" fill="#253049"/><text x="294" y="262">ANT DESIGN 5</text>
+    </g>
+    <g transform="translate(922 48)">
+      <rect width="204" height="204" rx="36" fill="#0f172a" stroke="#334155" stroke-width="2"/>
+      <rect x="22" y="22" width="160" height="160" rx="25" fill="none" stroke="url(#accent)" stroke-width="2"/>
+      <text x="102" y="136" text-anchor="middle" fill="#34d399" font-size="110" font-weight="800">E</text>
+      <circle cx="181" cy="24" r="7" fill="#fbbf24"/>
+    </g>
+  </g>
+</svg>
